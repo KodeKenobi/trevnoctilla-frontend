@@ -342,10 +342,10 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
             </div>
             
             {/* Content Display */}
-            <div className="border border-gray-600 rounded-lg overflow-hidden bg-white">
+            <div className="border border-gray-600 rounded-lg overflow-hidden">
               {viewMode === 'preview' ? (
                 <div 
-                  className="w-full h-[600px] overflow-auto"
+                  className="w-full h-[600px] overflow-auto bg-white"
                   dangerouslySetInnerHTML={{ __html: htmlContent }}
                 />
               ) : (
