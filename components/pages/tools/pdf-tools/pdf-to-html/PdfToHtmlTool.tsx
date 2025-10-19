@@ -183,13 +183,30 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
           }`}
         >
           <input {...getInputProps()} />
-          <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-300 mb-2">
+          {/* Mountain/Landscape icon with plus */}
+          <div className="relative mx-auto mb-4 w-16 h-12">
+            <div className="w-16 h-12 border-2 border-gray-400 rounded flex items-center justify-center">
+              <div className="w-8 h-6 bg-gray-300 rounded-sm relative">
+                <div className="absolute bottom-0 left-1 w-2 h-2 bg-gray-500 rounded-sm"></div>
+                <div className="absolute bottom-0 left-3 w-1 h-3 bg-gray-500 rounded-sm"></div>
+                <div className="absolute bottom-0 right-2 w-1 h-1 bg-gray-500 rounded-sm"></div>
+                <div className="absolute top-1 right-1 w-1 h-1 bg-gray-500 rounded-full"></div>
+              </div>
+            </div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-bold">+</span>
+            </div>
+          </div>
+          
+          <button className="bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg mb-2">
+            Choose PDF File
+          </button>
+          
+          <p className="text-gray-300 text-sm">
             {isDragActive
               ? "Drop your PDF file here"
-              : "Drag and drop your PDF file here or click to browse"}
+              : "Drag and drop your PDF here, or click to browse"}
           </p>
-          <p className="text-sm text-gray-500">Supports PDF files only</p>
         </div>
 
         {warning && (
