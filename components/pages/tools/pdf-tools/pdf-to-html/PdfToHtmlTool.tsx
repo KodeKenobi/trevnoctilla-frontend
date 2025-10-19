@@ -330,16 +330,6 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
               </pre>
             )}
           </div>
-          
-          <div className="mt-4 flex justify-center">
-            <button
-              onClick={handleDownload}
-              className="bg-gradient-to-b from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-lg flex items-center"
-            >
-              <Download className="h-5 w-5 mr-2" />
-              Download HTML File
-            </button>
-          </div>
         </div>
       )}
 
