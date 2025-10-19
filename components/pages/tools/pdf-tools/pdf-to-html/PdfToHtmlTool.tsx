@@ -176,7 +176,7 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
 
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer ${
+          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer ${
             isDragActive
               ? "border-cyan-400 bg-cyan-400/10"
               : "border-gray-600"
@@ -215,7 +215,7 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
         <button
           onClick={convertPdfToHtml}
           disabled={!file || loading}
-          className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center"
+          className="w-full mt-6 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center"
         >
           {loading ? (
             <>
@@ -263,16 +263,16 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
             <div className="flex justify-center space-x-4">
               <button
                 onClick={handleView}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center"
+                className="bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center"
               >
-                <FileText className="h-4 w-4 mr-2" />
+                <FileText className="h-5 w-5 mr-2" />
                 View HTML
               </button>
               <button
                 onClick={handleDownload}
-                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center"
+                className="bg-gradient-to-b from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-lg flex items-center"
               >
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-5 w-5 mr-2" />
                 Download HTML
               </button>
             </div>
@@ -334,9 +334,9 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
           <div className="mt-4 flex justify-center">
             <button
               onClick={handleDownload}
-              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center"
+              className="bg-gradient-to-b from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-lg flex items-center"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-5 w-5 mr-2" />
               Download HTML File
             </button>
           </div>
