@@ -209,26 +209,25 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
                 </p>
               </div>
             </div>
+            <button
+              onClick={convertPdfToHtml}
+              disabled={loading}
+              className="w-full mt-4 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Converting... {Math.round(progress)}%
+                </>
+              ) : (
+                <>
+                  <FileText className="h-5 w-5 mr-2" />
+                  Convert to HTML
+                </>
+              )}
+            </button>
           </div>
         )}
-
-        <button
-          onClick={convertPdfToHtml}
-          disabled={!file || loading}
-          className="w-full mt-6 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-              Converting... {Math.round(progress)}%
-            </>
-          ) : (
-            <>
-              <FileText className="h-5 w-5 mr-2" />
-              Convert to HTML
-            </>
-          )}
-        </button>
       </div>
 
       {/* Results */}
