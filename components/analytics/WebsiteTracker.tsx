@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import internalAnalytics from "../../lib/internalAnalytics";
+import internalAnalytics from "../../Lib/internalAnalytics";
 
 export default function WebsiteTracker() {
   const pathname = usePathname();

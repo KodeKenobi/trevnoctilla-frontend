@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Settings, Check } from "lucide-react";
 import Link from "next/link";
-import internalAnalytics from "../../lib/internalAnalytics";
+import internalAnalytics from "../../Lib/internalAnalytics";
 
 export default function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false);
