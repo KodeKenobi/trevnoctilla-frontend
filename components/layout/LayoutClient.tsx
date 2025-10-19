@@ -3,12 +3,15 @@
 import React, { useState, useEffect } from "react";
 import { NavigationProvider } from "@/contexts/NavigationContext";
 import UniversalHeader from "@/components/layout/UniversalHeader";
+import Footer from "@/components/layout/Footer";
+import CookieConsent from "@/components/layout/CookieConsent";
 import { useNavigation } from "@/contexts/NavigationContext";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const { currentPage } = useNavigation();
   const [isEditorMode, setIsEditorMode] = useState(false);
   const [isAuthPage, setIsAuthPage] = useState(false);
+  const [isDisclaimersPage, setIsDisclaimersPage] = useState(false);
 
   // Check for editor mode and auth pages
   useEffect(() => {
@@ -27,6 +30,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         typeof window !== "undefined" &&
         window.location.pathname.startsWith("/auth/");
       setIsAuthPage(isOnAuthPage);
+
+      // Check if we're on disclaimers page
+      const isOnDisclaimersPage =
+        typeof window !== "undefined" &&
+        window.location.pathname.startsWith("/disclaimers");
+      setIsDisclaimersPage(isOnDisclaimersPage);
     };
 
     checkModes();
@@ -47,6 +56,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     <>
       {!isEditorMode && !isAuthPage && <UniversalHeader />}
       {children}
+      {!isEditorMode && !isAuthPage && !isDisclaimersPage && <Footer />}
+      <CookieConsent />
     </>
   );
 }

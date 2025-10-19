@@ -1,0 +1,290 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Cookie, X, Settings, Check } from "lucide-react";
+import Link from "next/link";
+
+export default function CookieConsent() {
+  const [showConsent, setShowConsent] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [cookiePreferences, setCookiePreferences] = useState({
+    essential: true, // Always true, can't be disabled
+    analytics: false,
+    functional: false,
+    marketing: false,
+  });
+
+  useEffect(() => {
+    // Check if user has already made a choice
+    const consent = localStorage.getItem("cookieConsent");
+    if (!consent) {
+      // Show consent after a short delay
+      const timer = setTimeout(() => {
+        setShowConsent(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    } else {
+      // Load saved preferences
+      const savedPreferences = localStorage.getItem("cookiePreferences");
+      if (savedPreferences) {
+        setCookiePreferences(JSON.parse(savedPreferences));
+      }
+    }
+  }, []);
+
+  const handleAcceptAll = () => {
+    const allAccepted = {
+      essential: true,
+      analytics: true,
+      functional: true,
+      marketing: true,
+    };
+    setCookiePreferences(allAccepted);
+    localStorage.setItem("cookieConsent", "accepted");
+    localStorage.setItem("cookiePreferences", JSON.stringify(allAccepted));
+    setShowConsent(false);
+  };
+
+  const handleRejectAll = () => {
+    const onlyEssential = {
+      essential: true,
+      analytics: false,
+      functional: false,
+      marketing: false,
+    };
+    setCookiePreferences(onlyEssential);
+    localStorage.setItem("cookieConsent", "rejected");
+    localStorage.setItem("cookiePreferences", JSON.stringify(onlyEssential));
+    setShowConsent(false);
+  };
+
+  const handleSavePreferences = () => {
+    localStorage.setItem("cookieConsent", "customized");
+    localStorage.setItem(
+      "cookiePreferences",
+      JSON.stringify(cookiePreferences)
+    );
+    setShowConsent(false);
+    setShowSettings(false);
+  };
+
+  const togglePreference = (key: keyof typeof cookiePreferences) => {
+    if (key === "essential") return; // Can't disable essential cookies
+    setCookiePreferences((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  if (!showConsent) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 100 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 100 }}
+        className="fixed bottom-0 left-0 right-0 z-50 p-4"
+      >
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
+            {!showSettings ? (
+              // Main consent banner
+              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
+                <div className="flex items-center space-x-3 flex-1">
+                  <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Cookie className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-white mb-1">
+                      We use cookies to enhance your experience
+                    </h3>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      We use essential cookies to make our site work, and
+                      optional cookies to analyze usage and improve your
+                      experience. You can choose which cookies to accept.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                  <button
+                    onClick={() => setShowSettings(true)}
+                    className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-600 hover:border-cyan-400 text-gray-300 hover:text-white rounded-lg transition-all duration-200 text-sm"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Customize</span>
+                  </button>
+
+                  <button
+                    onClick={handleRejectAll}
+                    className="px-6 py-2 border border-gray-600 hover:border-red-400 text-gray-300 hover:text-red-400 rounded-lg transition-all duration-200 text-sm font-medium"
+                  >
+                    Reject All
+                  </button>
+
+                  <button
+                    onClick={handleAcceptAll}
+                    className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white rounded-lg transition-all duration-200 text-sm font-medium"
+                  >
+                    Accept All
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Settings panel
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-white">
+                    Cookie Preferences
+                  </h3>
+                  <button
+                    onClick={() => setShowSettings(false)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  {/* Essential Cookies */}
+                  <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <Settings className="w-5 h-5 text-green-400" />
+                        <h4 className="font-semibold text-white">
+                          Essential Cookies
+                        </h4>
+                        <span className="bg-green-600 text-white px-2 py-1 rounded text-xs font-semibold">
+                          Required
+                        </span>
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        These cookies are necessary for the website to function
+                        and cannot be switched off.
+                      </p>
+                    </div>
+                    <div className="ml-4">
+                      <div className="w-12 h-6 bg-green-500 rounded-full flex items-center justify-end px-1">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Analytics Cookies */}
+                  <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <Settings className="w-5 h-5 text-blue-400" />
+                        <h4 className="font-semibold text-white">
+                          Analytics Cookies
+                        </h4>
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        Help us understand how visitors interact with our
+                        website by collecting information anonymously.
+                      </p>
+                    </div>
+                    <div className="ml-4">
+                      <button
+                        onClick={() => togglePreference("analytics")}
+                        className={`w-12 h-6 rounded-full flex items-center transition-all duration-200 ${
+                          cookiePreferences.analytics
+                            ? "bg-cyan-500 justify-end"
+                            : "bg-gray-600 justify-start"
+                        }`}
+                      >
+                        <div className="w-5 h-5 bg-white rounded-full shadow-md"></div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Functional Cookies */}
+                  <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <Settings className="w-5 h-5 text-purple-400" />
+                        <h4 className="font-semibold text-white">
+                          Functional Cookies
+                        </h4>
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        Enable enhanced functionality and personalization, such
+                        as remembering your preferences.
+                      </p>
+                    </div>
+                    <div className="ml-4">
+                      <button
+                        onClick={() => togglePreference("functional")}
+                        className={`w-12 h-6 rounded-full flex items-center transition-all duration-200 ${
+                          cookiePreferences.functional
+                            ? "bg-cyan-500 justify-end"
+                            : "bg-gray-600 justify-start"
+                        }`}
+                      >
+                        <div className="w-5 h-5 bg-white rounded-full shadow-md"></div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Marketing Cookies */}
+                  <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <Settings className="w-5 h-5 text-orange-400" />
+                        <h4 className="font-semibold text-white">
+                          Marketing Cookies
+                        </h4>
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        Used to track visitors across websites to display
+                        relevant and engaging advertisements.
+                      </p>
+                    </div>
+                    <div className="ml-4">
+                      <button
+                        onClick={() => togglePreference("marketing")}
+                        className={`w-12 h-6 rounded-full flex items-center transition-all duration-200 ${
+                          cookiePreferences.marketing
+                            ? "bg-cyan-500 justify-end"
+                            : "bg-gray-600 justify-start"
+                        }`}
+                      >
+                        <div className="w-5 h-5 bg-white rounded-full shadow-md"></div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
+                  <Link
+                    href="/cookies"
+                    className="text-cyan-400 hover:text-cyan-300 text-sm underline"
+                  >
+                    Learn more about our cookie policy
+                  </Link>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowSettings(false)}
+                      className="px-6 py-2 border border-gray-600 hover:border-gray-500 text-gray-300 hover:text-white rounded-lg transition-all duration-200 text-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSavePreferences}
+                      className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white rounded-lg transition-all duration-200 text-sm font-medium"
+                    >
+                      Save Preferences
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}

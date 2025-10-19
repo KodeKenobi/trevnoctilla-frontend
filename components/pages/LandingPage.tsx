@@ -2,10 +2,21 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Play, FileText, QrCode, Image } from "lucide-react";
+import {
+  ArrowRight,
+  Play,
+  FileText,
+  QrCode,
+  Image,
+  Zap,
+  Sparkles,
+} from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigation } from "@/contexts/NavigationContext";
 
 export default function LandingPage() {
+  const { navigateTo } = useNavigation();
+
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -172,10 +183,10 @@ export default function LandingPage() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Link
-                  href="#demo"
+                  href="/api-docs"
                   className="text-gray-300 hover:text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-200 text-sm sm:text-base"
                 >
-                  Watch Demo
+                  API Docs
                 </Link>
               </motion.div>
             </motion.div>
@@ -332,60 +343,226 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Footer */}
-        <motion.footer
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="relative z-10 px-6 lg:px-12 py-12 border-t border-white/10"
-        >
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between">
+        {/* Powerful Tools CTA Section */}
+        <section className="py-24 relative overflow-hidden">
+          {/* Background Elements */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"></div>
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div
-              className="flex items-center space-x-3 mb-4 md:mb-0"
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center mb-16"
             >
-              <motion.span
-                className="text-xl font-bold text-white"
-                initial={{ opacity: 0, x: -10 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                Trevnoctilla
-              </motion.span>
+              <h2 className="text-2xl lg:text-3xl font-bold text-white mb-6">
+                Powerful Tools for Every Need
+              </h2>
+              <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+                From PDF editing to video conversion, our comprehensive toolkit
+                handles all your file processing needs with professional-grade
+                quality.
+              </p>
             </motion.div>
 
-            <motion.div
-              className="flex items-center space-x-6 text-gray-400"
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-            >
-              {["Privacy", "Terms", "Support"].map((link, index) => (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+              {[
+                {
+                  title: "PDF Powerhouse",
+                  description:
+                    "Edit, split, merge, and convert PDFs with precision. Add watermarks, signatures, and more.",
+                  features: [
+                    "Free PDF Editor",
+                    "Split & Merge",
+                    "Add Watermarks",
+                    "Digital Signatures",
+                  ],
+                  gradient: "from-red-500 to-pink-500",
+                },
+                {
+                  title: "Media Converter",
+                  description:
+                    "Convert videos, audio, and images between any format with advanced quality control.",
+                  features: [
+                    "All Video Formats",
+                    "Audio Conversion",
+                    "Image Processing",
+                    "Quality Control",
+                  ],
+                  gradient: "from-green-500 to-cyan-500",
+                },
+                {
+                  title: "Smart Tools",
+                  description:
+                    "Generate QR codes, extract text with OCR, and automate your workflow.",
+                  features: [
+                    "QR Generator",
+                    "OCR Text Extraction",
+                    "Batch Processing",
+                    "API Integration",
+                  ],
+                  gradient: "from-blue-500 to-purple-500",
+                },
+              ].map((tool, index) => (
                 <motion.div
-                  key={link}
-                  initial={{ opacity: 0, y: 10 }}
+                  key={tool.title}
+                  initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
-                  whileHover={{ y: -2 }}
+                  transition={{ duration: 0.6, delay: index * 0.2 }}
+                  className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-cyan-500/50 transition-all duration-300"
                 >
-                  <Link
-                    href={
-                      link === "Support"
-                        ? "mailto:info@trevnoctilla.com"
-                        : `/${link.toLowerCase()}`
-                    }
-                    className="hover:text-white transition-colors"
+                  <div
+                    className={`w-12 h-12 bg-gradient-to-r ${tool.gradient} rounded-xl flex items-center justify-center mb-6`}
                   >
-                    {link}
-                  </Link>
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-4">
+                    {tool.title}
+                  </h3>
+                  <p className="text-gray-300 mb-6 leading-relaxed">
+                    {tool.description}
+                  </p>
+                  <ul className="space-y-2">
+                    {tool.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-center text-gray-400">
+                        <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3"></div>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
                 </motion.div>
               ))}
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-center"
+            >
+              <motion.button
+                onClick={() => navigateTo("tools")}
+                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-lg px-10 py-5 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Explore All Tools
+              </motion.button>
             </motion.div>
           </div>
-        </motion.footer>
+        </section>
+
+        {/* Developer APIs CTA Section */}
+        <section className="py-24 relative overflow-hidden">
+          {/* Background Elements */}
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"></div>
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-2xl lg:text-3xl font-bold text-white mb-6">
+                Developer APIs for Powerful Computing
+              </h2>
+              <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+                Integrate our advanced file processing capabilities into your
+                applications with our comprehensive API suite. Built for
+                developers, by developers.
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 gap-8 mb-16">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8"
+              >
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-6">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  PDF Processing APIs
+                </h3>
+                <p className="text-gray-300 mb-6 leading-relaxed">
+                  Advanced PDF manipulation with OCR, text extraction, form
+                  filling, and document analysis capabilities.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    "PDF to Text with OCR",
+                    "Form Field Detection & Filling",
+                    "Document Structure Analysis",
+                    "Batch PDF Processing",
+                    "Advanced Text Extraction",
+                    "Metadata Extraction",
+                  ].map((feature, idx) => (
+                    <li key={idx} className="flex items-center text-gray-400">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <motion.button
+                  onClick={() => window.open("/api-docs", "_blank")}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  View API Documentation
+                </motion.button>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8"
+              >
+                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  Media Conversion APIs
+                </h3>
+                <p className="text-gray-300 mb-6 leading-relaxed">
+                  High-performance media processing with support for all major
+                  formats and advanced compression algorithms.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    "Video Format Conversion",
+                    "Audio Processing & Compression",
+                    "Image Optimization & Resizing",
+                    "Real-time Processing",
+                    "Custom Quality Settings",
+                    "Batch Media Processing",
+                  ].map((feature, idx) => (
+                    <li key={idx} className="flex items-center text-gray-400">
+                      <div className="w-2 h-2 bg-orange-400 rounded-full mr-3"></div>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <motion.button
+                  onClick={() => window.open("/auth/register", "_self")}
+                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Get API Access
+                </motion.button>
+              </motion.div>
+            </div>
+          </div>
+        </section>
       </div>
     </>
   );

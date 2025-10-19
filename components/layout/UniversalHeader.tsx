@@ -87,6 +87,7 @@ export default function UniversalHeader() {
     else if (item === "Image Converter") navigateTo("image-converter");
     else if (item === "PDF Tools") navigateTo("pdf-tools");
     else if (item === "QR Generator") navigateTo("qr-generator");
+    else if (item === "API") router.push("/api-docs");
   };
 
   const handleViewSwitch = (view: "website" | "client" | "admin") => {
@@ -149,6 +150,7 @@ export default function UniversalHeader() {
             "Image Converter",
             "PDF Tools",
             "QR Generator",
+            "API",
           ].map((item) => (
             <div key={item} className="mx-1">
               <button
@@ -408,6 +410,7 @@ export default function UniversalHeader() {
               "Image Converter",
               "PDF Tools",
               "QR Generator",
+              "API",
             ].map((item) => (
               <button
                 key={item}
