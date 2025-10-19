@@ -156,7 +156,7 @@ export default function ToolsPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {tools.map((tool, index) => (
               <motion.button
-                key={index}
+                key={tool.page}
                 onClick={() => navigateTo(tool.page)}
                 className="card card-hover p-8 group animate-fade-in-up text-left w-full"
                 style={{ animationDelay: `${index * 0.1}s` }}
@@ -179,9 +179,9 @@ export default function ToolsPage() {
                 </p>
 
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {tool.features.map((feature) => (
+                  {tool.features.map((feature, featureIndex) => (
                     <span
-                      key={feature}
+                      key={`${tool.page}-feature-${featureIndex}`}
                       className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-cyan-400 border border-cyan-500/30"
                     >
                       {feature}
@@ -281,7 +281,10 @@ export default function ToolsPage() {
                 </p>
                 <ul className="space-y-2">
                   {feature.features.map((item, idx) => (
-                    <li key={idx} className="flex items-center text-gray-400">
+                    <li
+                      key={`${feature.title}-item-${idx}`}
+                      className="flex items-center text-gray-400"
+                    >
                       <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3"></div>
                       {item}
                     </li>
@@ -343,7 +346,10 @@ export default function ToolsPage() {
                   "Advanced Text Extraction",
                   "Metadata Extraction",
                 ].map((feature, idx) => (
-                  <li key={idx} className="flex items-center text-gray-400">
+                  <li
+                    key={`api-feature-${idx}`}
+                    className="flex items-center text-gray-400"
+                  >
                     <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
                     {feature}
                   </li>
@@ -384,7 +390,10 @@ export default function ToolsPage() {
                   "Custom Quality Settings",
                   "Batch Media Processing",
                 ].map((feature, idx) => (
-                  <li key={idx} className="flex items-center text-gray-400">
+                  <li
+                    key={`media-feature-${idx}`}
+                    className="flex items-center text-gray-400"
+                  >
                     <div className="w-2 h-2 bg-orange-400 rounded-full mr-3"></div>
                     {feature}
                   </li>

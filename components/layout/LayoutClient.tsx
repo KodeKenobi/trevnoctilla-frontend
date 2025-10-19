@@ -5,6 +5,7 @@ import { NavigationProvider } from "@/contexts/NavigationContext";
 import UniversalHeader from "@/components/layout/UniversalHeader";
 import Footer from "@/components/layout/Footer";
 import CookieConsent from "@/components/layout/CookieConsent";
+import WebsiteTracker from "@/components/analytics/WebsiteTracker";
 import { useNavigation } from "@/contexts/NavigationContext";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
@@ -58,6 +59,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       {children}
       {!isEditorMode && !isAuthPage && !isDisclaimersPage && <Footer />}
       <CookieConsent />
+      <WebsiteTracker />
     </>
   );
 }

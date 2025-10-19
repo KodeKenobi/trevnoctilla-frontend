@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Cookie, X, Settings, Check } from "lucide-react";
+import { X, Settings, Check } from "lucide-react";
 import Link from "next/link";
+import internalAnalytics from "@/lib/internalAnalytics";
 
 export default function CookieConsent() {
   const [showConsent, setShowConsent] = useState(false);
@@ -19,11 +20,8 @@ export default function CookieConsent() {
     // Check if user has already made a choice
     const consent = localStorage.getItem("cookieConsent");
     if (!consent) {
-      // Show consent after a short delay
-      const timer = setTimeout(() => {
-        setShowConsent(true);
-      }, 2000);
-      return () => clearTimeout(timer);
+      // Show consent immediately
+      setShowConsent(true);
     } else {
       // Load saved preferences
       const savedPreferences = localStorage.getItem("cookiePreferences");
@@ -43,6 +41,13 @@ export default function CookieConsent() {
     setCookiePreferences(allAccepted);
     localStorage.setItem("cookieConsent", "accepted");
     localStorage.setItem("cookiePreferences", JSON.stringify(allAccepted));
+
+    // Initialize internal analytics
+    internalAnalytics.track("cookie_consent", {
+      action: "accept_all",
+      preferences: allAccepted,
+    });
+
     setShowConsent(false);
   };
 
@@ -81,11 +86,23 @@ export default function CookieConsent() {
 
   return (
     <AnimatePresence>
+      {/* Backdrop overlay when consent is required */}
+      {showConsent && (
+        <motion.div
+          key="backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] pointer-events-none"
+        />
+      )}
+
       <motion.div
+        key="consent-banner"
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 100 }}
-        className="fixed bottom-0 left-0 right-0 z-50 p-4"
+        className="fixed bottom-0 left-0 right-0 z-[70] p-4"
       >
         <div className="max-w-4xl mx-auto">
           <div className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 shadow-2xl">
@@ -93,9 +110,26 @@ export default function CookieConsent() {
               // Main consent banner
               <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
                 <div className="flex items-center space-x-3 flex-1">
-                  <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Cookie className="w-6 h-6 text-white" />
-                  </div>
+                  <img
+                    src="/logo.png"
+                    alt="Trevnoctilla Logo"
+                    className="w-12 h-12 object-contain flex-shrink-0"
+                    onLoad={() => console.log("Logo loaded successfully")}
+                    onError={(e) => {
+                      console.error("Logo failed to load:", e);
+                      // Fallback to a simple text logo
+                      e.currentTarget.style.display = "none";
+                      const fallback = document.createElement("div");
+                      fallback.className =
+                        "w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center";
+                      fallback.innerHTML =
+                        '<span class="text-white font-bold text-sm">T</span>';
+                      e.currentTarget.parentNode?.insertBefore(
+                        fallback,
+                        e.currentTarget
+                      );
+                    }}
+                  />
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-white mb-1">
                       We use cookies to enhance your experience

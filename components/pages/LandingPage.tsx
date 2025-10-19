@@ -126,7 +126,7 @@ export default function LandingPage() {
                   const IconComponent = card.icon;
                   return (
                     <motion.div
-                      key={card.text}
+                      key={`${card.text}-${index}`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{
@@ -240,7 +240,7 @@ export default function LandingPage() {
                 },
               ].map((feature, index) => (
                 <motion.div
-                  key={index}
+                  key={`feature-${index}`}
                   initial={{ opacity: 0, y: 40, scale: 0.9, rotateY: -15 }}
                   whileInView={{ opacity: 1, y: 0, scale: 1, rotateY: 0 }}
                   transition={{
@@ -304,7 +304,7 @@ export default function LandingPage() {
                 { number: "24/7", label: "Access" },
               ].map((stat, index) => (
                 <motion.div
-                  key={index}
+                  key={`stat-${index}`}
                   initial={{ opacity: 0, scale: 0.8, y: 30 }}
                   whileInView={{ opacity: 1, scale: 1, y: 0 }}
                   transition={{
@@ -426,7 +426,10 @@ export default function LandingPage() {
                   </p>
                   <ul className="space-y-2">
                     {tool.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center text-gray-400">
+                      <li
+                        key={`${tool.title}-feature-${idx}`}
+                        className="flex items-center text-gray-400"
+                      >
                         <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3"></div>
                         {feature}
                       </li>
@@ -504,7 +507,10 @@ export default function LandingPage() {
                     "Advanced Text Extraction",
                     "Metadata Extraction",
                   ].map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-gray-400">
+                    <li
+                      key={`pdf-feature-${idx}`}
+                      className="flex items-center text-gray-400"
+                    >
                       <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
                       {feature}
                     </li>
@@ -545,7 +551,10 @@ export default function LandingPage() {
                     "Custom Quality Settings",
                     "Batch Media Processing",
                   ].map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-gray-400">
+                    <li
+                      key={`media-feature-${idx}`}
+                      className="flex items-center text-gray-400"
+                    >
                       <div className="w-2 h-2 bg-orange-400 rounded-full mr-3"></div>
                       {feature}
                     </li>

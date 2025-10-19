@@ -53,7 +53,10 @@ export function StatsBar({ stats }: StatsBarProps) {
         {statItems.map((item, index) => {
           const IconComponent = item.icon;
           return (
-            <div key={index} className="flex items-center gap-3">
+            <div
+              key={`stat-${item.label}-${index}`}
+              className="flex items-center gap-3"
+            >
               <div className="w-8 h-8 bg-[#0a0a0a] rounded-lg flex items-center justify-center">
                 <IconComponent className="w-4 h-4 text-gray-400" />
               </div>

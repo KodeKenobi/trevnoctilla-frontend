@@ -771,7 +771,10 @@ export default function ApiDocsPage() {
 
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-gray-300">
+                    <li
+                      key={`${plan.name}-feature-${idx}`}
+                      className="flex items-center text-gray-300"
+                    >
                       <Check className="w-5 h-5 text-cyan-400 mr-3 flex-shrink-0" />
                       {feature}
                     </li>

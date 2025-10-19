@@ -121,7 +121,7 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
                 {result.data.images?.map((img: any, index: number) => (
                   <div
-                    key={index}
+                    key={`${img.page}-${img.image_index}-${index}`}
                     className="bg-gray-900/50 rounded-lg p-3 hover:bg-gray-900/70 transition-colors"
                   >
                     <div className="relative group/image">

@@ -62,28 +62,12 @@ export default function CookiesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20">
       {/* Header */}
-      <div className="border-b border-gray-700/50 bg-gray-900/50 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center"
-          >
-            <div className="flex items-center justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mr-4">
-                <Cookie className="w-8 h-8 text-white" />
-              </div>
-              <h1 className="text-4xl lg:text-5xl font-bold text-white">
-                Cookie Policy
-              </h1>
-            </div>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-              Learn about how we use cookies and similar technologies to enhance
-              your experience on Trevnoctilla.
-            </p>
-          </motion.div>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold text-white mb-4">Cookie Policy</h1>
+        <p className="text-gray-300">
+          Learn about how we use cookies and similar technologies to enhance
+          your experience on Trevnoctilla.
+        </p>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -166,7 +150,7 @@ export default function CookiesPage() {
                   <ul className="space-y-1">
                     {cookie.examples.map((example, idx) => (
                       <li
-                        key={idx}
+                        key={`${cookie.title}-example-${idx}`}
                         className="flex items-center text-gray-400 text-sm"
                       >
                         <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-3"></div>

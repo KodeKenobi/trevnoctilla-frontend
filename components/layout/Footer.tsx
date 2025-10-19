@@ -98,7 +98,7 @@ export default function Footer() {
                       transition={{ duration: 0.4, delay: index * 0.1 }}
                     >
                       <button
-                        onClick={() => navigateTo(tool.page)}
+                        onClick={() => navigateTo(tool.page as any)}
                         className="flex items-center space-x-3 text-gray-400 hover:text-cyan-400 transition-colors group"
                       >
                         <tool.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
