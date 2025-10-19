@@ -35,6 +35,7 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
   const [conversionResult, setConversionResult] = useState<string | null>(null);
   const [showViewer, setShowViewer] = useState(false);
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'preview' | 'code'>('preview');
 
   const {
     monetizationState,
@@ -175,7 +176,7 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
 
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-300 ${
+          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer ${
             isDragActive
               ? "border-cyan-400 bg-cyan-400/10"
               : "border-gray-600"
@@ -214,7 +215,7 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
         <button
           onClick={convertPdfToHtml}
           disabled={!file || loading}
-          className="w-full mt-6 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 flex items-center justify-center"
+          className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center"
         >
           {loading ? (
             <>
@@ -262,16 +263,16 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
             <div className="flex justify-center space-x-4">
               <button
                 onClick={handleView}
-                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center"
               >
-                <FileText className="h-5 w-5 mr-2" />
+                <FileText className="h-4 w-4 mr-2" />
                 View HTML
               </button>
               <button
                 onClick={handleDownload}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center"
+                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center"
               >
-                <Download className="h-5 w-5 mr-2" />
+                <Download className="h-4 w-4 mr-2" />
                 Download HTML
               </button>
             </div>
@@ -279,32 +280,63 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
         </div>
       )}
 
-      {/* Inline HTML Viewer */}
+      {/* HTML Viewer */}
       {showViewer && htmlContent && (
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-white">HTML Preview</h3>
             <button
               onClick={handleCloseViewer}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-gray-400 hover:text-white"
             >
               <X className="h-6 w-6" />
             </button>
           </div>
           
+          {/* View Mode Toggle */}
+          <div className="flex space-x-2 mb-4">
+            <button
+              onClick={() => setViewMode('preview')}
+              className={`px-4 py-2 rounded-lg font-medium ${
+                viewMode === 'preview'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              Web Preview
+            </button>
+            <button
+              onClick={() => setViewMode('code')}
+              className={`px-4 py-2 rounded-lg font-medium ${
+                viewMode === 'code'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              Code Editor
+            </button>
+          </div>
+          
+          {/* Content Display */}
           <div className="border border-gray-600 rounded-lg overflow-hidden bg-white">
-            <div 
-              className="w-full h-[600px] overflow-auto"
-              dangerouslySetInnerHTML={{ __html: htmlContent }}
-            />
+            {viewMode === 'preview' ? (
+              <div 
+                className="w-full h-[600px] overflow-auto"
+                dangerouslySetInnerHTML={{ __html: htmlContent }}
+              />
+            ) : (
+              <pre className="w-full h-[600px] overflow-auto p-4 text-sm bg-gray-900 text-gray-100">
+                <code>{htmlContent}</code>
+              </pre>
+            )}
           </div>
           
           <div className="mt-4 flex justify-center">
             <button
               onClick={handleDownload}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center"
+              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg flex items-center"
             >
-              <Download className="h-5 w-5 mr-2" />
+              <Download className="h-4 w-4 mr-2" />
               Download HTML File
             </button>
           </div>
