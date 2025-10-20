@@ -6,7 +6,8 @@
     const EZOIC_CONFIG = {
       scriptSrc: "https://open.video/video.js",
       ezscrex: false,
-      cfasync: false
+      cfasync: false,
+      timeout: 5000  // Shorter timeout for modal
     };
 
     // Load Ezoic video player
@@ -33,11 +34,14 @@
       };
       
       videoScript.onerror = function() {
-        console.error("[Ezoic Video] Failed to load video player");
+        console.error("[Ezoic Video] Failed to load video player - site may not be integrated with Ezoic");
+        console.log("[Ezoic Video] Falling back to timeout completion");
         // Fallback - complete immediately if video fails
-        if (window._fgiomte) {
-          window._fgiomte();
-        }
+        setTimeout(() => {
+          if (window._fgiomte) {
+            window._fgiomte();
+          }
+        }, 1000);
       };
       
       try {
@@ -46,22 +50,24 @@
       } catch (e) {
         console.error("[Ezoic Video] Script injection error:", e);
         // Fallback
-        if (window._fgiomte) {
-          window._fgiomte();
-        }
+        setTimeout(() => {
+          if (window._fgiomte) {
+            window._fgiomte();
+          }
+        }, 1000);
       }
     }
     
     // Load Ezoic video player
     loadEzoicVideo();
     
-    // Timeout after 10 seconds
+    // Shorter timeout for modal - 5 seconds max
     setTimeout(function() {
       console.log("[Ezoic Video] Timeout - completing");
       if (window._fgiomte) {
         window._fgiomte();
       }
-    }, 10000);
+    }, EZOIC_CONFIG.timeout);
 
   } catch (e) {
     console.error("[Ezoic Video] Error:", e);
