@@ -111,7 +111,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-Lib/
+# Lib/
 Scripts/
 
 # Flask
