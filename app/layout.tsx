@@ -8,6 +8,7 @@ import Script from "next/script";
 import { PROPELLER_ADS_URL } from "../lib/adConfig";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.trevnoctilla.com"),
   title: "Trevnoctilla - Edit PDF for Free | Complete File Conversion Toolkit",
   description:
     "Edit PDF for free with our powerful online PDF editor. Plus convert videos, audio, images, and more with professional-grade tools. No registration required - start editing PDFs instantly!",
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
     },
   },
   other: {
-    "monetag": "6a1c8e9c1dd41add268aac02d05eeaca",
+    monetag: "6a1c8e9c1dd41add268aac02d05eeaca",
   },
   openGraph: {
     type: "website",
