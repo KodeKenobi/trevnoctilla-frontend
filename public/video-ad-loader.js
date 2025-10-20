@@ -1,42 +1,70 @@
 (function () {
   try {
-    console.log("[PropellerAds] Loading single banner ad...");
+    console.log("[Ezoic Video] Initializing Ezoic video player...");
     
-    // Use your PropellerAds zone for a single banner ad
-    const script = document.createElement("script");
-    script.src = "https://fpyf8.com/88/tag.min.js";
-    script.setAttribute("data-zone", "179377");
-    script.async = true;
-    script.setAttribute("data-cfasync", "false");
-    
-    // Add parameters to ensure only ONE banner ad
-    script.setAttribute("data-ad-format", "banner");
-    script.setAttribute("data-max-ads", "1");
-    
-    script.onload = function() {
-      console.log("[PropellerAds] Banner ad loaded successfully");
+    // Ezoic video player configuration
+    const EZOIC_CONFIG = {
+      scriptSrc: "https://open.video/video.js",
+      ezscrex: false,
+      cfasync: false
     };
-    
-    script.onerror = function() {
-      console.error("[PropellerAds] Failed to load banner ad");
-      // Fallback - complete immediately if ad fails
-      if (window._fgiomte) {
-        window._fgiomte();
+
+    // Load Ezoic video player
+    function loadEzoicVideo() {
+      // First script - initialize humixPlayers
+      const initScript = document.createElement("script");
+      initScript.innerHTML = "(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});";
+      initScript.setAttribute("data-ezscrex", EZOIC_CONFIG.ezscrex.toString());
+      initScript.setAttribute("data-cfasync", EZOIC_CONFIG.cfasync.toString());
+      
+      // Second script - load video.js
+      const videoScript = document.createElement("script");
+      videoScript.src = EZOIC_CONFIG.scriptSrc;
+      videoScript.async = true;
+      videoScript.setAttribute("data-ezscrex", EZOIC_CONFIG.ezscrex.toString());
+      videoScript.setAttribute("data-cfasync", EZOIC_CONFIG.cfasync.toString());
+      
+      videoScript.onload = function() {
+        console.log("[Ezoic Video] Video player loaded successfully");
+        // Set up completion callback
+        if (window._fgiomte) {
+          console.log("[Ezoic Video] Video completion callback ready");
+        }
+      };
+      
+      videoScript.onerror = function() {
+        console.error("[Ezoic Video] Failed to load video player");
+        // Fallback - complete immediately if video fails
+        if (window._fgiomte) {
+          window._fgiomte();
+        }
+      };
+      
+      try {
+        document.head.appendChild(initScript);
+        document.head.appendChild(videoScript);
+      } catch (e) {
+        console.error("[Ezoic Video] Script injection error:", e);
+        // Fallback
+        if (window._fgiomte) {
+          window._fgiomte();
+        }
       }
-    };
+    }
     
-    document.head.appendChild(script);
+    // Load Ezoic video player
+    loadEzoicVideo();
     
-    // Timeout after 8 seconds
+    // Timeout after 10 seconds
     setTimeout(function() {
-      console.log("[PropellerAds] Timeout - completing");
+      console.log("[Ezoic Video] Timeout - completing");
       if (window._fgiomte) {
         window._fgiomte();
       }
-    }, 8000);
+    }, 10000);
 
   } catch (e) {
-    console.error("[PropellerAds] Error:", e);
+    console.error("[Ezoic Video] Error:", e);
     // Fallback
     if (window._fgiomte) {
       window._fgiomte();

@@ -203,17 +203,17 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
           <div className="space-y-6">
             {currentStep === "ad" && (
               <div className="space-y-4">
-                {/* PropellerAds banner ad loading */}
+                {/* Ezoic video ad loading */}
                 <div className="bg-gray-800 rounded-lg p-6 text-center">
                   <div className="w-12 h-12 mx-auto mb-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                   <h3 className="text-white font-semibold mb-2">
-                    Loading ad…
+                    Loading video ad…
                   </h3>
                   <p className="text-gray-400 text-sm">
-                    Please wait for the ad to complete to unlock your download.
+                    Please watch the video ad to unlock your download.
                   </p>
                   <div className="mt-3 text-xs text-gray-500">
-                    PropellerAds Zone 179377 - Single banner ad
+                    Ezoic Video Player - Premium video ads
                   </div>
                 </div>
 
