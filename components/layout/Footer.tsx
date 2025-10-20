@@ -53,7 +53,7 @@ export default function Footer() {
       <div className="relative z-10">
         {/* Main Footer Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 text-center md:text-left">
             {/* Brand Section */}
             <div className="lg:col-span-1">
               <motion.div
@@ -164,7 +164,7 @@ export default function Footer() {
         {/* Bottom Section */}
         <div className="border-t border-gray-700/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div className="flex flex-col md:flex-row items-center justify-center md:justify-between text-center md:text-left space-y-4 md:space-y-0">
               {/* Copyright */}
               <motion.div
                 initial={{ opacity: 0 }}

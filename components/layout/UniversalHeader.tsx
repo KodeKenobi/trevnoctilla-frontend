@@ -106,7 +106,7 @@ export default function UniversalHeader() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-2 sm:px-6 py-3 lg:px-12 bg-gray-900/95 backdrop-blur-md border-b border-gray-700/30">
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-2 sm:px-6 py-3 lg:px-12 bg-gray-900/95 backdrop-blur-md border-b border-gray-700/30 w-full max-w-full overflow-hidden">
         {/* Logo */}
         <div className="flex items-center space-x-3">
           <button
