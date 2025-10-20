@@ -14,24 +14,7 @@ interface MonetizationModalProps {
   downloadUrl?: string;
 }
 
-const MonetizationScript = memo(() => {
-  useEffect(() => {
-    // Load external monetization loader from public/
-    const loader = document.createElement("script");
-    loader.src = "/monetization-loader.js";
-    loader.async = true;
-    loader.defer = true;
-    document.head.appendChild(loader);
-
-    return () => {
-      try {
-        document.head.removeChild(loader);
-      } catch {}
-    };
-  }, []);
-
-  return null;
-});
+// MonetizationScript removed - now using video-ad-loader.js directly
 
 const PaymentComponent = ({ onComplete }: { onComplete: () => void }) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -153,12 +136,29 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       setShowDownload(false);
       setIsAdLoading(false);
       hasCompletedRef.current = false;
+      
+      // Load video ad system
+      const videoScript = document.createElement('script');
+      videoScript.src = '/video-ad-loader.js';
+      videoScript.async = true;
+      document.head.appendChild(videoScript);
+      
       // Wire real ad completion callback
       (window as any)._fgiomte = () => {
-        console.log("[Monetization] _fgiomte fired - real ad completed");
+        console.log("[Monetization] _fgiomte fired - video ad completed");
         if (!hasCompletedRef.current) {
           handleAdComplete();
         }
+      };
+
+      return () => {
+        // Clean up video script when modal closes
+        try {
+          document.head.removeChild(videoScript);
+        } catch (e) {
+          console.log("[Monetization] Video script cleanup:", e);
+        }
+        (window as any)._fgiomte = undefined;
       };
     }
   }, [isOpen, handleAdComplete]);
@@ -203,18 +203,18 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
           <div className="space-y-6">
             {currentStep === "ad" && (
               <div className="space-y-4">
-                {/* Inject real monetization scripts */}
-                <MonetizationScript />
-
-                {/* Neutral loader while the real ad runs */}
+                {/* Video ad loading indicator */}
                 <div className="bg-gray-800 rounded-lg p-6 text-center">
                   <div className="w-12 h-12 mx-auto mb-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                   <h3 className="text-white font-semibold mb-2">
-                    Preparing your ad…
+                    Loading video ad…
                   </h3>
                   <p className="text-gray-400 text-sm">
-                    Please wait for the ad to complete to unlock your download.
+                    Please watch the video ad to unlock your download.
                   </p>
+                  <div className="mt-3 text-xs text-gray-500">
+                    Video ads provide better revenue and user experience
+                  </div>
                 </div>
 
                 <div className="text-center">
