@@ -1,8 +1,18 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     domains: ["localhost", "web-production-737b.up.railway.app", "web-production-ef253.up.railway.app"],
     unoptimized: true, // Disable image optimization for static files
+  },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname),
+      '@/lib': path.resolve(__dirname, 'lib'),
+    };
+    return config;
   },
   async rewrites() {
     const backendUrl =
