@@ -1,69 +1,59 @@
 (function () {
   try {
-    console.log("[Video Ads] Initializing video ad system...");
+    console.log("[Video Ads] Initializing PropellerAds Multitag system...");
     
-    // Video ad configuration
-    const VIDEO_AD_CONFIG = {
-      // Different zone IDs for different video ad formats
-      zones: {
-        interstitial: 10067334, // Video interstitial ads
-        popunder: 10067335,    // Video popunder ads  
-        inStream: 10067336,     // In-stream video ads
-        outStream: 10067337,    // Out-stream video ads
-        banner: 10067333         // Current banner zone
-      },
-      domain: "ueuee.com",
-      // Video ad preferences
-      preferences: {
-        autoplay: true,
-        muted: true,
-        controls: false,
-        loop: false
-      }
+    // PropellerAds Multitag configuration
+    const MULTITAG_CONFIG = {
+      zoneId: 179377,  // Your real Multitag zone ID
+      domain: "fpyf8.com",
+      scriptPath: "/88/tag.min.js"
     };
 
-    // Function to load video ads
-    function loadVideoAd(zoneId, callback) {
+    // Function to load PropellerAds Multitag
+    function loadMultitagAd(callback) {
       const script = document.createElement("script");
-      script.src = `//${VIDEO_AD_CONFIG.domain}/400/${zoneId}`;
+      script.src = `https://${MULTITAG_CONFIG.domain}${MULTITAG_CONFIG.scriptPath}`;
+      script.setAttribute("data-zone", MULTITAG_CONFIG.zoneId);
+      script.async = true;
+      script.setAttribute("data-cfasync", "false");
       
       script.onload = function() {
-        console.log(`[Video Ads] Loaded video ad zone ${zoneId}`);
+        console.log(`[Video Ads] PropellerAds Multitag loaded successfully (Zone: ${MULTITAG_CONFIG.zoneId})`);
         if (callback) callback();
       };
       
       script.onerror = function() {
-        console.error(`[Video Ads] Failed to load video ad zone ${zoneId}`);
+        console.error(`[Video Ads] Failed to load PropellerAds Multitag (Zone: ${MULTITAG_CONFIG.zoneId})`);
         if (callback) callback();
       };
       
       try {
-        (document.body || document.documentElement).appendChild(script);
+        document.head.appendChild(script);
       } catch (e) {
         console.error("[Video Ads] Script injection error:", e);
         if (callback) callback();
       }
     }
 
-    // Load primary video ad (interstitial)
-    loadVideoAd(VIDEO_AD_CONFIG.zones.interstitial, function() {
-      // Set up video ad completion callback
+    // Load PropellerAds Multitag
+    loadMultitagAd(function() {
+      // Set up ad completion callback
       if (window._fgiomte) {
-        console.log("[Video Ads] Video ad completion callback ready");
+        console.log("[Video Ads] Multitag ad completion callback ready");
       }
     });
 
-    // Fallback: Load banner ad if video fails
+    // Fallback timeout - if no ad loads in 10 seconds, trigger completion
     setTimeout(function() {
       if (!window._fgiomte) {
-        console.log("[Video Ads] Loading fallback banner ad...");
-        loadVideoAd(VIDEO_AD_CONFIG.zones.banner, function() {
-          console.log("[Video Ads] Fallback banner ad loaded");
-        });
+        console.log("[Video Ads] Fallback timeout - triggering completion");
+        if (window._fgiomte) {
+          window._fgiomte();
+        }
       }
-    }, 2000);
+    }, 10000);
 
   } catch (e) {
-    console.error("[Video Ads] Video ad system error:", e);
+    console.error("[Video Ads] PropellerAds Multitag error:", e);
   }
 })();

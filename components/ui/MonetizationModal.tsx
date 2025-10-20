@@ -104,7 +104,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
   const handleAdComplete = useCallback(() => {
     console.log("🎬 MonetizationModal - Ad completed");
-    onAdComplete();
+      onAdComplete();
     setCurrentStep("complete");
     setShowDownload(true);
     hasCompletedRef.current = true;
@@ -167,14 +167,14 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         onClick={handleClose}
-      >
-        <motion.div
+        >
+          <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
@@ -197,23 +197,23 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
             >
               <X className="w-6 h-6" />
             </button>
-          </div>
+                </div>
 
           {/* Content */}
           <div className="space-y-6">
             {currentStep === "ad" && (
               <div className="space-y-4">
-                {/* Video ad loading indicator */}
+                {/* PropellerAds Multitag loading indicator */}
                 <div className="bg-gray-800 rounded-lg p-6 text-center">
                   <div className="w-12 h-12 mx-auto mb-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                   <h3 className="text-white font-semibold mb-2">
-                    Loading video ad…
+                    Loading premium ad…
                   </h3>
                   <p className="text-gray-400 text-sm">
-                    Please watch the video ad to unlock your download.
+                    Please watch the ad to unlock your download.
                   </p>
                   <div className="mt-3 text-xs text-gray-500">
-                    Video ads provide better revenue and user experience
+                    PropellerAds Multitag - optimized for maximum revenue
                   </div>
                 </div>
 
@@ -259,7 +259,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                   <CheckCircle className="w-10 h-10 text-white" />
                 </div>
 
-                <div>
+              <div>
                   <h3 className="text-2xl font-bold text-white mb-2">
                     Thank You!
                   </h3>
