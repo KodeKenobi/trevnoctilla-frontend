@@ -12,8 +12,8 @@ import {
   Clock,
 } from "lucide-react";
 import { useAlert } from "@/contexts/AlertProvider";
-import { API_ENDPOINTS } from "@/lib/apiEndpoints";
-import { apiTestClient, ApiTestResult } from "@/lib/apiTestClient";
+import { API_ENDPOINTS } from "../../lib/apiEndpoints";
+import { apiTestClient, ApiTestResult } from "../../lib/apiTestClient";
 
 interface ApiTesterProps {
   toolId: string;

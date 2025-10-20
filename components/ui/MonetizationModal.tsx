@@ -7,7 +7,7 @@ import {
   AD_ZONE_ID,
   USE_FAKE_AD_FALLBACK,
   AD_LOAD_TIMEOUT,
-} from "@/lib/adConfig";
+} from "../../lib/adConfig";
 
 interface MonetizationModalProps {
   isOpen: boolean;

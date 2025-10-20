@@ -5,7 +5,7 @@ import { UserProvider } from "@/contexts/UserContext";
 import { ViewProvider } from "@/contexts/ViewContext";
 import { AlertProvider } from "@/contexts/AlertProvider";
 import Script from "next/script";
-import { PROPELLER_ADS_URL } from "@/lib/adConfig";
+import { PROPELLER_ADS_URL } from "../lib/adConfig";
 
 export const metadata: Metadata = {
   title: "Trevnoctilla - Edit PDF for Free | Complete File Conversion Toolkit",

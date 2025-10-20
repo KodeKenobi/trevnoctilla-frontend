@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useAlert } from "@/contexts/AlertProvider";
-import { TOOL_CATEGORIES } from "@/lib/apiEndpoints";
+import { TOOL_CATEGORIES } from "../../lib/apiEndpoints";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { ToolCard } from "@/components/dashboard/ToolCard";
 import { CircularStats } from "@/components/dashboard/CircularChart";

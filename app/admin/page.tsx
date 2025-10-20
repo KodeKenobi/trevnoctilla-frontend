@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/contexts/UserContext";
-import { getApiUrl, getAuthHeaders } from "@/lib/config";
+import { getApiUrl, getAuthHeaders } from "../../lib/config";
 
 interface SystemStats {
   totalUsers: number;
