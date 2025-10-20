@@ -203,17 +203,21 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
           <div className="space-y-6">
             {currentStep === "ad" && (
               <div className="space-y-4">
-                {/* PropellerAds Multitag loading indicator */}
+                {/* Clean support request */}
                 <div className="bg-gray-800 rounded-lg p-6 text-center">
-                  <div className="w-12 h-12 mx-auto mb-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-12 h-12 mx-auto mb-4 bg-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
                   <h3 className="text-white font-semibold mb-2">
-                    Loading premium ad…
+                    Support Trevnoctilla
                   </h3>
                   <p className="text-gray-400 text-sm">
-                    Please watch the ad to unlock your download.
+                    Thank you for using our free tools!
                   </p>
                   <div className="mt-3 text-xs text-gray-500">
-                    PropellerAds Multitag - optimized for maximum revenue
+                    This helps us keep the service free for everyone
                   </div>
                 </div>
 
