@@ -3,11 +3,14 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Trevnoctilla - Free Online File Conversion Tools",
-  description: "Convert videos, audio, images, and PDFs with our free online tools. High-quality file conversion with compression, quality control, and advanced features.",
-  keywords: "file converter, video converter, audio converter, image converter, pdf tools, qr generator, online converter, free tools, file conversion",
+  description:
+    "Free PDF editor and file converter — merge, split, sign and edit PDFs online. Convert videos, audio, and images across all major formats with lightning-fast, professional results.",
+  keywords:
+    "file converter, video converter, audio converter, image converter, pdf tools, qr generator, online converter, free tools, file conversion",
   openGraph: {
     title: "Trevnoctilla - Free Online File Conversion Tools",
-    description: "Convert videos, audio, images, and PDFs with our free online tools. High-quality file conversion with compression, quality control, and advanced features.",
+    description:
+      "Free PDF editor and file converter — merge, split, sign and edit PDFs online. Convert videos, audio, and images across all major formats with lightning-fast, professional results.",
     type: "website",
   },
 };

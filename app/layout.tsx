@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.trevnoctilla.com"),
   title: "Trevnoctilla - Edit PDF for Free | Complete File Conversion Toolkit",
   description:
-    "Edit PDF for free with our powerful online PDF editor. Plus convert videos, audio, images, and more with professional-grade tools. No registration required - start editing PDFs instantly!",
+    "Free PDF editor and file converter — merge, split, sign and edit PDFs online. Convert videos, audio, and images across all major formats with lightning-fast, professional results.",
   keywords: [
     "edit PDF free",
     "PDF editor online",
@@ -90,9 +90,15 @@ export default function RootLayout({
     <html lang="en">
       <head>
         {/* Ezoic Privacy Scripts - Must load first */}
-        <script src="https://cmp.gatekeeperconsent.com/min.js" data-cfasync="false"></script>
-        <script src="https://the.gatekeeperconsent.com/cmp.min.js" data-cfasync="false"></script>
-        
+        <script
+          src="https://cmp.gatekeeperconsent.com/min.js"
+          data-cfasync="false"
+        ></script>
+        <script
+          src="https://the.gatekeeperconsent.com/cmp.min.js"
+          data-cfasync="false"
+        ></script>
+
         {/* Ezoic Header Script */}
         <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
         <script
@@ -103,7 +109,7 @@ export default function RootLayout({
             `,
           }}
         />
-        
+
         <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="icon" href="/favicon.png" sizes="32x32" type="image/png" />

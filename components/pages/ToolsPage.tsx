@@ -49,7 +49,7 @@ export default function ToolsPage() {
     {
       title: "PDF Tools",
       description:
-        "Comprehensive PDF processing: extract text/images, merge, split, sign, watermark, and compress PDFs.",
+        "Comprehensive PDF processing: extract text/images, merge, split, edit, sign, watermark, and compress PDFs.",
       page: "pdf-tools" as const,
       icon: FileText,
       gradient: "from-yellow-500 to-orange-500",
