@@ -200,7 +200,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                 </div>
 
           {/* Content */}
-          <div className="space-y-6">
+          <div className="space-y-6" data-modal-content>
             {currentStep === "ad" && (
               <div className="space-y-4">
                 {/* Ezoic video ad loading */}

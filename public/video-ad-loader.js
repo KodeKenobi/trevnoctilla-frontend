@@ -1,73 +1,78 @@
 (function () {
   try {
-    console.log("[Ezoic Video] Initializing Ezoic video player...");
+    console.log("[Ezoic Video] Initializing Ezoic video ad placement...");
     
-    // Ezoic video player configuration
-    const EZOIC_CONFIG = {
-      scriptSrc: "https://open.video/video.js",
-      ezscrex: false,
-      cfasync: false,
-      timeout: 5000  // Shorter timeout for modal
-    };
-
-    // Load Ezoic video player
-    function loadEzoicVideo() {
-      // First script - initialize humixPlayers
-      const initScript = document.createElement("script");
-      initScript.innerHTML = "(window.humixPlayers = window.humixPlayers || []).push({target: document.currentScript});";
-      initScript.setAttribute("data-ezscrex", EZOIC_CONFIG.ezscrex.toString());
-      initScript.setAttribute("data-cfasync", EZOIC_CONFIG.cfasync.toString());
+    // Create Ezoic ad placeholder for video ads
+    function createEzoicVideoAd() {
+      // Create placeholder div
+      const placeholder = document.createElement('div');
+      placeholder.id = 'ezoic-pub-ad-placeholder-video-modal';
+      placeholder.style.cssText = `
+        width: 100%;
+        max-width: 400px;
+        height: 300px;
+        margin: 0 auto;
+        background: #1e293b;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      `;
       
-      // Second script - load video.js
-      const videoScript = document.createElement("script");
-      videoScript.src = EZOIC_CONFIG.scriptSrc;
-      videoScript.async = true;
-      videoScript.setAttribute("data-ezscrex", EZOIC_CONFIG.ezscrex.toString());
-      videoScript.setAttribute("data-cfasync", EZOIC_CONFIG.cfasync.toString());
-      
-      videoScript.onload = function() {
-        console.log("[Ezoic Video] Video player loaded successfully");
-        // Set up completion callback
-        if (window._fgiomte) {
-          console.log("[Ezoic Video] Video completion callback ready");
-        }
-      };
-      
-      videoScript.onerror = function() {
-        console.error("[Ezoic Video] Failed to load video player - site may not be integrated with Ezoic");
-        console.log("[Ezoic Video] Falling back to timeout completion");
-        // Fallback - complete immediately if video fails
-        setTimeout(() => {
-          if (window._fgiomte) {
-            window._fgiomte();
+      // Add loading message
+      placeholder.innerHTML = `
+        <div style="text-align: center;">
+          <div style="width: 40px; height: 40px; border: 2px solid #3b82f6; border-top: transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Loading Video Ad</div>
+          <div style="font-size: 14px; color: #94a3b8;">Please wait...</div>
+        </div>
+        <style>
+          @keyframes spin {
+            to { transform: rotate(360deg); }
           }
-        }, 1000);
-      };
+        </style>
+      `;
       
-      try {
-        document.head.appendChild(initScript);
-        document.head.appendChild(videoScript);
-      } catch (e) {
-        console.error("[Ezoic Video] Script injection error:", e);
-        // Fallback
+      // Add to modal content
+      const modalContent = document.querySelector('[data-modal-content]') || document.body;
+      modalContent.appendChild(placeholder);
+      
+      // Show Ezoic ad
+      if (window.ezstandalone && window.ezstandalone.cmd) {
+        window.ezstandalone.cmd.push(function () {
+          console.log("[Ezoic Video] Showing video ad placement");
+          window.ezstandalone.showAds('video-modal');
+        });
+      } else {
+        console.log("[Ezoic Video] Ezoic not ready, waiting...");
+        // Wait for Ezoic to load
         setTimeout(() => {
-          if (window._fgiomte) {
-            window._fgiomte();
+          if (window.ezstandalone && window.ezstandalone.cmd) {
+            window.ezstandalone.cmd.push(function () {
+              window.ezstandalone.showAds('video-modal');
+            });
           }
         }, 1000);
       }
+      
+      // Set up completion callback
+      if (window._fgiomte) {
+        console.log("[Ezoic Video] Video completion callback ready");
+      }
     }
     
-    // Load Ezoic video player
-    loadEzoicVideo();
+    // Create the video ad
+    createEzoicVideoAd();
     
-    // Shorter timeout for modal - 5 seconds max
+    // Timeout after 8 seconds
     setTimeout(function() {
       console.log("[Ezoic Video] Timeout - completing");
       if (window._fgiomte) {
         window._fgiomte();
       }
-    }, EZOIC_CONFIG.timeout);
+    }, 8000);
 
   } catch (e) {
     console.error("[Ezoic Video] Error:", e);
