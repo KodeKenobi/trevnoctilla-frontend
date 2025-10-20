@@ -4,6 +4,7 @@ import LayoutClient from "@/components/layout/LayoutClient";
 import { UserProvider } from "@/contexts/UserContext";
 import { ViewProvider } from "@/contexts/ViewContext";
 import { AlertProvider } from "@/contexts/AlertProvider";
+import AuthProvider from "@/components/providers/AuthProvider";
 import Script from "next/script";
 import { PROPELLER_ADS_URL } from "../lib/adConfig";
 
@@ -193,13 +194,15 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <UserProvider>
-          <ViewProvider>
-            <AlertProvider>
-              <LayoutClient>{children}</LayoutClient>
-            </AlertProvider>
-          </ViewProvider>
-        </UserProvider>
+        <AuthProvider>
+          <UserProvider>
+            <ViewProvider>
+              <AlertProvider>
+                <LayoutClient>{children}</LayoutClient>
+              </AlertProvider>
+            </ViewProvider>
+          </UserProvider>
+        </AuthProvider>
         <Script
           id="propeller-ads"
           strategy="afterInteractive"

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { signIn, getSession } from "next-auth/react";
 import {
   Eye,
   EyeOff,
@@ -13,12 +14,9 @@ import {
   CheckCircle,
   Loader,
 } from "lucide-react";
-import { useUser } from "@/contexts/UserContext";
-import { getApiUrl } from "@/lib/config";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useUser();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -45,20 +43,28 @@ export default function LoginPage() {
     setSuccess("");
 
     try {
-      const success = await login(formData.email, formData.password);
+      const result = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
 
-      if (success) {
+      if (result?.error) {
+        setError("Invalid email or password. Please try again.");
+      } else if (result?.ok) {
         setSuccess("Login successful! Redirecting...");
+
+        // Get the session to check user role
+        const session = await getSession();
+
         setTimeout(() => {
           // Redirect based on user role
-          if (isSuperAdminEmail) {
+          if ((session?.user as any)?.role === "super_admin") {
             router.push("/admin");
           } else {
             router.push("/dashboard");
           }
         }, 1500);
-      } else {
-        setError("Invalid email or password. Please try again.");
       }
     } catch (error) {
       setError("Network error. Please check your connection and try again.");
@@ -237,7 +243,6 @@ export default function LoginPage() {
             </p>
           </div>
         </form>
-
       </div>
     </div>
   );

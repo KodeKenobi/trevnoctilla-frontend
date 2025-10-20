@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { getApiUrl, getAuthHeaders } from "@/lib/config";
 
 interface User {
@@ -24,6 +25,7 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,10 +35,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check if user is logged in on mount
     checkAuthStatus();
-  }, []);
+  }, [session]);
 
   const checkAuthStatus = async () => {
     try {
+      // If we have a NextAuth session, use it
+      if (session?.user) {
+        console.log("🔍 Using NextAuth session:", session.user);
+        const userFromSession: User = {
+          id: parseInt(session.user.id),
+          email: session.user.email || "",
+          role: (session.user as any).role,
+          is_active: (session.user as any).is_active,
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString(),
+        };
+        setUser(userFromSession);
+        setLoading(false);
+        return;
+      }
+
+      // Fallback to localStorage token check
       const token = localStorage.getItem("auth_token");
       console.log("🔍 Checking auth status, token exists:", !!token);
 
@@ -147,13 +166,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user_data");
     setUser(null);
+    signOut({ callbackUrl: "/" });
   };
 
   return (
     <UserContext.Provider
       value={{
         user,
-        loading,
+        loading: loading || status === "loading",
         login,
         logout,
         isAdmin,
