@@ -39,6 +39,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  other: {
+    "monetag": "6a1c8e9c1dd41add268aac02d05eeaca",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
