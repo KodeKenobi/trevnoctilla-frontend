@@ -12,9 +12,6 @@ import {
   AlertCircle,
   CheckCircle,
   Loader,
-  Shield,
-  Settings,
-  BarChart3,
 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { getApiUrl } from "@/lib/config";
@@ -241,41 +238,6 @@ export default function LoginPage() {
           </div>
         </form>
 
-        {/* Admin Cards for Super Admin */}
-        {isSuperAdminEmail && (
-          <div className="mt-8">
-            <div className="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-lg p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Shield className="h-6 w-6 text-purple-400" />
-                <h3 className="text-lg font-semibold text-white">
-                  Super Admin Access
-                </h3>
-              </div>
-              <p className="text-sm text-gray-300 mb-4">
-                You have super admin privileges. After login, you'll have access
-                to:
-              </p>
-              <div className="grid grid-cols-1 gap-3">
-                <div className="flex items-center space-x-3 p-3 bg-gray-800/50 rounded-lg">
-                  <Settings className="h-5 w-5 text-blue-400" />
-                  <span className="text-sm text-gray-300">
-                    System Administration
-                  </span>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-gray-800/50 rounded-lg">
-                  <BarChart3 className="h-5 w-5 text-green-400" />
-                  <span className="text-sm text-gray-300">
-                    Advanced Analytics
-                  </span>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-gray-800/50 rounded-lg">
-                  <Shield className="h-5 w-5 text-purple-400" />
-                  <span className="text-sm text-gray-300">User Management</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
