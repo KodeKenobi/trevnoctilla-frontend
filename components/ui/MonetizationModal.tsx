@@ -7,7 +7,7 @@ import {
   AD_ZONE_ID,
   USE_FAKE_AD_FALLBACK,
   AD_LOAD_TIMEOUT,
-} from "../../lib/adConfig";
+} from "@/lib/adConfig";
 
 interface MonetizationModalProps {
   isOpen: boolean;
@@ -166,7 +166,12 @@ const AdComponent = memo(({ onComplete }: { onComplete: () => void }) => {
                 console.log("🎬 onComplete() called successfully");
               } catch (error) {
                 console.error("🎬 Error calling onComplete:", error);
-                console.error("🎬 Error stack:", error instanceof Error ? error.stack : 'No stack trace available');
+                console.error(
+                  "🎬 Error stack:",
+                  error instanceof Error
+                    ? error.stack
+                    : "No stack trace available"
+                );
               }
             }, 0);
             return 100;
