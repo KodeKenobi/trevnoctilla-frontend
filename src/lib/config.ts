@@ -1,10 +1,9 @@
 // API Configuration
 export const API_CONFIG = {
-  // Use production URL in production, localhost in development
+  // Always point to hosted API by default; allow override via env
   BASE_URL:
-    process.env.NODE_ENV === "production"
-      ? "https://web-production-737b.up.railway.app"
-      : "http://localhost:5000",
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    "https://web-production-737b.up.railway.app",
 
   // API endpoints
   ENDPOINTS: {

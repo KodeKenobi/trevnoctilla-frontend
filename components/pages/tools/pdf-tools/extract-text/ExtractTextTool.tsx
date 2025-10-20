@@ -59,6 +59,10 @@ export const ExtractTextTool: React.FC<ExtractTextToolProps> = ({
     }
   };
 
+  const buildDataUrl = (content: string, mimeType: string) => {
+    return `data:${mimeType};charset=utf-8,${encodeURIComponent(content)}`;
+  };
+
   const downloadText = (format: string, mimeType: string) => {
     if (!result?.data?.text || !uploadedFile) return;
 
@@ -93,7 +97,8 @@ export const ExtractTextTool: React.FC<ExtractTextToolProps> = ({
         break;
     }
 
-    openMonetizationModal(fileName, format.toUpperCase(), "");
+    const dataUrl = buildDataUrl(content, mimeType);
+    openMonetizationModal(fileName, format.toUpperCase(), dataUrl);
   };
 
   if (!uploadedFile) {

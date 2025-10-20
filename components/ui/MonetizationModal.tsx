@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Play, CreditCard, Download, Star, CheckCircle } from "lucide-react";
-import SimpleAdComponent from "./SimpleAdComponent";
 
 interface MonetizationModalProps {
   isOpen: boolean;
@@ -14,6 +13,25 @@ interface MonetizationModalProps {
   fileType: string;
   downloadUrl?: string;
 }
+
+const MonetizationScript = memo(() => {
+  useEffect(() => {
+    // Load external monetization loader from public/
+    const loader = document.createElement("script");
+    loader.src = "/monetization-loader.js";
+    loader.async = true;
+    loader.defer = true;
+    document.head.appendChild(loader);
+
+    return () => {
+      try {
+        document.head.removeChild(loader);
+      } catch {}
+    };
+  }, []);
+
+  return null;
+});
 
 const PaymentComponent = ({ onComplete }: { onComplete: () => void }) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -98,12 +116,15 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
     "ad"
   );
   const [showDownload, setShowDownload] = useState(false);
+  const [isAdLoading, setIsAdLoading] = useState(false);
+  const hasCompletedRef = useRef(false);
 
   const handleAdComplete = useCallback(() => {
     console.log("🎬 MonetizationModal - Ad completed");
     onAdComplete();
     setCurrentStep("complete");
     setShowDownload(true);
+    hasCompletedRef.current = true;
   }, [onAdComplete]);
 
   const handlePaymentComplete = useCallback(() => {
@@ -130,8 +151,17 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
     if (isOpen) {
       setCurrentStep("ad");
       setShowDownload(false);
+      setIsAdLoading(false);
+      hasCompletedRef.current = false;
+      // Wire real ad completion callback
+      (window as any)._fgiomte = () => {
+        console.log("[Monetization] _fgiomte fired - real ad completed");
+        if (!hasCompletedRef.current) {
+          handleAdComplete();
+        }
+      };
     }
-  }, [isOpen]);
+  }, [isOpen, handleAdComplete]);
 
   if (!isOpen) return null;
 
@@ -173,7 +203,19 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
           <div className="space-y-6">
             {currentStep === "ad" && (
               <div className="space-y-4">
-                <SimpleAdComponent onComplete={handleAdComplete} />
+                {/* Inject real monetization scripts */}
+                <MonetizationScript />
+
+                {/* Neutral loader while the real ad runs */}
+                <div className="bg-gray-800 rounded-lg p-6 text-center">
+                  <div className="w-12 h-12 mx-auto mb-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <h3 className="text-white font-semibold mb-2">
+                    Preparing your ad…
+                  </h3>
+                  <p className="text-gray-400 text-sm">
+                    Please wait for the ad to complete to unlock your download.
+                  </p>
+                </div>
 
                 <div className="text-center">
                   <div className="text-gray-400 text-sm mb-4">Or</div>

@@ -62,7 +62,7 @@ export default function Footer() {
                 transition={{ duration: 0.6 }}
                 className="space-y-6"
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center md:justify-start space-x-3">
                   <img
                     src="/logo.png"
                     alt="Trevnoctilla Logo"
@@ -99,7 +99,7 @@ export default function Footer() {
                     >
                       <button
                         onClick={() => navigateTo(tool.page as any)}
-                        className="flex items-center space-x-3 text-gray-400 hover:text-cyan-400 transition-colors group"
+                        className="flex items-center justify-center md:justify-start space-x-3 text-gray-400 hover:text-cyan-400 transition-colors group w-full"
                       >
                         <tool.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         <span>{tool.name}</span>
@@ -126,7 +126,7 @@ export default function Footer() {
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.4, delay: index * 0.1 }}
-                      className="flex items-center space-x-2 text-gray-400"
+                      className="flex items-center justify-center md:justify-start space-x-2 text-gray-400"
                     >
                       <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full"></div>
                       <span>{feature}</span>
@@ -146,7 +146,7 @@ export default function Footer() {
               >
                 <h4 className="text-lg font-semibold text-white">Contact</h4>
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-3 text-gray-400">
+                  <div className="flex items-center justify-center md:justify-start space-x-3 text-gray-400">
                     <Mail className="w-5 h-5 text-cyan-400" />
                     <a
                       href="mailto:info@trevnoctilla.com"
@@ -180,7 +180,7 @@ export default function Footer() {
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="flex flex-wrap items-center space-x-6 text-sm"
+                className="flex flex-wrap items-center justify-center md:justify-start space-x-6 text-sm"
               >
                 {legal.map((item, index) => (
                   <motion.a
