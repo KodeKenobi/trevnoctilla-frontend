@@ -6,7 +6,7 @@ import { ViewProvider } from "@/contexts/ViewContext";
 import { AlertProvider } from "@/contexts/AlertProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
 import Script from "next/script";
-import { PROPELLER_ADS_URL } from "../lib/adConfig";
+// adConfig removed - using Google AdSense only
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.trevnoctilla.com"),

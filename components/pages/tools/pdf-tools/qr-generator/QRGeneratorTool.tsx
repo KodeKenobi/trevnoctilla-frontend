@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { useMonetization } from "@/hooks/useMonetization";
-import MonetizationModal from "@/components/ui/MonetizationModal";
+// Monetization removed - using Google AdSense only
 import { getApiUrl } from "@/lib/config";
 
 interface QRGeneratorToolProps {
@@ -86,13 +85,7 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
   const [generatedQR, setGeneratedQR] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const {
-    monetizationState,
-    openMonetizationModal,
-    closeMonetizationModal,
-    handleAdComplete,
-    handlePaymentComplete,
-  } = useMonetization();
+  // Monetization removed - using Google AdSense only
 
   const handleAdCompleteWithDownload = () => {
     handleAdComplete();
@@ -118,7 +111,8 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
 
   const downloadResult = () => {
     if (generatedQR) {
-      openMonetizationModal(`qr-code-${qrType}`, "image", generatedQR);
+      // Direct download - monetization removed
+      window.open(generatedQR, "_blank");
     }
   };
 
@@ -768,15 +762,7 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
         </div>
       )}
 
-      {/* Monetization Modal */}
-      <MonetizationModal
-        isOpen={monetizationState.isModalOpen}
-        onClose={closeMonetizationModal}
-        onAdComplete={handleAdCompleteWithDownload}
-        onPaymentComplete={handlePaymentCompleteWithDownload}
-        fileName={monetizationState.fileName}
-        fileType={monetizationState.fileType}
-      />
+      {/* Monetization removed - using Google AdSense only */}
     </div>
   );
 };

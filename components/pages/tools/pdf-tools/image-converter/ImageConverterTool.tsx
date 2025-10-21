@@ -2,8 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { useMonetization } from "@/hooks/useMonetization";
-import MonetizationModal from "@/components/ui/MonetizationModal";
+// Monetization removed - using Google AdSense only
 import { getApiUrl } from "@/lib/config";
 
 interface ImageConverterToolProps {
@@ -45,13 +44,7 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
   const [height, setHeight] = useState(1080);
   const [maintainAspectRatio, setMaintainAspectRatio] = useState(true);
 
-  const {
-    monetizationState,
-    openMonetizationModal,
-    closeMonetizationModal,
-    handleAdComplete,
-    handlePaymentComplete,
-  } = useMonetization();
+  // Monetization removed - using Google AdSense only
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -169,11 +162,8 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
 
   const downloadResult = () => {
     if (conversionResult) {
-      openMonetizationModal(
-        file?.name || "converted-image",
-        "image",
-        conversionResult
-      );
+      // Direct download - monetization removed
+      window.open(conversionResult, "_blank");
     }
   };
 
@@ -415,15 +405,7 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
         </div>
       )}
 
-      {/* Monetization Modal */}
-      <MonetizationModal
-        isOpen={monetizationState.isModalOpen}
-        onClose={closeMonetizationModal}
-        onAdComplete={handleAdCompleteWithDownload}
-        onPaymentComplete={handlePaymentCompleteWithDownload}
-        fileName={monetizationState.fileName}
-        fileType={monetizationState.fileType}
-      />
+      {/* Monetization removed - using Google AdSense only */}
     </div>
   );
 };
