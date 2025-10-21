@@ -189,11 +189,6 @@ export default function RootLayout({
             </ViewProvider>
           </UserProvider>
         </AuthProvider>
-        <Script
-          id="propeller-ads"
-          strategy="afterInteractive"
-          src={PROPELLER_ADS_URL}
-        />
       </body>
     </html>
   );
