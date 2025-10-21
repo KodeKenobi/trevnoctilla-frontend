@@ -2,8 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { useMonetization } from "@/hooks/useMonetization";
-import MonetizationModal from "@/components/ui/MonetizationModal";
+// Monetization removed - using Google AdSense only
 import { getApiUrl } from "@/lib/config";
 
 interface AudioConverterToolProps {

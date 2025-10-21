@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { PDFFileUpload } from "@/components/ui/PDFFileUpload";
-import { useMonetization } from "@/hooks/useMonetization";
-import MonetizationModal from "@/components/ui/MonetizationModal";
+// Monetization removed - using Google AdSense only
 
 interface ExtractTextToolProps {
   uploadedFile: File | null;

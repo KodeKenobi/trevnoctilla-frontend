@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
-import { useMonetization } from "@/hooks/useMonetization";
 import { useAlertModal } from "@/hooks/useAlertModal";
 import { SignatureCanvas } from "@/components/ui/signature-canvas";
 import { PDFEditorLayout } from "@/components/ui/PDFEditorLayout";
-import MonetizationModal from "@/components/ui/MonetizationModal";
+// Monetization removed - using Google AdSense only
 import { getApiUrl } from "@/lib/config";
 
 // Simple button component
@@ -45,13 +44,7 @@ export const AddSignatureTool: React.FC<AddSignatureToolProps> = ({
   setIsProcessing,
   handleFileUpload,
 }) => {
-  const {
-    monetizationState,
-    openMonetizationModal,
-    closeMonetizationModal,
-    handleAdComplete,
-    handlePaymentComplete,
-  } = useMonetization();
+  // Monetization removed - using Google AdSense only
   const alertModal = useAlertModal();
 
   // Core state
@@ -419,13 +412,9 @@ export const AddSignatureTool: React.FC<AddSignatureToolProps> = ({
     console.log("📥 uploadedFile?.name:", uploadedFile?.name);
 
     if (generatedPdfUrl) {
-      console.log("📥 Opening monetization modal");
-      // Trigger monetization modal
-      openMonetizationModal(
-        uploadedFile?.name || "document",
-        "pdf",
-        generatedPdfUrl
-      );
+      console.log("📥 Direct download");
+      // Direct download - monetization removed
+      window.open(generatedPdfUrl, "_blank");
     } else {
       console.log("📥 No generatedPdfUrl, cannot download");
     }
@@ -703,14 +692,7 @@ export const AddSignatureTool: React.FC<AddSignatureToolProps> = ({
           </div>
         )}
 
-        <MonetizationModal
-          isOpen={monetizationState.isModalOpen}
-          onClose={closeMonetizationModal}
-          onAdComplete={handleAdComplete}
-          onPaymentComplete={handlePaymentComplete}
-          fileName={monetizationState.fileName}
-          fileType={monetizationState.fileType}
-        />
+        {/* Monetization removed - using Google AdSense only */}
       </div>
     );
   }

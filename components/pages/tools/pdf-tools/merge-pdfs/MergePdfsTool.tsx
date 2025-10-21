@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
-import { useMonetization } from "@/hooks/useMonetization";
 import { useAlertModal } from "@/hooks/useAlertModal";
-import MonetizationModal from "@/components/ui/MonetizationModal";
+// Monetization removed - using Google AdSense only
 import { getApiUrl } from "@/lib/config";
 
 // Simple button component
