@@ -481,14 +481,6 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
           </div>
         )}
 
-        <MonetizationModal
-          isOpen={monetizationState.isModalOpen}
-          onClose={closeMonetizationModal}
-          onAdComplete={handleAdCompleteMerged}
-          onPaymentComplete={handlePaymentCompleteMerged}
-          fileName={monetizationState.fileName}
-          fileType={monetizationState.fileType}
-        />
 
         {/* Full-screen Preview Modal */}
         {previewImage && (

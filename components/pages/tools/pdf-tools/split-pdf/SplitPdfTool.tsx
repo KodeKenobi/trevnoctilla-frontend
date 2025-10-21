@@ -696,14 +696,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
           )}
         </div>
 
-        <MonetizationModal
-          isOpen={monetizationState.isModalOpen}
-          onClose={closeMonetizationModal}
-          onAdComplete={handleAdComplete}
-          onPaymentComplete={handlePaymentComplete}
-          fileName={monetizationState.fileName}
-          fileType={monetizationState.fileType}
-        />
 
         {/* Full-screen Preview Modal */}
         {previewImage && (

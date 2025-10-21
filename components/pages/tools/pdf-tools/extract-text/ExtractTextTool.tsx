@@ -223,14 +223,6 @@ export const ExtractTextTool: React.FC<ExtractTextToolProps> = ({
         </div>
       )}
 
-      <MonetizationModal
-        isOpen={monetizationState.isModalOpen}
-        onClose={closeMonetizationModal}
-        onAdComplete={handleAdComplete}
-        onPaymentComplete={handlePaymentComplete}
-        fileName={monetizationState.fileName}
-        fileType={monetizationState.fileType}
-      />
     </>
   );
 };
