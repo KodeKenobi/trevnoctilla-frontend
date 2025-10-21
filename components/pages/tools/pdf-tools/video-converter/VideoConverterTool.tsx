@@ -2,8 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { useMonetization } from "@/hooks/useMonetization";
-import MonetizationModal from "@/components/ui/MonetizationModal";
+// Monetization removed - using Google AdSense only
 import { getApiUrl } from "@/lib/config";
 
 interface VideoConverterToolProps {
@@ -27,33 +26,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
   setIsProcessing,
   handleFileUpload,
 }) => {
-  const {
-    monetizationState,
-    openMonetizationModal,
-    closeMonetizationModal,
-    handleAdComplete,
-    handlePaymentComplete,
-  } = useMonetization();
-
-  const handleAdCompleteWithDownload = () => {
-    console.log("🎬 VideoConverterTool handleAdCompleteWithDownload called");
-    console.log(
-      "🎬 VideoConverterTool - calling handleAdComplete from useMonetization"
-    );
-    handleAdComplete();
-    console.log("🎬 VideoConverterTool - handleAdComplete completed");
-  };
-
-  const handlePaymentCompleteWithDownload = () => {
-    console.log(
-      "💳 VideoConverterTool handlePaymentCompleteWithDownload called"
-    );
-    console.log(
-      "💳 VideoConverterTool - calling handlePaymentComplete from useMonetization"
-    );
-    handlePaymentComplete();
-    console.log("💳 VideoConverterTool - handlePaymentComplete completed");
-  };
+  // Monetization removed - direct download
 
   const [file, setFile] = useState<File | null>(uploadedFile);
   const [loading, setLoading] = useState(false);
@@ -1018,15 +991,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         </p>
       </div>
 
-      <MonetizationModal
-        isOpen={monetizationState.isModalOpen}
-        onClose={closeMonetizationModal}
-        onAdComplete={handleAdCompleteWithDownload}
-        onPaymentComplete={handlePaymentCompleteWithDownload}
-        fileName={file?.name || "video-file"}
-        fileType="video"
-        downloadUrl={monetizationState.downloadUrl}
-      />
+      {/* Monetization removed - using Google AdSense only */}
     </div>
   );
 };

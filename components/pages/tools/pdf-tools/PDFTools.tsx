@@ -4,8 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Loader2 } from "lucide-react";
 import { useNavigation } from "@/contexts/NavigationContext";
-import { useMonetization } from "@/hooks/useMonetization";
-import MonetizationModal from "@/components/ui/MonetizationModal";
+// Monetization removed - using Google AdSense only
 import { getApiUrl } from "@/lib/config";
 
 // Import individual tool components
@@ -51,13 +50,7 @@ const tabs = toolCategories.flatMap((category) =>
 
 export default function PDFTools() {
   const { navigateTo } = useNavigation();
-  const {
-    monetizationState,
-    openMonetizationModal,
-    closeMonetizationModal,
-    handleAdComplete,
-    handlePaymentComplete,
-  } = useMonetization();
+  // Monetization removed - using Google AdSense only
 
   const [activeTab, setActiveTab] = useState("extract-text");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -227,14 +220,7 @@ export default function PDFTools() {
         </motion.div>
       </div>
 
-      <MonetizationModal
-        isOpen={monetizationState.isModalOpen}
-        onClose={closeMonetizationModal}
-        onAdComplete={handleAdComplete}
-        onPaymentComplete={handlePaymentComplete}
-        fileName={monetizationState.fileName}
-        fileType={monetizationState.fileType}
-      />
+      {/* Monetization removed - using Google AdSense only */}
     </div>
   );
 }
