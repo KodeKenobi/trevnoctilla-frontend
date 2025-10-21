@@ -409,15 +409,6 @@ export default function PDFEditor() {
           </motion.div>
         )}
 
-        {/* Monetization Modal */}
-        <MonetizationModal
-          isOpen={monetizationState.isModalOpen}
-          onClose={closeMonetizationModal}
-          onAdComplete={handleAdComplete}
-          onPaymentComplete={handlePaymentComplete}
-          fileName={monetizationState.fileName}
-          fileType={monetizationState.fileType}
-        />
       </div>
     </div>
   );
