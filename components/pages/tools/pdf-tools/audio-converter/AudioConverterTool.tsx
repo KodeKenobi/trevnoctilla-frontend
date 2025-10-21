@@ -34,25 +34,11 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
   setIsProcessing,
   handleFileUpload,
 }) => {
-  const {
-    monetizationState,
-    openMonetizationModal,
-    closeMonetizationModal,
-    handleAdComplete,
-    handlePaymentComplete,
-  } = useMonetization();
+  // Monetization removed - using Google AdSense only
 
-  const handleAdCompleteWithDownload = () => {
-    console.log("🎵 AudioConverterTool handleAdCompleteWithDownload called");
-    handleAdComplete();
-  };
+  // Direct download - monetization removed
 
-  const handlePaymentCompleteWithDownload = () => {
-    console.log(
-      "💳 AudioConverterTool handlePaymentCompleteWithDownload called"
-    );
-    handlePaymentComplete();
-  };
+  // Direct download - monetization removed
 
   const [file, setFile] = useState<File | null>(uploadedFile);
   const [loading, setLoading] = useState(false);
@@ -143,14 +129,15 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
         downloadUrl: conversionResult,
       });
 
-      // Show monetization modal before download
-      openMonetizationModal(
-        file?.name || "audio-file",
-        "audio",
-        conversionResult
-      );
+      // Direct download - monetization removed
+      const link = document.createElement("a");
+      link.href = conversionResult;
+      link.download = file?.name || "converted-audio";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-      console.log("🎵 Monetization modal opened");
+      console.log("🎵 Direct download initiated");
     } else {
       console.error("🎵 ERROR: conversionResult is null or undefined!");
     }
@@ -550,14 +537,6 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
         </p>
       </div>
 
-      <MonetizationModal
-        isOpen={monetizationState.isModalOpen}
-        onClose={closeMonetizationModal}
-        onAdComplete={handleAdCompleteWithDownload}
-        onPaymentComplete={handlePaymentCompleteWithDownload}
-        fileName={file?.name || "audio-file"}
-        fileType="audio"
-      />
     </div>
   );
 };
