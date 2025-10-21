@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { PDFFileUpload } from "@/components/ui/PDFFileUpload";
-import { useMonetization } from "@/hooks/useMonetization";
-import MonetizationModal from "@/components/ui/MonetizationModal";
+// Monetization removed - using Google AdSense only
 import { motion, AnimatePresence } from "framer-motion";
 import { getApiUrl } from "@/lib/config";
 
@@ -29,13 +28,7 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
   const [selectedImage, setSelectedImage] = useState<any>(null);
 
   const [showImageModal, setShowImageModal] = useState(false);
-  const {
-    monetizationState,
-    openMonetizationModal,
-    closeMonetizationModal,
-    handleAdComplete,
-    handlePaymentComplete,
-  } = useMonetization();
+  // Monetization removed - using Google AdSense only
 
   const disableContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -60,11 +53,8 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
   const downloadAllImages = () => {
     if (!result?.data?.images || !uploadedFile) return;
 
-    openMonetizationModal(
-      `${uploadedFile.name.replace(".pdf", "")}_all_images.zip`,
-      "ZIP",
-      `${getApiUrl("")}/download_images/${uploadedFile.name}`
-    );
+    // Direct download - monetization removed
+    window.open(`${getApiUrl("")}/download_images/${uploadedFile.name}`, "_blank");
   };
 
   if (!uploadedFile) {
@@ -289,14 +279,7 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
         )}
       </AnimatePresence>
 
-      <MonetizationModal
-        isOpen={monetizationState.isModalOpen}
-        onClose={closeMonetizationModal}
-        onAdComplete={handleAdComplete}
-        onPaymentComplete={handlePaymentComplete}
-        fileName={monetizationState.fileName}
-        fileType={monetizationState.fileType}
-      />
+      {/* Monetization removed - using Google AdSense only */}
     </>
   );
 };
