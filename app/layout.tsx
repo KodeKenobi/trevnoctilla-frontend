@@ -110,7 +110,7 @@ export default function RootLayout({
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3267907607581065"
-          crossorigin="anonymous"
+          crossOrigin="anonymous"
         ></script>
 
         <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
