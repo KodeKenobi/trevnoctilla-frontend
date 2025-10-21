@@ -413,3 +413,4 @@ export default function PDFEditor() {
     </div>
   );
 }
+// Monetization completely removed - Google AdSense only
