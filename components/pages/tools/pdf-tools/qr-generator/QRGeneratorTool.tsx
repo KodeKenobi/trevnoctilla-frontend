@@ -87,8 +87,8 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
 
   // Monetization removed - using Google AdSense only
 
-  const handleAdCompleteWithDownload = () => {
-    handleAdComplete();
+  // Direct download - monetization removed
+  const handleDirectDownload = () => {
     if (generatedQR) {
       try {
         window.open(generatedQR, "_blank");
@@ -98,8 +98,8 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
     }
   };
 
-  const handlePaymentCompleteWithDownload = () => {
-    handlePaymentComplete();
+  // Direct download - monetization removed
+  const handleDirectDownload2 = () => {
     if (generatedQR) {
       try {
         window.open(generatedQR, "_blank");

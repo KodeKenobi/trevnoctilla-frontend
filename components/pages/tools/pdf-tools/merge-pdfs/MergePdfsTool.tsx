@@ -54,13 +54,7 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
   setIsProcessing,
   handleFileUpload,
 }) => {
-  const {
-    monetizationState,
-    openMonetizationModal,
-    closeMonetizationModal,
-    handleAdComplete,
-    handlePaymentComplete,
-  } = useMonetization();
+  // Monetization removed - using Google AdSense only
   const alertModal = useAlertModal();
 
   // Core state for merge functionality
@@ -220,9 +214,15 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
   // Handle download merged PDF (with monetization)
   const handleDownloadMerged = useCallback(() => {
     if (mergedPdfUrl) {
-      openMonetizationModal("merged_document.pdf", "pdf", mergedPdfUrl);
+      // Direct download - monetization removed
+      const link = document.createElement("a");
+      link.href = mergedPdfUrl;
+      link.download = "merged_document.pdf";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
-  }, [mergedPdfUrl, openMonetizationModal]);
+  }, [mergedPdfUrl]);
 
   // Handle view merged PDF
   const handleViewMerged = useCallback(() => {
@@ -232,7 +232,8 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
   }, [mergedPdfUrl]);
 
   // Handle monetization completion
-  const handleAdCompleteMerged = useCallback(() => {
+  // Direct download - monetization removed
+  const handleDirectDownload = useCallback(() => {
     if (mergedPdfUrl) {
       const link = document.createElement("a");
       link.href = mergedPdfUrl;
@@ -241,10 +242,10 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
       link.click();
       document.body.removeChild(link);
     }
-    closeMonetizationModal();
-  }, [mergedPdfUrl, closeMonetizationModal]);
+  }, [mergedPdfUrl]);
 
-  const handlePaymentCompleteMerged = useCallback(() => {
+  // Direct download - monetization removed
+  const handleDirectDownload2 = useCallback(() => {
     if (mergedPdfUrl) {
       const link = document.createElement("a");
       link.href = mergedPdfUrl;
@@ -253,8 +254,7 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
       link.click();
       document.body.removeChild(link);
     }
-    closeMonetizationModal();
-  }, [mergedPdfUrl, closeMonetizationModal]);
+  }, [mergedPdfUrl]);
 
   // Format file size
   const formatFileSize = (bytes: number) => {

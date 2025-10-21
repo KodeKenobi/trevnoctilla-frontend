@@ -24,13 +24,7 @@ export const ExtractTextTool: React.FC<ExtractTextToolProps> = ({
   handleFileUpload,
 }) => {
   const [previewFormat, setPreviewFormat] = useState<string>("txt");
-  const {
-    monetizationState,
-    openMonetizationModal,
-    closeMonetizationModal,
-    handleAdComplete,
-    handlePaymentComplete,
-  } = useMonetization();
+  // Monetization removed - using Google AdSense only
 
   const getPreviewContent = () => {
     if (!result?.data?.text || !uploadedFile) return "";
@@ -97,7 +91,13 @@ export const ExtractTextTool: React.FC<ExtractTextToolProps> = ({
     }
 
     const dataUrl = buildDataUrl(content, mimeType);
-    openMonetizationModal(fileName, format.toUpperCase(), dataUrl);
+    // Direct download - monetization removed
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (!uploadedFile) {

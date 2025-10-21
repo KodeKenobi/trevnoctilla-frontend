@@ -41,13 +41,15 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
   };
 
   const downloadSingleImage = (img: any, index: number) => {
-    openMonetizationModal(
-      `${uploadedFile?.name.replace(".pdf", "")}_page${img.page}_image${
-        img.image_index
-      }.png`,
-      "PNG",
-      `data:image/png;base64,${img.data}`
-    );
+    // Direct download - monetization removed
+    const link = document.createElement("a");
+    link.href = `data:image/png;base64,${img.data}`;
+    link.download = `${uploadedFile?.name.replace(".pdf", "")}_page${img.page}_image${
+      img.image_index
+    }.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const downloadAllImages = () => {

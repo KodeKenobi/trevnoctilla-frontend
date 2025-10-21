@@ -138,8 +138,8 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
     }
   };
 
-  const handleAdCompleteWithDownload = () => {
-    handleAdComplete();
+  // Direct download - monetization removed
+  const handleDirectDownload = () => {
     if (conversionResult) {
       try {
         window.open(conversionResult, "_blank");
@@ -149,8 +149,8 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
     }
   };
 
-  const handlePaymentCompleteWithDownload = () => {
-    handlePaymentComplete();
+  // Direct download - monetization removed
+  const handleDirectDownload2 = () => {
     if (conversionResult) {
       try {
         window.open(conversionResult, "_blank");

@@ -642,14 +642,15 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         downloadUrl: conversionResult,
       });
 
-      // Show monetization modal before download
-      openMonetizationModal(
-        file?.name || "video-file",
-        "video",
-        conversionResult
-      );
+      // Direct download - monetization removed
+      const link = document.createElement("a");
+      link.href = conversionResult;
+      link.download = file?.name || "converted-video";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-      console.log("📥 Monetization modal opened");
+      console.log("📥 Direct download initiated");
     } else {
       console.error("📥 ERROR: conversionResult is null or undefined!");
     }

@@ -48,13 +48,7 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
   setIsProcessing,
   handleFileUpload,
 }) => {
-  const {
-    monetizationState,
-    openMonetizationModal,
-    closeMonetizationModal,
-    handleAdComplete,
-    handlePaymentComplete,
-  } = useMonetization();
+  // Monetization removed - using Google AdSense only
   const alertModal = useAlertModal();
 
   // Core state
@@ -323,27 +317,34 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
 
   // Handle download all as ZIP
   const handleDownloadAll = () => {
-    // This would trigger the monetization modal for the ZIP download
+    // Direct download - monetization removed
     const selectedPages = pages.filter((page) => page.isSelected);
     const fileName = uploadedFile?.name?.replace(".pdf", "") || "split_pages";
-
-    openMonetizationModal(
-      `${fileName}_split_${selectedPages.length}_pages`,
-      "zip",
-      downloadUrls[0] // Use first URL as placeholder
-    );
+    
+    // Create ZIP download
+    if (downloadUrls.length > 0) {
+      const link = document.createElement("a");
+      link.href = downloadUrls[0];
+      link.download = `${fileName}_split_${selectedPages.length}_pages.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
-  // Handle individual page download with monetization
+  // Handle individual page download - monetization removed
   const handleDownloadPageWithMonetization = (pageNumber: number) => {
     const fileName = uploadedFile?.name?.replace(".pdf", "") || "page";
-    const selectedPages = pages.filter((page) => page.isSelected);
-
-    openMonetizationModal(
-      `${fileName}_page_${pageNumber}`,
-      "pdf",
-      downloadUrls[pageNumber - 1] || ""
-    );
+    
+    // Direct download
+    if (downloadUrls[pageNumber - 1]) {
+      const link = document.createElement("a");
+      link.href = downloadUrls[pageNumber - 1];
+      link.download = `${fileName}_page_${pageNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   // Get PDF view URL for preview
