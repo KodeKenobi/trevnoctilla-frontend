@@ -106,7 +106,7 @@ export default function UniversalHeader() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-2 sm:px-6 py-3 lg:px-12 bg-gray-900/95 backdrop-blur-md border-b border-gray-700/30 w-full max-w-full overflow-hidden">
+      <header className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-between px-2 sm:px-6 py-3 lg:px-12 bg-gray-900/95 backdrop-blur-md border-b border-gray-700/30 w-full max-w-full overflow-hidden">
         {/* Logo */}
         <div className="flex items-center space-x-3">
           <button
@@ -220,7 +220,7 @@ export default function UniversalHeader() {
                 </Link>
               )}
               <div className="flex items-center space-x-2">
-                <div className="relative" data-profile-dropdown>
+                <div className="relative z-[99999]" data-profile-dropdown>
                   <button
                     onClick={() =>
                       setIsProfileDropdownOpen(!isProfileDropdownOpen)
@@ -319,7 +319,7 @@ export default function UniversalHeader() {
             <div className="w-16 h-6 bg-gray-700 rounded-lg animate-pulse"></div>
           ) : user ? (
             <div className="flex items-center space-x-2">
-              <div className="relative" data-profile-dropdown>
+                <div className="relative z-[99999]" data-profile-dropdown>
                 <button
                   onClick={() =>
                     setIsProfileDropdownOpen(!isProfileDropdownOpen)
