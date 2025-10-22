@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log("🚀 AUTH FIX DEPLOYED - " + new Date().toISOString());
+        console.log("🚀 AUTH FIX DEPLOYED - " + new Date().toISOString() + " - FORCE DEPLOY");
         
         if (!credentials?.email || !credentials?.password) {
           console.log("❌ Missing credentials");
