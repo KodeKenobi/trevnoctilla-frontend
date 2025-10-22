@@ -106,7 +106,7 @@ export default function UniversalHeader() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-2 sm:px-6 py-3 lg:px-12 bg-gray-900/95 backdrop-blur-md border-b border-gray-700/30 w-full max-w-full overflow-hidden">
+      <header className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-2 sm:px-6 py-3 lg:px-12 bg-gray-900/95 backdrop-blur-md border-b border-gray-700/30 w-full max-w-full overflow-hidden">
         {/* Logo */}
         <div className="flex items-center space-x-3">
           <button
@@ -234,7 +234,7 @@ export default function UniversalHeader() {
 
                   {/* Profile Dropdown */}
                   {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-[9999]">
+                    <div className="absolute right-0 mt-2 w-64 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-[99999]">
                       <div className="p-4 border-b border-gray-700">
                         <div className="flex items-center space-x-3">
                           <UserCircle className="h-8 w-8 text-purple-400" />
@@ -333,7 +333,7 @@ export default function UniversalHeader() {
 
                 {/* Mobile Profile Dropdown */}
                 {isProfileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-[99999]">
                     <div className="p-3 border-b border-gray-700">
                       <div className="flex items-center space-x-2">
                         <UserCircle className="h-6 w-6 text-purple-400" />
