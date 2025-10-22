@@ -5,7 +5,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 declare module "next-auth" {
   interface User {
     id: string;
-    role?: string;
+    role: "user" | "admin" | "super_admin";
+    is_active: boolean;
   }
   interface Session {
     user: {
@@ -13,7 +14,8 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      role?: string;
+      role: "user" | "admin" | "super_admin";
+      is_active: boolean;
     };
   }
 }
@@ -47,6 +49,7 @@ export const authOptions: NextAuthOptions = {
             email: "kodekenobi@gmail.com",
             name: "Super Admin",
             role: "super_admin",
+            is_active: true,
           };
         }
 
@@ -63,13 +66,15 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.is_active = user.is_active;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.role = token.role as "user" | "admin" | "super_admin";
+        session.user.is_active = token.is_active as boolean;
       }
       return session;
     },
