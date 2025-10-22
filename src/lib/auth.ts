@@ -34,12 +34,12 @@ export const authOptions: NextAuthOptions = {
 
         console.log("🔐 NextAuth: Attempting authentication for:", credentials.email);
 
-        // AUTH FIX: Use fallback credentials for kodekenobi@gmail.com
+        // AUTH FIX: Use correct credentials for kodekenobi@gmail.com
         if (
           credentials.email === "kodekenobi@gmail.com" &&
-          credentials.password === "password"
+          credentials.password === "Kopenikus0218!"
         ) {
-          console.log("✅ NextAuth: Using fallback credentials - AUTH FIX DEPLOYED");
+          console.log("✅ NextAuth: Using correct credentials - AUTH FIX DEPLOYED");
           return {
             id: "1",
             email: "kodekenobi@gmail.com",
@@ -47,7 +47,7 @@ export const authOptions: NextAuthOptions = {
           };
         }
 
-        console.log("❌ NextAuth: Invalid credentials - use kodekenobi@gmail.com / password");
+        console.log("❌ NextAuth: Invalid credentials - use kodekenobi@gmail.com / Kopenikus0218!");
         return null;
       },
     }),

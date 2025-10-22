@@ -234,7 +234,7 @@ export default function UniversalHeader() {
 
                   {/* Profile Dropdown */}
                   {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-50">
+                    <div className="absolute right-0 mt-2 w-64 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-[9999]">
                       <div className="p-4 border-b border-gray-700">
                         <div className="flex items-center space-x-3">
                           <UserCircle className="h-8 w-8 text-purple-400" />
