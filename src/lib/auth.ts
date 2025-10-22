@@ -5,6 +5,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 declare module "next-auth" {
   interface User {
     id: string;
+    role?: string;
   }
   interface Session {
     user: {
@@ -12,6 +13,7 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      role?: string;
     };
   }
 }
@@ -44,6 +46,7 @@ export const authOptions: NextAuthOptions = {
             id: "1",
             email: "kodekenobi@gmail.com",
             name: "Super Admin",
+            role: "super_admin",
           };
         }
 
@@ -59,12 +62,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.role = token.role as string;
       }
       return session;
     },
