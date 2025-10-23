@@ -86,53 +86,79 @@ export default function UsersPage() {
     try {
       setLoading(true);
       
-      // For now, show a message that this requires API key setup
-      // In a real implementation, you would either:
-      // 1. Use NextAuth session token if the backend supports it
-      // 2. Require the user to create an API key first
-      // 3. Use a different authentication method
+      // Get the session token from NextAuth
+      const session = await fetch('/api/auth/session').then(res => res.json());
       
-      console.log("Admin users page requires API key setup. Showing mock data for now.");
+      if (!session?.user) {
+        throw new Error('No active session found');
+      }
+
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (roleFilter) params.append('role', roleFilter);
+      if (statusFilter) params.append('is_active', statusFilter === 'active' ? 'true' : 'false');
+
+      // Use session token for authentication
+      const response = await fetch(
+        `https://web-production-737b.up.railway.app/api/admin/users?${params.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${session.accessToken || session.user.id}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        // If admin API fails, try to get users from auth endpoint
+        console.log('Admin API failed, trying auth endpoint...');
+        
+        // Try to get user data from the auth profile endpoint
+        const profileResponse = await fetch(
+          'https://web-production-737b.up.railway.app/auth/profile',
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${session.accessToken || session.user.id}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          // Create a single user entry from profile data
+          setUsers([{
+            id: profileData.id || 1,
+            email: profileData.email || session.user.email,
+            role: profileData.role || 'user',
+            is_active: profileData.is_active !== false,
+            created_at: profileData.created_at || new Date().toISOString(),
+            last_login: profileData.last_login || new Date().toISOString(),
+            api_keys_count: profileData.api_keys?.length || 0,
+          }]);
+        } else {
+          throw new Error(`Failed to fetch user data: ${response.status}`);
+        }
+      } else {
+        const data = await response.json();
+        
+        // Transform the data to match our interface
+        const transformedUsers = data.users.map((user: any) => ({
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          is_active: user.is_active,
+          created_at: user.created_at,
+          last_login: user.last_login || user.created_at,
+          api_keys_count: user.api_keys?.length || 0,
+        }));
+
+        setUsers(transformedUsers);
+      }
       
-      // Show mock data with a notice
-      setUsers([
-        {
-          id: 1,
-          email: "kodekenobi@gmail.com",
-          role: "super_admin",
-          is_active: true,
-          created_at: "2024-01-01T08:00:00Z",
-          last_login: "2024-01-20T12:30:00Z",
-          api_keys_count: 1,
-        },
-        {
-          id: 2,
-          email: "admin@example.com",
-          role: "admin",
-          is_active: true,
-          created_at: "2024-01-15T10:30:00Z",
-          last_login: "2024-01-20T14:22:00Z",
-          api_keys_count: 2,
-        },
-        {
-          id: 3,
-          email: "user@example.com",
-          role: "user",
-          is_active: true,
-          created_at: "2024-01-10T09:15:00Z",
-          last_login: "2024-01-19T16:45:00Z",
-          api_keys_count: 1,
-        },
-        {
-          id: 4,
-          email: "inactive@example.com",
-          role: "user",
-          is_active: false,
-          created_at: "2024-01-05T11:20:00Z",
-          last_login: "2024-01-18T09:10:00Z",
-          api_keys_count: 0,
-        },
-      ]);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -142,25 +168,80 @@ export default function UsersPage() {
 
   const fetchUserStats = async (userId: number) => {
     try {
-      // For now, show mock data since API key setup is required
-      console.log("User stats requires API key setup. Showing mock data for now.");
+      // Get the session token from NextAuth
+      const session = await fetch('/api/auth/session').then(res => res.json());
       
-      // Mock data for user stats
-      setUserStats({
-        total_calls: Math.floor(Math.random() * 1000) + 100,
-        recent_calls: Math.floor(Math.random() * 50) + 10,
-        success_calls: Math.floor(Math.random() * 800) + 100,
-        error_calls: Math.floor(Math.random() * 50) + 5,
-        success_rate: Math.floor(Math.random() * 20) + 80,
-        popular_endpoints: [
-          { endpoint: "/api/v1/convert/video", count: Math.floor(Math.random() * 200) + 50 },
-          { endpoint: "/api/v1/convert/audio", count: Math.floor(Math.random() * 100) + 25 },
-          { endpoint: "/api/v1/pdf/extract-text", count: Math.floor(Math.random() * 50) + 10 },
-        ],
-      });
+      if (!session?.user) {
+        throw new Error('No active session found');
+      }
+
+      // Try to get user stats from admin API
+      const response = await fetch(
+        `https://web-production-737b.up.railway.app/api/admin/users/${userId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${session.accessToken || session.user.id}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const userData = await response.json();
+        
+        // Transform the stats data to match our interface
+        if (userData.stats) {
+          setUserStats({
+            total_calls: userData.stats.total_calls || 0,
+            recent_calls: userData.stats.recent_calls || 0,
+            success_calls: userData.stats.success_calls || 0,
+            error_calls: userData.stats.error_calls || 0,
+            success_rate: userData.stats.success_rate || 0,
+            popular_endpoints: userData.stats.popular_endpoints || [],
+          });
+        } else {
+          // If no stats available, show empty stats
+          setUserStats({
+            total_calls: 0,
+            recent_calls: 0,
+            success_calls: 0,
+            error_calls: 0,
+            success_rate: 0,
+            popular_endpoints: [],
+          });
+        }
+      } else {
+        // If admin API fails, try to get basic user info
+        const profileResponse = await fetch(
+          'https://web-production-737b.up.railway.app/auth/profile',
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${session.accessToken || session.user.id}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          // Show basic stats from profile data
+          setUserStats({
+            total_calls: 0,
+            recent_calls: 0,
+            success_calls: 0,
+            error_calls: 0,
+            success_rate: 0,
+            popular_endpoints: [],
+          });
+        } else {
+          throw new Error(`Failed to fetch user stats: ${response.status}`);
+        }
+      }
     } catch (error) {
       console.error("Error fetching user stats:", error);
-      // Fallback to empty stats on error
+      // Show empty stats on error
       setUserStats({
         total_calls: 0,
         recent_calls: 0,
@@ -276,29 +357,6 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Notice */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-yellow-800">
-              Mock Data Display
-            </h3>
-            <div className="mt-2 text-sm text-yellow-700">
-              <p>
-                This page is currently displaying mock data. To show real user data, 
-                API key authentication needs to be set up. The backend admin API 
-                requires an API key for access.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Header */}
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
