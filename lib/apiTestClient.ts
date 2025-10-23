@@ -29,16 +29,16 @@ export class ApiTestClient {
         
         // Add files to FormData
         Object.entries(files).forEach(([key, file]) => {
-          if (file) {
-            requestBody.append(key, file);
+          if (file && requestBody instanceof FormData) {
+            (requestBody as FormData).append(key, file);
           }
         });
 
         // Add other body parameters
-        if (body) {
+        if (body && requestBody instanceof FormData) {
           Object.entries(body).forEach(([key, value]) => {
             if (value !== null && value !== undefined) {
-              requestBody.append(key, String(value));
+              (requestBody as FormData).append(key, String(value));
             }
           });
         }

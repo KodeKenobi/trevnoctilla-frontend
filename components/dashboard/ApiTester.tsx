@@ -124,7 +124,7 @@ export function ApiTester({ toolId }: ApiTesterProps) {
       });
 
       const result = await apiTestClient.testEndpoint({
-        endpoint: currentEndpoint.path,
+        url: currentEndpoint.path,
         method: currentEndpoint.method,
         headers,
         body: formData,
@@ -135,7 +135,8 @@ export function ApiTester({ toolId }: ApiTesterProps) {
       setResult({
         success: false,
         status: 0,
-        responseTime: 0,
+        duration: 0,
+        headers: {},
         error: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
@@ -152,7 +153,7 @@ export function ApiTester({ toolId }: ApiTesterProps) {
   const copyCurl = () => {
     if (currentEndpoint) {
       const curlCommand = apiTestClient.generateCurlCommand({
-        endpoint: currentEndpoint.path,
+        url: currentEndpoint.path,
         method: currentEndpoint.method,
         headers,
         body: undefined,
@@ -414,7 +415,7 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                 Response
                 {result && (
                   <span className="text-sm font-normal text-gray-400">
-                    ({result.status} - {result.responseTime}ms)
+                    ({result.status} - {result.duration}ms)
                   </span>
                 )}
               </h4>
