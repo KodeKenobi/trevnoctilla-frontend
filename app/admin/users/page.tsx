@@ -396,7 +396,7 @@ export default function UsersPage() {
                     type="text"
                     name="search"
                     id="search"
-                    className="focus:ring-purple-500 focus:border-purple-500 block w-full pl-10 sm:text-sm bg-gray-700 border-gray-600 text-white rounded-md"
+                    className="focus:ring-purple-500 focus:border-purple-500 block w-full pl-10 py-2 text-base bg-gray-700 border-gray-600 text-white rounded-md sm:text-sm"
                     placeholder="Search by email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -533,148 +533,148 @@ export default function UsersPage() {
         </ul>
       </div>
 
-      {/* User Details Modal */}
-      {showUserDetails && selectedUser && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-              onClick={() => setShowUserDetails(false)}
-            />
+          {/* User Details Modal */}
+          {showUserDetails && selectedUser && (
+            <div className="fixed inset-0 z-[99999] overflow-y-auto">
+              <div className="flex items-center justify-center min-h-screen pt-20 px-4 pb-20 text-center sm:block sm:p-0">
+                <div
+                  className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity"
+                  onClick={() => setShowUserDetails(false)}
+                />
 
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                      User Details: {selectedUser.email}
-                    </h3>
+                <div className="inline-block align-bottom bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                  <div className="px-6 pt-6 pb-4 sm:p-6 sm:pb-4">
+                    <div className="sm:flex sm:items-start">
+                      <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                        <h3 className="text-xl leading-6 font-semibold text-white mb-6">
+                          User Details: {selectedUser.email}
+                        </h3>
 
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                      {/* User Info */}
-                      <div>
-                        <h4 className="text-md font-medium text-gray-900 mb-3">
-                          User Information
-                        </h4>
-                        <dl className="space-y-2">
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                          {/* User Info */}
                           <div>
-                            <dt className="text-sm font-medium text-gray-500">
-                              Email
-                            </dt>
-                            <dd className="text-sm text-gray-900">
-                              {selectedUser.email}
-                            </dd>
+                            <h4 className="text-lg font-semibold text-white mb-4">
+                              User Information
+                            </h4>
+                            <dl className="space-y-3">
+                              <div>
+                                <dt className="text-sm font-medium text-gray-400">
+                                  Email
+                                </dt>
+                                <dd className="text-sm text-white">
+                                  {selectedUser.email}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt className="text-sm font-medium text-gray-400">
+                                  Role
+                                </dt>
+                                <dd className="text-sm text-white capitalize">
+                                  {selectedUser.role}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt className="text-sm font-medium text-gray-400">
+                                  Status
+                                </dt>
+                                <dd className="text-sm">
+                                  <span
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                      selectedUser.is_active
+                                        ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                                        : "bg-red-500/20 text-red-300 border border-red-500/30"
+                                    }`}
+                                  >
+                                    {selectedUser.is_active ? "Active" : "Inactive"}
+                                  </span>
+                                </dd>
+                              </div>
+                              <div>
+                                <dt className="text-sm font-medium text-gray-400">
+                                  Created
+                                </dt>
+                                <dd className="text-sm text-white">
+                                  {formatDate(selectedUser.created_at)}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt className="text-sm font-medium text-gray-400">
+                                  Last Login
+                                </dt>
+                                <dd className="text-sm text-white">
+                                  {formatDate(selectedUser.last_login)}
+                                </dd>
+                              </div>
+                            </dl>
                           </div>
-                          <div>
-                            <dt className="text-sm font-medium text-gray-500">
-                              Role
-                            </dt>
-                            <dd className="text-sm text-gray-900 capitalize">
-                              {selectedUser.role}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt className="text-sm font-medium text-gray-500">
-                              Status
-                            </dt>
-                            <dd className="text-sm">
-                              <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  selectedUser.is_active
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-red-100 text-red-800"
-                                }`}
-                              >
-                                {selectedUser.is_active ? "Active" : "Inactive"}
-                              </span>
-                            </dd>
-                          </div>
-                          <div>
-                            <dt className="text-sm font-medium text-gray-500">
-                              Created
-                            </dt>
-                            <dd className="text-sm text-gray-900">
-                              {formatDate(selectedUser.created_at)}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt className="text-sm font-medium text-gray-500">
-                              Last Login
-                            </dt>
-                            <dd className="text-sm text-gray-900">
-                              {formatDate(selectedUser.last_login)}
-                            </dd>
-                          </div>
-                        </dl>
-                      </div>
 
-                      {/* Usage Stats */}
-                      <div>
-                        <h4 className="text-md font-medium text-gray-900 mb-3">
-                          Usage Statistics
-                        </h4>
-                        {userStats ? (
-                          <dl className="space-y-2">
-                            <div>
-                              <dt className="text-sm font-medium text-gray-500">
-                                Total API Calls
-                              </dt>
-                              <dd className="text-sm text-gray-900">
-                                {userStats.total_calls.toLocaleString()}
-                              </dd>
-                            </div>
-                            <div>
-                              <dt className="text-sm font-medium text-gray-500">
-                                Recent Calls (24h)
-                              </dt>
-                              <dd className="text-sm text-gray-900">
-                                {userStats.recent_calls}
-                              </dd>
-                            </div>
-                            <div>
-                              <dt className="text-sm font-medium text-gray-500">
-                                Success Rate
-                              </dt>
-                              <dd className="text-sm text-gray-900">
-                                {userStats.success_rate}%
-                              </dd>
-                            </div>
-                            <div>
-                              <dt className="text-sm font-medium text-gray-500">
-                                Popular Endpoints
-                              </dt>
-                              <dd className="text-sm text-gray-900">
-                                <ul className="list-disc list-inside">
-                                  {userStats.popular_endpoints.map(
-                                    (ep, idx) => (
-                                      <li key={idx}>
-                                        {ep.endpoint} ({ep.count} calls)
-                                      </li>
-                                    )
-                                  )}
-                                </ul>
-                              </dd>
-                            </div>
-                          </dl>
-                        ) : (
-                          <div className="text-sm text-gray-500">
-                            Loading stats...
+                          {/* Usage Stats */}
+                          <div>
+                            <h4 className="text-lg font-semibold text-white mb-4">
+                              Usage Statistics
+                            </h4>
+                            {userStats ? (
+                              <dl className="space-y-3">
+                                <div>
+                                  <dt className="text-sm font-medium text-gray-400">
+                                    Total API Calls
+                                  </dt>
+                                  <dd className="text-sm text-white">
+                                    {userStats.total_calls.toLocaleString()}
+                                  </dd>
+                                </div>
+                                <div>
+                                  <dt className="text-sm font-medium text-gray-400">
+                                    Recent Calls (24h)
+                                  </dt>
+                                  <dd className="text-sm text-white">
+                                    {userStats.recent_calls}
+                                  </dd>
+                                </div>
+                                <div>
+                                  <dt className="text-sm font-medium text-gray-400">
+                                    Success Rate
+                                  </dt>
+                                  <dd className="text-sm text-white">
+                                    {userStats.success_rate}%
+                                  </dd>
+                                </div>
+                                <div>
+                                  <dt className="text-sm font-medium text-gray-400">
+                                    Popular Endpoints
+                                  </dt>
+                                  <dd className="text-sm text-white">
+                                    <ul className="list-disc list-inside">
+                                      {userStats.popular_endpoints.map(
+                                        (ep, idx) => (
+                                          <li key={idx}>
+                                            {ep.endpoint} ({ep.count} calls)
+                                          </li>
+                                        )
+                                      )}
+                                    </ul>
+                                  </dd>
+                                </div>
+                              </dl>
+                            ) : (
+                              <div className="text-sm text-gray-400">
+                                Loading stats...
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </div>
+                        </div>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={() => setShowUserDetails(false)}
-                >
-                  Close
-                </button>
-              </div>
+                  <div className="bg-gray-700/50 px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-600">
+                    <button
+                      type="button"
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-700 text-base font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
+                      onClick={() => setShowUserDetails(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
             </div>
           </div>
         </div>
