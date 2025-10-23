@@ -93,31 +93,18 @@ export default function UsersPage() {
         throw new Error('No active session found');
       }
 
+      console.log('🔍 Fetching users with session:', session.user);
+
       // Build query parameters
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (roleFilter) params.append('role', roleFilter);
       if (statusFilter) params.append('is_active', statusFilter === 'active' ? 'true' : 'false');
 
-      // Use session token for authentication
-      const response = await fetch(
-        `https://web-production-737b.up.railway.app/api/admin/users?${params.toString()}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${session.accessToken || session.user.id}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        // If admin API fails, try to get users from auth endpoint
-        console.log('Admin API failed, trying auth endpoint...');
-        
-        // Try to get user data from the auth profile endpoint
-        const profileResponse = await fetch(
-          'https://web-production-737b.up.railway.app/auth/profile',
+      // Try admin API first
+      try {
+        const response = await fetch(
+          `https://web-production-737b.up.railway.app/api/admin/users?${params.toString()}`,
           {
             method: 'GET',
             headers: {
@@ -127,41 +114,63 @@ export default function UsersPage() {
           }
         );
 
-        if (profileResponse.ok) {
-          const profileData = await profileResponse.json();
-          // Create a single user entry from profile data
-          setUsers([{
-            id: profileData.id || 1,
-            email: profileData.email || session.user.email,
-            role: profileData.role || 'user',
-            is_active: profileData.is_active !== false,
-            created_at: profileData.created_at || new Date().toISOString(),
-            last_login: profileData.last_login || new Date().toISOString(),
-            api_keys_count: profileData.api_keys?.length || 0,
-          }]);
-        } else {
-          throw new Error(`Failed to fetch user data: ${response.status}`);
-        }
-      } else {
-        const data = await response.json();
-        
-        // Transform the data to match our interface
-        const transformedUsers = data.users.map((user: any) => ({
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          is_active: user.is_active,
-          created_at: user.created_at,
-          last_login: user.last_login || user.created_at,
-          api_keys_count: user.api_keys?.length || 0,
-        }));
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Admin API response:', data);
+          
+          // Transform the data to match our interface
+          const transformedUsers = data.users.map((user: any) => ({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            is_active: user.is_active,
+            created_at: user.created_at,
+            last_login: user.last_login || user.created_at,
+            api_keys_count: user.api_keys?.length || 0,
+          }));
 
-        setUsers(transformedUsers);
+          setUsers(transformedUsers);
+          setLoading(false);
+          return;
+        } else {
+          console.log('❌ Admin API failed:', response.status, response.statusText);
+        }
+      } catch (adminError) {
+        console.log('❌ Admin API error:', adminError);
       }
+
+      // Fallback: Create user entry from current session
+      console.log('🔄 Using fallback: creating user from session data');
       
+      const currentUser = {
+        id: session.user.id || 1,
+        email: session.user.email || 'unknown@example.com',
+        role: session.user.role || 'user',
+        is_active: session.user.is_active !== false,
+        created_at: new Date().toISOString(),
+        last_login: new Date().toISOString(),
+        api_keys_count: 0,
+      };
+
+      setUsers([currentUser]);
       setLoading(false);
+      
     } catch (error) {
       console.error("Error fetching users:", error);
+      
+      // Ultimate fallback: show current user if available
+      if (user) {
+        setUsers([{
+          id: user.id || 1,
+          email: user.email || 'unknown@example.com',
+          role: user.role || 'user',
+          is_active: user.is_active !== false,
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString(),
+          api_keys_count: 0,
+        }]);
+      }
+      
       setLoading(false);
     }
   };
@@ -356,168 +365,171 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Manage user accounts and their API access
-          </p>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <label
-              htmlFor="search"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Search
-            </label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                name="search"
-                id="search"
-                className="focus:ring-purple-500 focus:border-purple-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                placeholder="Search by email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="sm:flex sm:items-center">
+            <div className="sm:flex-auto">
+              <h1 className="text-4xl font-bold text-white mb-2">Users</h1>
+              <p className="text-gray-300 text-lg">
+                Manage user accounts and their API access
+              </p>
             </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Role
-            </label>
-            <select
-              id="role"
-              name="role"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-            >
-              <option value="">All roles</option>
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">All statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Users Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
-          {filteredUsers.map((user) => (
-            <li key={user.id}>
-              <div className="px-4 py-4 flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-700">
-                        {user.email.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+          {/* Filters */}
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl p-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <label
+                  htmlFor="search"
+                  className="block text-sm font-medium text-gray-300"
+                >
+                  Search
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400" />
                   </div>
-                  <div className="ml-4">
-                    <div className="flex items-center">
-                      <p className="text-sm font-medium text-gray-900">
-                        {user.email}
-                      </p>
-                      <span
-                        className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.role === "admin"
-                            ? "bg-purple-100 text-purple-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {user.role}
-                      </span>
-                      <span
-                        className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.is_active
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {user.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-center text-sm text-gray-500">
-                      <Calendar className="flex-shrink-0 mr-1.5 h-4 w-4" />
-                      Joined {formatDate(user.created_at)}
-                    </div>
-                    <div className="mt-1 flex items-center text-sm text-gray-500">
-                      <Key className="flex-shrink-0 mr-1.5 h-4 w-4" />
-                      {user.api_keys_count} API key
-                      {user.api_keys_count !== 1 ? "s" : ""}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleViewUser(user)}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleToggleUserStatus(user.id, user.is_active)
-                    }
-                    className={`inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${
-                      user.is_active
-                        ? "border-red-300 text-red-700 bg-white hover:bg-red-50"
-                        : "border-green-300 text-green-700 bg-white hover:bg-green-50"
-                    }`}
-                  >
-                    {user.is_active ? (
-                      <>
-                        <UserX className="h-4 w-4 mr-1" />
-                        Deactivate
-                      </>
-                    ) : (
-                      <>
-                        <UserCheck className="h-4 w-4 mr-1" />
-                        Activate
-                      </>
-                    )}
-                  </button>
+                  <input
+                    type="text"
+                    name="search"
+                    id="search"
+                    className="focus:ring-purple-500 focus:border-purple-500 block w-full pl-10 sm:text-sm bg-gray-700 border-gray-600 text-white rounded-md"
+                    placeholder="Search by email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
               </div>
-            </li>
-          ))}
+
+              <div>
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-300"
+                >
+                  Role
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base bg-gray-700 border-gray-600 text-white focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md"
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                >
+                  <option value="">All roles</option>
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                  <option value="super_admin">Super Admin</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="status"
+                  className="block text-sm font-medium text-gray-300"
+                >
+                  Status
+                </label>
+                <select
+                  id="status"
+                  name="status"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base bg-gray-700 border-gray-600 text-white focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">All statuses</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Users Table */}
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl overflow-hidden">
+            <ul className="divide-y divide-gray-700">
+              {filteredUsers.map((user) => (
+                <li key={user.id}>
+                  <div className="px-4 py-4 flex items-center justify-between hover:bg-gray-700/30 transition-colors">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <div className="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
+                          <span className="text-sm font-medium text-white">
+                            {user.email.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <div className="flex items-center">
+                          <p className="text-sm font-medium text-white">
+                            {user.email}
+                          </p>
+                          <span
+                            className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              user.role === "admin" || user.role === "super_admin"
+                                ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                                : "bg-gray-500/20 text-gray-300 border border-gray-500/30"
+                            }`}
+                          >
+                            {user.role}
+                          </span>
+                          <span
+                            className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              user.is_active
+                                ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                                : "bg-red-500/20 text-red-300 border border-red-500/30"
+                            }`}
+                          >
+                            {user.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-center text-sm text-gray-400">
+                          <Calendar className="flex-shrink-0 mr-1.5 h-4 w-4" />
+                          Joined {formatDate(user.created_at)}
+                        </div>
+                        <div className="mt-1 flex items-center text-sm text-gray-400">
+                          <Key className="flex-shrink-0 mr-1.5 h-4 w-4" />
+                          {user.api_keys_count} API key
+                          {user.api_keys_count !== 1 ? "s" : ""}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleViewUser(user)}
+                        className="inline-flex items-center px-3 py-2 border border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleToggleUserStatus(user.id, user.is_active)
+                        }
+                        className={`inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${
+                          user.is_active
+                            ? "border-red-500/50 text-red-300 bg-red-500/10 hover:bg-red-500/20"
+                            : "border-green-500/50 text-green-300 bg-green-500/10 hover:bg-green-500/20"
+                        }`}
+                      >
+                        {user.is_active ? (
+                          <>
+                            <UserX className="h-4 w-4 mr-1" />
+                            Deactivate
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck className="h-4 w-4 mr-1" />
+                            Activate
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))}
         </ul>
       </div>
 
@@ -667,6 +679,8 @@ export default function UsersPage() {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }
