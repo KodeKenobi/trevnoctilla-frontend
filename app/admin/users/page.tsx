@@ -75,22 +75,48 @@ export default function UsersPage() {
     }
   }, [user]);
 
+  // Refetch users when filters change
+  useEffect(() => {
+    if (user) {
+      fetchUsers();
+    }
+  }, [searchTerm, roleFilter, statusFilter]);
+
   const fetchUsers = async () => {
     try {
-      // Mock data - in real implementation, fetch from API
+      setLoading(true);
+      
+      // For now, show a message that this requires API key setup
+      // In a real implementation, you would either:
+      // 1. Use NextAuth session token if the backend supports it
+      // 2. Require the user to create an API key first
+      // 3. Use a different authentication method
+      
+      console.log("Admin users page requires API key setup. Showing mock data for now.");
+      
+      // Show mock data with a notice
       setUsers([
         {
           id: 1,
-          email: "john@example.com",
-          role: "user",
+          email: "kodekenobi@gmail.com",
+          role: "super_admin",
+          is_active: true,
+          created_at: "2024-01-01T08:00:00Z",
+          last_login: "2024-01-20T12:30:00Z",
+          api_keys_count: 1,
+        },
+        {
+          id: 2,
+          email: "admin@example.com",
+          role: "admin",
           is_active: true,
           created_at: "2024-01-15T10:30:00Z",
           last_login: "2024-01-20T14:22:00Z",
           api_keys_count: 2,
         },
         {
-          id: 2,
-          email: "jane@example.com",
+          id: 3,
+          email: "user@example.com",
           role: "user",
           is_active: true,
           created_at: "2024-01-10T09:15:00Z",
@@ -98,17 +124,8 @@ export default function UsersPage() {
           api_keys_count: 1,
         },
         {
-          id: 3,
-          email: "admin@example.com",
-          role: "admin",
-          is_active: true,
-          created_at: "2024-01-01T08:00:00Z",
-          last_login: "2024-01-20T12:30:00Z",
-          api_keys_count: 3,
-        },
-        {
           id: 4,
-          email: "bob@example.com",
+          email: "inactive@example.com",
           role: "user",
           is_active: false,
           created_at: "2024-01-05T11:20:00Z",
@@ -125,21 +142,33 @@ export default function UsersPage() {
 
   const fetchUserStats = async (userId: number) => {
     try {
-      // Mock data - in real implementation, fetch from API
+      // For now, show mock data since API key setup is required
+      console.log("User stats requires API key setup. Showing mock data for now.");
+      
+      // Mock data for user stats
       setUserStats({
-        total_calls: 1234,
-        recent_calls: 56,
-        success_calls: 1156,
-        error_calls: 78,
-        success_rate: 93.7,
+        total_calls: Math.floor(Math.random() * 1000) + 100,
+        recent_calls: Math.floor(Math.random() * 50) + 10,
+        success_calls: Math.floor(Math.random() * 800) + 100,
+        error_calls: Math.floor(Math.random() * 50) + 5,
+        success_rate: Math.floor(Math.random() * 20) + 80,
         popular_endpoints: [
-          { endpoint: "/api/v1/convert/video", count: 456 },
-          { endpoint: "/api/v1/convert/audio", count: 234 },
-          { endpoint: "/api/v1/pdf/extract-text", count: 123 },
+          { endpoint: "/api/v1/convert/video", count: Math.floor(Math.random() * 200) + 50 },
+          { endpoint: "/api/v1/convert/audio", count: Math.floor(Math.random() * 100) + 25 },
+          { endpoint: "/api/v1/pdf/extract-text", count: Math.floor(Math.random() * 50) + 10 },
         ],
       });
     } catch (error) {
       console.error("Error fetching user stats:", error);
+      // Fallback to empty stats on error
+      setUserStats({
+        total_calls: 0,
+        recent_calls: 0,
+        success_calls: 0,
+        error_calls: 0,
+        success_rate: 0,
+        popular_endpoints: [],
+      });
     }
   };
 
@@ -154,12 +183,16 @@ export default function UsersPage() {
     currentStatus: boolean
   ) => {
     try {
+      // TODO: Implement API call to update user status
+      // For now, show an alert that this feature is not yet implemented
+      alert(`User status toggle feature is not yet implemented. User ID: ${userId}, Current status: ${currentStatus}`);
+      
       // In real implementation, make API call to update user status
-      setUsers(
-        users.map((user) =>
-          user.id === userId ? { ...user, is_active: !currentStatus } : user
-        )
-      );
+      // setUsers(
+      //   users.map((user) =>
+      //     user.id === userId ? { ...user, is_active: !currentStatus } : user
+      //   )
+      // );
     } catch (error) {
       console.error("Error updating user status:", error);
     }
@@ -243,6 +276,29 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
+      {/* Notice */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-yellow-800">
+              Mock Data Display
+            </h3>
+            <div className="mt-2 text-sm text-yellow-700">
+              <p>
+                This page is currently displaying mock data. To show real user data, 
+                API key authentication needs to be set up. The backend admin API 
+                requires an API key for access.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
