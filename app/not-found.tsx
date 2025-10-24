@@ -29,7 +29,7 @@ export default function NotFound() {
   }));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden page-content">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {floatingElements.map((element) => (
@@ -69,8 +69,8 @@ export default function NotFound() {
         }}
       />
 
-      {/* Main Content */}
-      <div className="relative z-20 flex items-center justify-center min-h-screen px-4">
+      {/* Main Content with Header Spacing */}
+      <div className="relative z-20 flex items-center justify-center min-h-screen px-4 pt-16 sm:pt-20 lg:pt-24 pb-20">
         <div className="text-center max-w-4xl mx-auto">
           {/* 404 Number */}
           <motion.div

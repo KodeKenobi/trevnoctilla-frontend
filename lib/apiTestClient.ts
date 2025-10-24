@@ -1,3 +1,5 @@
+import { getApiUrl } from "./config";
+
 export interface ApiTestResult {
   success: boolean;
   status: number;
@@ -26,7 +28,7 @@ export class ApiTestClient {
       if (files && Object.keys(files).length > 0) {
         // Handle file uploads with FormData
         requestBody = new FormData();
-        
+
         // Add files to FormData
         Object.entries(files).forEach(([key, file]) => {
           if (file && requestBody instanceof FormData) {
@@ -45,10 +47,14 @@ export class ApiTestClient {
       } else if (body) {
         // Handle JSON body
         requestBody = JSON.stringify(body);
-        headers['Content-Type'] = 'application/json';
+        headers["Content-Type"] = "application/json";
       }
 
-      const response = await fetch(url, {
+      // Use getApiUrl to construct the full URL
+      const fullUrl = getApiUrl(url);
+      console.log("🔗 API Test: Calling", fullUrl);
+
+      const response = await fetch(fullUrl, {
         method,
         headers,
         body: requestBody,
@@ -56,15 +62,15 @@ export class ApiTestClient {
 
       const duration = Date.now() - startTime;
       const responseHeaders: Record<string, string> = {};
-      
+
       response.headers.forEach((value, key) => {
         responseHeaders[key] = value;
       });
 
       let responseData;
-      const contentType = response.headers.get('content-type');
-      
-      if (contentType && contentType.includes('application/json')) {
+      const contentType = response.headers.get("content-type");
+
+      if (contentType && contentType.includes("application/json")) {
         responseData = await response.json();
       } else {
         responseData = await response.text();
@@ -82,7 +88,7 @@ export class ApiTestClient {
       return {
         success: false,
         status: 0,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         duration,
         headers: {},
       };
@@ -90,7 +96,7 @@ export class ApiTestClient {
   }
 
   downloadFile(url: string, filename: string): void {
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
@@ -100,14 +106,14 @@ export class ApiTestClient {
 
   generateCurlCommand(params: TestEndpointParams): string {
     const { url, method, headers, body, files } = params;
-    
+
     let curlCommand = `curl -X ${method.toUpperCase()} "${url}"`;
-    
+
     // Add headers
     Object.entries(headers).forEach(([key, value]) => {
       curlCommand += ` \\\n  -H "${key}: ${value}"`;
     });
-    
+
     // Add body
     if (body && Object.keys(body).length > 0) {
       if (files && Object.keys(files).length > 0) {
@@ -125,7 +131,7 @@ export class ApiTestClient {
         curlCommand += ` \\\n  -d '${JSON.stringify(body)}'`;
       }
     }
-    
+
     return curlCommand;
   }
 
@@ -134,11 +140,11 @@ export class ApiTestClient {
       await navigator.clipboard.writeText(text);
     } catch (error) {
       // Fallback for older browsers
-      const textArea = document.createElement('textarea');
+      const textArea = document.createElement("textarea");
       textArea.value = text;
       document.body.appendChild(textArea);
       textArea.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
       document.body.removeChild(textArea);
     }
   }

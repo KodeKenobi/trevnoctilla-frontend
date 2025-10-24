@@ -296,7 +296,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 page-content">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}

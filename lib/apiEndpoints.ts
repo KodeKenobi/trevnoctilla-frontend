@@ -1,241 +1,87 @@
 export interface ApiEndpoint {
   id: string;
   name: string;
-  method: "GET" | "POST" | "PUT" | "DELETE";
+  method: string;
   path: string;
   description: string;
-  parameters: {
-    name: string;
-    type: "file" | "text" | "number" | "select" | "boolean";
-    required: boolean;
-    options?: string[];
-    min?: number;
-    max?: number;
-    description?: string;
-  }[];
-  responseType: "file" | "json" | "image";
-  limits?: {
-    maxFileSize: string;
-    supportedFormats: string[];
-    maxPages?: number;
-  };
+  parameters: ApiParameter[];
 }
 
+export interface ApiParameter {
+  name: string;
+  type: "text" | "number" | "file" | "select" | "boolean";
+  required: boolean;
+  description?: string;
+  options?: string[];
+}
+
+export interface ToolCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  tools: string[];
+}
+
+export const TOOL_CATEGORIES: ToolCategory[] = [
+  {
+    id: "pdf-tools",
+    name: "PDF Tools",
+    description: "Edit, merge, split, and convert PDF files",
+    icon: "📄",
+    color: "from-red-500 to-pink-500",
+    tools: ["merge-pdfs", "split-pdf", "add-watermark"],
+  },
+  {
+    id: "video-converter",
+    name: "Video Converter",
+    description: "Convert videos to different formats",
+    icon: "🎥",
+    color: "from-blue-500 to-cyan-500",
+    tools: ["convert-video"],
+  },
+  {
+    id: "audio-converter",
+    name: "Audio Converter",
+    description: "Convert audio files to different formats",
+    icon: "🎵",
+    color: "from-green-500 to-emerald-500",
+    tools: ["convert-audio"],
+  },
+  {
+    id: "image-converter",
+    name: "Image Converter",
+    description: "Convert images to different formats",
+    icon: "🖼️",
+    color: "from-purple-500 to-indigo-500",
+    tools: ["convert-image"],
+  },
+  {
+    id: "extract-text",
+    name: "Text Extraction",
+    description: "Extract text from PDF files",
+    icon: "📝",
+    color: "from-yellow-500 to-orange-500",
+    tools: ["extract-text-basic"],
+  },
+  {
+    id: "qr-generator",
+    name: "QR Generator",
+    description: "Generate QR codes from text or URLs",
+    icon: "📱",
+    color: "from-teal-500 to-cyan-500",
+    tools: ["generate-qr"],
+  },
+];
+
 export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
-  video: [
+  "extract-text": [
     {
-      id: "convert-video",
-      name: "Convert Video",
-      method: "POST",
-      path: "/convert-video",
-      description:
-        "Convert video files to different formats with quality and compression options",
-      parameters: [
-        {
-          name: "file",
-          type: "file",
-          required: true,
-          description: "Video file to convert",
-        },
-        {
-          name: "outputFormat",
-          type: "select",
-          required: true,
-          options: ["mp4", "avi", "mov", "mkv"],
-          description: "Output video format",
-        },
-        {
-          name: "quality",
-          type: "number",
-          required: false,
-          min: 1,
-          max: 100,
-          description: "Video quality (1-100)",
-        },
-        {
-          name: "compression",
-          type: "select",
-          required: false,
-          options: ["ultrafast", "fast", "medium", "slow", "veryslow"],
-          description: "Compression speed",
-        },
-      ],
-      responseType: "file",
-    },
-  ],
-  audio: [
-    {
-      id: "convert-audio",
-      name: "Convert Audio",
-      method: "POST",
-      path: "/convert-audio",
-      description:
-        "Convert audio files to different formats with bitrate and quality options",
-      parameters: [
-        {
-          name: "file",
-          type: "file",
-          required: true,
-          description: "Audio file to convert",
-        },
-        {
-          name: "outputFormat",
-          type: "select",
-          required: true,
-          options: ["mp3", "wav", "ogg", "aac", "flac", "opus", "m4a", "wma"],
-          description: "Output audio format",
-        },
-        {
-          name: "bitrate",
-          type: "select",
-          required: false,
-          options: ["64k", "128k", "192k", "256k", "320k"],
-          description: "Audio bitrate",
-        },
-        {
-          name: "sampleRate",
-          type: "select",
-          required: false,
-          options: ["22050", "44100", "48000", "96000"],
-          description: "Sample rate",
-        },
-        {
-          name: "channels",
-          type: "select",
-          required: false,
-          options: ["mono", "stereo", "surround"],
-          description: "Audio channels",
-        },
-        {
-          name: "quality",
-          type: "number",
-          required: false,
-          min: 1,
-          max: 100,
-          description: "Audio quality (1-100)",
-        },
-      ],
-      responseType: "file",
-    },
-  ],
-  image: [
-    {
-      id: "convert-image",
-      name: "Convert Image",
-      method: "POST",
-      path: "/convert-image",
-      description:
-        "Convert image files to different formats with resize and compression options",
-      parameters: [
-        {
-          name: "file",
-          type: "file",
-          required: true,
-          description: "Image file to convert",
-        },
-        {
-          name: "outputFormat",
-          type: "select",
-          required: true,
-          options: ["jpg", "png", "webp", "bmp", "tiff", "gif"],
-          description: "Output image format",
-        },
-        {
-          name: "quality",
-          type: "number",
-          required: false,
-          min: 1,
-          max: 100,
-          description: "Image quality (1-100)",
-        },
-        {
-          name: "resize",
-          type: "boolean",
-          required: false,
-          description: "Enable resizing",
-        },
-        {
-          name: "width",
-          type: "number",
-          required: false,
-          min: 1,
-          max: 4000,
-          description: "Target width (if resize enabled)",
-        },
-        {
-          name: "height",
-          type: "number",
-          required: false,
-          min: 1,
-          max: 4000,
-          description: "Target height (if resize enabled)",
-        },
-        {
-          name: "maintainAspectRatio",
-          type: "boolean",
-          required: false,
-          description: "Maintain aspect ratio when resizing",
-        },
-        {
-          name: "compression",
-          type: "select",
-          required: false,
-          options: ["low", "medium", "high"],
-          description: "Compression level",
-        },
-      ],
-      responseType: "file",
-    },
-  ],
-  qr: [
-    {
-      id: "generate-qr",
-      name: "Generate QR Code",
-      method: "POST",
-      path: "/generate-qr",
-      description: "Generate QR codes for various data types",
-      parameters: [
-        {
-          name: "type",
-          type: "select",
-          required: true,
-          options: [
-            "text",
-            "url",
-            "wifi",
-            "email",
-            "sms",
-            "phone",
-            "vcard",
-            "location",
-            "calendar",
-          ],
-          description: "QR code type",
-        },
-        {
-          name: "data",
-          type: "text",
-          required: true,
-          description: "Data to encode in QR code",
-        },
-        {
-          name: "size",
-          type: "number",
-          required: false,
-          min: 100,
-          max: 1000,
-          description: "QR code size in pixels",
-        },
-      ],
-      responseType: "image",
-    },
-  ],
-  pdf: [
-    {
-      id: "extract-text",
+      id: "extract-text-basic",
       name: "Extract Text from PDF",
       method: "POST",
-      path: "/extract_text",
+      path: "/convert/pdf-extract-text",
       description: "Extract text content from PDF files",
       parameters: [
         {
@@ -244,47 +90,136 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
           required: true,
           description: "PDF file to extract text from",
         },
+        {
+          name: "output_format",
+          type: "select",
+          required: false,
+          description: "Output format for extracted text",
+          options: ["txt", "json", "html"],
+        },
       ],
-      responseType: "json",
     },
+  ],
+  "video-converter": [
     {
-      id: "extract-images",
-      name: "Extract Images from PDF",
+      id: "convert-video",
+      name: "Convert Video",
       method: "POST",
-      path: "/extract_images",
-      description: "Extract images from PDF files",
+      path: "/convert/video",
+      description: "Convert video files to different formats",
       parameters: [
         {
           name: "file",
           type: "file",
           required: true,
-          description: "PDF file to extract images from",
+          description: "Video file to convert",
+        },
+        {
+          name: "output_format",
+          type: "select",
+          required: true,
+          description: "Target video format",
+          options: ["mp4", "avi", "mov", "wmv", "flv", "webm"],
+        },
+        {
+          name: "quality",
+          type: "select",
+          required: false,
+          description: "Video quality",
+          options: ["low", "medium", "high", "ultra"],
         },
       ],
-      responseType: "file",
     },
+  ],
+  "audio-converter": [
+    {
+      id: "convert-audio",
+      name: "Convert Audio",
+      method: "POST",
+      path: "/convert/audio",
+      description: "Convert audio files to different formats",
+      parameters: [
+        {
+          name: "file",
+          type: "file",
+          required: true,
+          description: "Audio file to convert",
+        },
+        {
+          name: "output_format",
+          type: "select",
+          required: true,
+          description: "Target audio format",
+          options: ["mp3", "wav", "flac", "aac", "ogg", "m4a"],
+        },
+        {
+          name: "bitrate",
+          type: "select",
+          required: false,
+          description: "Audio bitrate",
+          options: ["128", "192", "256", "320"],
+        },
+      ],
+    },
+  ],
+  "image-converter": [
+    {
+      id: "convert-image",
+      name: "Convert Image",
+      method: "POST",
+      path: "/convert/image",
+      description: "Convert image files to different formats",
+      parameters: [
+        {
+          name: "file",
+          type: "file",
+          required: true,
+          description: "Image file to convert",
+        },
+        {
+          name: "output_format",
+          type: "select",
+          required: true,
+          description: "Target image format",
+          options: ["jpg", "png", "webp", "bmp", "tiff", "gif"],
+        },
+        {
+          name: "quality",
+          type: "number",
+          required: false,
+          description: "Image quality (1-100)",
+        },
+      ],
+    },
+  ],
+  "pdf-tools": [
     {
       id: "merge-pdfs",
       name: "Merge PDFs",
       method: "POST",
-      path: "/merge_pdfs",
+      path: "/convert/pdf-merge",
       description: "Merge multiple PDF files into one",
       parameters: [
         {
           name: "files",
           type: "file",
           required: true,
-          description: "Multiple PDF files to merge",
+          description: "PDF files to merge (select multiple)",
+        },
+        {
+          name: "output_filename",
+          type: "text",
+          required: false,
+          description: "Name for the merged PDF file",
         },
       ],
-      responseType: "file",
     },
     {
       id: "split-pdf",
       name: "Split PDF",
       method: "POST",
-      path: "/api/split_pdf",
-      description: "Split PDF into individual pages",
+      path: "/convert/pdf-split",
+      description: "Split PDF into multiple pages",
       parameters: [
         {
           name: "file",
@@ -293,60 +228,25 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
           description: "PDF file to split",
         },
         {
-          name: "pages",
+          name: "split_type",
+          type: "select",
+          required: true,
+          description: "How to split the PDF",
+          options: ["by_pages", "by_range", "every_page"],
+        },
+        {
+          name: "page_range",
           type: "text",
           required: false,
-          description: 'Page range (e.g., "1-3,5,7-9")',
+          description: "Page range (e.g., '1-5,10-15')",
         },
       ],
-      responseType: "file",
-    },
-    {
-      id: "add-signature",
-      name: "Add Signature to PDF",
-      method: "POST",
-      path: "/add_signature",
-      description: "Add digital signature to PDF",
-      parameters: [
-        {
-          name: "file",
-          type: "file",
-          required: true,
-          description: "PDF file to sign",
-        },
-        {
-          name: "signature",
-          type: "file",
-          required: true,
-          description: "Signature image file",
-        },
-        {
-          name: "page",
-          type: "number",
-          required: false,
-          min: 1,
-          description: "Page number to add signature to",
-        },
-        {
-          name: "x",
-          type: "number",
-          required: false,
-          description: "X position for signature",
-        },
-        {
-          name: "y",
-          type: "number",
-          required: false,
-          description: "Y position for signature",
-        },
-      ],
-      responseType: "file",
     },
     {
       id: "add-watermark",
-      name: "Add Watermark to PDF",
+      name: "Add Watermark",
       method: "POST",
-      path: "/add_watermark",
+      path: "/convert/pdf-watermark",
       description: "Add watermark to PDF",
       parameters: [
         {
@@ -356,59 +256,56 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
           description: "PDF file to watermark",
         },
         {
-          name: "watermark",
-          type: "file",
+          name: "watermark_text",
+          type: "text",
           required: true,
-          description: "Watermark image file",
+          description: "Watermark text",
         },
         {
-          name: "opacity",
-          type: "number",
+          name: "position",
+          type: "select",
           required: false,
-          min: 0.1,
-          max: 1.0,
-          description: "Watermark opacity (0.1-1.0)",
+          description: "Watermark position",
+          options: [
+            "center",
+            "top-left",
+            "top-right",
+            "bottom-left",
+            "bottom-right",
+          ],
         },
       ],
-      responseType: "file",
+    },
+  ],
+  "qr-generator": [
+    {
+      id: "generate-qr",
+      name: "Generate QR Code",
+      method: "POST",
+      path: "/convert/qr-generate",
+      description: "Generate QR code from text or URL",
+      parameters: [
+        {
+          name: "text",
+          type: "text",
+          required: true,
+          description: "Text or URL to encode in QR code",
+        },
+        {
+          name: "size",
+          type: "select",
+          required: false,
+          description: "QR code size",
+          options: ["small", "medium", "large"],
+        },
+        {
+          name: "format",
+          type: "select",
+          required: false,
+          description: "Output format",
+          options: ["png", "jpg", "svg"],
+        },
+      ],
     },
   ],
 };
-
-export const TOOL_CATEGORIES = [
-  {
-    id: "video",
-    name: "Video Converter",
-    icon: "Video",
-    color: "#ef4444",
-    description: "Convert videos between formats with quality control",
-  },
-  {
-    id: "audio",
-    name: "Audio Converter",
-    icon: "Music",
-    color: "#8b5cf6",
-    description: "Convert audio files with bitrate and quality options",
-  },
-  {
-    id: "image",
-    name: "Image Converter",
-    icon: "Image",
-    color: "#06b6d4",
-    description: "Convert and resize images with compression control",
-  },
-  {
-    id: "qr",
-    name: "QR Generator",
-    icon: "QrCode",
-    color: "#10b981",
-    description: "Generate QR codes for various data types",
-  },
-  {
-    id: "pdf",
-    name: "PDF Tools",
-    icon: "FileText",
-    color: "#f59e0b",
-    description: "Extract, merge, split, and modify PDF files",
-  },
-];
