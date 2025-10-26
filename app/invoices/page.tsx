@@ -43,7 +43,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Clean and professional invoice for any business",
     icon: Briefcase,
     color: "from-blue-500 to-cyan-500",
-    downloadUrl: "/templates/simple-business-invoice.pdf",
+    downloadUrl: "/templates/simple-business-invoice.html",
   },
   {
     id: "invoice-2",
@@ -53,7 +53,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Perfect for retail stores and shops",
     icon: ShoppingCart,
     color: "from-green-500 to-emerald-500",
-    downloadUrl: "/templates/retail-store-invoice.pdf",
+    downloadUrl: "/templates/retail-store-invoice.html",
   },
   {
     id: "invoice-3",
@@ -63,7 +63,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Ideal for consultants, freelancers, and service providers",
     icon: Wrench,
     color: "from-purple-500 to-pink-500",
-    downloadUrl: "/templates/service-provider-invoice.pdf",
+    downloadUrl: "/templates/service-provider-invoice.html",
   },
   {
     id: "invoice-4",
@@ -73,7 +73,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Recurring billing template for subscription services",
     icon: CreditCard,
     color: "from-orange-500 to-red-500",
-    downloadUrl: "/templates/subscription-invoice.pdf",
+    downloadUrl: "/templates/subscription-invoice.html",
   },
   {
     id: "invoice-5",
@@ -83,7 +83,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Restaurant and cafe billing template",
     icon: Receipt,
     color: "from-amber-500 to-yellow-500",
-    downloadUrl: "/templates/restaurant-invoice.pdf",
+    downloadUrl: "/templates/restaurant-invoice.html",
   },
   {
     id: "invoice-6",
@@ -93,7 +93,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Construction and contractor invoice template",
     icon: Wrench,
     color: "from-yellow-600 to-orange-600",
-    downloadUrl: "/templates/construction-invoice.pdf",
+    downloadUrl: "/templates/construction-invoice.html",
   },
   {
     id: "invoice-7",
@@ -103,7 +103,7 @@ const invoiceTemplates: Invoice[] = [
     description: "School, college, and educational institution invoice",
     icon: GraduationCap,
     color: "from-indigo-500 to-blue-500",
-    downloadUrl: "/templates/education-invoice.pdf",
+    downloadUrl: "/templates/education-invoice.html",
   },
   {
     id: "invoice-8",
@@ -113,7 +113,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Medical clinic and healthcare provider invoice",
     icon: Heart,
     color: "from-red-500 to-pink-500",
-    downloadUrl: "/templates/medical-invoice.pdf",
+    downloadUrl: "/templates/medical-invoice.html",
   },
   {
     id: "invoice-9",
@@ -123,7 +123,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Law firm and legal services invoice template",
     icon: FileText,
     color: "from-slate-600 to-gray-600",
-    downloadUrl: "/templates/legal-invoice.pdf",
+    downloadUrl: "/templates/legal-invoice.html",
   },
   {
     id: "invoice-10",
@@ -133,7 +133,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Design agencies and creative professionals",
     icon: Lightbulb,
     color: "from-violet-500 to-purple-500",
-    downloadUrl: "/templates/creative-agency-invoice.pdf",
+    downloadUrl: "/templates/creative-agency-invoice.html",
   },
   {
     id: "invoice-11",
@@ -143,7 +143,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Online store and e-commerce platform invoice",
     icon: ShoppingCart,
     color: "from-cyan-500 to-blue-500",
-    downloadUrl: "/templates/ecommerce-invoice.pdf",
+    downloadUrl: "/templates/ecommerce-invoice.html",
   },
   {
     id: "invoice-12",
@@ -153,7 +153,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Photographer and photography studio invoice",
     icon: ImageIcon,
     color: "from-pink-500 to-rose-500",
-    downloadUrl: "/templates/photography-invoice.pdf",
+    downloadUrl: "/templates/photography-invoice.html",
   },
 ];
 
