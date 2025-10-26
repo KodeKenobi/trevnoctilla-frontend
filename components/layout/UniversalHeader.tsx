@@ -70,9 +70,6 @@ export default function UniversalHeader() {
       case "qr-generator":
         setSelectedMenuItem("QR Generator");
         break;
-      case "invoices":
-        setSelectedMenuItem("Invoices");
-        break;
       default:
         setSelectedMenuItem("Home");
     }
@@ -85,7 +82,6 @@ export default function UniversalHeader() {
 
     if (item === "Home") navigateTo("home");
     else if (item === "Tools") navigateTo("tools");
-    else if (item === "Invoices") router.push("/invoices");
     else if (item === "Video Converter") navigateTo("video-converter");
     else if (item === "Audio Converter") navigateTo("audio-converter");
     else if (item === "Image Converter") navigateTo("image-converter");
@@ -149,7 +145,6 @@ export default function UniversalHeader() {
           {[
             "Home",
             "Tools",
-            "Invoices",
             "Video Converter",
             "Audio Converter",
             "Image Converter",
@@ -446,7 +441,6 @@ export default function UniversalHeader() {
             {[
               "Home",
               "Tools",
-              "Invoices",
               "Video Converter",
               "Audio Converter",
               "Image Converter",

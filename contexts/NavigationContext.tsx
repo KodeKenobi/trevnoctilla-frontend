@@ -11,8 +11,7 @@ type Page =
   | "image-converter"
   | "pdf-tools"
   | "pdf-editor"
-  | "qr-generator"
-  | "invoices";
+  | "qr-generator";
 
 interface NavigationContextType {
   currentPage: Page;
@@ -31,7 +30,6 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const getCurrentPage = (): Page => {
     if (pathname === "/") return "home";
     if (pathname === "/tools") return "tools";
-    if (pathname === "/invoices") return "invoices";
     if (pathname === "/tools/video-converter") return "video-converter";
     if (pathname === "/tools/audio-converter") return "audio-converter";
     if (pathname === "/tools/image-converter") return "image-converter";
@@ -47,9 +45,6 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         break;
       case "tools":
         router.push("/tools");
-        break;
-      case "invoices":
-        router.push("/invoices");
         break;
       case "video-converter":
         router.push("/tools/video-converter");
