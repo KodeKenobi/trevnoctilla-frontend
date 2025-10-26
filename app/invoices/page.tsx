@@ -282,56 +282,88 @@ export default function InvoicesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 whileHover={{ y: -5 }}
-                className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 hover:border-purple-500/50 transition-all group"
+                className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl overflow-hidden hover:border-purple-500/50 transition-all group"
               >
-                {/* Icon */}
-                <div
-                  className={`w-16 h-16 bg-gradient-to-r ${invoice.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
-                >
-                  <IconComponent className="w-8 h-8 text-white" />
+                {/* Template Preview */}
+                <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-700 to-gray-800 overflow-hidden">
+                  {/* Mock Invoice Design */}
+                  <div className="absolute inset-4 rounded-lg overflow-hidden shadow-2xl">
+                    {/* Header */}
+                    <div className="h-24 bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">INVOICE</span>
+                    </div>
+                    
+                    {/* Content Area */}
+                    <div className="bg-white p-4 h-full">
+                      {/* Company Info */}
+                      <div className="space-y-1 mb-4">
+                        <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-2 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-2 bg-gray-200 rounded w-2/3"></div>
+                      </div>
+                      
+                      {/* Table */}
+                      <div className="mb-3">
+                        <div className="h-6 bg-purple-100 rounded mb-1"></div>
+                        <div className="space-y-1">
+                          <div className="h-3 bg-gray-100 rounded"></div>
+                          <div className="h-3 bg-gray-100 rounded"></div>
+                          <div className="h-3 bg-gray-100 rounded w-5/6"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Summary */}
+                      <div className="space-y-1">
+                        <div className="h-2 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-2 bg-gray-200 rounded w-2/3"></div>
+                        <div className="h-4 bg-purple-200 rounded mt-2"></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Overlay with View Icon */}
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                       onClick={() => handlePreview(invoice)}>
+                    <div className="bg-white/90 backdrop-blur-sm p-6 rounded-full shadow-xl hover:scale-110 transition-transform">
+                      <Eye className="w-12 h-12 text-purple-600" />
+                    </div>
+                  </div>
                 </div>
 
-                {/* Content */}
-                <h3 className="text-xl font-bold text-white mb-2">
-                  {invoice.title}
-                </h3>
-                <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                  {invoice.description}
-                </p>
+                {/* Title and Actions */}
+                <div className="p-4">
+                  <h3 className="text-lg font-bold text-white mb-2">
+                    {invoice.title}
+                  </h3>
+                  <p className="text-gray-400 text-xs mb-3 line-clamp-2">
+                    {invoice.description}
+                  </p>
 
-                {/* Badges */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="px-3 py-1 bg-gray-700/50 text-gray-300 rounded-lg text-xs font-medium">
-                    {invoice.type}
-                  </span>
-                  <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg text-xs font-medium border border-purple-500/30">
-                    {invoice.category}
-                  </span>
-                </div>
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <span className="px-2 py-1 bg-gray-700/50 text-gray-300 rounded text-xs font-medium">
+                      {invoice.type}
+                    </span>
+                    <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs font-medium border border-purple-500/30">
+                      {invoice.category}
+                    </span>
+                  </div>
 
-                {/* Actions */}
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => handlePreview(invoice)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all group/item"
-                  >
-                    <Eye className="w-4 h-4 group-hover/item:scale-110 transition-transform" />
-                    <span className="text-sm font-medium">Preview</span>
-                  </button>
+                  {/* Actions */}
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleDownload(invoice)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-700 text-white rounded-lg transition-all group/item"
+                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-gray-700/50 hover:bg-gray-700 text-white rounded transition-all text-xs group/item"
                     >
-                      <Download className="w-4 h-4 group-hover/item:translate-y-1 transition-transform" />
-                      <span className="text-sm font-medium">Download</span>
+                      <Download className="w-3 h-3 group-hover/item:translate-y-0.5 transition-transform" />
+                      <span>Download</span>
                     </button>
                     <button
                       onClick={() => handleEdit(invoice)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all group/item"
+                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded transition-all text-xs group/item"
                     >
-                      <Edit className="w-4 h-4 group-hover/item:rotate-12 transition-transform" />
-                      <span className="text-sm font-medium">Edit</span>
+                      <Edit className="w-3 h-3 group-hover/item:rotate-12 transition-transform" />
+                      <span>Edit</span>
                     </button>
                   </div>
                 </div>
