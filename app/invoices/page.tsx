@@ -286,39 +286,13 @@ export default function InvoicesPage() {
               >
                 {/* Template Preview */}
                 <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-700 to-gray-800 overflow-hidden">
-                  {/* Mock Invoice Design */}
-                  <div className="absolute inset-4 rounded-lg overflow-hidden shadow-2xl">
-                    {/* Header */}
-                    <div className="h-24 bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">INVOICE</span>
-                    </div>
-                    
-                    {/* Content Area */}
-                    <div className="bg-white p-4 h-full">
-                      {/* Company Info */}
-                      <div className="space-y-1 mb-4">
-                        <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-2 bg-gray-200 rounded w-1/2"></div>
-                        <div className="h-2 bg-gray-200 rounded w-2/3"></div>
-                      </div>
-                      
-                      {/* Table */}
-                      <div className="mb-3">
-                        <div className="h-6 bg-purple-100 rounded mb-1"></div>
-                        <div className="space-y-1">
-                          <div className="h-3 bg-gray-100 rounded"></div>
-                          <div className="h-3 bg-gray-100 rounded"></div>
-                          <div className="h-3 bg-gray-100 rounded w-5/6"></div>
-                        </div>
-                      </div>
-                      
-                      {/* Summary */}
-                      <div className="space-y-1">
-                        <div className="h-2 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-2 bg-gray-200 rounded w-2/3"></div>
-                        <div className="h-4 bg-purple-200 rounded mt-2"></div>
-                      </div>
-                    </div>
+                  {/* Invoice Preview */}
+                  <div className="absolute inset-4 rounded-lg overflow-hidden shadow-2xl transform scale-[0.4] origin-top-left pointer-events-none" style={{ width: '250%', height: '250%' }}>
+                    <iframe
+                      src={invoice.downloadUrl}
+                      className="w-full h-full border-0 pointer-events-none"
+                      style={{ zoom: 0.5 }}
+                    />
                   </div>
                   
                   {/* Overlay with View Icon */}
