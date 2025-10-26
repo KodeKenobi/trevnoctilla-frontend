@@ -19,6 +19,7 @@ import {
   Search,
   Filter,
   ArrowRight,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -72,7 +73,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Recurring billing template for subscription services",
     icon: CreditCard,
     color: "from-orange-500 to-red-500",
-    downloadUrl: "templates/subscription-invoice.pdf",
+    downloadUrl: "/templates/subscription-invoice.pdf",
   },
   {
     id: "invoice-5",
@@ -82,7 +83,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Restaurant and cafe billing template",
     icon: Receipt,
     color: "from-amber-500 to-yellow-500",
-    downloadUrl: "templates/restaurant-invoice.pdf",
+    downloadUrl: "/templates/restaurant-invoice.pdf",
   },
   {
     id: "invoice-6",
@@ -92,7 +93,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Construction and contractor invoice template",
     icon: Wrench,
     color: "from-yellow-600 to-orange-600",
-    downloadUrl: "templates/construction-invoice.pdf",
+    downloadUrl: "/templates/construction-invoice.pdf",
   },
   {
     id: "invoice-7",
@@ -102,7 +103,7 @@ const invoiceTemplates: Invoice[] = [
     description: "School, college, and educational institution invoice",
     icon: GraduationCap,
     color: "from-indigo-500 to-blue-500",
-    downloadUrl: "templates/education-invoice.pdf",
+    downloadUrl: "/templates/education-invoice.pdf",
   },
   {
     id: "invoice-8",
@@ -112,7 +113,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Medical clinic and healthcare provider invoice",
     icon: Heart,
     color: "from-red-500 to-pink-500",
-    downloadUrl: "templates/medical-invoice.pdf",
+    downloadUrl: "/templates/medical-invoice.pdf",
   },
   {
     id: "invoice-9",
@@ -122,7 +123,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Law firm and legal services invoice template",
     icon: FileText,
     color: "from-slate-600 to-gray-600",
-    downloadUrl: "templates/legal-invoice.pdf",
+    downloadUrl: "/templates/legal-invoice.pdf",
   },
   {
     id: "invoice-10",
@@ -132,7 +133,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Design agencies and creative professionals",
     icon: Lightbulb,
     color: "from-violet-500 to-purple-500",
-    downloadUrl: "templates/creative-agency-invoice.pdf",
+    downloadUrl: "/templates/creative-agency-invoice.pdf",
   },
   {
     id: "invoice-11",
@@ -142,7 +143,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Online store and e-commerce platform invoice",
     icon: ShoppingCart,
     color: "from-cyan-500 to-blue-500",
-    downloadUrl: "templates/ecommerce-invoice.pdf",
+    downloadUrl: "/templates/ecommerce-invoice.pdf",
   },
   {
     id: "invoice-12",
@@ -152,7 +153,7 @@ const invoiceTemplates: Invoice[] = [
     description: "Photographer and photography studio invoice",
     icon: ImageIcon,
     color: "from-pink-500 to-rose-500",
-    downloadUrl: "templates/photography-invoice.pdf",
+    downloadUrl: "/templates/photography-invoice.pdf",
   },
 ];
 
@@ -195,6 +196,11 @@ export default function InvoicesPage() {
     window.location.href = `/pdf-editor?template=${encodeURIComponent(
       invoice.downloadUrl
     )}`;
+  };
+
+  const handlePreview = (invoice: Invoice) => {
+    // Open invoice in new tab for preview
+    window.open(invoice.downloadUrl, "_blank");
   };
 
   return (
@@ -304,21 +310,30 @@ export default function InvoicesPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2">
                   <button
-                    onClick={() => handleDownload(invoice)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-700 text-white rounded-lg transition-all group/item"
+                    onClick={() => handlePreview(invoice)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all group/item"
                   >
-                    <Download className="w-4 h-4 group-hover/item:translate-y-1 transition-transform" />
-                    <span className="text-sm font-medium">Download</span>
+                    <Eye className="w-4 h-4 group-hover/item:scale-110 transition-transform" />
+                    <span className="text-sm font-medium">Preview</span>
                   </button>
-                  <button
-                    onClick={() => handleEdit(invoice)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all group/item"
-                  >
-                    <Edit className="w-4 h-4 group-hover/item:rotate-12 transition-transform" />
-                    <span className="text-sm font-medium">Edit</span>
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleDownload(invoice)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-700 text-white rounded-lg transition-all group/item"
+                    >
+                      <Download className="w-4 h-4 group-hover/item:translate-y-1 transition-transform" />
+                      <span className="text-sm font-medium">Download</span>
+                    </button>
+                    <button
+                      onClick={() => handleEdit(invoice)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all group/item"
+                    >
+                      <Edit className="w-4 h-4 group-hover/item:rotate-12 transition-transform" />
+                      <span className="text-sm font-medium">Edit</span>
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             );
