@@ -285,21 +285,20 @@ export default function InvoicesPage() {
                 className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl overflow-hidden hover:border-purple-500/50 transition-all group"
               >
                 {/* Template Preview */}
-                <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-700 to-gray-800 overflow-hidden">
+                <div className="relative aspect-[4/3] bg-gradient-to-br from-gray-700 to-gray-800 overflow-hidden">
                   {/* Invoice Preview */}
-                  <div className="absolute inset-4 rounded-lg overflow-hidden shadow-2xl transform scale-[0.4] origin-top-left pointer-events-none" style={{ width: '250%', height: '250%' }}>
+                  <div className="absolute inset-2 rounded overflow-hidden shadow-lg transform scale-[0.25] origin-top-left pointer-events-none" style={{ width: '400%', height: '400%' }}>
                     <iframe
                       src={invoice.downloadUrl}
                       className="w-full h-full border-0 pointer-events-none"
-                      style={{ zoom: 0.5 }}
                     />
                   </div>
                   
                   {/* Overlay with View Icon */}
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                        onClick={() => handlePreview(invoice)}>
-                    <div className="bg-white/90 backdrop-blur-sm p-6 rounded-full shadow-xl hover:scale-110 transition-transform">
-                      <Eye className="w-12 h-12 text-purple-600" />
+                    <div className="bg-white/90 backdrop-blur-sm p-4 rounded-full shadow-xl hover:scale-110 transition-transform">
+                      <Eye className="w-8 h-8 text-purple-600" />
                     </div>
                   </div>
                 </div>
