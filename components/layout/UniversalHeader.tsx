@@ -70,6 +70,9 @@ export default function UniversalHeader() {
       case "qr-generator":
         setSelectedMenuItem("QR Generator");
         break;
+      case "invoices":
+        setSelectedMenuItem("Invoices");
+        break;
       default:
         setSelectedMenuItem("Home");
     }
@@ -82,6 +85,7 @@ export default function UniversalHeader() {
 
     if (item === "Home") navigateTo("home");
     else if (item === "Tools") navigateTo("tools");
+    else if (item === "Invoices") router.push("/invoices");
     else if (item === "Video Converter") navigateTo("video-converter");
     else if (item === "Audio Converter") navigateTo("audio-converter");
     else if (item === "Image Converter") navigateTo("image-converter");
@@ -145,6 +149,7 @@ export default function UniversalHeader() {
           {[
             "Home",
             "Tools",
+            "Invoices",
             "Video Converter",
             "Audio Converter",
             "Image Converter",
@@ -257,7 +262,7 @@ export default function UniversalHeader() {
                           <User className="h-4 w-4" />
                           <span>Client Dashboard</span>
                         </Link>
-                        
+
                         {/* Switch to Admin Dashboard */}
                         <Link
                           href="/admin"
@@ -266,7 +271,7 @@ export default function UniversalHeader() {
                           <Shield className="h-4 w-4" />
                           <span>Admin Dashboard</span>
                         </Link>
-                        
+
                         <button
                           onClick={logout}
                           className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
@@ -337,7 +342,7 @@ export default function UniversalHeader() {
             <div className="w-16 h-6 bg-gray-700 rounded-lg animate-pulse"></div>
           ) : user ? (
             <div className="flex items-center space-x-2">
-                <div className="relative z-[99999]" data-profile-dropdown>
+              <div className="relative z-[99999]" data-profile-dropdown>
                 <button
                   onClick={() =>
                     setIsProfileDropdownOpen(!isProfileDropdownOpen)
@@ -374,7 +379,7 @@ export default function UniversalHeader() {
                         <User className="h-3 w-3" />
                         <span>Client Dashboard</span>
                       </Link>
-                      
+
                       {/* Switch to Admin Dashboard */}
                       <Link
                         href="/admin"
@@ -383,7 +388,7 @@ export default function UniversalHeader() {
                         <Shield className="h-3 w-3" />
                         <span>Admin Dashboard</span>
                       </Link>
-                      
+
                       <button
                         onClick={logout}
                         className="w-full flex items-center space-x-2 px-2 py-1.5 text-xs text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
@@ -441,6 +446,7 @@ export default function UniversalHeader() {
             {[
               "Home",
               "Tools",
+              "Invoices",
               "Video Converter",
               "Audio Converter",
               "Image Converter",
