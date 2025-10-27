@@ -239,7 +239,7 @@ export default function ApiDocsPage() {
             applications. Convert videos, process PDFs, optimize images, and
             more with our comprehensive API suite.
           </p>
-          <div className="flex flex-col gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <motion.button
               onClick={handleGetStarted}
               className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
