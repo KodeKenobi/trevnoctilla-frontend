@@ -270,23 +270,23 @@ export default function ApiDocsPage() {
           transition={{ duration: 0.8 }}
           className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16"
         >
-          {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 text-center"
-            >
-              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                {feature.icon}
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">
-                {feature.title}
-              </h3>
-              <p className="text-gray-400">{feature.description}</p>
-            </motion.div>
-          ))}
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 text-center md:text-left"
+              >
+                <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto md:mx-0 mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-400">{feature.description}</p>
+              </motion.div>
+            ))}
         </motion.div>
 
         {/* API Reference */}
@@ -302,8 +302,8 @@ export default function ApiDocsPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {/* PDF APIs */}
-            <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
-              <div className="flex items-center mb-4">
+            <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 text-center md:text-left">
+              <div className="flex items-center mb-4 justify-center md:justify-start">
                 <FileText className="w-8 h-8 text-red-500 mr-3" />
                 <h3 className="text-xl font-bold text-white">PDF Processing</h3>
               </div>
@@ -328,8 +328,8 @@ export default function ApiDocsPage() {
             </div>
 
             {/* Video/Audio APIs */}
-            <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
-              <div className="flex items-center mb-4">
+            <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 text-center md:text-left">
+              <div className="flex items-center mb-4 justify-center md:justify-start">
                 <Play className="w-8 h-8 text-green-500 mr-3" />
                 <h3 className="text-xl font-bold text-white">
                   Media Conversion
@@ -366,8 +366,8 @@ export default function ApiDocsPage() {
             </div>
 
             {/* Utility APIs */}
-            <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6">
-              <div className="flex items-center mb-4">
+            <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 text-center md:text-left">
+              <div className="flex items-center mb-4 justify-center md:justify-start">
                 <QrCode className="w-8 h-8 text-purple-500 mr-3" />
                 <h3 className="text-xl font-bold text-white">Utilities</h3>
               </div>
