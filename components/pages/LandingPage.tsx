@@ -429,10 +429,10 @@ export default function LandingPage() {
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.2 }}
-                  className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-cyan-500/50 transition-all duration-300"
+                  className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-cyan-500/50 transition-all duration-300 text-center md:text-left"
                 >
                   <div
-                    className={`w-12 h-12 bg-gradient-to-r ${tool.gradient} rounded-xl flex items-center justify-center mb-6`}
+                    className={`w-12 h-12 bg-gradient-to-r ${tool.gradient} rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
                   >
                     <FileText className="w-6 h-6 text-white" />
                   </div>
@@ -446,7 +446,7 @@ export default function LandingPage() {
                     {tool.features.map((feature, idx) => (
                       <li
                         key={`${tool.title}-feature-${idx}`}
-                        className="flex items-center text-gray-400"
+                        className="flex items-center text-gray-400 justify-center md:justify-start"
                       >
                         <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3"></div>
                         {feature}
@@ -504,9 +504,9 @@ export default function LandingPage() {
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
-                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8"
+                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 text-center md:text-left"
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-6">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0">
                   <FileText className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-4">
@@ -527,7 +527,7 @@ export default function LandingPage() {
                   ].map((feature, idx) => (
                     <li
                       key={`pdf-feature-${idx}`}
-                      className="flex items-center text-gray-400"
+                      className="flex items-center text-gray-400 justify-center md:justify-start"
                     >
                       <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
                       {feature}
@@ -548,9 +548,9 @@ export default function LandingPage() {
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
-                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8"
+                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 text-center md:text-left"
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6">
+                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0">
                   <Zap className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-4">
@@ -571,7 +571,7 @@ export default function LandingPage() {
                   ].map((feature, idx) => (
                     <li
                       key={`media-feature-${idx}`}
-                      className="flex items-center text-gray-400"
+                      className="flex items-center text-gray-400 justify-center md:justify-start"
                     >
                       <div className="w-2 h-2 bg-orange-400 rounded-full mr-3"></div>
                       {feature}
