@@ -172,8 +172,8 @@ export default function AdminDashboard() {
     const content = (
       <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 overflow-hidden shadow-lg rounded-xl hover:bg-gray-800/70 transition-all duration-300 group">
         <div className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
+          <div className="flex flex-col md:flex-row items-center text-center md:text-left md:justify-between">
+            <div className="flex-1 mb-4 md:mb-0">
               <p className="text-sm font-medium text-gray-300 mb-2">{title}</p>
               <p className="text-3xl font-bold text-white">{value}</p>
               {change && (
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
               )}
             </div>
             <div
-              className={`p-3 rounded-lg bg-gradient-to-r ${colorClasses[color]} opacity-80 group-hover:opacity-100 transition-opacity`}
+              className={`p-3 rounded-lg bg-gradient-to-r ${colorClasses[color]} opacity-80 group-hover:opacity-100 transition-opacity mx-auto md:mx-0`}
             >
               <Icon className="h-6 w-6 text-white" />
             </div>
