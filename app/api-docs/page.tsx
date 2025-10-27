@@ -222,46 +222,6 @@ export default function ApiDocsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 page-content">
-      {/* Header */}
-      <div className="border-b border-gray-700/50 bg-gray-900/50 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
-                <Code className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">
-                  Trevnoctilla API
-                </h1>
-                <p className="text-gray-400">Developer Documentation</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <motion.button
-                  onClick={() => router.push("/dashboard")}
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold px-6 py-2 rounded-lg transition-all duration-300"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Dashboard
-                </motion.button>
-              ) : (
-                <motion.button
-                  onClick={handleGetStarted}
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold px-6 py-2 rounded-lg transition-all duration-300"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Get API Key
-                </motion.button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
         <motion.div
@@ -279,10 +239,10 @@ export default function ApiDocsPage() {
             applications. Convert videos, process PDFs, optimize images, and
             more with our comprehensive API suite.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col gap-4 justify-center items-center">
             <motion.button
               onClick={handleGetStarted}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300"
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -294,7 +254,7 @@ export default function ApiDocsPage() {
                   .getElementById("code-examples")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
-              className="border-2 border-gray-600 hover:border-cyan-400 text-gray-300 hover:text-white font-bold px-8 py-4 rounded-xl transition-all duration-300"
+              className="border-2 border-gray-600 hover:border-cyan-400 text-gray-300 hover:text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -815,7 +775,7 @@ export default function ApiDocsPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.button
               onClick={handleGetStarted}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300"
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -825,7 +785,7 @@ export default function ApiDocsPage() {
               onClick={() =>
                 window.open("mailto:api@trevnoctilla.com", "_blank")
               }
-              className="border-2 border-gray-600 hover:border-cyan-400 text-gray-300 hover:text-white font-bold px-8 py-4 rounded-xl transition-all duration-300"
+              className="border-2 border-gray-600 hover:border-cyan-400 text-gray-300 hover:text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
