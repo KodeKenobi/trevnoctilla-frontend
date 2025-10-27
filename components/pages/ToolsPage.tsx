@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   ArrowRight,
   Play,
@@ -13,11 +14,8 @@ import {
   Shield,
   Zap as Lightning,
 } from "lucide-react";
-import { useNavigation } from "@/contexts/NavigationContext";
 
 export default function ToolsPage() {
-  const { navigateTo } = useNavigation();
-
   const tools = [
     {
       title: "Video Converter",
@@ -70,15 +68,6 @@ export default function ToolsPage() {
       icon: QrCode,
       gradient: "from-purple-500 to-pink-500",
       features: ["Custom Design", "High Resolution", "Multiple Formats"],
-    },
-    {
-      title: "Image Converter",
-      description:
-        "Convert images between different formats with our powerful conversion engine.",
-      page: "image-converter" as const,
-      icon: Image,
-      gradient: "from-orange-500 to-red-500",
-      features: ["Batch Convert", "Quality Preserve", "Format Support"],
     },
   ];
 
@@ -153,48 +142,67 @@ export default function ToolsPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-blue-500/5 to-transparent"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {tools.map((tool, index) => (
-              <motion.button
-                key={tool.page}
-                onClick={() => navigateTo(tool.page)}
-                className="card card-hover p-8 group animate-fade-in-up text-left w-full"
-                style={{ animationDelay: `${index * 0.1}s` }}
-                whileHover={{ scale: 1.02, y: -5 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="flex items-center mb-6">
-                  <div
-                    className={`w-14 h-14 rounded-xl bg-gradient-to-r ${tool.gradient} flex items-center justify-center mr-4 group-hover:scale-110 transition-transform`}
-                  >
-                    <tool.icon className="w-7 h-7 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white group-hover:text-cyan-400 transition-colors">
-                    {tool.title}
-                  </h3>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center md:justify-items-stretch">
+            {tools.map((tool, index) => {
+              const href =
+                tool.page === "pdf-tools"
+                  ? "/tools/pdf-tools"
+                  : tool.page === "video-converter"
+                  ? "/tools/video-converter"
+                  : tool.page === "audio-converter"
+                  ? "/tools/audio-converter"
+                  : tool.page === "image-converter"
+                  ? "/tools/image-converter"
+                  : tool.page === "qr-generator"
+                  ? "/tools/qr-generator"
+                  : "/";
 
-                <p className="text-gray-300 mb-6 leading-relaxed">
-                  {tool.description}
-                </p>
-
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {tool.features.map((feature, featureIndex) => (
-                    <span
-                      key={`${tool.page}-feature-${featureIndex}`}
-                      className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-cyan-400 border border-cyan-500/30"
+              return (
+                <motion.div
+                  key={tool.page}
+                  whileHover={{ scale: 1.02, y: -5 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="card card-hover p-8 group animate-fade-in-up text-center md:text-left w-full max-w-md md:max-w-none mx-auto"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="flex flex-col md:flex-row items-center mb-6">
+                    <div
+                      className={`w-14 h-14 rounded-xl bg-gradient-to-r ${tool.gradient} flex items-center justify-center mb-4 md:mb-0 md:mr-4 group-hover:scale-110 transition-transform`}
                     >
-                      {feature}
-                    </span>
-                  ))}
-                </div>
+                      <tool.icon className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white group-hover:text-cyan-400 transition-colors">
+                      {tool.title}
+                    </h3>
+                  </div>
 
-                <div className="flex items-center text-cyan-400 group-hover:text-cyan-300">
-                  <span className="font-medium">Try it now</span>
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </motion.button>
-            ))}
+                  <p className="text-gray-300 mb-6 leading-relaxed text-center md:text-left">
+                    {tool.description}
+                  </p>
+
+                  <div className="flex flex-wrap gap-2 mb-6 justify-center md:justify-start">
+                    {tool.features.map((feature, featureIndex) => (
+                      <span
+                        key={`${tool.page}-feature-${featureIndex}`}
+                        className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-cyan-400 border border-cyan-500/30"
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center text-cyan-400 group-hover:text-cyan-300 justify-center md:justify-start">
+                    <span className="font-medium">Try it now</span>
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  <Link
+                    href={href}
+                    className="absolute inset-0"
+                    aria-label={tool.title}
+                  />
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>

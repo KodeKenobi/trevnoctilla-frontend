@@ -240,25 +240,33 @@ export default function WebsiteTracker() {
         const response = await originalFetch(...args);
         const endTime = Date.now();
 
-        internalAnalytics.track("api_call", {
-          url: url.toString(),
-          method: options?.method || "GET",
-          status: response.status,
-          duration: endTime - startTime,
-          page: pathname,
-        });
+        // Don't track analytics calls to avoid recursion
+        const urlStr = url.toString();
+        if (!urlStr.includes("/api/analytics/")) {
+          internalAnalytics.track("api_call", {
+            url: urlStr,
+            method: options?.method || "GET",
+            status: response.status,
+            duration: endTime - startTime,
+            page: pathname,
+          });
+        }
 
         return response;
       } catch (error) {
         const endTime = Date.now();
+        const urlStr = url.toString();
 
-        internalAnalytics.track("api_error", {
-          url: url.toString(),
-          method: options?.method || "GET",
-          error: error instanceof Error ? error.message : "Unknown error",
-          duration: endTime - startTime,
-          page: pathname,
-        });
+        // Don't track analytics errors to avoid recursion
+        if (!urlStr.includes("/api/analytics/")) {
+          internalAnalytics.track("api_error", {
+            url: urlStr,
+            method: options?.method || "GET",
+            error: error instanceof Error ? error.message : "Unknown error",
+            duration: endTime - startTime,
+            page: pathname,
+          });
+        }
 
         throw error;
       }

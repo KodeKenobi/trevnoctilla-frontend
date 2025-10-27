@@ -164,32 +164,36 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 1.2 }}
-              className="mt-[-120px] flex flex-row items-center justify-center space-x-2 sm:space-x-6"
+              className="mt-[-120px] flex flex-row items-center justify-center space-x-2 sm:space-x-6 relative z-50"
             >
-              <motion.div
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
+              <Link
+                href="/tools"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-1 sm:space-x-2 group text-sm sm:text-base hover:scale-105 active:scale-95 relative z-50"
               >
-                <Link
-                  href="/tools"
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-1 sm:space-x-2 group text-sm sm:text-base"
-                >
-                  <span>Start Converting</span>
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
-                </Link>
-              </motion.div>
-              <motion.div
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
+                <span>Start Converting</span>
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link
+                href="/api-docs"
+                className="text-gray-300 hover:text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-200 text-sm sm:text-base hover:scale-105 active:scale-95 relative z-50"
               >
-                <Link
-                  href="/api-docs"
-                  className="text-gray-300 hover:text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-200 text-sm sm:text-base"
-                >
-                  API Docs
-                </Link>
-              </motion.div>
+                API Docs
+              </Link>
             </motion.div>
+
+            {/* Ezoic Ad Placement - Above Features */}
+            <div id="ezoic-pub-ad-placeholder-101"></div>
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  if (typeof ezstandalone !== 'undefined') {
+                    ezstandalone.cmd.push(function () {
+                      ezstandalone.showAds(101);
+                    });
+                  }
+                `,
+              }}
+            />
           </div>
         </main>
 
@@ -256,10 +260,10 @@ export default function LandingPage() {
                     rotateY: 5,
                     transition: { duration: 0.3 },
                   }}
-                  className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300"
+                  className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 text-center md:text-left"
                 >
                   <motion.div
-                    className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-6`}
+                    className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
                     initial={{ scale: 0, rotate: -180 }}
                     whileInView={{ scale: 1, rotate: 0 }}
                     transition={{
@@ -291,6 +295,20 @@ export default function LandingPage() {
                 </motion.div>
               ))}
             </div>
+
+            {/* Ezoic Ad Placement - Between Features and Stats */}
+            <div id="ezoic-pub-ad-placeholder-102"></div>
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  if (typeof ezstandalone !== 'undefined') {
+                    ezstandalone.cmd.push(function () {
+                      ezstandalone.showAds(102);
+                    });
+                  }
+                `,
+              }}
+            />
           </div>
         </section>
 
