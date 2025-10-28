@@ -110,19 +110,30 @@ export function ApiTester({ toolId }: ApiTesterProps) {
       if (param.required) {
         if (param.type === "file") {
           const file = files[param.name];
-          if (!file || file === null) {
+          console.log(`🔍 Checking file param "${param.name}":`, file, "Type:", typeof file);
+          if (!file || file === null || file === undefined) {
+            console.log(`❌ File "${param.name}" is missing or invalid`);
             missingFields.push(param.name);
+          } else {
+            console.log(`✅ File "${param.name}" is present`);
           }
         } else {
           const value = parameters[param.name];
+          console.log(`🔍 Checking param "${param.name}":`, value);
           if (value === undefined || value === null || value === "") {
+            console.log(`❌ Parameter "${param.name}" is missing`);
             missingFields.push(param.name);
           }
         }
       }
     });
 
-    console.log("🔍 Validation check:", { missingFields, files, parameters });
+    console.log("🔍 Validation check:", { 
+      missingFields, 
+      filesObject: files, 
+      parametersObject: parameters,
+      requiredParams: currentEndpoint.parameters.filter(p => p.required)
+    });
 
     if (missingFields.length > 0) {
       console.log("❌ Validation failed, missing fields:", missingFields);
