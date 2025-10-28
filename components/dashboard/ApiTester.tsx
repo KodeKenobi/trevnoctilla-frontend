@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Send,
   Download,
@@ -10,13 +10,24 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Key,
+  Plus,
 } from "lucide-react";
 import { useAlert } from "@/contexts/AlertProvider";
 import { API_ENDPOINTS } from "../../lib/apiEndpoints";
 import { apiTestClient, ApiTestResult } from "../../lib/apiTestClient";
+import { getApiUrl } from "@/lib/config";
 
 interface ApiTesterProps {
   toolId: string;
+}
+
+interface ApiKey {
+  id: number;
+  name: string;
+  key?: string;
+  created_at: string;
+  is_active: boolean;
 }
 
 export function ApiTester({ toolId }: ApiTesterProps) {
@@ -24,17 +35,152 @@ export function ApiTester({ toolId }: ApiTesterProps) {
   const [selectedEndpoint, setSelectedEndpoint] = useState<string>("");
   const [parameters, setParameters] = useState<Record<string, any>>({});
   const [files, setFiles] = useState<Record<string, File | null>>({});
-  const [headers, setHeaders] = useState<Record<string, string>>({
-    Authorization: "Bearer your-api-key-here",
-  });
+  const [headers, setHeaders] = useState<Record<string, string>>({});
+  const [selectedApiKey, setSelectedApiKey] = useState<string>("");
+  const [availableKeys, setAvailableKeys] = useState<ApiKey[]>([]);
+  const [loadingKeys, setLoadingKeys] = useState(false);
   const [showKeyGenerator, setShowKeyGenerator] = useState(false);
   const [isGeneratingKey, setIsGeneratingKey] = useState(false);
+  const [newKeyName, setNewKeyName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ApiTestResult | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const endpoints = API_ENDPOINTS[toolId] || [];
   const currentEndpoint = endpoints.find((ep) => ep.id === selectedEndpoint);
+
+  // Fetch available API keys
+  useEffect(() => {
+    fetchApiKeys();
+  }, []);
+
+  // Update headers when API key changes
+  useEffect(() => {
+    if (selectedApiKey) {
+      const selectedKey = availableKeys.find(
+        (k) => k.id.toString() === selectedApiKey
+      );
+      console.log("🔍 Looking for key with ID:", selectedApiKey);
+      console.log("🔍 Found key:", selectedKey);
+      if (selectedKey && selectedKey.key) {
+        console.log(
+          "✅ Setting Authorization header for API key:",
+          selectedKey.name
+        );
+        setHeaders((prev) => ({
+          ...prev,
+          Authorization: `Bearer ${selectedKey.key}`,
+        }));
+      } else {
+        console.warn("⚠️ Selected key does not have a key value");
+      }
+    }
+  }, [selectedApiKey, availableKeys]);
+
+  const fetchApiKeys = async () => {
+    setLoadingKeys(true);
+    try {
+      const authToken = localStorage.getItem("auth_token");
+      if (!authToken) {
+        console.log("No auth token found");
+        setLoadingKeys(false);
+        return;
+      }
+
+      const response = await fetch(getApiUrl("/api/client/keys"), {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const keys = await response.json();
+        console.log("🔑 Fetched API keys:", keys);
+        console.log(
+          "📝 First key structure:",
+          keys.length > 0 ? keys[0] : "No keys"
+        );
+        setAvailableKeys(keys);
+        if (keys.length > 0 && !selectedApiKey) {
+          setSelectedApiKey(keys[0].id.toString());
+        }
+      } else {
+        console.error("Failed to fetch API keys:", response.status);
+        const errorData = await response.json();
+        console.error("Error details:", errorData);
+      }
+    } catch (error) {
+      console.error("Error fetching API keys:", error);
+    } finally {
+      setLoadingKeys(false);
+    }
+  };
+
+  const createApiKey = async () => {
+    if (!newKeyName.trim()) {
+      showError("Error", "Please enter a name for the API key", {
+        primary: { text: "OK", onClick: hideAlert },
+      });
+      return;
+    }
+
+    setIsGeneratingKey(true);
+    try {
+      const authToken = localStorage.getItem("auth_token");
+      if (!authToken) {
+        showError(
+          "Authentication Required",
+          "Please log in to create API keys",
+          {
+            primary: { text: "OK", onClick: hideAlert },
+          }
+        );
+        return;
+      }
+
+      const response = await fetch(getApiUrl("/api/client/keys"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          name: newKeyName,
+          rate_limit: 1000,
+        }),
+      });
+
+      if (response.ok) {
+        const newKey = await response.json();
+        setAvailableKeys((prev) => [newKey, ...prev]);
+        setSelectedApiKey(newKey.id.toString());
+        setNewKeyName("");
+        setShowKeyGenerator(false);
+        showSuccess(
+          "API Key Created",
+          `Your new API key "${newKey.name}" has been created and selected for testing.`,
+          {
+            primary: { text: "OK", onClick: hideAlert },
+          }
+        );
+      } else {
+        const error = await response.json();
+        showError(
+          "Failed to Create Key",
+          error.error || "Unknown error occurred",
+          {
+            primary: { text: "OK", onClick: hideAlert },
+          }
+        );
+      }
+    } catch (error) {
+      showError("Error", "Failed to create API key. Please try again.", {
+        primary: { text: "OK", onClick: hideAlert },
+      });
+    } finally {
+      setIsGeneratingKey(false);
+    }
+  };
 
   const handleParameterChange = (paramName: string, value: any) => {
     setParameters((prev) => ({
@@ -51,10 +197,17 @@ export function ApiTester({ toolId }: ApiTesterProps) {
   };
 
   const handleHeaderChange = (key: string, value: string) => {
-    setHeaders((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    setHeaders((prev) => {
+      const newHeaders = { ...prev };
+      newHeaders[key] = value;
+
+      // If changing Authorization header, clear the selected API key
+      if (key === "Authorization" && value !== prev.Authorization) {
+        setSelectedApiKey("");
+      }
+
+      return newHeaders;
+    });
   };
 
   const addHeader = () => {
@@ -69,35 +222,14 @@ export function ApiTester({ toolId }: ApiTesterProps) {
     setHeaders((prev) => {
       const newHeaders = { ...prev };
       delete newHeaders[key];
+
+      // If removing Authorization header, clear the selected API key
+      if (key === "Authorization") {
+        setSelectedApiKey("");
+      }
+
       return newHeaders;
     });
-  };
-
-  const generateTestKey = () => {
-    setIsGeneratingKey(true);
-
-    setTimeout(() => {
-      const mockKey = `test_${Math.random().toString(36).substring(2, 10)}`;
-
-      setHeaders((prev) => ({
-        ...prev,
-        Authorization: `Bearer ${mockKey}`,
-      }));
-      setShowKeyGenerator(false);
-
-      showSuccess(
-        "Test Key Generated",
-        `A test API key has been generated and set in the Authorization header. You can now test the API endpoints.`,
-        {
-          primary: {
-            text: "OK",
-            onClick: hideAlert,
-          },
-        }
-      );
-
-      setIsGeneratingKey(false);
-    }, 1000);
   };
 
   const executeRequest = async () => {
@@ -105,12 +237,17 @@ export function ApiTester({ toolId }: ApiTesterProps) {
 
     // Validate required fields
     const missingFields: string[] = [];
-    
+
     currentEndpoint.parameters.forEach((param) => {
       if (param.required) {
         if (param.type === "file") {
           const file = files[param.name];
-          console.log(`🔍 Checking file param "${param.name}":`, file, "Type:", typeof file);
+          console.log(
+            `🔍 Checking file param "${param.name}":`,
+            file,
+            "Type:",
+            typeof file
+          );
           if (!file || file === null || file === undefined) {
             console.log(`❌ File "${param.name}" is missing or invalid`);
             missingFields.push(param.name);
@@ -128,18 +265,20 @@ export function ApiTester({ toolId }: ApiTesterProps) {
       }
     });
 
-    console.log("🔍 Validation check:", { 
-      missingFields, 
-      filesObject: files, 
+    console.log("🔍 Validation check:", {
+      missingFields,
+      filesObject: files,
       parametersObject: parameters,
-      requiredParams: currentEndpoint.parameters.filter(p => p.required)
+      requiredParams: currentEndpoint.parameters.filter((p) => p.required),
     });
 
     if (missingFields.length > 0) {
       console.log("❌ Validation failed, missing fields:", missingFields);
       showError(
         "Missing Required Fields",
-        `Please fill in the following required fields: ${missingFields.join(", ")}`,
+        `Please fill in the following required fields: ${missingFields.join(
+          ", "
+        )}`,
         {
           primary: {
             text: "OK",
@@ -153,10 +292,13 @@ export function ApiTester({ toolId }: ApiTesterProps) {
     console.log("✅ Validation passed");
 
     // Check if Authorization header exists
-    if (!headers.Authorization) {
+    if (
+      !headers.Authorization ||
+      headers.Authorization === "Bearer your-api-key-here"
+    ) {
       showError(
         "API Key Required",
-        "Please add an API key in the Authorization header. You can generate a test key using the button above.",
+        "Please select or create an API key using the dropdown above.",
         {
           primary: {
             text: "OK",
@@ -186,6 +328,10 @@ export function ApiTester({ toolId }: ApiTesterProps) {
           formData.append(paramName, value.toString());
         }
       });
+
+      console.log("🚀 Sending request with headers:", headers);
+      console.log("🔑 Selected API key:", selectedApiKey);
+      console.log("📦 FormData entries:", Array.from(formData.entries()));
 
       const result = await apiTestClient.testEndpoint({
         url: currentEndpoint.path,
@@ -234,7 +380,9 @@ export function ApiTester({ toolId }: ApiTesterProps) {
           <div className="w-4 h-4 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full animate-pulse"></div>
           <div className="absolute inset-0 w-4 h-4 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full blur-sm opacity-50"></div>
         </div>
-        <h3 className="text-lg font-semibold text-white">API Testing Interface</h3>
+        <h3 className="text-lg font-semibold text-white">
+          API Testing Interface
+        </h3>
       </div>
 
       {/* Endpoint Selection */}
@@ -265,7 +413,61 @@ export function ApiTester({ toolId }: ApiTesterProps) {
           <div className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg p-4 space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-2 h-2 bg-gradient-to-r from-[#22c55e] to-[#16a34a] rounded-full"></div>
-              <h4 className="text-lg font-semibold text-white">Request Builder</h4>
+              <h4 className="text-lg font-semibold text-white">
+                Request Builder
+              </h4>
+            </div>
+
+            {/* API Key Selector */}
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Key className="w-4 h-4 text-[#8b5cf6]" />
+                <label className="text-sm font-medium text-gray-300">
+                  Select API Key
+                </label>
+              </div>
+
+              {loadingKeys ? (
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <div className="w-4 h-4 border-2 border-[#8b5cf6] border-t-transparent rounded-full animate-spin"></div>
+                  Loading API keys...
+                </div>
+              ) : availableKeys.length > 0 ? (
+                <div className="space-y-3">
+                  <select
+                    value={selectedApiKey}
+                    onChange={(e) => setSelectedApiKey(e.target.value)}
+                    className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-4 py-3 text-white focus:border-[#8b5cf6] focus:outline-none"
+                  >
+                    {availableKeys.map((key) => (
+                      <option key={key.id} value={key.id.toString()}>
+                        {key.name} - Created{" "}
+                        {new Date(key.created_at).toLocaleDateString()}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => setShowKeyGenerator(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#8b5cf6]/20 to-[#3b82f6]/20 hover:from-[#8b5cf6]/30 hover:to-[#3b82f6]/30 text-white text-sm font-medium rounded-lg border border-[#8b5cf6]/30 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create New API Key
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-400">
+                    No API keys available. Create one to start testing.
+                  </p>
+                  <button
+                    onClick={() => setShowKeyGenerator(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white text-sm font-medium rounded-lg transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Your First API Key
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Parameters */}
@@ -358,30 +560,22 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                     Headers
                   </label>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowKeyGenerator(!showKeyGenerator)}
-                    className="px-3 py-1 bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white text-xs font-medium rounded-lg transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
-                  >
-                    🔑 Generate Test Key
-                  </button>
-                  <button
-                    onClick={addHeader}
-                    className="text-xs text-[#8b5cf6] hover:text-[#7c3aed]"
-                  >
-                    + Add Header
-                  </button>
-                </div>
+                <button
+                  onClick={addHeader}
+                  className="text-xs text-[#8b5cf6] hover:text-[#7c3aed]"
+                >
+                  + Add Header
+                </button>
               </div>
 
-              {/* Test Key Generator */}
+              {/* Create New API Key */}
               {showKeyGenerator && (
                 <div className="bg-gradient-to-r from-[#0a0a0a] to-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-gradient-to-r from-[#22c55e] to-[#16a34a] rounded-full animate-pulse"></div>
+                      <Key className="w-4 h-4 text-[#8b5cf6]" />
                       <h4 className="text-sm font-medium text-white">
-                        Generate Test Bearer Key
+                        Create New API Key
                       </h4>
                     </div>
                     <button
@@ -392,56 +586,93 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                     </button>
                   </div>
                   <p className="text-xs text-gray-400">
-                    Generate a test API key with full permissions for testing
-                    this tool. After generation, the key will be automatically
-                    set in the Authorization header.
+                    Create a new API key for testing endpoints. The key will be
+                    saved to your account and can be used for production API
+                    calls.
                   </p>
-                  <button
-                    onClick={generateTestKey}
-                    disabled={isGeneratingKey}
-                    className="w-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] disabled:from-gray-600 disabled:to-gray-600 text-white px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:shadow-none"
-                  >
-                    {isGeneratingKey ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Generating...
-                      </>
-                    ) : (
-                      <>🔑 Generate Test Key</>
-                    )}
-                  </button>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={newKeyName}
+                      onChange={(e) => setNewKeyName(e.target.value)}
+                      placeholder="Enter a name for your API key (e.g., Development Key)"
+                      className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-4 py-2 text-white text-sm focus:border-[#8b5cf6] focus:outline-none"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          createApiKey();
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={createApiKey}
+                      disabled={isGeneratingKey || !newKeyName.trim()}
+                      className="w-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] disabled:from-gray-600 disabled:to-gray-600 text-white px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:shadow-none"
+                    >
+                      {isGeneratingKey ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <Key className="w-4 h-4" />
+                          Create API Key
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
 
-              {Object.entries(headers).map(([key, value]) => (
-                <div key={key} className="grid grid-cols-12 gap-2">
-                  <input
-                    type="text"
-                    value={key}
-                    onChange={(e) => {
-                      const newHeaders = { ...headers };
-                      delete newHeaders[key];
-                      newHeaders[e.target.value] = value;
-                      setHeaders(newHeaders);
-                    }}
-                    placeholder="Header name"
-                    className="col-span-5 bg-[#0a0a0a] border border-[#2a2a2a] rounded px-3 py-2 text-white text-sm focus:border-[#8b5cf6] focus:outline-none"
-                  />
-                  <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => handleHeaderChange(key, e.target.value)}
-                    placeholder="Header value"
-                    className="col-span-6 bg-[#0a0a0a] border border-[#2a2a2a] rounded px-3 py-2 text-white text-sm focus:border-[#8b5cf6] focus:outline-none"
-                  />
+              {/* Show Authorization header as read-only badge when API key is selected */}
+              {selectedApiKey && headers.Authorization && (
+                <div className="bg-[#1a1a1a] border border-[#22c55e]/30 rounded-lg px-3 py-2 flex items-center gap-2">
+                  <Key className="w-4 h-4 text-[#22c55e]" />
+                  <span className="text-sm text-gray-300">Authorization:</span>
+                  <span className="text-xs text-[#22c55e] font-mono bg-[#0a0a0a] px-2 py-1 rounded flex-1 truncate">
+                    {headers.Authorization.substring(0, 40)}...
+                  </span>
                   <button
-                    onClick={() => removeHeader(key)}
-                    className="col-span-1 text-gray-400 hover:text-red-400 p-2 rounded hover:bg-[#2a2a2a] transition-colors"
+                    onClick={() => removeHeader("Authorization")}
+                    className="text-gray-400 hover:text-red-400 p-1 rounded hover:bg-[#2a2a2a] transition-colors"
                   >
                     ✕
                   </button>
                 </div>
-              ))}
+              )}
+
+              {Object.entries(headers)
+                .filter(([key]) => key !== "Authorization")
+                .map(([key, value]) => (
+                  <div key={key} className="grid grid-cols-12 gap-2">
+                    <input
+                      type="text"
+                      value={key}
+                      onChange={(e) => {
+                        const newHeaders = { ...headers };
+                        delete newHeaders[key];
+                        newHeaders[e.target.value] = value;
+                        setHeaders(newHeaders);
+                      }}
+                      placeholder="Header name"
+                      className="col-span-5 bg-[#0a0a0a] border border-[#2a2a2a] rounded px-3 py-2 text-white text-sm focus:border-[#8b5cf6] focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={value}
+                      onChange={(e) => handleHeaderChange(key, e.target.value)}
+                      placeholder="Header value"
+                      className="col-span-6 bg-[#0a0a0a] border border-[#2a2a2a] rounded px-3 py-2 text-white text-sm focus:border-[#8b5cf6] focus:outline-none"
+                    />
+                    <button
+                      onClick={() => removeHeader(key)}
+                      className="col-span-1 text-gray-400 hover:text-red-400 p-2 rounded hover:bg-[#2a2a2a] transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
             </div>
 
             {/* Send Button */}
