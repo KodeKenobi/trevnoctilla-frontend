@@ -81,7 +81,7 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       id: "extract-text-basic",
       name: "Extract Text from PDF",
       method: "POST",
-      path: "/convert/pdf-extract-text",
+      path: "/api/v1/convert/pdf-extract-text",
       description: "Extract text content from PDF files",
       parameters: [
         {
@@ -105,7 +105,7 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       id: "convert-video",
       name: "Convert Video",
       method: "POST",
-      path: "/convert/video",
+      path: "/api/v1/convert/video",
       description: "Convert video files to different formats",
       parameters: [
         {
@@ -136,7 +136,7 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       id: "convert-audio",
       name: "Convert Audio",
       method: "POST",
-      path: "/convert/audio",
+      path: "/api/v1/convert/audio",
       description: "Convert audio files to different formats",
       parameters: [
         {
@@ -167,7 +167,7 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       id: "convert-image",
       name: "Convert Image",
       method: "POST",
-      path: "/convert/image",
+      path: "/api/v1/convert/image",
       description: "Convert image files to different formats",
       parameters: [
         {
@@ -197,7 +197,7 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       id: "merge-pdfs",
       name: "Merge PDFs",
       method: "POST",
-      path: "/convert/pdf-merge",
+      path: "/api/v1/convert/pdf-merge",
       description: "Merge multiple PDF files into one",
       parameters: [
         {
@@ -218,7 +218,7 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       id: "split-pdf",
       name: "Split PDF",
       method: "POST",
-      path: "/convert/pdf-split",
+      path: "/api/v1/convert/pdf-split",
       description: "Split PDF into multiple pages",
       parameters: [
         {
@@ -246,7 +246,7 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       id: "add-watermark",
       name: "Add Watermark",
       method: "POST",
-      path: "/convert/pdf-watermark",
+      path: "/api/v1/convert/pdf-watermark",
       description: "Add watermark to PDF",
       parameters: [
         {
@@ -282,7 +282,7 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       id: "generate-qr",
       name: "Generate QR Code",
       method: "POST",
-      path: "/convert/qr-generate",
+      path: "/api/v1/convert/qr-generate",
       description: "Generate QR code from text or URL",
       parameters: [
         {
