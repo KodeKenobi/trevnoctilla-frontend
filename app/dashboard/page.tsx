@@ -38,46 +38,28 @@ export default function DashboardPage() {
     const loadMockData = () => {
       setLoading(true);
 
-      // Mock stats
+      // Mock stats - set to zero (no false data)
       setStats({
-        callsToday: 1247,
-        successRate: 98.5,
-        dataProcessed: 45.2,
-        activeKeys: 3,
-        avgResponseTime: 2.1,
+        callsToday: 0,
+        successRate: 0,
+        dataProcessed: 0,
+        activeKeys: 0,
+        avgResponseTime: 0,
       });
 
       // Clean activities - start fresh
       setActivities([]);
 
-      // Mock API keys
-      setApiKeys([
-        {
-          id: "1",
-          name: "Production Key",
-          key: "jpk_live_1234567890abcdef1234567890abcdef",
-          created: new Date(Date.now() - 86400000 * 30).toISOString(),
-          lastUsed: new Date(Date.now() - 3600000).toISOString(),
-          isActive: true,
-          permissions: ["read", "write", "convert"],
-        },
-        {
-          id: "2",
-          name: "Development Key",
-          key: "jpk_test_abcdef1234567890abcdef1234567890",
-          created: new Date(Date.now() - 86400000 * 7).toISOString(),
-          isActive: true,
-          permissions: ["read", "convert"],
-        },
-      ]);
+      // No mock API keys - start empty
+      setApiKeys([]);
 
-      // Mock tool stats
+      // Mock tool stats - set to zero (no false data)
       const toolStatsData = TOOL_CATEGORIES.map((tool) => ({
         toolId: tool.id,
         stats: {
-          callsToday: Math.floor(Math.random() * 500) + 100,
-          successRate: 95 + Math.random() * 5,
-          avgResponseTime: 1 + Math.random() * 3,
+          callsToday: 0,
+          successRate: 0,
+          avgResponseTime: 0,
         },
       }));
       setToolStats(toolStatsData);
