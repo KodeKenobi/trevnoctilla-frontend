@@ -109,7 +109,8 @@ export function ApiTester({ toolId }: ApiTesterProps) {
     currentEndpoint.parameters.forEach((param) => {
       if (param.required) {
         if (param.type === "file") {
-          if (!files[param.name]) {
+          const file = files[param.name];
+          if (!file || file === null) {
             missingFields.push(param.name);
           }
         } else {
@@ -121,7 +122,10 @@ export function ApiTester({ toolId }: ApiTesterProps) {
       }
     });
 
+    console.log("🔍 Validation check:", { missingFields, files, parameters });
+
     if (missingFields.length > 0) {
+      console.log("❌ Validation failed, missing fields:", missingFields);
       showError(
         "Missing Required Fields",
         `Please fill in the following required fields: ${missingFields.join(", ")}`,
@@ -134,6 +138,8 @@ export function ApiTester({ toolId }: ApiTesterProps) {
       );
       return;
     }
+
+    console.log("✅ Validation passed");
 
     // Check if Authorization header exists
     if (!headers.Authorization) {
