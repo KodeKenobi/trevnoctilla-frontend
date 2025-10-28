@@ -116,15 +116,15 @@ export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
       {/* Animated background gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#8b5cf6]/5 to-transparent opacity-50"></div>
 
-      <div className="relative max-w-6xl mx-auto px-6 py-2">
-        <nav className="flex space-x-2" aria-label="Dashboard tabs">
+      <div className="relative max-w-6xl mx-auto px-3 sm:px-6 py-2 overflow-x-auto scrollbar-hide">
+        <nav className="flex space-x-2 min-w-max sm:min-w-0" aria-label="Dashboard tabs">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`
-                group relative flex items-center space-x-3 py-3 px-6 text-sm font-medium transition-all duration-300 ease-out
-                rounded-xl backdrop-blur-sm border
+                group relative flex items-center space-x-1 sm:space-x-3 py-2 sm:py-3 px-3 sm:px-6 text-xs sm:text-sm font-medium transition-all duration-300 ease-out
+                rounded-xl backdrop-blur-sm border whitespace-nowrap flex-shrink-0
                 ${
                   activeTab === tab.id
                     ? "text-white bg-gradient-to-r from-[#8b5cf6]/20 to-[#3b82f6]/20 border-[#8b5cf6]/30 shadow-lg shadow-[#8b5cf6]/20"
