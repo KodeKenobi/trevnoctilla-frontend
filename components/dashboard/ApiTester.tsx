@@ -103,6 +103,53 @@ export function ApiTester({ toolId }: ApiTesterProps) {
   const executeRequest = async () => {
     if (!currentEndpoint) return;
 
+    // Validate required fields
+    const missingFields: string[] = [];
+    
+    currentEndpoint.parameters.forEach((param) => {
+      if (param.required) {
+        if (param.type === "file") {
+          if (!files[param.name]) {
+            missingFields.push(param.name);
+          }
+        } else {
+          const value = parameters[param.name];
+          if (value === undefined || value === null || value === "") {
+            missingFields.push(param.name);
+          }
+        }
+      }
+    });
+
+    if (missingFields.length > 0) {
+      showError(
+        "Missing Required Fields",
+        `Please fill in the following required fields: ${missingFields.join(", ")}`,
+        {
+          primary: {
+            text: "OK",
+            onClick: hideAlert,
+          },
+        }
+      );
+      return;
+    }
+
+    // Check if Authorization header exists
+    if (!headers.Authorization) {
+      showError(
+        "API Key Required",
+        "Please add an API key in the Authorization header. You can generate a test key using the button above.",
+        {
+          primary: {
+            text: "OK",
+            onClick: hideAlert,
+          },
+        }
+      );
+      return;
+    }
+
     setIsLoading(true);
     setResult(null);
 
