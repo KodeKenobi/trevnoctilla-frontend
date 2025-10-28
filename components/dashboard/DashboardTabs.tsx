@@ -117,7 +117,10 @@ export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#8b5cf6]/5 to-transparent opacity-50"></div>
 
       <div className="relative max-w-6xl mx-auto px-3 sm:px-6 py-2 overflow-x-auto scrollbar-hide">
-        <nav className="flex space-x-2 min-w-max sm:min-w-0" aria-label="Dashboard tabs">
+        <nav
+          className="flex space-x-2 min-w-max sm:min-w-0"
+          aria-label="Dashboard tabs"
+        >
           {tabs.map((tab) => (
             <button
               key={tab.id}

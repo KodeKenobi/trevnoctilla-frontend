@@ -255,19 +255,25 @@ export default function DashboardPage() {
                     (sum, tool) => sum + tool.stats.callsToday,
                     0
                   ),
-                  successRate: Math.round(
-                    toolStats.reduce(
-                      (sum, tool) => sum + tool.stats.successRate,
-                      0
-                    ) / toolStats.length
-                  ),
-                  dataProcessed: 45.2,
-                  avgResponseTime: Math.round(
-                    toolStats.reduce(
-                      (sum, tool) => sum + tool.stats.avgResponseTime,
-                      0
-                    ) / toolStats.length
-                  ),
+                  successRate:
+                    toolStats.length > 0
+                      ? Math.round(
+                          toolStats.reduce(
+                            (sum, tool) => sum + tool.stats.successRate,
+                            0
+                          ) / toolStats.length
+                        )
+                      : 0,
+                  dataProcessed: 0,
+                  avgResponseTime:
+                    toolStats.length > 0
+                      ? Math.round(
+                          toolStats.reduce(
+                            (sum, tool) => sum + tool.stats.avgResponseTime,
+                            0
+                          ) / toolStats.length
+                        )
+                      : 0,
                   activeKeys: apiKeys.length,
                 }}
               />

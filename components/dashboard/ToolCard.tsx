@@ -2,17 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import {
-  Video,
-  Music,
-  Image,
-  QrCode,
-  FileText,
-  Play,
-  BookOpen,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { TOOL_CATEGORIES } from "@/lib/apiEndpoints";
 import { ApiTester } from "./ApiTester";
 
@@ -28,14 +18,6 @@ interface ToolCardProps {
   onTestApi: (toolId: string) => void;
 }
 
-const iconMap = {
-  Video,
-  Music,
-  Image,
-  QrCode,
-  FileText,
-};
-
 export function ToolCard({
   toolId,
   stats,
@@ -47,26 +29,14 @@ export function ToolCard({
 
   if (!tool) return null;
 
-  const IconComponent = iconMap[tool.icon as keyof typeof iconMap];
-
   return (
     <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 hover:bg-[#0f0f0f] hover:border-[#3a3a3a] transition-all duration-200 relative">
       <div className="flex flex-col md:flex-row items-center md:items-center justify-between">
         <div className="flex flex-col md:flex-row items-center gap-4 mb-4 md:mb-0">
           <div className="relative">
-            <div
-              className="w-12 h-12 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: tool.color + "20" }}
-            >
-              <IconComponent
-                className="w-6 h-6"
-                style={{ color: tool.color }}
-              />
+            <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl bg-[#2a2a2a]">
+              {tool.icon}
             </div>
-            <div
-              className="absolute inset-0 w-12 h-12 rounded-full blur-sm opacity-30"
-              style={{ backgroundColor: tool.color }}
-            ></div>
           </div>
           <div className="flex-1 text-center md:text-left">
             <h3 className="text-xl font-semibold text-white">{tool.name}</h3>
