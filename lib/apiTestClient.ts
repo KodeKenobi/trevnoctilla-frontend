@@ -25,7 +25,10 @@ export class ApiTestClient {
     try {
       let requestBody: FormData | string | undefined;
 
-      if (files && Object.keys(files).length > 0) {
+      // If body is already FormData, use it directly
+      if (body instanceof FormData) {
+        requestBody = body;
+      } else if (files && Object.keys(files).length > 0) {
         // Handle file uploads with FormData
         requestBody = new FormData();
 
@@ -37,7 +40,11 @@ export class ApiTestClient {
         });
 
         // Add other body parameters
-        if (body && requestBody instanceof FormData) {
+        if (
+          body &&
+          requestBody instanceof FormData &&
+          typeof body === "object"
+        ) {
           Object.entries(body).forEach(([key, value]) => {
             if (value !== null && value !== undefined) {
               (requestBody as FormData).append(key, String(value));
@@ -54,9 +61,15 @@ export class ApiTestClient {
       const fullUrl = getApiUrl(url);
       console.log("🔗 API Test: Calling", fullUrl);
 
+      // When using FormData, don't set Content-Type - browser will set it with boundary
+      const fetchHeaders = { ...headers };
+      if (requestBody instanceof FormData) {
+        delete fetchHeaders["Content-Type"];
+      }
+
       const response = await fetch(fullUrl, {
         method,
-        headers,
+        headers: fetchHeaders,
         body: requestBody,
       });
 

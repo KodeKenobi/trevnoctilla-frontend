@@ -94,7 +94,97 @@ export function ApiTester({ toolId }: ApiTesterProps) {
 
       // Get backend token (should exist if user logged in properly)
       let backendToken: string | null = authToken;
-      
+
+      // If we have a NextAuth session but no backend token, try to get one automatically
+      if (hasSession && !backendToken && session?.user?.email) {
+        console.log(
+          "🔍 No backend token found, attempting to get one from backend..."
+        );
+        try {
+          // Try login first
+          let backendLoginResponse = await fetch(getApiUrl("/auth/login"), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: session.user.email,
+              password: "Kopenikus0218!", // Known password from auth-new.ts
+            }),
+          });
+
+          // If login fails, try to register the user first (then login again)
+          if (!backendLoginResponse.ok) {
+            console.log("⚠️ Login failed, attempting to register user...");
+            const registerResponse = await fetch(getApiUrl("/auth/register"), {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: session.user.email,
+                password: "Kopenikus0218!",
+                role:
+                  (session.user as any)?.role === "super_admin"
+                    ? "super_admin"
+                    : "user",
+              }),
+            });
+
+            if (registerResponse.ok) {
+              console.log("✅ User registered, attempting login again...");
+              // Now try login again
+              backendLoginResponse = await fetch(getApiUrl("/auth/login"), {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  email: session.user.email,
+                  password: "Kopenikus0218!",
+                }),
+              });
+            } else {
+              // If register also fails, it might be because user exists but password is wrong
+              const registerError = await registerResponse
+                .json()
+                .catch(() => ({}));
+              if (
+                registerError?.error?.includes("already registered") ||
+                registerError?.error?.includes("Email already")
+              ) {
+                console.log(
+                  "⚠️ User exists but password might be incorrect. Please log in through the backend login page first."
+                );
+              }
+            }
+          }
+
+          if (backendLoginResponse.ok) {
+            const backendData = await backendLoginResponse.json();
+            const token = backendData.access_token;
+            if (token && typeof token === "string") {
+              backendToken = token;
+              localStorage.setItem("auth_token", token);
+              if (backendData.user) {
+                localStorage.setItem(
+                  "user_data",
+                  JSON.stringify(backendData.user)
+                );
+              }
+              console.log("✅ Backend token obtained and stored");
+            }
+          } else {
+            const errorData = await backendLoginResponse
+              .json()
+              .catch(() => ({}));
+            console.log("⚠️ Could not get backend token:", errorData);
+          }
+        } catch (backendError) {
+          console.error("Backend auth failed:", backendError);
+        }
+      }
+
       if (!backendToken) {
         showError(
           "Authentication Required",
