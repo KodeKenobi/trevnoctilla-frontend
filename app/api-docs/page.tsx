@@ -48,102 +48,115 @@ export default function ApiDocsPage() {
     pdf: {
       title: "PDF Text Extraction",
       description: "Extract text from PDF documents with OCR support",
-      endpoint: "POST /extract_text",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/extract_text" \\
-  -H "Content-Type: multipart/form-data" \\
+      endpoint: "POST /api/v1/convert/pdf-extract-text",
+      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/pdf-extract-text" \\
+  -H "X-API-Key: your-api-key-here" \\
   -F "file=@document.pdf"`,
       response: `{
-  "success": true,
+  "job_id": "9818f6e9-0816-4413-9b5f-ce0cbb18e051",
+  "status": "completed",
+  "message": "Text extracted successfully",
   "text": "Extracted text content from PDF...",
-  "pages": 5,
-  "filename": "extracted_text_abc123.txt"
+  "text_length": 1523,
+  "processing_time": 1.058
 }`,
     },
     video: {
       title: "Video Conversion",
       description: "Convert videos between MP4, WebM, AVI, MOV formats",
-      endpoint: "POST /convert-video",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/convert-video" \\
-  -H "Content-Type: multipart/form-data" \\
+      endpoint: "POST /api/v1/convert/video",
+      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/video" \\
+  -H "X-API-Key: your-api-key-here" \\
   -F "file=@video.mp4" \\
   -F "output_format=webm"`,
       response: `{
-  "success": true,
-  "message": "Conversion started",
-  "filename": "converted_video_abc123.webm",
-  "job_id": "job_12345"
+  "job_id": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "completed",
+  "message": "Video converted successfully",
+  "file_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+  "format": "webm",
+  "file_size": 5242880,
+  "mime_type": "video/webm",
+  "processing_time": 12.5
 }`,
     },
     image: {
       title: "Image Conversion",
       description: "Convert images between JPG, PNG, WebP, BMP formats",
-      endpoint: "POST /convert-image",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/convert-image" \\
-  -H "Content-Type: multipart/form-data" \\
+      endpoint: "POST /api/v1/convert/image",
+      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/image" \\
+  -H "X-API-Key: your-api-key-here" \\
   -F "file=@image.jpg" \\
   -F "output_format=png"`,
       response: `{
-  "success": true,
+  "job_id": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "completed",
   "message": "Image converted successfully",
-  "filename": "converted_image_abc123.png",
-  "download_url": "/download/converted_image_abc123.png"
+  "image_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+  "format": "png",
+  "file_size": 245760,
+  "mime_type": "image/png",
+  "processing_time": 0.5
 }`,
     },
     pdf_merge: {
       title: "PDF Merge",
       description: "Merge multiple PDF files into a single document",
-      endpoint: "POST /merge_pdfs",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/merge_pdfs" \\
-  -H "Content-Type: multipart/form-data" \\
+      endpoint: "POST /api/v1/convert/pdf-merge",
+      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/pdf-merge" \\
+  -H "X-API-Key: your-api-key-here" \\
   -F "files=@file1.pdf" \\
   -F "files=@file2.pdf" \\
   -F "files=@file3.pdf"`,
       response: `{
-  "success": true,
+  "job_id": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "completed",
   "message": "PDFs merged successfully",
-  "merged_filename": "merged_abc123.pdf",
-  "download_url": "/download_merged/merged_abc123.pdf"
+  "pdf_base64": "JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC...",
+  "file_size": 524288,
+  "mime_type": "application/pdf",
+  "processing_time": 2.3
 }`,
     },
     pdf_split: {
       title: "PDF Split",
       description: "Split PDF into individual pages or custom ranges",
-      endpoint: "POST /api/split_pdf",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/api/split_pdf" \\
-  -H "Content-Type: multipart/form-data" \\
+      endpoint: "POST /api/v1/convert/pdf-split",
+      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/pdf-split" \\
+  -H "X-API-Key: your-api-key-here" \\
   -F "file=@document.pdf" \\
-  -F "split_type=pages" \\
-  -F "pages=1,3,5-10"`,
+  -F "split_type=by_range" \\
+  -F "page_range=1,3,5-10"`,
       response: `{
-  "success": true,
+  "job_id": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "completed",
   "message": "PDF split successfully",
-  "split_files": [
-    "page_1_abc123.pdf",
-    "page_3_abc123.pdf",
-    "pages_5-10_abc123.pdf"
-  ],
-  "download_urls": [
-    "/download_split/page_1_abc123.pdf",
-    "/download_split/page_3_abc123.pdf",
-    "/download_split/pages_5-10_abc123.pdf"
-  ]
+  "pdf_base64": "JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC...",
+  "file_size": 157286,
+  "mime_type": "application/pdf",
+  "processing_time": 1.2
 }`,
     },
     qr_generate: {
       title: "QR Code Generation",
       description: "Generate QR codes with custom styling and data",
-      endpoint: "POST /generate-qr",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/generate-qr" \\
-  -H "Content-Type: multipart/form-data" \\
-  -F "data=https://trevnoctilla.com" \\
-  -F "size=300" \\
-  -F "color=000000" \\
-  -F "background_color=FFFFFF"`,
+      endpoint: "POST /api/v1/convert/qr-generate",
+      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/qr-generate" \\
+  -H "X-API-Key: your-api-key-here" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "text": "https://trevnoctilla.com",
+    "size": "medium",
+    "format": "png"
+  }'`,
       response: `{
-  "success": true,
+  "job_id": "123e4567-e89b-12d3-a456-426614174000",
+  "status": "completed",
   "message": "QR code generated successfully",
-  "filename": "qr_code_abc123.png",
-  "download_url": "/download/qr_code_abc123.png"
+  "image_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
+  "format": "png",
+  "mime_type": "image/png",
+  "processing_time": 0.15
 }`,
     },
   };
@@ -270,23 +283,23 @@ export default function ApiDocsPage() {
           transition={{ duration: 0.8 }}
           className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16"
         >
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 text-center md:text-left"
-              >
-                <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto md:mx-0 mb-4">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-400">{feature.description}</p>
-              </motion.div>
-            ))}
+          {features.map((feature, index) => (
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 text-center md:text-left"
+            >
+              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto md:mx-0 mb-4">
+                {feature.icon}
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-gray-400">{feature.description}</p>
+            </motion.div>
+          ))}
         </motion.div>
 
         {/* API Reference */}
