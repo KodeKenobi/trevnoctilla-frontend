@@ -111,9 +111,10 @@ export function ApiTester({ toolId }: ApiTesterProps) {
 
           if (loginResponse.ok) {
             const loginData = await loginResponse.json();
-            if (loginData.access_token && typeof loginData.access_token === 'string') {
-              backendToken = loginData.access_token;
-              localStorage.setItem("auth_token", backendToken);
+            const token = loginData.access_token;
+            if (token && typeof token === 'string') {
+              backendToken = token;
+              localStorage.setItem("auth_token", token);
             }
           }
         } catch (loginError) {
