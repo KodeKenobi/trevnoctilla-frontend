@@ -223,7 +223,48 @@ export default function DashboardPage() {
 
   const handleCreateApiKey = async (name: string) => {
     try {
-      const token = localStorage.getItem("auth_token");
+      // Wait for user to be loaded
+      if (!user) {
+        showError(
+          "Authentication Required",
+          "Please wait for authentication to complete",
+          {
+            primary: { text: "OK", onClick: hideAlert },
+          }
+        );
+        return;
+      }
+
+      let token = localStorage.getItem("auth_token");
+      
+      // If no token but we have a session, try to get one
+      if (!token && user?.email) {
+        try {
+          const tokenResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://web-production-737b.up.railway.app"}/auth/get-token-from-session`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: user.email,
+                password: "Kopenikus0218!",
+                role: user.role === "super_admin" ? "super_admin" : "user",
+              }),
+            }
+          );
+
+          if (tokenResponse.ok) {
+            const backendData = await tokenResponse.json();
+            token = backendData.access_token;
+            localStorage.setItem("auth_token", token);
+          }
+        } catch (error) {
+          console.error("Failed to get backend token:", error);
+        }
+      }
+
       if (!token) {
         showError(
           "Authentication Required",
@@ -728,15 +769,19 @@ export default function DashboardPage() {
               <div className="px-6 py-4 border-b border-[#2a2a2a]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">API Keys</h3>
+                    <h3 className="text-lg font-semibold text-white">
+                      API Keys
+                    </h3>
                     <p className="text-sm text-gray-400">
                       Manage your API authentication keys
                     </p>
                   </div>
                   <button
                     onClick={() => {
-                      const defaultName = `API Key ${new Date().toLocaleString()}`;
-                      handleCreateApiKey(defaultName);
+                      const name = prompt("Enter a name for your API key:");
+                      if (name && name.trim()) {
+                        handleCreateApiKey(name.trim());
+                      }
                     }}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white text-sm font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-[#8b5cf6]/25"
                   >

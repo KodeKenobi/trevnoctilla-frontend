@@ -92,24 +92,12 @@ export function ApiKeysSection({
               Manage your API authentication keys
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                setShowCreateForm(true);
-                setIsExpanded(true);
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white text-sm font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-[#8b5cf6]/25"
-            >
-              <Plus className="w-4 h-4" />
-              Create Key
-            </button>
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-gray-400 hover:text-white text-sm font-medium transition-colors"
-            >
-              {isExpanded ? "Hide" : "Show"}
-            </button>
-          </div>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-gray-400 hover:text-white text-sm font-medium transition-colors"
+          >
+            {isExpanded ? "Hide" : "Show"}
+          </button>
         </div>
       </div>
 
