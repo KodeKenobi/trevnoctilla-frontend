@@ -18,7 +18,8 @@ const formatResponseTime = (ms: number): string => {
 const formatDataSize = (bytes: number): string => {
   if (bytes < 1024) return `${bytes}B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  if (bytes < 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)}GB`;
 };
 
@@ -30,6 +31,7 @@ interface CircularChartProps {
   size?: "sm" | "md" | "lg";
   showPercentage?: boolean;
   className?: string;
+  formatValue?: (value: number) => string;
 }
 
 export function CircularChart({
@@ -40,6 +42,7 @@ export function CircularChart({
   size = "md",
   showPercentage = true,
   className = "",
+  formatValue,
 }: CircularChartProps) {
   const percentage = Math.min((value / maxValue) * 100, 100);
   const circumference = 2 * Math.PI * 40; // radius = 40
@@ -113,7 +116,11 @@ export function CircularChart({
           <span
             className={`font-bold text-white drop-shadow-sm ${textSizeClasses[size]}`}
           >
-            {showPercentage ? `${Math.round(percentage)}%` : value}
+            {showPercentage 
+              ? `${Math.round(percentage)}%` 
+              : formatValue 
+              ? formatValue(value)
+              : value}
           </span>
         </div>
       </div>
@@ -122,7 +129,7 @@ export function CircularChart({
         <div
           className={`font-bold text-white ${textSizeClasses[size]} drop-shadow-sm`}
         >
-          {label === "Response Time" 
+          {label === "Response Time"
             ? formatResponseTime(value)
             : label === "Data (GB)"
             ? formatDataSize(value)
@@ -185,6 +192,7 @@ export function CircularStats({ stats, className = "" }: CircularStatsProps) {
           color="#8b5cf6"
           size="md"
           showPercentage={false}
+          formatValue={formatDataSize}
         />
         <CircularChart
           value={stats.avgResponseTime}
@@ -193,6 +201,7 @@ export function CircularStats({ stats, className = "" }: CircularStatsProps) {
           color="#f59e0b"
           size="md"
           showPercentage={false}
+          formatValue={formatResponseTime}
         />
         <CircularChart
           value={stats.activeKeys}
