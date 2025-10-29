@@ -236,12 +236,15 @@ export default function DashboardPage() {
       }
 
       let token = localStorage.getItem("auth_token");
-      
+
       // If no token but we have a session, try to get one
       if (!token && user?.email) {
         try {
           const tokenResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE_URL || "https://web-production-737b.up.railway.app"}/auth/get-token-from-session`,
+            `${
+              process.env.NEXT_PUBLIC_API_BASE_URL ||
+              "https://web-production-737b.up.railway.app"
+            }/auth/get-token-from-session`,
             {
               method: "POST",
               headers: {
@@ -257,8 +260,11 @@ export default function DashboardPage() {
 
           if (tokenResponse.ok) {
             const backendData = await tokenResponse.json();
-            token = backendData.access_token;
-            localStorage.setItem("auth_token", token);
+            const newToken = backendData.access_token;
+            if (newToken && typeof newToken === "string") {
+              token = newToken;
+              localStorage.setItem("auth_token", token);
+            }
           }
         } catch (error) {
           console.error("Failed to get backend token:", error);
