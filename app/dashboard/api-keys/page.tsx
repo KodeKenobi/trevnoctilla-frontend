@@ -66,36 +66,42 @@ export default function ApiKeysPage() {
 
   const fetchApiKeys = async () => {
     try {
-      // Mock data - in real implementation, fetch from API
-      setApiKeys([
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          "https://web-production-737b.up.railway.app"
+        }/api/client/keys`,
         {
-          id: 1,
-          name: "Production Key",
-          key: "ak_live_1234567890abcdef1234567890abcdef",
-          is_active: true,
-          created_at: "2024-01-15T10:30:00Z",
-          last_used: "2024-01-20T14:22:00Z",
-          rate_limit: 1000,
-        },
-        {
-          id: 2,
-          name: "Development Key",
-          key: "ak_test_abcdef1234567890abcdef1234567890",
-          is_active: true,
-          created_at: "2024-01-10T09:15:00Z",
-          last_used: "2024-01-19T16:45:00Z",
-          rate_limit: 100,
-        },
-        {
-          id: 3,
-          name: "Testing Key",
-          key: "ak_test_9876543210fedcba9876543210fedcba",
-          is_active: false,
-          created_at: "2024-01-05T11:20:00Z",
-          last_used: "2024-01-18T09:10:00Z",
-          rate_limit: 50,
-        },
-      ]);
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        // Transform backend format to match frontend interface
+        const transformedKeys = data.map((key: any) => ({
+          id: key.id,
+          name: key.name,
+          key: key.key || key.key_value || "",
+          is_active: key.is_active,
+          created_at: key.created_at,
+          last_used: key.last_used || "",
+          rate_limit: key.rate_limit || 1000,
+        }));
+        setApiKeys(transformedKeys);
+      } else {
+        console.error("Failed to fetch API keys:", await response.text());
+      }
       setLoading(false);
     } catch (error) {
       console.error("Error fetching API keys:", error);
@@ -105,23 +111,53 @@ export default function ApiKeysPage() {
 
   const handleCreateKey = async (name: string, rateLimit: number) => {
     try {
-      // Mock API call - in real implementation, call your API
-      const newKey: ApiKey = {
-        id: Date.now(),
-        name,
-        key: `ak_live_${Math.random().toString(36).substring(2, 34)}`,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        last_used: "",
-        rate_limit: rateLimit,
-      };
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        alert("Please log in to create API keys");
+        return;
+      }
 
-      setApiKeys([newKey, ...apiKeys]);
-      setNewKey(newKey);
-      setShowCreateModal(false);
-      setShowKeyModal(true);
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          "https://web-production-737b.up.railway.app"
+        }/api/client/keys`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: name || `API Key ${new Date().toLocaleString()}`,
+            rate_limit: rateLimit || 1000,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const newKeyData = await response.json();
+        const newKey: ApiKey = {
+          id: newKeyData.id,
+          name: newKeyData.name,
+          key: newKeyData.key || newKeyData.key_value || "",
+          is_active: newKeyData.is_active,
+          created_at: newKeyData.created_at,
+          last_used: newKeyData.last_used || "",
+          rate_limit: newKeyData.rate_limit || rateLimit,
+        };
+
+        setApiKeys([newKey, ...apiKeys]);
+        setNewKey(newKey);
+        setShowCreateModal(false);
+        setShowKeyModal(true);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.error || "Failed to create API key");
+      }
     } catch (error) {
       console.error("Error creating API key:", error);
+      alert("An error occurred while creating the API key");
     }
   };
 
@@ -148,15 +184,43 @@ export default function ApiKeysPage() {
 
   const handleDeleteKey = async (keyId: number) => {
     if (
-      window.confirm(
+      !window.confirm(
         "Are you sure you want to delete this API key? This action cannot be undone."
       )
     ) {
-      try {
-        setApiKeys(apiKeys.filter((key) => key.id !== keyId));
-      } catch (error) {
-        console.error("Error deleting API key:", error);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        alert("Please log in to delete API keys");
+        return;
       }
+
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          "https://web-production-737b.up.railway.app"
+        }/api/client/keys/${keyId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        setApiKeys(apiKeys.filter((key) => key.id !== keyId));
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.error || "Failed to delete API key");
+      }
+    } catch (error) {
+      console.error("Error deleting API key:", error);
+      alert("An error occurred while deleting the API key");
     }
   };
 

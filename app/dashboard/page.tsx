@@ -150,42 +150,60 @@ export default function DashboardPage() {
   const [toolStats, setToolStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock data for UI development
+  // Load real data from API
   useEffect(() => {
-    const loadMockData = () => {
-      setLoading(true);
+    if (user) {
+      fetchApiKeys();
+      fetchStats();
+    }
+  }, [user]);
 
-      // Mock stats - set to zero (no false data)
-      setStats({
-        callsToday: 0,
-        successRate: 0,
-        dataProcessed: 0,
-        activeKeys: 0,
-        avgResponseTime: 0,
-      });
+  const fetchApiKeys = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return;
 
-      // Clean activities - start fresh
-      setActivities([]);
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          "https://web-production-737b.up.railway.app"
+        }/api/client/keys`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      // No mock API keys - start empty
-      setApiKeys([]);
+      if (response.ok) {
+        const data = await response.json();
+        // Transform backend format to frontend format
+        const transformedKeys = data.map((key: any) => ({
+          id: key.id.toString(),
+          name: key.name,
+          key: key.key || key.key_value || "",
+          created: key.created_at,
+          isActive: key.is_active,
+          permissions: ["read", "write", "convert"],
+          rate_limit: key.rate_limit,
+          last_used: key.last_used,
+        }));
+        setApiKeys(transformedKeys);
+        setStats((prev) => ({ ...prev, activeKeys: transformedKeys.length }));
+      } else {
+        console.error("Failed to fetch API keys:", await response.text());
+      }
+    } catch (error) {
+      console.error("Error fetching API keys:", error);
+    }
+  };
 
-      // Mock tool stats - set to zero (no false data)
-      const toolStatsData = TOOL_CATEGORIES.map((tool) => ({
-        toolId: tool.id,
-        stats: {
-          callsToday: 0,
-          successRate: 0,
-          avgResponseTime: 0,
-        },
-      }));
-      setToolStats(toolStatsData);
-
-      setLoading(false);
-    };
-
-    loadMockData();
-  }, []);
+  const fetchStats = async () => {
+    // TODO: Implement stats fetching
+    setLoading(false);
+  };
 
   const handleTestApi = (toolId: string) => {
     setSelectedTool(toolId);
@@ -202,38 +220,148 @@ export default function DashboardPage() {
     });
   };
 
-  const handleCreateApiKey = (name: string) => {
-    const newKey = {
-      id: Date.now().toString(),
-      name: name,
-      key: `jpk_mock_${Math.random().toString(36).substring(2, 15)}`,
-      created: new Date().toISOString(),
-      isActive: true,
-      permissions: ["read", "write", "convert"],
-    };
-    setApiKeys((prev) => [...prev, newKey]);
-
-    showSuccess(
-      "API Key Created",
-      `Successfully created API key: ${newKey.key}`,
-      {
-        primary: {
-          text: "OK",
-          onClick: hideAlert,
-        },
+  const handleCreateApiKey = async (name: string) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        showError(
+          "Authentication Required",
+          "Please log in to create API keys",
+          {
+            primary: { text: "OK", onClick: hideAlert },
+          }
+        );
+        return;
       }
-    );
+
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          "https://web-production-737b.up.railway.app"
+        }/api/client/keys`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: name || `API Key ${new Date().toLocaleString()}`,
+            rate_limit: 1000,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const newKeyData = await response.json();
+        const newKey = {
+          id: newKeyData.id.toString(),
+          name: newKeyData.name,
+          key: newKeyData.key || newKeyData.key_value || "",
+          created: newKeyData.created_at,
+          isActive: newKeyData.is_active,
+          permissions: ["read", "write", "convert"],
+          rate_limit: newKeyData.rate_limit,
+          last_used: newKeyData.last_used,
+        };
+
+        setApiKeys((prev) => [newKey, ...prev]);
+        setStats((prev) => ({ ...prev, activeKeys: prev.activeKeys + 1 }));
+
+        showSuccess(
+          "API Key Created",
+          `Successfully created API key: ${newKey.key}`,
+          {
+            primary: {
+              text: "OK",
+              onClick: hideAlert,
+            },
+          }
+        );
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        showError(
+          "Failed to Create API Key",
+          errorData.error || "An error occurred",
+          {
+            primary: { text: "OK", onClick: hideAlert },
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Error creating API key:", error);
+      showError(
+        "Failed to Create API Key",
+        "An error occurred while creating the API key",
+        {
+          primary: { text: "OK", onClick: hideAlert },
+        }
+      );
+    }
   };
 
-  const handleDeleteApiKey = (keyId: string) => {
-    setApiKeys((prev) => prev.filter((key) => key.id !== keyId));
+  const handleDeleteApiKey = async (keyId: string) => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        showError(
+          "Authentication Required",
+          "Please log in to delete API keys",
+          {
+            primary: { text: "OK", onClick: hideAlert },
+          }
+        );
+        return;
+      }
 
-    showSuccess("API Key Deleted", "API key has been successfully deleted", {
-      primary: {
-        text: "OK",
-        onClick: hideAlert,
-      },
-    });
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          "https://web-production-737b.up.railway.app"
+        }/api/client/keys/${keyId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        setApiKeys((prev) => prev.filter((key) => key.id !== keyId));
+        setStats((prev) => ({ ...prev, activeKeys: prev.activeKeys - 1 }));
+
+        showSuccess(
+          "API Key Deleted",
+          "API key has been successfully deleted",
+          {
+            primary: {
+              text: "OK",
+              onClick: hideAlert,
+            },
+          }
+        );
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        showError(
+          "Failed to Delete API Key",
+          errorData.error || "An error occurred",
+          {
+            primary: { text: "OK", onClick: hideAlert },
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Error deleting API key:", error);
+      showError(
+        "Failed to Delete API Key",
+        "An error occurred while deleting the API key",
+        {
+          primary: { text: "OK", onClick: hideAlert },
+        }
+      );
+    }
   };
 
   const handleCopyApiKey = (key: string) => {
