@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { Plus } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { useAlert } from "@/contexts/AlertProvider";
 import { TOOL_CATEGORIES } from "../../lib/apiEndpoints";
@@ -725,10 +726,24 @@ export default function DashboardPage() {
             {/* API Keys Management */}
             <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg">
               <div className="px-6 py-4 border-b border-[#2a2a2a]">
-                <h3 className="text-lg font-semibold text-white">API Keys</h3>
-                <p className="text-sm text-gray-400">
-                  Manage your API authentication keys
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">API Keys</h3>
+                    <p className="text-sm text-gray-400">
+                      Manage your API authentication keys
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const defaultName = `API Key ${new Date().toLocaleString()}`;
+                      handleCreateApiKey(defaultName);
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white text-sm font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-[#8b5cf6]/25"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Key
+                  </button>
+                </div>
               </div>
               <ApiKeysSection
                 apiKeys={apiKeys}
