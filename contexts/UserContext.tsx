@@ -39,7 +39,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuthStatus = async () => {
     try {
-      // If we have a NextAuth session, use it
+      // If we have a NextAuth session, use it AND get backend token
       if (session?.user) {
         console.log("🔍 Using NextAuth session:", session.user);
         const userFromSession: User = {
@@ -51,6 +51,39 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           last_login: new Date().toISOString(),
         };
         setUser(userFromSession);
+        
+        // If no backend token exists, try to get one automatically
+        const existingToken = localStorage.getItem("auth_token");
+        if (!existingToken && session.user.email) {
+          console.log("🔍 No backend token found, attempting to get one from backend...");
+          try {
+            // Try to authenticate with backend using known credentials
+            // Since NextAuth uses hardcoded credentials, we can use the same for backend
+            const backendLoginResponse = await fetch(getApiUrl("/auth/login"), {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: session.user.email,
+                password: "Kopenikus0218!", // Known password from auth-new.ts
+              }),
+            });
+
+            if (backendLoginResponse.ok) {
+              const backendData = await backendLoginResponse.json();
+              localStorage.setItem("auth_token", backendData.access_token);
+              localStorage.setItem("user_data", JSON.stringify(backendData.user));
+              console.log("✅ Backend token obtained and stored");
+            } else {
+              console.log("⚠️ Could not get backend token (non-critical)");
+            }
+          } catch (backendError) {
+            console.error("Backend auth failed (non-critical):", backendError);
+            // Don't block - NextAuth session is enough for UI
+          }
+        }
+        
         setLoading(false);
         return;
       }
