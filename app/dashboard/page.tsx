@@ -164,6 +164,13 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user && apiKeys.length >= 0) {
       fetchStats();
+      
+      // Refresh stats every 10 seconds to show new activity
+      const interval = setInterval(() => {
+        fetchStats();
+      }, 10000);
+      
+      return () => clearInterval(interval);
     }
   }, [user, apiKeys.length]);
 
