@@ -5,11 +5,12 @@ import {
   Send,
   Download,
   Copy,
-  FileUp,
-  Settings,
+  Key,
   CheckCircle,
   XCircle,
   Clock,
+  ChevronRight,
+  Info,
 } from "lucide-react";
 import { useAlert } from "@/contexts/AlertProvider";
 import { API_ENDPOINTS } from "../../lib/apiEndpoints";
@@ -27,8 +28,7 @@ export function ApiTester({ toolId }: ApiTesterProps) {
   const [selectedEndpoint, setSelectedEndpoint] = useState<string>("");
   const [parameters, setParameters] = useState<Record<string, any>>({});
   const [files, setFiles] = useState<Record<string, File | null>>({});
-  const [headers, setHeaders] = useState<Record<string, string>>({});
-  const [showKeyGenerator, setShowKeyGenerator] = useState(false);
+  const [apiKey, setApiKey] = useState<string>("");
   const [isGeneratingKey, setIsGeneratingKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ApiTestResult | null>(null);
@@ -37,123 +37,54 @@ export function ApiTester({ toolId }: ApiTesterProps) {
   const endpoints = API_ENDPOINTS[toolId] || [];
   const currentEndpoint = endpoints.find((ep) => ep.id === selectedEndpoint);
 
-  const handleParameterChange = (paramName: string, value: any) => {
-    setParameters((prev) => ({
-      ...prev,
-      [paramName]: value,
-    }));
-  };
+  // Auto-generate API key if not present
+  const ensureApiKey = async () => {
+    if (apiKey) return true;
 
-  const handleFileChange = (paramName: string, file: File | null) => {
-    setFiles((prev) => ({
-      ...prev,
-      [paramName]: file,
-    }));
-  };
+    const hasSession = session?.user;
+    const authToken = localStorage.getItem("auth_token");
+    let backendToken: string | null = authToken;
 
-  const handleHeaderChange = (key: string, value: string) => {
-    setHeaders((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
+    if (hasSession && !backendToken && session?.user?.email) {
+      try {
+        const tokenResponse = await fetch(
+          getApiUrl("/auth/get-token-from-session"),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: session.user.email,
+              password: "Kopenikus0218!",
+              role:
+                (session.user as any)?.role === "super_admin"
+                  ? "super_admin"
+                  : "user",
+            }),
+          }
+        );
 
-  const addHeader = () => {
-    const newKey = `header-${Date.now()}`;
-    setHeaders((prev) => ({
-      ...prev,
-      [newKey]: "",
-    }));
-  };
+        if (tokenResponse.ok) {
+          const backendData = await tokenResponse.json();
+          backendToken = backendData.access_token;
+          localStorage.setItem("auth_token", backendToken);
+          if (backendData.user) {
+            localStorage.setItem("user_data", JSON.stringify(backendData.user));
+          }
+        }
+      } catch (error) {
+        console.error("Failed to get backend token:", error);
+      }
+    }
 
-  const removeHeader = (key: string) => {
-    setHeaders((prev) => {
-      const newHeaders = { ...prev };
-      delete newHeaders[key];
-      return newHeaders;
-    });
-  };
+    if (!backendToken) {
+      showError("Authentication Required", "Please log in to test APIs", {
+        primary: { text: "OK", onClick: hideAlert },
+      });
+      return false;
+    }
 
-  const generateTestKey = async () => {
     setIsGeneratingKey(true);
     try {
-      // Check for NextAuth session or localStorage token
-      const hasSession = session?.user;
-      const authToken = localStorage.getItem("auth_token");
-
-      if (!hasSession && !authToken) {
-        showError(
-          "Authentication Required",
-          "Please log in to generate API keys",
-          {
-            primary: { text: "OK", onClick: hideAlert },
-          }
-        );
-        return;
-      }
-
-      // Get backend token (should exist if user logged in properly)
-      let backendToken: string | null = authToken;
-
-      // If we have a NextAuth session but no backend token, get one from session
-      if (hasSession && !backendToken && session?.user?.email) {
-        console.log(
-          "🔍 No backend token found, getting one from NextAuth session..."
-        );
-        try {
-          // Use endpoint that auto-creates/updates user and returns JWT
-          const tokenResponse = await fetch(
-            getApiUrl("/auth/get-token-from-session"),
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                email: session.user.email,
-                password: "Kopenikus0218!", // Known password from auth-new.ts
-                role:
-                  (session.user as any)?.role === "super_admin"
-                    ? "super_admin"
-                    : "user",
-              }),
-            }
-          );
-
-          if (tokenResponse.ok) {
-            const backendData = await tokenResponse.json();
-            const token = backendData.access_token;
-            if (token && typeof token === "string") {
-              backendToken = token;
-              localStorage.setItem("auth_token", token);
-              if (backendData.user) {
-                localStorage.setItem(
-                  "user_data",
-                  JSON.stringify(backendData.user)
-                );
-              }
-              console.log("✅ Backend token obtained from NextAuth session");
-            }
-          } else {
-            const errorData = await tokenResponse.json().catch(() => ({}));
-            console.log("⚠️ Could not get backend token:", errorData);
-          }
-        } catch (backendError) {
-          console.error("Backend auth failed:", backendError);
-        }
-      }
-
-      if (!backendToken) {
-        showError(
-          "Authentication Required",
-          "Please log in to generate API keys",
-          {
-            primary: { text: "OK", onClick: hideAlert },
-          }
-        );
-        return;
-      }
-
       const response = await fetch(getApiUrl("/api/client/keys"), {
         method: "POST",
         headers: {
@@ -168,34 +99,23 @@ export function ApiTester({ toolId }: ApiTesterProps) {
 
       if (response.ok) {
         const newKey = await response.json();
-
-        setHeaders((prev) => ({
-          ...prev,
-          Authorization: `Bearer ${newKey.key}`,
-        }));
-        setShowKeyGenerator(false);
-
-        showSuccess(
-          "API Key Generated",
-          `Your API key has been generated and set in the Authorization header. You can now test endpoints.`,
-          {
-            primary: { text: "OK", onClick: hideAlert },
-          }
-        );
+        setApiKey(newKey.key);
+        showSuccess("API Key Generated", "Your test key is ready to use", {
+          primary: { text: "OK", onClick: hideAlert },
+        });
+        return true;
       } else {
         const error = await response.json();
-        showError(
-          "Failed to Generate Key",
-          error.error || "Unknown error occurred",
-          {
-            primary: { text: "OK", onClick: hideAlert },
-          }
-        );
+        showError("Failed to Generate Key", error.error || "Unknown error", {
+          primary: { text: "OK", onClick: hideAlert },
+        });
+        return false;
       }
     } catch (error) {
-      showError("Error", "Failed to generate API key. Please try again.", {
+      showError("Error", "Failed to generate API key", {
         primary: { text: "OK", onClick: hideAlert },
       });
+      return false;
     } finally {
       setIsGeneratingKey(false);
     }
@@ -204,73 +124,32 @@ export function ApiTester({ toolId }: ApiTesterProps) {
   const executeRequest = async () => {
     if (!currentEndpoint) return;
 
+    // Ensure API key exists
+    const hasKey = await ensureApiKey();
+    if (!hasKey) return;
+
     // Validate required fields
     const missingFields: string[] = [];
-
     currentEndpoint.parameters.forEach((param) => {
       if (param.required) {
         if (param.type === "file") {
-          const file = files[param.name];
-          console.log(
-            `🔍 Checking file param "${param.name}":`,
-            file,
-            "Type:",
-            typeof file
-          );
-          if (!file || file === null || file === undefined) {
-            console.log(`❌ File "${param.name}" is missing or invalid`);
+          if (!files[param.name]) {
             missingFields.push(param.name);
-          } else {
-            console.log(`✅ File "${param.name}" is present`);
           }
         } else {
           const value = parameters[param.name];
-          console.log(`🔍 Checking param "${param.name}":`, value);
           if (value === undefined || value === null || value === "") {
-            console.log(`❌ Parameter "${param.name}" is missing`);
             missingFields.push(param.name);
           }
         }
       }
     });
 
-    console.log("🔍 Validation check:", {
-      missingFields,
-      filesObject: files,
-      parametersObject: parameters,
-      requiredParams: currentEndpoint.parameters.filter((p) => p.required),
-    });
-
     if (missingFields.length > 0) {
-      console.log("❌ Validation failed, missing fields:", missingFields);
       showError(
         "Missing Required Fields",
-        `Please fill in the following required fields: ${missingFields.join(
-          ", "
-        )}`,
-        {
-          primary: {
-            text: "OK",
-            onClick: hideAlert,
-          },
-        }
-      );
-      return;
-    }
-
-    console.log("✅ Validation passed");
-
-    // Check if Authorization header exists
-    if (!headers.Authorization) {
-      showError(
-        "API Key Required",
-        "Please click 'Generate Test Key' button to create and use an API key for testing.",
-        {
-          primary: {
-            text: "OK",
-            onClick: hideAlert,
-          },
-        }
+        `Please fill in: ${missingFields.join(", ")}`,
+        { primary: { text: "OK", onClick: hideAlert } }
       );
       return;
     }
@@ -280,25 +159,19 @@ export function ApiTester({ toolId }: ApiTesterProps) {
 
     try {
       const formData = new FormData();
-
-      // Add files
-      Object.entries(files).forEach(([paramName, file]) => {
-        if (file) {
-          formData.append(paramName, file);
-        }
+      Object.entries(files).forEach(([name, file]) => {
+        if (file) formData.append(name, file);
       });
-
-      // Add other parameters
-      Object.entries(parameters).forEach(([paramName, value]) => {
+      Object.entries(parameters).forEach(([name, value]) => {
         if (value !== undefined && value !== "") {
-          formData.append(paramName, value.toString());
+          formData.append(name, value.toString());
         }
       });
 
       const result = await apiTestClient.testEndpoint({
         url: currentEndpoint.path,
         method: currentEndpoint.method,
-        headers,
+        headers: { Authorization: `Bearer ${apiKey}` },
         body: formData,
       });
 
@@ -322,316 +195,260 @@ export function ApiTester({ toolId }: ApiTesterProps) {
     }
   };
 
-  const copyCurl = () => {
-    if (currentEndpoint) {
-      const curlCommand = apiTestClient.generateCurlCommand({
-        url: currentEndpoint.path,
-        method: currentEndpoint.method,
-        headers,
-        body: undefined,
-      });
-      apiTestClient.copyToClipboard(curlCommand);
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Header with Circle */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="relative">
-          <div className="w-4 h-4 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full animate-pulse"></div>
-          <div className="absolute inset-0 w-4 h-4 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full blur-sm opacity-50"></div>
+    <div className="w-full max-w-6xl mx-auto space-y-6 p-4 md:p-6">
+      {/* Simple Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-1">API Tester</h2>
+          <p className="text-sm text-gray-400">Test API endpoints with ease</p>
         </div>
-        <h3 className="text-lg font-semibold text-white">
-          API Testing Interface
-        </h3>
+        {!apiKey && (
+          <button
+            onClick={ensureApiKey}
+            disabled={isGeneratingKey}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-all"
+          >
+            {isGeneratingKey ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Key className="w-4 h-4" />
+                Get API Key
+              </>
+            )}
+          </button>
+        )}
+        {apiKey && (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-900/20 border border-green-800 rounded-lg">
+            <CheckCircle className="w-4 h-4 text-green-400" />
+            <span className="text-xs text-green-400 font-mono">
+              {apiKey.slice(0, 8)}...
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Endpoint Selection */}
-      <div className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-2 h-2 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] rounded-full"></div>
-          <label className="text-sm font-medium text-white">
-            Select API Endpoint
-          </label>
+      {/* Step 1: Select Endpoint */}
+      <div className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl p-4 md:p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 font-semibold text-sm">
+            1
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white">
+              Choose Endpoint
+            </h3>
+            <p className="text-xs text-gray-400">
+              Select an API endpoint to test
+            </p>
+          </div>
         </div>
         <select
           value={selectedEndpoint}
-          onChange={(e) => setSelectedEndpoint(e.target.value)}
-          className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-4 py-3 text-white focus:border-[#8b5cf6] focus:outline-none transition-colors"
+          onChange={(e) => {
+            setSelectedEndpoint(e.target.value);
+            setParameters({});
+            setFiles({});
+            setResult(null);
+          }}
+          className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:outline-none transition-colors"
         >
-          <option value="">Choose an endpoint...</option>
+          <option value="">Select endpoint...</option>
           {endpoints.map((endpoint) => (
             <option key={endpoint.id} value={endpoint.id}>
-              {endpoint.method} - {endpoint.name}
+              {endpoint.method} {endpoint.name}
             </option>
           ))}
         </select>
       </div>
 
+      {/* Step 2: Fill Parameters */}
       {currentEndpoint && (
-        <div className="space-y-6">
-          {/* Request Builder - Full Width */}
-          <div className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg p-4 space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 bg-gradient-to-r from-[#22c55e] to-[#16a34a] rounded-full"></div>
-              <h4 className="text-lg font-semibold text-white">
-                Request Builder
-              </h4>
-            </div>
-
-            {/* Parameters */}
-            <div className="space-y-3">
-              {currentEndpoint.parameters.map((param) => (
-                <div key={param.name}>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    {param.name}
-                    {param.required && (
-                      <span className="text-red-400 ml-1">*</span>
-                    )}
-                  </label>
-
-                  {param.type === "file" ? (
-                    <div>
-                      <input
-                        ref={(el) => {
-                          fileInputRefs.current[param.name] = el;
-                        }}
-                        type="file"
-                        onChange={(e) =>
-                          handleFileChange(
-                            param.name,
-                            e.target.files?.[0] || null
-                          )
-                        }
-                        className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-[#8b5cf6] file:text-white hover:file:bg-[#7c3aed] transition-colors"
-                      />
-                      {files[param.name] && (
-                        <p className="text-xs text-gray-400 mt-1">
-                          Selected: {files[param.name]?.name}
-                        </p>
-                      )}
-                    </div>
-                  ) : param.type === "select" ? (
-                    <select
-                      value={parameters[param.name] || ""}
-                      onChange={(e) =>
-                        handleParameterChange(param.name, e.target.value)
-                      }
-                      className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white focus:border-[#8b5cf6] focus:outline-none"
-                    >
-                      <option value="">Select {param.name}...</option>
-                      {param.options?.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  ) : param.type === "boolean" ? (
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={parameters[param.name] || false}
-                        onChange={(e) =>
-                          handleParameterChange(param.name, e.target.checked)
-                        }
-                        className="w-4 h-4 text-[#8b5cf6] bg-[#0a0a0a] border-[#2a2a2a] rounded focus:ring-[#8b5cf6] focus:ring-2"
-                      />
-                      <span className="text-sm text-gray-300">
-                        {param.description || `Enable ${param.name}`}
-                      </span>
-                    </label>
-                  ) : (
-                    <input
-                      type={param.type === "number" ? "number" : "text"}
-                      value={parameters[param.name] || ""}
-                      onChange={(e) =>
-                        handleParameterChange(
-                          param.name,
-                          param.type === "number"
-                            ? parseFloat(e.target.value) || 0
-                            : e.target.value
-                        )
-                      }
-                      placeholder={param.description || `Enter ${param.name}`}
-                      className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white focus:border-[#8b5cf6] focus:outline-none"
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Headers */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-gradient-to-r from-[#f59e0b] to-[#d97706] rounded-full"></div>
-                  <label className="text-sm font-medium text-gray-300">
-                    Headers
-                  </label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowKeyGenerator(!showKeyGenerator)}
-                    className="px-3 py-1 bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white text-xs font-medium rounded-lg transition-all duration-200 flex items-center gap-1 shadow-md hover:shadow-lg"
-                  >
-                    🔑 Generate Test Key
-                  </button>
-                  <button
-                    onClick={addHeader}
-                    className="text-xs text-[#8b5cf6] hover:text-[#7c3aed]"
-                  >
-                    + Add Header
-                  </button>
-                </div>
+        <>
+          <div className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl p-4 md:p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500/20 text-green-400 font-semibold text-sm">
+                2
               </div>
-
-              {/* Test Key Generator */}
-              {showKeyGenerator && (
-                <div className="bg-gradient-to-r from-[#0a0a0a] to-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-gradient-to-r from-[#22c55e] to-[#16a34a] rounded-full animate-pulse"></div>
-                      <h4 className="text-sm font-medium text-white">
-                        Generate Test Bearer Key
-                      </h4>
-                    </div>
-                    <button
-                      onClick={() => setShowKeyGenerator(false)}
-                      className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-[#2a2a2a] transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-400">
-                    Generate a test API key with full permissions for testing
-                    this tool. After generation, the key will be automatically
-                    set in the Authorization header.
-                  </p>
-                  <button
-                    onClick={generateTestKey}
-                    disabled={isGeneratingKey}
-                    className="w-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] disabled:from-gray-600 disabled:to-gray-600 text-white px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:shadow-none"
-                  >
-                    {isGeneratingKey ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Generating...
-                      </>
-                    ) : (
-                      <>🔑 Generate Test Key</>
-                    )}
-                  </button>
-                </div>
-              )}
-
-              {Object.entries(headers).map(([key, value]) => (
-                <div key={key} className="grid grid-cols-12 gap-2">
-                  <input
-                    type="text"
-                    value={key}
-                    onChange={(e) => {
-                      const newHeaders = { ...headers };
-                      delete newHeaders[key];
-                      newHeaders[e.target.value] = value;
-                      setHeaders(newHeaders);
-                    }}
-                    placeholder="Header name"
-                    className="col-span-5 bg-[#0a0a0a] border border-[#2a2a2a] rounded px-3 py-2 text-white text-sm focus:border-[#8b5cf6] focus:outline-none"
-                  />
-                  <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => handleHeaderChange(key, e.target.value)}
-                    placeholder="Header value"
-                    className="col-span-6 bg-[#0a0a0a] border border-[#2a2a2a] rounded px-3 py-2 text-white text-sm focus:border-[#8b5cf6] focus:outline-none"
-                  />
-                  <button
-                    onClick={() => removeHeader(key)}
-                    className="col-span-1 text-gray-400 hover:text-red-400 p-2 rounded hover:bg-[#2a2a2a] transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
+              <div>
+                <h3 className="text-lg font-semibold text-white">Parameters</h3>
+                <p className="text-xs text-gray-400">
+                  {currentEndpoint.description ||
+                    "Fill in the required parameters"}
+                </p>
+              </div>
             </div>
 
-            {/* Send Button */}
+            <div className="space-y-4">
+              {currentEndpoint.parameters.length === 0 ? (
+                <div className="text-center py-6 text-gray-400 text-sm">
+                  No parameters required for this endpoint
+                </div>
+              ) : (
+                currentEndpoint.parameters.map((param) => (
+                  <div key={param.name} className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
+                      {param.name}
+                      {param.required && (
+                        <span className="text-red-400 text-xs">*</span>
+                      )}
+                      {param.description && (
+                        <Info
+                          className="w-3.5 h-3.5 text-gray-500"
+                          title={param.description}
+                        />
+                      )}
+                    </label>
+
+                    {param.type === "file" ? (
+                      <div className="space-y-2">
+                        <input
+                          ref={(el) => {
+                            fileInputRefs.current[param.name] = el;
+                          }}
+                          type="file"
+                          onChange={(e) =>
+                            setFiles((prev) => ({
+                              ...prev,
+                              [param.name]: e.target.files?.[0] || null,
+                            }))
+                          }
+                          className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-4 py-2.5 text-white text-sm file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-500 file:text-white hover:file:bg-blue-600 transition-colors"
+                        />
+                        {files[param.name] && (
+                          <p className="text-xs text-gray-400">
+                            Selected: {files[param.name]?.name}
+                          </p>
+                        )}
+                      </div>
+                    ) : param.type === "select" ? (
+                      <select
+                        value={parameters[param.name] || ""}
+                        onChange={(e) =>
+                          setParameters((prev) => ({
+                            ...prev,
+                            [param.name]: e.target.value,
+                          }))
+                        }
+                        className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="">Select {param.name}...</option>
+                        {param.options?.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    ) : param.type === "boolean" ? (
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={parameters[param.name] || false}
+                          onChange={(e) =>
+                            setParameters((prev) => ({
+                              ...prev,
+                              [param.name]: e.target.checked,
+                            }))
+                          }
+                          className="w-4 h-4 text-blue-500 bg-[#1a1a1a] border-[#2a2a2a] rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-300">
+                          {param.description || `Enable ${param.name}`}
+                        </span>
+                      </label>
+                    ) : (
+                      <input
+                        type={param.type === "number" ? "number" : "text"}
+                        value={parameters[param.name] || ""}
+                        onChange={(e) =>
+                          setParameters((prev) => ({
+                            ...prev,
+                            [param.name]:
+                              param.type === "number"
+                                ? parseFloat(e.target.value) || 0
+                                : e.target.value,
+                          }))
+                        }
+                        placeholder={param.description || `Enter ${param.name}`}
+                        className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none"
+                      />
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Step 3: Send & View Response */}
+          <div className="space-y-4">
             <button
               onClick={executeRequest}
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] disabled:from-gray-600 disabled:to-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:shadow-none"
+              disabled={isLoading || !apiKey}
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-gray-600 disabled:to-gray-600 text-white px-6 py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:shadow-none"
             >
               {isLoading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Sending...
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Sending Request...
                 </>
               ) : (
                 <>
-                  <Send className="w-4 h-4" />
+                  <Send className="w-5 h-5" />
                   Send Request
                 </>
               )}
             </button>
-          </div>
 
-          {/* Response Viewer - Full Width Below */}
-          <div className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg p-4 space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 bg-gradient-to-r from-[#ef4444] to-[#dc2626] rounded-full"></div>
-              <h4 className="text-lg font-semibold text-white flex items-center gap-2">
-                {result?.success ? (
-                  <CheckCircle className="w-4 h-4 text-[#22c55e]" />
-                ) : result ? (
-                  <XCircle className="w-4 h-4 text-[#ef4444]" />
-                ) : (
-                  <Clock className="w-4 h-4 text-gray-400" />
-                )}
-                Response
-                {result && (
-                  <span className="text-sm font-normal text-gray-400">
-                    ({result.status} - {result.duration}ms)
-                  </span>
-                )}
-              </h4>
-            </div>
-
-            {result ? (
-              <div className="space-y-4">
-                {/* Response Actions */}
+            {result && (
+              <div className="bg-[#0a0a0a] border border-[#2a2a2a] rounded-xl p-4 md:p-6 space-y-4">
                 <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {result.success ? (
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-red-400" />
+                    )}
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">
+                        Response
+                      </h3>
+                      <p className="text-xs text-gray-400">
+                        Status {result.status} • {result.duration}ms
+                      </p>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        result.success
-                          ? "bg-green-900/20 text-green-400 border border-green-800"
-                          : "bg-red-900/20 text-red-400 border border-red-800"
-                      }`}
-                    >
-                      {result.success ? "Success" : "Error"}
-                    </span>
                     {result.data?.downloadUrl && (
                       <button
                         onClick={downloadResult}
-                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                        className="p-2 text-gray-400 hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-colors"
                         title="Download file"
                       >
                         <Download className="w-4 h-4" />
                       </button>
                     )}
                     <button
-                      onClick={copyCurl}
-                      className="p-2 text-gray-400 hover:text-white transition-colors"
-                      title="Copy cURL command"
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          JSON.stringify(result.data || result.error, null, 2)
+                        );
+                        showSuccess("Copied!", "Response copied to clipboard", {
+                          primary: { text: "OK", onClick: hideAlert },
+                        });
+                      }}
+                      className="p-2 text-gray-400 hover:text-white hover:bg-[#1a1a1a] rounded-lg transition-colors"
+                      title="Copy response"
                     >
                       <Copy className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                {/* Response Data */}
-                <div className="bg-[#0a0a0a] rounded-lg p-4 max-h-96 overflow-auto">
+                <div className="bg-[#1a1a1a] rounded-lg p-4 max-h-96 overflow-auto">
                   {result.data?.downloadUrl ? (
                     <div className="space-y-2">
                       <p className="text-sm text-gray-300">
@@ -645,21 +462,21 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                       </p>
                     </div>
                   ) : (
-                    <pre className="text-sm text-gray-300 whitespace-pre-wrap">
+                    <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono">
                       {result.error || JSON.stringify(result.data, null, 2)}
                     </pre>
                   )}
                 </div>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">
-                  Send a request to see the response
-                </p>
-              </div>
             )}
           </div>
+        </>
+      )}
+
+      {!currentEndpoint && (
+        <div className="text-center py-12 text-gray-400">
+          <Send className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p>Select an endpoint to get started</p>
         </div>
       )}
     </div>
