@@ -157,13 +157,19 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user) {
       fetchApiKeys();
-      fetchStats();
     }
   }, [user]);
 
+  // Fetch stats after API keys are loaded (stats depends on apiKeys.length)
+  useEffect(() => {
+    if (user && apiKeys.length >= 0) {
+      fetchStats();
+    }
+  }, [user, apiKeys.length]);
+
   const refreshToken = async () => {
     if (!user?.email) return null;
-    
+
     try {
       const tokenResponse = await fetch(
         `${
@@ -266,7 +272,10 @@ export default function DashboardPage() {
               last_used: key.last_used,
             }));
             setApiKeys(transformedKeys);
-            setStats((prev) => ({ ...prev, activeKeys: transformedKeys.length }));
+            setStats((prev) => ({
+              ...prev,
+              activeKeys: transformedKeys.length,
+            }));
           }
         }
       } else {
@@ -278,8 +287,207 @@ export default function DashboardPage() {
   };
 
   const fetchStats = async () => {
-    // TODO: Implement stats fetching
-    setLoading(false);
+    try {
+      let token = localStorage.getItem("auth_token");
+      if (!token && user?.email) {
+        token = await refreshToken();
+        if (!token) {
+      setLoading(false);
+          return;
+        }
+      }
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          "https://web-production-737b.up.railway.app"
+        }/api/client/usage?days=30`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update stats
+        if (data.summary) {
+          // Get calls today (last 24 hours)
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+          const todayCalls = data.recent_logs?.filter((log: any) => {
+            const logDate = new Date(log.timestamp);
+            return logDate >= todayStart;
+          }).length || 0;
+
+          setStats({
+            callsToday: todayCalls,
+            successRate: data.summary.success_rate || 0,
+            dataProcessed: data.recent_logs?.reduce((sum: number, log: any) => 
+              sum + (log.file_size || 0), 0) || 0,
+            activeKeys: apiKeys.length,
+            avgResponseTime: data.recent_logs?.length > 0
+              ? data.recent_logs.reduce((sum: number, log: any) => 
+                  sum + ((log.processing_time || 0) * 1000), 0) / data.recent_logs.length
+              : 0,
+          });
+        }
+
+        // Transform usage logs to activity format
+        if (data.recent_logs && Array.isArray(data.recent_logs)) {
+          const transformedActivities = data.recent_logs.map((log: any) => {
+            // Extract tool name from endpoint
+            const endpoint = log.endpoint || "";
+            let tool = "Other";
+            let operation = endpoint.split("/").pop() || "Unknown";
+            
+            if (endpoint.includes("pdf")) {
+              tool = "PDF Tools";
+              if (endpoint.includes("extract-text")) operation = "Text Extraction";
+              else if (endpoint.includes("merge")) operation = "Merge";
+              else if (endpoint.includes("split")) operation = "Split";
+              else if (endpoint.includes("watermark")) operation = "Watermark";
+            } else if (endpoint.includes("video")) {
+              tool = "Video Converter";
+              operation = "Conversion";
+            } else if (endpoint.includes("audio")) {
+              tool = "Audio Converter";
+              operation = "Conversion";
+            } else if (endpoint.includes("image")) {
+              tool = "Image Converter";
+              operation = "Conversion";
+            } else if (endpoint.includes("qr")) {
+              tool = "QR Generator";
+              operation = "Generation";
+            }
+
+            return {
+              id: log.id?.toString() || `${log.timestamp}-${Math.random()}`,
+              timestamp: log.timestamp || new Date().toISOString(),
+              tool: tool,
+              operation: operation,
+              status: log.status_code >= 200 && log.status_code < 300 
+                ? "success" 
+                : log.status_code >= 400 
+                ? "error" 
+                : "processing",
+              fileSize: log.file_size || 0,
+              duration: log.processing_time || 0,
+              endpoint: log.endpoint || "",
+              responseTime: log.processing_time ? Math.round(log.processing_time * 1000) : 0,
+            };
+          });
+          
+          setActivities(transformedActivities);
+        }
+
+        setLoading(false);
+      } else if (response.status === 401) {
+        // Token invalid - refresh and retry
+        const newToken = await refreshToken();
+        if (newToken) {
+          const retryResponse = await fetch(
+            `${
+              process.env.NEXT_PUBLIC_API_BASE_URL ||
+              "https://web-production-737b.up.railway.app"
+            }/api/client/usage?days=30`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${newToken}`,
+              },
+            }
+          );
+          
+          if (retryResponse.ok) {
+            const retryData = await retryResponse.json();
+            // Apply same transformation as above
+            if (retryData.summary) {
+              const todayStart = new Date();
+              todayStart.setHours(0, 0, 0, 0);
+              const todayCalls = retryData.recent_logs?.filter((log: any) => {
+                const logDate = new Date(log.timestamp);
+                return logDate >= todayStart;
+              }).length || 0;
+
+              setStats({
+                callsToday: todayCalls,
+                successRate: retryData.summary.success_rate || 0,
+                dataProcessed: retryData.recent_logs?.reduce((sum: number, log: any) => 
+                  sum + (log.file_size || 0), 0) || 0,
+                activeKeys: apiKeys.length,
+                avgResponseTime: retryData.recent_logs?.length > 0
+                  ? retryData.recent_logs.reduce((sum: number, log: any) => 
+                      sum + ((log.processing_time || 0) * 1000), 0) / retryData.recent_logs.length
+                  : 0,
+              });
+            }
+
+            if (retryData.recent_logs && Array.isArray(retryData.recent_logs)) {
+              const transformedActivities = retryData.recent_logs.map((log: any) => {
+                const endpoint = log.endpoint || "";
+                let tool = "Other";
+                let operation = endpoint.split("/").pop() || "Unknown";
+                
+                if (endpoint.includes("pdf")) {
+                  tool = "PDF Tools";
+                  if (endpoint.includes("extract-text")) operation = "Text Extraction";
+                  else if (endpoint.includes("merge")) operation = "Merge";
+                  else if (endpoint.includes("split")) operation = "Split";
+                  else if (endpoint.includes("watermark")) operation = "Watermark";
+                } else if (endpoint.includes("video")) {
+                  tool = "Video Converter";
+                  operation = "Conversion";
+                } else if (endpoint.includes("audio")) {
+                  tool = "Audio Converter";
+                  operation = "Conversion";
+                } else if (endpoint.includes("image")) {
+                  tool = "Image Converter";
+                  operation = "Conversion";
+                } else if (endpoint.includes("qr")) {
+                  tool = "QR Generator";
+                  operation = "Generation";
+                }
+
+                return {
+                  id: log.id?.toString() || `${log.timestamp}-${Math.random()}`,
+                  timestamp: log.timestamp || new Date().toISOString(),
+                  tool: tool,
+                  operation: operation,
+                  status: log.status_code >= 200 && log.status_code < 300 
+                    ? "success" 
+                    : log.status_code >= 400 
+                    ? "error" 
+                    : "processing",
+                  fileSize: log.file_size || 0,
+                  duration: log.processing_time || 0,
+                  endpoint: log.endpoint || "",
+                  responseTime: log.processing_time ? Math.round(log.processing_time * 1000) : 0,
+                };
+              });
+              
+              setActivities(transformedActivities);
+            }
+          }
+        }
+        setLoading(false);
+      } else {
+        console.error("Failed to fetch stats:", await response.text());
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      setLoading(false);
+    }
   };
 
   const handleTestApi = (toolId: string) => {
@@ -312,7 +520,7 @@ export default function DashboardPage() {
       }
 
       let token = localStorage.getItem("auth_token");
-      
+
       // If no token or token might be invalid, refresh it
       if (!token && user?.email) {
         token = await refreshToken();
@@ -349,30 +557,30 @@ export default function DashboardPage() {
 
       if (response.ok) {
         const newKeyData = await response.json();
-        const newKey = {
+    const newKey = {
           id: newKeyData.id.toString(),
           name: newKeyData.name,
           key: newKeyData.key || newKeyData.key_value || "",
           created: newKeyData.created_at,
           isActive: newKeyData.is_active,
-          permissions: ["read", "write", "convert"],
+      permissions: ["read", "write", "convert"],
           rate_limit: newKeyData.rate_limit,
           last_used: newKeyData.last_used,
-        };
+    };
 
         setApiKeys((prev) => [newKey, ...prev]);
         setStats((prev) => ({ ...prev, activeKeys: prev.activeKeys + 1 }));
 
-        showSuccess(
-          "API Key Created",
-          `Successfully created API key: ${newKey.key}`,
-          {
-            primary: {
-              text: "OK",
-              onClick: hideAlert,
-            },
-          }
-        );
+    showSuccess(
+      "API Key Created",
+      `Successfully created API key: ${newKey.key}`,
+      {
+        primary: {
+          text: "OK",
+          onClick: hideAlert,
+        },
+      }
+    );
       } else if (response.status === 401) {
         // Token invalid - refresh and retry
         const newToken = await refreshToken();
@@ -394,7 +602,7 @@ export default function DashboardPage() {
               }),
             }
           );
-          
+
           if (retryResponse.ok) {
             const newKeyData = await retryResponse.json();
             const newKey = {
@@ -491,17 +699,17 @@ export default function DashboardPage() {
       );
 
       if (response.ok) {
-        setApiKeys((prev) => prev.filter((key) => key.id !== keyId));
+    setApiKeys((prev) => prev.filter((key) => key.id !== keyId));
         setStats((prev) => ({ ...prev, activeKeys: prev.activeKeys - 1 }));
 
         showSuccess(
           "API Key Deleted",
           "API key has been successfully deleted",
           {
-            primary: {
-              text: "OK",
-              onClick: hideAlert,
-            },
+      primary: {
+        text: "OK",
+        onClick: hideAlert,
+      },
           }
         );
       } else {
@@ -892,9 +1100,9 @@ export default function DashboardPage() {
                     <h3 className="text-lg font-semibold text-white">
                       API Keys
                     </h3>
-                    <p className="text-sm text-gray-400">
-                      Manage your API authentication keys
-                    </p>
+                <p className="text-sm text-gray-400">
+                  Manage your API authentication keys
+                </p>
                   </div>
                   <button
                     onClick={() => setShowCreateKeyModal(true)}
@@ -1009,13 +1217,13 @@ export default function DashboardPage() {
                 <p className="text-sm text-gray-400 mb-4">
                   Enter a descriptive name for your API key
                 </p>
-                <input
-                  type="text"
+            <input
+              type="text"
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
                   placeholder="e.g., Production Key, Development Key"
                   className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-4 py-3 text-white text-sm focus:border-[#8b5cf6] focus:outline-none transition-colors mb-4"
-                  autoFocus
+              autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && newKeyName.trim()) {
                       handleCreateApiKey(newKeyName.trim());
