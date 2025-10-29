@@ -44,9 +44,6 @@ export class ApiTestClient {
             }
           });
         }
-
-        // Don't set Content-Type header for FormData - let browser set it with boundary
-        delete headers["Content-Type"];
       } else if (body) {
         // Handle JSON body
         requestBody = JSON.stringify(body);
@@ -56,7 +53,6 @@ export class ApiTestClient {
       // Use getApiUrl to construct the full URL
       const fullUrl = getApiUrl(url);
       console.log("🔗 API Test: Calling", fullUrl);
-      console.log("📋 Request headers:", headers);
 
       const response = await fetch(fullUrl, {
         method,

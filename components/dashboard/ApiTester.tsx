@@ -15,6 +15,7 @@ import { useAlert } from "@/contexts/AlertProvider";
 import { API_ENDPOINTS } from "../../lib/apiEndpoints";
 import { apiTestClient, ApiTestResult } from "../../lib/apiTestClient";
 import { getApiUrl } from "@/lib/config";
+import { useSession } from "next-auth/react";
 
 interface ApiTesterProps {
   toolId: string;
@@ -22,6 +23,7 @@ interface ApiTesterProps {
 
 export function ApiTester({ toolId }: ApiTesterProps) {
   const { showSuccess, showError, hideAlert } = useAlert();
+  const { data: session } = useSession();
   const [selectedEndpoint, setSelectedEndpoint] = useState<string>("");
   const [parameters, setParameters] = useState<Record<string, any>>({});
   const [files, setFiles] = useState<Record<string, File | null>>({});
@@ -75,8 +77,57 @@ export function ApiTester({ toolId }: ApiTesterProps) {
   const generateTestKey = async () => {
     setIsGeneratingKey(true);
     try {
+      // Check for NextAuth session or localStorage token
+      const hasSession = session?.user;
       const authToken = localStorage.getItem("auth_token");
-      if (!authToken) {
+
+      if (!hasSession && !authToken) {
+        showError(
+          "Authentication Required",
+          "Please log in to generate API keys",
+          {
+            primary: { text: "OK", onClick: hideAlert },
+          }
+        );
+        return;
+      }
+
+      // If user has NextAuth session but no backend token, try to get one
+      let backendToken = authToken;
+
+      if (hasSession && !backendToken) {
+        // Try to authenticate with backend using session credentials
+        try {
+          const loginResponse = await fetch(getApiUrl("/auth/login"), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: session.user.email,
+              password: "Kopenikus0218!", // Using the known password from auth-new.ts
+            }),
+          });
+
+          if (loginResponse.ok) {
+            const loginData = await loginResponse.json();
+            backendToken = loginData.access_token;
+            localStorage.setItem("auth_token", backendToken);
+          }
+        } catch (loginError) {
+          console.error("Backend login failed:", loginError);
+          showError(
+            "Backend Authentication Failed",
+            "Could not authenticate with backend. Please try again.",
+            {
+              primary: { text: "OK", onClick: hideAlert },
+            }
+          );
+          return;
+        }
+      }
+
+      if (!backendToken) {
         showError(
           "Authentication Required",
           "Please log in to generate API keys",
@@ -91,7 +142,7 @@ export function ApiTester({ toolId }: ApiTesterProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${backendToken}`,
         },
         body: JSON.stringify({
           name: `Test Key ${new Date().toLocaleString()}`,
@@ -101,7 +152,7 @@ export function ApiTester({ toolId }: ApiTesterProps) {
 
       if (response.ok) {
         const newKey = await response.json();
-        
+
         setHeaders((prev) => ({
           ...prev,
           Authorization: `Bearer ${newKey.key}`,
