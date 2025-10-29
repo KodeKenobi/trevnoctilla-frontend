@@ -161,9 +161,49 @@ export default function DashboardPage() {
     }
   }, [user]);
 
+  const refreshToken = async () => {
+    if (!user?.email) return null;
+    
+    try {
+      const tokenResponse = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          "https://web-production-737b.up.railway.app"
+        }/auth/get-token-from-session`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: user.email,
+            password: "Kopenikus0218!",
+            role: user.role === "super_admin" ? "super_admin" : "user",
+          }),
+        }
+      );
+
+      if (tokenResponse.ok) {
+        const backendData = await tokenResponse.json();
+        const newToken = backendData.access_token;
+        if (newToken && typeof newToken === "string") {
+          localStorage.setItem("auth_token", newToken);
+          return newToken;
+        }
+      }
+    } catch (error) {
+      console.error("Failed to refresh token:", error);
+    }
+    return null;
+  };
+
   const fetchApiKeys = async () => {
     try {
-      const token = localStorage.getItem("auth_token");
+      let token = localStorage.getItem("auth_token");
+      if (!token && user?.email) {
+        token = await refreshToken();
+        if (!token) return;
+      }
       if (!token) return;
 
       const response = await fetch(
@@ -195,6 +235,40 @@ export default function DashboardPage() {
         }));
         setApiKeys(transformedKeys);
         setStats((prev) => ({ ...prev, activeKeys: transformedKeys.length }));
+      } else if (response.status === 401) {
+        // Token invalid - refresh and retry
+        const newToken = await refreshToken();
+        if (newToken) {
+          // Retry with new token
+          const retryResponse = await fetch(
+            `${
+              process.env.NEXT_PUBLIC_API_BASE_URL ||
+              "https://web-production-737b.up.railway.app"
+            }/api/client/keys`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${newToken}`,
+              },
+            }
+          );
+          if (retryResponse.ok) {
+            const data = await retryResponse.json();
+            const transformedKeys = data.map((key: any) => ({
+              id: key.id.toString(),
+              name: key.name,
+              key: key.key || key.key_value || "",
+              created: key.created_at,
+              isActive: key.is_active,
+              permissions: ["read", "write", "convert"],
+              rate_limit: key.rate_limit,
+              last_used: key.last_used,
+            }));
+            setApiKeys(transformedKeys);
+            setStats((prev) => ({ ...prev, activeKeys: transformedKeys.length }));
+          }
+        }
       } else {
         console.error("Failed to fetch API keys:", await response.text());
       }
@@ -238,39 +312,10 @@ export default function DashboardPage() {
       }
 
       let token = localStorage.getItem("auth_token");
-
-      // If no token but we have a session, try to get one
+      
+      // If no token or token might be invalid, refresh it
       if (!token && user?.email) {
-        try {
-          const tokenResponse = await fetch(
-            `${
-              process.env.NEXT_PUBLIC_API_BASE_URL ||
-              "https://web-production-737b.up.railway.app"
-            }/auth/get-token-from-session`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                email: user.email,
-                password: "Kopenikus0218!",
-                role: user.role === "super_admin" ? "super_admin" : "user",
-              }),
-            }
-          );
-
-          if (tokenResponse.ok) {
-            const backendData = await tokenResponse.json();
-            const newToken = backendData.access_token;
-            if (newToken && typeof newToken === "string") {
-              token = newToken;
-              localStorage.setItem("auth_token", token);
-            }
-          }
-        } catch (error) {
-          console.error("Failed to get backend token:", error);
-        }
+        token = await refreshToken();
       }
 
       if (!token) {
@@ -328,6 +373,73 @@ export default function DashboardPage() {
             },
           }
         );
+      } else if (response.status === 401) {
+        // Token invalid - refresh and retry
+        const newToken = await refreshToken();
+        if (newToken) {
+          const retryResponse = await fetch(
+            `${
+              process.env.NEXT_PUBLIC_API_BASE_URL ||
+              "https://web-production-737b.up.railway.app"
+            }/api/client/keys`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${newToken}`,
+              },
+              body: JSON.stringify({
+                name: name || `API Key ${new Date().toLocaleString()}`,
+                rate_limit: 1000,
+              }),
+            }
+          );
+          
+          if (retryResponse.ok) {
+            const newKeyData = await retryResponse.json();
+            const newKey = {
+              id: newKeyData.id.toString(),
+              name: newKeyData.name,
+              key: newKeyData.key || newKeyData.key_value || "",
+              created: newKeyData.created_at,
+              isActive: newKeyData.is_active,
+              permissions: ["read", "write", "convert"],
+              rate_limit: newKeyData.rate_limit,
+              last_used: newKeyData.last_used,
+            };
+
+            setApiKeys((prev) => [newKey, ...prev]);
+            setStats((prev) => ({ ...prev, activeKeys: prev.activeKeys + 1 }));
+
+            showSuccess(
+              "API Key Created",
+              `Successfully created API key: ${newKey.key}`,
+              {
+                primary: {
+                  text: "OK",
+                  onClick: hideAlert,
+                },
+              }
+            );
+          } else {
+            const errorData = await retryResponse.json().catch(() => ({}));
+            showError(
+              "Failed to Create API Key",
+              errorData.error || "An error occurred",
+              {
+                primary: { text: "OK", onClick: hideAlert },
+              }
+            );
+          }
+        } else {
+          showError(
+            "Authentication Failed",
+            "Unable to refresh authentication token",
+            {
+              primary: { text: "OK", onClick: hideAlert },
+            }
+          );
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         showError(
