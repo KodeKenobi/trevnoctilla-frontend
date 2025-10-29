@@ -92,42 +92,20 @@ export function ApiTester({ toolId }: ApiTesterProps) {
         return;
       }
 
-      // If user has NextAuth session but no backend token, try to get one
+      // If user has NextAuth session but no backend token, they need to log in via backend
       let backendToken: string | null = authToken;
       
       if (hasSession && !backendToken) {
-        // Try to authenticate with backend using session credentials
-        try {
-          const loginResponse = await fetch(getApiUrl("/auth/login"), {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              email: session.user.email,
-              password: "Kopenikus0218!", // Using the known password from auth-new.ts
-            }),
-          });
-
-          if (loginResponse.ok) {
-            const loginData = await loginResponse.json();
-            const token = loginData.access_token;
-            if (token && typeof token === 'string') {
-              backendToken = token;
-              localStorage.setItem("auth_token", token);
-            }
+        // User is authenticated via NextAuth but doesn't have a backend JWT token
+        // They need to log in through the backend login flow to get a JWT token
+        showError(
+          "Backend Authentication Required",
+          "You are logged in via NextAuth, but you need a backend JWT token to generate API keys. Please log in through the backend authentication system.",
+          {
+            primary: { text: "OK", onClick: hideAlert },
           }
-        } catch (loginError) {
-          console.error("Backend login failed:", loginError);
-          showError(
-            "Backend Authentication Failed",
-            "Could not authenticate with backend. Please try again.",
-            {
-              primary: { text: "OK", onClick: hideAlert },
-            }
-          );
-          return;
-        }
+        );
+        return;
       }
 
       if (!backendToken) {
