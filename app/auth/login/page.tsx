@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { signIn, getSession } from "next-auth/react";
+import { getApiUrl } from "@/lib/config";
 import {
   Eye,
   EyeOff,
@@ -52,7 +53,31 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password. Please try again.");
       } else if (result?.ok) {
-        setSuccess("Login successful! Redirecting...");
+        setSuccess("Login successful! Authenticating with backend...");
+
+        // Also get a backend JWT token for API calls
+        try {
+          const backendLoginResponse = await fetch(getApiUrl("/auth/login"), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+            }),
+          });
+
+          if (backendLoginResponse.ok) {
+            const backendData = await backendLoginResponse.json();
+            // Store backend JWT token for API calls
+            localStorage.setItem("auth_token", backendData.access_token);
+            localStorage.setItem("user_data", JSON.stringify(backendData.user));
+          }
+        } catch (backendError) {
+          console.error("Backend auth failed (non-critical):", backendError);
+          // Don't block login if backend auth fails - NextAuth session is enough for UI
+        }
 
         // Get the session to check user role
         const session = await getSession();

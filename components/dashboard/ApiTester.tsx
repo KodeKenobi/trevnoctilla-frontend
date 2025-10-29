@@ -92,22 +92,9 @@ export function ApiTester({ toolId }: ApiTesterProps) {
         return;
       }
 
-      // If user has NextAuth session but no backend token, they need to log in via backend
+      // Get backend token (should exist if user logged in properly)
       let backendToken: string | null = authToken;
       
-      if (hasSession && !backendToken) {
-        // User is authenticated via NextAuth but doesn't have a backend JWT token
-        // They need to log in through the backend login flow to get a JWT token
-        showError(
-          "Backend Authentication Required",
-          "You are logged in via NextAuth, but you need a backend JWT token to generate API keys. Please log in through the backend authentication system.",
-          {
-            primary: { text: "OK", onClick: hideAlert },
-          }
-        );
-        return;
-      }
-
       if (!backendToken) {
         showError(
           "Authentication Required",
