@@ -2,6 +2,26 @@
 
 import React from "react";
 
+const formatResponseTime = (ms: number): string => {
+  if (ms < 1000) {
+    return `${Math.round(ms)}ms`;
+  }
+  const seconds = ms / 1000;
+  if (seconds < 60) {
+    return `${seconds.toFixed(1)}s`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}m ${remainingSeconds.toFixed(0)}s`;
+};
+
+const formatDataSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)}GB`;
+};
+
 interface CircularChartProps {
   value: number;
   maxValue: number;
@@ -102,7 +122,11 @@ export function CircularChart({
         <div
           className={`font-bold text-white ${textSizeClasses[size]} drop-shadow-sm`}
         >
-          {value}
+          {label === "Response Time" 
+            ? formatResponseTime(value)
+            : label === "Data (GB)"
+            ? formatDataSize(value)
+            : value}
         </div>
         <div className="text-xs text-gray-400 truncate max-w-20 font-medium">
           {label}
@@ -165,7 +189,7 @@ export function CircularStats({ stats, className = "" }: CircularStatsProps) {
         <CircularChart
           value={stats.avgResponseTime}
           maxValue={maxValues.avgResponseTime}
-          label="Response (ms)"
+          label="Response Time"
           color="#f59e0b"
           size="md"
           showPercentage={false}
