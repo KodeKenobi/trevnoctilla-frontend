@@ -77,24 +77,39 @@ export function ApiKeysSection({
       {/* Header */}
       <div className="px-6 py-4 border-b border-[#2a2a2a]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-1">
               <div className="relative">
                 <div className="w-3 h-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full animate-pulse"></div>
                 <div className="absolute inset-0 w-3 h-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full blur-sm opacity-50"></div>
               </div>
               <h3 className="text-lg font-semibold text-white">API Keys</h3>
+              <span className="text-xs px-3 py-1 rounded-full bg-gradient-to-r from-[#8b5cf6]/20 to-[#3b82f6]/20 text-[#8b5cf6] font-medium border border-[#8b5cf6]/30">
+                {apiKeys.length}
+              </span>
             </div>
-            <span className="text-xs px-3 py-1 rounded-full bg-gradient-to-r from-[#8b5cf6]/20 to-[#3b82f6]/20 text-[#8b5cf6] font-medium border border-[#8b5cf6]/30">
-              {apiKeys.length}
-            </span>
+            <p className="text-sm text-gray-400">
+              Manage your API authentication keys
+            </p>
           </div>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-gray-400 hover:text-white text-sm font-medium transition-colors"
-          >
-            {isExpanded ? "Hide" : "Show"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setShowCreateForm(true);
+                setIsExpanded(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white text-sm font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-[#8b5cf6]/25"
+            >
+              <Plus className="w-4 h-4" />
+              Create Key
+            </button>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-gray-400 hover:text-white text-sm font-medium transition-colors"
+            >
+              {isExpanded ? "Hide" : "Show"}
+            </button>
+          </div>
         </div>
       </div>
 
