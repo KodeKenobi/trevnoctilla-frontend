@@ -93,8 +93,8 @@ export function ApiTester({ toolId }: ApiTesterProps) {
       }
 
       // If user has NextAuth session but no backend token, try to get one
-      let backendToken = authToken;
-
+      let backendToken: string | null = authToken;
+      
       if (hasSession && !backendToken) {
         // Try to authenticate with backend using session credentials
         try {
@@ -111,8 +111,10 @@ export function ApiTester({ toolId }: ApiTesterProps) {
 
           if (loginResponse.ok) {
             const loginData = await loginResponse.json();
-            backendToken = loginData.access_token;
-            localStorage.setItem("auth_token", backendToken);
+            if (loginData.access_token && typeof loginData.access_token === 'string') {
+              backendToken = loginData.access_token;
+              localStorage.setItem("auth_token", backendToken);
+            }
           }
         } catch (loginError) {
           console.error("Backend login failed:", loginError);
