@@ -65,10 +65,13 @@ export function ApiTester({ toolId }: ApiTesterProps) {
 
         if (tokenResponse.ok) {
           const backendData = await tokenResponse.json();
-          backendToken = backendData.access_token;
-          localStorage.setItem("auth_token", backendToken);
-          if (backendData.user) {
-            localStorage.setItem("user_data", JSON.stringify(backendData.user));
+          const token = backendData.access_token;
+          if (token && typeof token === "string") {
+            backendToken = token;
+            localStorage.setItem("auth_token", token);
+            if (backendData.user) {
+              localStorage.setItem("user_data", JSON.stringify(backendData.user));
+            }
           }
         }
       } catch (error) {
@@ -297,10 +300,9 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                         <span className="text-red-400 text-xs">*</span>
                       )}
                       {param.description && (
-                        <Info
-                          className="w-3.5 h-3.5 text-gray-500"
-                          title={param.description}
-                        />
+                        <div title={param.description} className="inline-flex">
+                          <Info className="w-3.5 h-3.5 text-gray-500" />
+                        </div>
                       )}
                     </label>
 
