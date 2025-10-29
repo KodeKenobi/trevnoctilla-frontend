@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useAlert } from "@/contexts/AlertProvider";
 import { TOOL_CATEGORIES } from "../../lib/apiEndpoints";
@@ -10,6 +10,123 @@ import { CircularStats } from "@/components/dashboard/CircularChart";
 import { ActivityTable } from "@/components/dashboard/ActivityTable";
 import { ApiKeysSection } from "@/components/dashboard/ApiKeysSection";
 import { FloatingNav } from "@/components/dashboard/FloatingNav";
+
+function CommandPaletteContent({
+  onCommand,
+}: {
+  onCommand: (cmd: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const commands = [
+    {
+      id: "test-video",
+      label: "Test Video Converter",
+      icon: "🎥",
+      action: () => onCommand("test-video"),
+    },
+    {
+      id: "test-audio",
+      label: "Test Audio Converter",
+      icon: "🎵",
+      action: () => onCommand("test-audio"),
+    },
+    {
+      id: "test-image",
+      label: "Test Image Converter",
+      icon: "🖼️",
+      action: () => onCommand("test-image"),
+    },
+    {
+      id: "test-qr",
+      label: "Test QR Generator",
+      icon: "📱",
+      action: () => onCommand("test-qr"),
+    },
+    {
+      id: "test-pdf",
+      label: "Test PDF Tools",
+      icon: "📄",
+      action: () => onCommand("test-pdf"),
+    },
+    {
+      id: "create-key",
+      label: "Create API Key",
+      icon: "🔑",
+      action: () => onCommand("create-key"),
+    },
+    {
+      id: "view-stats",
+      label: "View Statistics",
+      icon: "📊",
+      action: () => onCommand("view-stats"),
+    },
+    {
+      id: "settings",
+      label: "Open Settings",
+      icon: "⚙️",
+      action: () => onCommand("settings"),
+    },
+    {
+      id: "help",
+      label: "View Help",
+      icon: "❓",
+      action: () => onCommand("help"),
+    },
+  ];
+
+  const filteredCommands = commands.filter((cmd) =>
+    cmd.label.toLowerCase().includes(query.toLowerCase())
+  );
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      onCommand("cancel");
+    } else if (e.key === "Enter" && filteredCommands.length > 0) {
+      filteredCommands[0].action();
+    }
+  };
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Type a command..."
+        className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white focus:border-[#8b5cf6] focus:outline-none"
+        autoFocus
+      />
+      <div className="mt-4 max-h-64 overflow-y-auto">
+        {filteredCommands.length > 0 ? (
+          <div className="space-y-1">
+            {filteredCommands.map((cmd) => (
+              <button
+                key={cmd.id}
+                onClick={cmd.action}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#2a2a2a] text-left transition-colors"
+              >
+                <span className="text-xl">{cmd.icon}</span>
+                <span className="text-sm text-white">{cmd.label}</span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm text-gray-400 py-4 text-center">
+            No commands found
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
 
 // Real API data - production ready
 
@@ -134,22 +251,72 @@ export default function DashboardPage() {
   };
 
   const handleQuickTest = () => {
-    // Open first tool for quick testing
-    setSelectedTool("video");
+    // Switch to testing tab and open first tool
+    setActiveTab("testing");
+    const firstToolId =
+      toolStats.length > 0 ? toolStats[0].toolId : "video-converter";
+    setSelectedTool(firstToolId);
+    // Scroll to tools section after a brief delay
+    setTimeout(() => {
+      const toolsSection = document.querySelector("[data-tools-section]");
+      if (toolsSection) {
+        toolsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
   };
 
   const handleOpenSettings = () => {
-    console.log("Open settings");
-    // Implement settings modal
+    // Switch to settings tab
+    setActiveTab("settings");
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 100);
   };
 
   const handleOpenHelp = () => {
-    console.log("Open help");
-    // Implement help modal
+    // Navigate to API documentation page
+    window.location.href = "/api-docs";
   };
 
   const handleOpenCommandPalette = () => {
     setShowCommandPalette(true);
+  };
+
+  const handleCommand = (command: string) => {
+    switch (command) {
+      case "test-video":
+        setActiveTab("testing");
+        setSelectedTool("video-converter");
+        break;
+      case "test-audio":
+        setActiveTab("testing");
+        setSelectedTool("audio-converter");
+        break;
+      case "test-image":
+        setActiveTab("testing");
+        setSelectedTool("image-converter");
+        break;
+      case "test-qr":
+        setActiveTab("testing");
+        setSelectedTool("qr-generator");
+        break;
+      case "test-pdf":
+        setActiveTab("testing");
+        setSelectedTool("pdf-tools");
+        break;
+      case "create-key":
+        setActiveTab("settings");
+        break;
+      case "view-stats":
+        setActiveTab("analytics");
+        break;
+      case "settings":
+        setActiveTab("settings");
+        break;
+      case "help":
+        window.location.href = "/api-docs";
+        break;
+    }
   };
 
   return (
@@ -280,7 +447,10 @@ export default function DashboardPage() {
             </div>
 
             {/* Tools Section with Enhanced Header */}
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl overflow-hidden">
+            <div
+              className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl overflow-hidden"
+              data-tools-section
+            >
               <div className="px-6 py-4 border-b border-[#2a2a2a]">
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -484,7 +654,14 @@ export default function DashboardPage() {
 
       {/* Command Palette Modal */}
       {showCommandPalette && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowCommandPalette(false);
+            }
+          }}
+        >
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-white">
@@ -492,29 +669,17 @@ export default function DashboardPage() {
               </h3>
               <button
                 onClick={() => setShowCommandPalette(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white p-1 rounded hover:bg-[#2a2a2a] transition-colors"
               >
                 ×
               </button>
             </div>
-            <input
-              type="text"
-              placeholder="Type a command..."
-              className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white focus:border-[#8b5cf6] focus:outline-none"
-              autoFocus
+            <CommandPaletteContent
+              onCommand={(command) => {
+                handleCommand(command);
+                setShowCommandPalette(false);
+              }}
             />
-            <div className="mt-4 text-sm text-gray-400">
-              <p>Available commands:</p>
-              <ul className="mt-2 space-y-1">
-                <li>• test video - Test video converter</li>
-                <li>• test audio - Test audio converter</li>
-                <li>• test image - Test image converter</li>
-                <li>• test qr - Test QR generator</li>
-                <li>• test pdf - Test PDF tools</li>
-                <li>• create key - Create new API key</li>
-                <li>• view stats - View detailed statistics</li>
-              </ul>
-            </div>
           </div>
         </div>
       )}
