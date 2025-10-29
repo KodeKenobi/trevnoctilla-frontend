@@ -137,6 +137,8 @@ export default function DashboardPage() {
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showCreateKeyModal, setShowCreateKeyModal] = useState(false);
+  const [newKeyName, setNewKeyName] = useState("");
 
   // Real data state
   const [stats, setStats] = useState({
@@ -783,12 +785,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <button
-                    onClick={() => {
-                      const name = prompt("Enter a name for your API key:");
-                      if (name && name.trim()) {
-                        handleCreateApiKey(name.trim());
-                      }
-                    }}
+                    onClick={() => setShowCreateKeyModal(true)}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white text-sm font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-[#8b5cf6]/25"
                   >
                     <Plus className="w-4 h-4" />
@@ -874,6 +871,76 @@ export default function DashboardPage() {
                 setShowCommandPalette(false);
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Create Key Modal */}
+      {showCreateKeyModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+            onClick={() => {
+              setShowCreateKeyModal(false);
+              setNewKeyName("");
+            }}
+          />
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div
+              className="relative w-full max-w-md transform overflow-hidden rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] shadow-xl transition-all"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  Create New API Key
+                </h3>
+                <p className="text-sm text-gray-400 mb-4">
+                  Enter a descriptive name for your API key
+                </p>
+                <input
+                  type="text"
+                  value={newKeyName}
+                  onChange={(e) => setNewKeyName(e.target.value)}
+                  placeholder="e.g., Production Key, Development Key"
+                  className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-4 py-3 text-white text-sm focus:border-[#8b5cf6] focus:outline-none transition-colors mb-4"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newKeyName.trim()) {
+                      handleCreateApiKey(newKeyName.trim());
+                      setShowCreateKeyModal(false);
+                      setNewKeyName("");
+                    } else if (e.key === "Escape") {
+                      setShowCreateKeyModal(false);
+                      setNewKeyName("");
+                    }
+                  }}
+                />
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => {
+                      setShowCreateKeyModal(false);
+                      setNewKeyName("");
+                    }}
+                    className="px-4 py-2 border border-[#2a2a2a] hover:border-[#4a4a4a] text-gray-300 hover:text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (newKeyName.trim()) {
+                        handleCreateApiKey(newKeyName.trim());
+                        setShowCreateKeyModal(false);
+                        setNewKeyName("");
+                      }
+                    }}
+                    disabled={!newKeyName.trim()}
+                    className="px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Create Key
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
