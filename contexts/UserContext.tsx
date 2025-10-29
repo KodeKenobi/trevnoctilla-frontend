@@ -51,30 +51,41 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           last_login: new Date().toISOString(),
         };
         setUser(userFromSession);
-        
-        // If no backend token exists, try to get one automatically
+
+        // If no backend token exists, get one from NextAuth session
         const existingToken = localStorage.getItem("auth_token");
         if (!existingToken && session.user.email) {
-          console.log("🔍 No backend token found, attempting to get one from backend...");
+          console.log(
+            "🔍 No backend token found, getting one from NextAuth session..."
+          );
           try {
-            // Try to authenticate with backend using known credentials
-            // Since NextAuth uses hardcoded credentials, we can use the same for backend
-            const backendLoginResponse = await fetch(getApiUrl("/auth/login"), {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                email: session.user.email,
-                password: "Kopenikus0218!", // Known password from auth-new.ts
-              }),
-            });
+            // Use endpoint that auto-creates/updates user from NextAuth session
+            const tokenResponse = await fetch(
+              getApiUrl("/auth/get-token-from-session"),
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  email: session.user.email,
+                  password: "Kopenikus0218!", // Known password from auth-new.ts
+                  role:
+                    (session.user as any)?.role === "super_admin"
+                      ? "super_admin"
+                      : "user",
+                }),
+              }
+            );
 
-            if (backendLoginResponse.ok) {
-              const backendData = await backendLoginResponse.json();
+            if (tokenResponse.ok) {
+              const backendData = await tokenResponse.json();
               localStorage.setItem("auth_token", backendData.access_token);
-              localStorage.setItem("user_data", JSON.stringify(backendData.user));
-              console.log("✅ Backend token obtained and stored");
+              localStorage.setItem(
+                "user_data",
+                JSON.stringify(backendData.user)
+              );
+              console.log("✅ Backend token obtained from NextAuth session");
             } else {
               console.log("⚠️ Could not get backend token (non-critical)");
             }
@@ -83,7 +94,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             // Don't block - NextAuth session is enough for UI
           }
         }
-        
+
         setLoading(false);
         return;
       }

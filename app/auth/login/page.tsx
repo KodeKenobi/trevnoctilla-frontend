@@ -55,21 +55,28 @@ export default function LoginPage() {
       } else if (result?.ok) {
         setSuccess("Login successful! Authenticating with backend...");
 
-        // Also get a backend JWT token for API calls
+        // Also get a backend JWT token from NextAuth session
         try {
-          const backendLoginResponse = await fetch(getApiUrl("/auth/login"), {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              email: formData.email,
-              password: formData.password,
-            }),
-          });
+          const tokenResponse = await fetch(
+            getApiUrl("/auth/get-token-from-session"),
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: formData.email,
+                password: formData.password,
+                role:
+                  formData.email === "kodekenobi@gmail.com"
+                    ? "super_admin"
+                    : "user",
+              }),
+            }
+          );
 
-          if (backendLoginResponse.ok) {
-            const backendData = await backendLoginResponse.json();
+          if (tokenResponse.ok) {
+            const backendData = await tokenResponse.json();
             // Store backend JWT token for API calls
             localStorage.setItem("auth_token", backendData.access_token);
             localStorage.setItem("user_data", JSON.stringify(backendData.user));
