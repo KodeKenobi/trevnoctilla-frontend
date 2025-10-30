@@ -716,7 +716,6 @@ export const AddWatermarkTool: React.FC<AddWatermarkToolProps> = ({
                     height: "100vh",
                     transform: `scale(${zoomLevel / 100})`,
                     transformOrigin: 'top left',
-                    transformOrigin: "center center",
                   }}
                 />
               </div>
