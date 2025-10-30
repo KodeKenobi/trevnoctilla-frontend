@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { X, Play, CreditCard, Loader2 } from "lucide-react";
+import React from "react";
+import { X, Play, CreditCard } from "lucide-react";
 
 interface MonetizationModalProps {
   isOpen: boolean;
@@ -18,79 +18,67 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   title = "Continue with Ad or Payment",
   message = "Choose how you'd like to proceed",
 }) => {
-  const [showAd, setShowAd] = useState(false);
-  const [adLoading, setAdLoading] = useState(false);
-  const [adComplete, setAdComplete] = useState(false);
-  const adContainerRef = useRef<HTMLDivElement>(null);
-  const scriptLoadedRef = useRef(false);
+  const handleViewAd = () => {
+    const monetagUrl = "https://otieu.com/4/10115019";
+    console.log("🎯 Opening monetag link:", monetagUrl);
 
-  useEffect(() => {
-    if (!isOpen) {
-      // Reset state when modal closes
-      setShowAd(false);
-      setAdLoading(false);
-      setAdComplete(false);
-      scriptLoadedRef.current = false;
-    }
-  }, [isOpen]);
-
-  // Load monetag script when user clicks "View Ad"
-  useEffect(() => {
-    if (showAd && !scriptLoadedRef.current && adContainerRef.current) {
-      setAdLoading(true);
-      scriptLoadedRef.current = true;
-
-      // Remove any existing monetag scripts
-      const existingScripts = document.querySelectorAll(
-        'script[src*="otieu.com"]'
+    // Immediately try to open the link
+    try {
+      // Try opening as popunder first
+      let popunder = window.open(
+        monetagUrl,
+        "_blank",
+        "width=1,height=1,left=-1000,top=-1000,noopener,noreferrer"
       );
-      existingScripts.forEach((script) => script.remove());
 
-      // Clear container
-      if (adContainerRef.current) {
-        adContainerRef.current.innerHTML = "";
+      // If that fails, try normal popup
+      if (!popunder) {
+        popunder = window.open(
+          monetagUrl,
+          "_blank",
+          "width=600,height=400,noopener,noreferrer"
+        );
       }
 
-      // This is a DIRECT LINK (popunder), not an embedded script
-      // Open it as a popunder window
-      console.log("🎯 Opening monetag popunder: https://otieu.com/4/10115019");
-      
-      setAdLoading(false);
-      
-      // Open popunder (must be triggered by user interaction)
-      const popunder = window.open(
-        "https://otieu.com/4/10115019",
-        "_blank",
-        "width=1,height=1,left=-1000,top=-1000"
-      );
-      
-      if (popunder) {
-        // Try to focus back to main window and hide popunder behind
-        window.focus();
-        
-        // Wait a few seconds to let popunder load, then allow completion
-        setTimeout(() => {
-          console.log("✅ Popunder opened successfully");
-          setAdComplete(true);
-          setTimeout(() => {
-            onComplete();
-            onClose();
-          }, 2000);
-        }, 3000);
-      } else {
-        // Popup blocked - allow user to continue anyway
-        console.log("⚠️ Popunder blocked - allowing user to continue");
-        setAdComplete(true);
+      // If still blocked, try to open as regular link
+      if (!popunder) {
+        console.log("⚠️ Popup blocked, opening in same window");
+        window.location.href = monetagUrl;
+        // Complete after navigation
         setTimeout(() => {
           onComplete();
           onClose();
-        }, 1000);
+        }, 500);
+        return;
       }
-    }
-  }, [showAd, onComplete, onClose]);
 
-  const handleViewAd = () => {
-    setShowAd(true);
+      // If popunder opened, focus back to main window
+      setTimeout(() => {
+        try {
+          window.focus();
+          if (popunder && !popunder.closed) {
+            try {
+              popunder.blur();
+            } catch (e) {
+              // Cross-origin, ignore
+            }
+          }
+        } catch (e) {
+          // Ignore focus errors
+        }
+      }, 100);
+
+      // Mark as complete and close modal
+      setTimeout(() => {
+        onComplete();
+        onClose();
+      }, 1000);
+    } catch (error) {
+      console.error("❌ Error opening link:", error);
+      // Still complete to allow user to proceed
+      onComplete();
+      onClose();
+    }
   };
 
   const handlePay = () => {
@@ -137,107 +125,63 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
           {/* Content */}
           <div className="p-6">
-            {!showAd ? (
-              // Initial choice screen
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* View Ad Option */}
-                  <button
-                    onClick={handleViewAd}
-                    className="group relative p-6 bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] rounded-lg border border-[#8b5cf6]/30 hover:border-[#8b5cf6] transition-all hover:scale-105"
-                  >
-                    <div className="flex flex-col items-center space-y-3">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-white rounded-full blur-lg opacity-30"></div>
-                        <div className="relative bg-white/10 p-4 rounded-full">
-                          <Play className="w-8 h-8 text-white" />
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <h4 className="text-lg font-semibold text-white mb-1">
-                          View Ad
-                        </h4>
-                        <p className="text-sm text-white/80">
-                          Watch a short advertisement to continue
-                        </p>
+            {/* Initial choice screen */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* View Ad Option */}
+                <button
+                  onClick={handleViewAd}
+                  className="group relative p-6 bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] rounded-lg border border-[#8b5cf6]/30 hover:border-[#8b5cf6] transition-all hover:scale-105"
+                >
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-white rounded-full blur-lg opacity-30"></div>
+                      <div className="relative bg-white/10 p-4 rounded-full">
+                        <Play className="w-8 h-8 text-white" />
                       </div>
                     </div>
-                  </button>
+                    <div className="text-center">
+                      <h4 className="text-lg font-semibold text-white mb-1">
+                        View Ad
+                      </h4>
+                      <p className="text-sm text-white/80">
+                        Watch a short advertisement to continue
+                      </p>
+                    </div>
+                  </div>
+                </button>
 
-                  {/* Pay Option */}
-                  <button
-                    onClick={handlePay}
-                    className="group relative p-6 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:scale-105"
-                  >
-                    <div className="flex flex-col items-center space-y-3">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-white rounded-full blur-lg opacity-30"></div>
-                        <div className="relative bg-white/10 p-4 rounded-full">
-                          <CreditCard className="w-8 h-8 text-white" />
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <h4 className="text-lg font-semibold text-white mb-1">
-                          Pay $1
-                        </h4>
-                        <p className="text-sm text-white/80">
-                          Instant access, no ads
-                        </p>
+                {/* Pay Option */}
+                <button
+                  onClick={handlePay}
+                  className="group relative p-6 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:scale-105"
+                >
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-white rounded-full blur-lg opacity-30"></div>
+                      <div className="relative bg-white/10 p-4 rounded-full">
+                        <CreditCard className="w-8 h-8 text-white" />
                       </div>
                     </div>
-                  </button>
-                </div>
+                    <div className="text-center">
+                      <h4 className="text-lg font-semibold text-white mb-1">
+                        Pay $1
+                      </h4>
+                      <p className="text-sm text-white/80">
+                        Instant access, no ads
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              </div>
 
-                <div className="pt-4 border-t border-[#2a2a2a]">
-                  <p className="text-xs text-gray-500 text-center">
-                    By continuing, you agree to view advertisements or complete
-                    payment
-                  </p>
-                </div>
+              <div className="pt-4 border-t border-[#2a2a2a]">
+                <p className="text-xs text-gray-500 text-center">
+                  By continuing, you agree to view advertisements or complete
+                  payment
+                </p>
               </div>
-            ) : (
-              // Ad display screen
-              <div className="space-y-4">
-                {adLoading ? (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <Loader2 className="w-12 h-12 text-[#8b5cf6] animate-spin mb-4" />
-                    <p className="text-gray-400">Loading advertisement...</p>
-                  </div>
-                ) : adComplete ? (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <div className="relative mb-4">
-                      <div className="absolute inset-0 bg-green-500 rounded-full blur-lg opacity-30"></div>
-                      <div className="relative bg-green-500/10 p-4 rounded-full">
-                        <svg
-                          className="w-12 h-12 text-green-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                    <p className="text-white font-semibold mb-2">
-                      Thank you for viewing the ad!
-                    </p>
-                    <p className="text-gray-400 text-sm">Redirecting...</p>
-                  </div>
-                ) : (
-                  <div>
-                    <div
-                      ref={adContainerRef}
-                      className="w-full min-h-[400px] flex items-center justify-center bg-gray-900 rounded-lg"
-                    ></div>
-                  </div>
-                )}
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

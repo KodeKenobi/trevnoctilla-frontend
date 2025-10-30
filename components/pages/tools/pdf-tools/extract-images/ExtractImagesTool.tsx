@@ -42,9 +42,9 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
   };
 
   const downloadSingleImage = async (img: any, index: number) => {
-    const fileName = `${uploadedFile?.name.replace(".pdf", "")}_page${img.page}_image${
-      img.image_index
-    }.png`;
+    const fileName = `${uploadedFile?.name.replace(".pdf", "")}_page${
+      img.page
+    }_image${img.image_index}.png`;
 
     const completed = await showMonetizationModal({
       title: "Download Image",
@@ -68,13 +68,18 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
 
     const completed = await showMonetizationModal({
       title: "Download All Images",
-      message: `Choose how you'd like to download all ${result.data.total_images || 0} images`,
+      message: `Choose how you'd like to download all ${
+        result.data.total_images || 0
+      } images`,
       fileName: `${uploadedFile.name.replace(".pdf", "")}_images.zip`,
       fileType: "ZIP",
     });
 
     if (completed) {
-      window.open(`${getApiUrl("")}/download_images/${uploadedFile.name}`, "_blank");
+      window.open(
+        `${getApiUrl("")}/download_images/${uploadedFile.name}`,
+        "_blank"
+      );
     }
   };
 

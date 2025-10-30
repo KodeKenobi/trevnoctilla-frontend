@@ -70,7 +70,10 @@ export function ApiTester({ toolId }: ApiTesterProps) {
             backendToken = token;
             localStorage.setItem("auth_token", token);
             if (backendData.user) {
-              localStorage.setItem("user_data", JSON.stringify(backendData.user));
+              localStorage.setItem(
+                "user_data",
+                JSON.stringify(backendData.user)
+              );
             }
           }
         }

@@ -639,7 +639,9 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
     if (conversionResult) {
       const completed = await showMonetizationModal({
         title: "Download Video",
-        message: `Choose how you'd like to download ${file?.name || "this video"}`,
+        message: `Choose how you'd like to download ${
+          file?.name || "this video"
+        }`,
         fileName: file?.name || "converted-video",
         fileType: "video",
         downloadUrl: conversionResult,

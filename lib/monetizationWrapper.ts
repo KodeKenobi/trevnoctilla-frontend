@@ -13,7 +13,7 @@ export async function withMonetization<T = void>(
 ): Promise<T | null> {
   // Import dynamically to avoid SSR issues
   const { useMonetization } = await import("@/contexts/MonetizationProvider");
-  
+
   // We need to get the modal instance from the context
   // Since we can't use hooks outside components, we'll use the window message system
   return new Promise((resolve) => {
@@ -22,7 +22,9 @@ export async function withMonetization<T = void>(
       if (event.data.type === "MONETIZATION_COMPLETE") {
         window.removeEventListener("message", handleMessage);
         // Execute download after monetization
-        Promise.resolve(downloadCallback()).then(resolve).catch(() => resolve(null));
+        Promise.resolve(downloadCallback())
+          .then(resolve)
+          .catch(() => resolve(null));
       } else if (event.data.type === "MONETIZATION_CANCELLED") {
         window.removeEventListener("message", handleMessage);
         resolve(null);
@@ -68,4 +70,3 @@ export async function requireMonetization(
     downloadCallback();
   }
 }
-

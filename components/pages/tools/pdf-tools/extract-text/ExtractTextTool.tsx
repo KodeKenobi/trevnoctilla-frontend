@@ -230,7 +230,6 @@ export const ExtractTextTool: React.FC<ExtractTextToolProps> = ({
           </div>
         </div>
       )}
-
     </>
   );
 };

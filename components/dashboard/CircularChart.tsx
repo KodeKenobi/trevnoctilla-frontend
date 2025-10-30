@@ -116,9 +116,9 @@ export function CircularChart({
           <span
             className={`font-bold text-white drop-shadow-sm ${textSizeClasses[size]}`}
           >
-            {showPercentage 
-              ? `${Math.round(percentage)}%` 
-              : formatValue 
+            {showPercentage
+              ? `${Math.round(percentage)}%`
+              : formatValue
               ? formatValue(value)
               : value}
           </span>

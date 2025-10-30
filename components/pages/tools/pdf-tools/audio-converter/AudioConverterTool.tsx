@@ -126,7 +126,9 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
     if (conversionResult) {
       const completed = await showMonetizationModal({
         title: "Download Audio",
-        message: `Choose how you'd like to download ${file?.name || "this audio file"}`,
+        message: `Choose how you'd like to download ${
+          file?.name || "this audio file"
+        }`,
         fileName: file?.name || "converted-audio",
         fileType: "audio",
         downloadUrl: conversionResult,
@@ -538,7 +540,6 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
           Convert between all major audio formats with quality control
         </p>
       </div>
-
     </div>
   );
 };

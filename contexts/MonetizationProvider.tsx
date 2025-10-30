@@ -22,7 +22,9 @@ const MonetizationContext = createContext<MonetizationContextType | undefined>(
 export const useMonetization = () => {
   const context = useContext(MonetizationContext);
   if (!context) {
-    throw new Error("useMonetization must be used within a MonetizationProvider");
+    throw new Error(
+      "useMonetization must be used within a MonetizationProvider"
+    );
   }
   return context;
 };
@@ -38,7 +40,9 @@ export const MonetizationProvider: React.FC<{ children: React.ReactNode }> = ({
       if (event.data.type === "OPEN_MONETIZATION_MODAL") {
         monetizationModal.showModal({
           title: "Continue with Ad or Payment",
-          message: `Choose how you'd like to access ${event.data.fileName || "this content"}`,
+          message: `Choose how you'd like to access ${
+            event.data.fileName || "this content"
+          }`,
           fileName: event.data.fileName,
           fileType: event.data.fileType,
           downloadUrl: event.data.downloadUrl,
@@ -68,4 +72,3 @@ export const MonetizationProvider: React.FC<{ children: React.ReactNode }> = ({
     </MonetizationContext.Provider>
   );
 };
-

@@ -491,7 +491,6 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
           </div>
         )}
 
-
         {/* Full-screen Preview Modal */}
         {previewImage && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">

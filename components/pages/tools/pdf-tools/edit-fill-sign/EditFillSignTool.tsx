@@ -504,7 +504,9 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
     if (generatedPdfUrl) {
       const completed = await showMonetizationModal({
         title: "Download PDF",
-        message: `Choose how you'd like to download ${uploadedFile?.name || "this PDF"}`,
+        message: `Choose how you'd like to download ${
+          uploadedFile?.name || "this PDF"
+        }`,
         fileName: uploadedFile?.name || "document.pdf",
         fileType: "PDF",
         downloadUrl: generatedPdfUrl,

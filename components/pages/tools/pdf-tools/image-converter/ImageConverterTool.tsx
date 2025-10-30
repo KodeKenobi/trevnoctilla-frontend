@@ -111,9 +111,9 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
       if (response.ok) {
         const result = await response.json();
         // Construct full URL using the backend base URL
-        const fullDownloadUrl = result.downloadUrl.startsWith('http') 
-          ? result.downloadUrl 
-          : `${getApiUrl('')}${result.downloadUrl}`;
+        const fullDownloadUrl = result.downloadUrl.startsWith("http")
+          ? result.downloadUrl
+          : `${getApiUrl("")}${result.downloadUrl}`;
         setConversionResult(fullDownloadUrl);
         setConvertedFileSize(result.convertedSize);
         setResult({
@@ -165,7 +165,9 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
     if (conversionResult) {
       const completed = await showMonetizationModal({
         title: "Download Image",
-        message: `Choose how you'd like to download ${file?.name || "this image"}`,
+        message: `Choose how you'd like to download ${
+          file?.name || "this image"
+        }`,
         fileName: file?.name || "converted-image",
         fileType: "image",
         downloadUrl: conversionResult,
