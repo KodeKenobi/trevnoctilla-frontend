@@ -22,6 +22,26 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const [adLoading, setAdLoading] = useState(false);
   const [adComplete, setAdComplete] = useState(false);
   const adContainerRef = useRef<HTMLDivElement>(null);
+  const [headerOffset, setHeaderOffset] = useState<number>(0);
+
+  // Measure fixed header height and offset modal below it
+  useEffect(() => {
+    if (!isOpen) return;
+    const measure = () => {
+      try {
+        const header = document.querySelector("header");
+        const h = header
+          ? (header as HTMLElement).getBoundingClientRect().height
+          : 0;
+        setHeaderOffset(Math.max(0, Math.floor(h)));
+      } catch (_) {
+        setHeaderOffset(0);
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [isOpen]);
   const scriptLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -67,27 +87,27 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       const script = document.createElement("script");
       script.src = "//otieu.com/4/10114939";
       script.async = true;
-      
+
       // Track ad loading attempts
       let adCheckInterval: NodeJS.Timeout;
       let checkCount = 0;
       const maxChecks = 15; // 15 seconds max
-      
+
       script.onload = () => {
         console.log("✅ Monetag script loaded successfully");
-        
+
         // Start polling to check if ad content appeared
         adCheckInterval = setInterval(() => {
           checkCount++;
           const container = document.getElementById("monetag-ad-container");
-          
+
           if (container) {
             // Check for various ad indicators
             const hasIframe = container.querySelector("iframe");
             const hasImg = container.querySelector("img");
             const hasAdContent = container.innerHTML.length > 100;
             const hasChildren = container.children.length > 0;
-            
+
             if (hasIframe || hasImg || (hasAdContent && hasChildren)) {
               console.log("✅ Ad content detected");
               clearInterval(adCheckInterval);
@@ -101,7 +121,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
               return;
             }
           }
-          
+
           // Timeout after max checks
           if (checkCount >= maxChecks) {
             console.log("⚠️ Ad check timeout - allowing completion anyway");
@@ -117,14 +137,16 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
           }
         }, 1000); // Check every second
       };
-      
+
       script.onerror = (error) => {
         console.error("❌ Script load error:", error);
         clearInterval(adCheckInterval);
         setAdLoading(false);
         scriptLoadedRef.current = false;
         // Show user-friendly error
-        alert("Ad service is temporarily unavailable. Please try again or choose the payment option.");
+        alert(
+          "Ad service is temporarily unavailable. Please try again or choose the payment option."
+        );
       };
 
       // Append to document head or body (monetag prefers body)
@@ -146,10 +168,14 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
+    <div
+      className="fixed z-[10000] overflow-y-auto"
+      style={{ top: headerOffset, left: 0, right: 0, bottom: 0 }}
+    >
+      {/* Backdrop (does not cover header) */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-70 transition-opacity"
+        className="fixed bg-black bg-opacity-70 transition-opacity z-[10000]"
+        style={{ top: headerOffset, left: 0, right: 0, bottom: 0 }}
         onClick={onClose}
       />
 
