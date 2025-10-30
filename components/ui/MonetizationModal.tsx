@@ -54,7 +54,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       // Create ad container div for monetag
       const adContainer = document.createElement("div");
       adContainer.id = "monetag-ad-container";
-      adContainer.setAttribute("data-zone-id", "10114939");
+      adContainer.setAttribute("data-zone-id", "10115019");
       adContainer.className =
         "w-full min-h-[400px] flex items-center justify-center bg-gray-900 rounded-lg";
 
@@ -62,10 +62,10 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
         adContainerRef.current.appendChild(adContainer);
       }
 
-      // Load monetag script - using protocol-relative URL
-      // Format: //domain.com/zone_type/zone_id
+      // Load monetag script - using the direct link URL
+      // Direct link format: https://otieu.com/4/zone_id
       const script = document.createElement("script");
-      script.src = "//otieu.com/4/10114939";
+      script.src = "https://otieu.com/4/10115019";
       script.async = true;
 
       // Track ad loading attempts
