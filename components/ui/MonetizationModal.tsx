@@ -18,6 +18,39 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   title = "Continue with Ad or Payment",
   message = "Choose how you'd like to proceed",
 }) => {
+  const [adOpened, setAdOpened] = React.useState(false);
+  const [hideWhileWaiting, setHideWhileWaiting] = React.useState(false);
+  const waitingReturnRef = React.useRef(false);
+
+  // Complete when user returns to the tab/window after viewing the ad
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleFocus = () => {
+      if (waitingReturnRef.current) {
+        waitingReturnRef.current = false;
+        onComplete();
+        onClose();
+        setHideWhileWaiting(false);
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && waitingReturnRef.current) {
+        waitingReturnRef.current = false;
+        onComplete();
+        onClose();
+        setHideWhileWaiting(false);
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [isOpen, onClose, onComplete]);
   const handleViewAd = () => {
     const monetagUrl = "https://otieu.com/4/10115019";
     console.log("🎯 Opening monetag link:", monetagUrl);
@@ -44,11 +77,10 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       if (!popunder) {
         console.log("⚠️ Popup blocked, opening in same window");
         window.location.href = monetagUrl;
-        // Complete after navigation
-        setTimeout(() => {
-          onComplete();
-          onClose();
-        }, 500);
+        // We will complete when the user returns (focus/visibility handlers)
+        waitingReturnRef.current = true;
+        setAdOpened(true);
+        setHideWhileWaiting(true);
         return;
       }
 
@@ -67,17 +99,16 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
           // Ignore focus errors
         }
       }, 100);
-
-      // Mark as complete and close modal
-      setTimeout(() => {
-        onComplete();
-        onClose();
-      }, 1000);
+      // Wait for the user to return before completing
+      waitingReturnRef.current = true;
+      setAdOpened(true);
+      setHideWhileWaiting(true);
     } catch (error) {
       console.error("❌ Error opening link:", error);
-      // Still complete to allow user to proceed
-      onComplete();
-      onClose();
+      // If we error trying to open, still allow user to continue after returning
+      waitingReturnRef.current = true;
+      setAdOpened(true);
+      setHideWhileWaiting(true);
     }
   };
 
@@ -91,7 +122,11 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100000] overflow-y-auto">
+    <div
+      className={`fixed inset-0 z-[100000] overflow-y-auto ${
+        hideWhileWaiting ? "pointer-events-none opacity-0" : ""
+      }`}
+    >
       {/* Backdrop - covers everything including header */}
       <div
         className="fixed inset-0 bg-black bg-opacity-70 transition-opacity"
@@ -174,7 +209,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                   </div>
                 </button>
               </div>
-
+              {/* Hide overlay entirely while waiting for return to avoid stacking */}
               <div className="pt-4 border-t border-[#2a2a2a]">
                 <p className="text-xs text-gray-500 text-center">
                   By continuing, you agree to view advertisements or complete
