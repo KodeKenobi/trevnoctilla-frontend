@@ -989,7 +989,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
                     height: "100vh",
                     transform: `scale(${zoomLevel / 100})`,
                     transformOrigin: 'top left',
-                    transformOrigin: "center center",
                   }}
                 />
               </div>
