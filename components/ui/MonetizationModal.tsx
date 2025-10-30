@@ -75,6 +75,14 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
       script.onload = () => {
         console.log("✅ Monetag script loaded successfully");
+        console.log("🔍 Script URL:", script.src);
+        console.log("🔍 Ad container ID:", "monetag-ad-container");
+        
+        const container = document.getElementById("monetag-ad-container");
+        console.log("🔍 Container found:", !!container);
+        if (container) {
+          console.log("🔍 Container HTML (first 500 chars):", container.innerHTML.substring(0, 500));
+        }
 
         // Start polling to check if ad content appeared
         adCheckInterval = setInterval(() => {
@@ -87,9 +95,17 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
             const hasImg = container.querySelector("img");
             const hasAdContent = container.innerHTML.length > 100;
             const hasChildren = container.children.length > 0;
+            
+            console.log(`🔍 Ad check #${checkCount}:`, {
+              hasIframe: !!hasIframe,
+              hasImg: !!hasImg,
+              htmlLength: container.innerHTML.length,
+              childrenCount: container.children.length,
+              sampleHTML: container.innerHTML.substring(0, 200)
+            });
 
             if (hasIframe || hasImg || (hasAdContent && hasChildren)) {
-              console.log("✅ Ad content detected");
+              console.log("✅ Ad content detected!");
               clearInterval(adCheckInterval);
               setAdLoading(false);
               setAdComplete(true);
@@ -100,11 +116,13 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
               }, 4000); // 4 seconds for user to view
               return;
             }
+          } else {
+            console.log(`⚠️ Ad container not found on check #${checkCount}`);
           }
 
           // Timeout after max checks
           if (checkCount >= maxChecks) {
-            console.log("⚠️ Ad check timeout - allowing completion anyway");
+            console.log(`⚠️ Ad check timeout after ${maxChecks} seconds - allowing completion anyway`);
             clearInterval(adCheckInterval);
             setAdLoading(false);
             // Even if ad doesn't show, allow user to continue
@@ -119,15 +137,29 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       };
 
       script.onerror = (error) => {
-        // Suppress console error - ad might be blocked or unavailable
-        // Allow user to continue anyway
+        console.error("❌ Script load failed - diagnostics:", {
+          errorType: error.type,
+          errorTarget: error.target,
+          scriptSrc: script.src,
+          zoneId: "10115019",
+          containerExists: !!document.getElementById("monetag-ad-container")
+        });
+        
+        // Test if the URL is accessible (this might fail due to CORS, but helps diagnose)
+        console.log("🔍 Testing URL accessibility...");
+        fetch(script.src, { method: 'HEAD', mode: 'no-cors' })
+          .then(() => {
+            console.log("✅ URL is accessible (CORS might be blocking script execution)");
+          })
+          .catch((fetchError) => {
+            console.error("❌ URL fetch test failed:", fetchError);
+          });
+        
         clearInterval(adCheckInterval);
         setAdLoading(false);
         scriptLoadedRef.current = false;
-        // Don't show alert - just allow completion (ads might be blocked)
-        console.log(
-          "⚠️ Ad script failed to load (may be blocked or unavailable) - allowing user to continue"
-        );
+        console.log("⚠️ Ad script failed to load - allowing user to continue");
+        console.log("💡 Possible causes: Ad blocker, CORS, invalid zone ID, or network issue");
         setAdComplete(true);
         setTimeout(() => {
           onComplete();
