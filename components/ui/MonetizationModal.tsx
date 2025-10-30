@@ -51,48 +51,83 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
         adContainerRef.current.innerHTML = "";
       }
 
-      // Create ad container div for monetag first
+      // Create ad container div for monetag
       const adContainer = document.createElement("div");
       adContainer.id = "monetag-ad-container";
+      adContainer.setAttribute("data-zone-id", "10114939");
       adContainer.className =
         "w-full min-h-[400px] flex items-center justify-center bg-gray-900 rounded-lg";
-      
+
       if (adContainerRef.current) {
         adContainerRef.current.appendChild(adContainer);
       }
 
-      // Load monetag script - using the format from monetization-loader.js
+      // Load monetag script - using protocol-relative URL
+      // Format: //domain.com/zone_type/zone_id
       const script = document.createElement("script");
-      // Monetag format: https://domain.com/zone/zoneId
-      script.src = "https://otieu.com/4/10114939";
+      script.src = "//otieu.com/4/10114939";
       script.async = true;
+      
+      // Track ad loading attempts
+      let adCheckInterval: NodeJS.Timeout;
+      let checkCount = 0;
+      const maxChecks = 15; // 15 seconds max
+      
       script.onload = () => {
-        setAdLoading(false);
-        // Give monetag time to initialize and render
-        setTimeout(() => {
-          // Check if ad was rendered
-          const adElement = document.querySelector("#monetag-ad-container");
-          if (adElement && adElement.children.length > 0) {
+        console.log("✅ Monetag script loaded successfully");
+        
+        // Start polling to check if ad content appeared
+        adCheckInterval = setInterval(() => {
+          checkCount++;
+          const container = document.getElementById("monetag-ad-container");
+          
+          if (container) {
+            // Check for various ad indicators
+            const hasIframe = container.querySelector("iframe");
+            const hasImg = container.querySelector("img");
+            const hasAdContent = container.innerHTML.length > 100;
+            const hasChildren = container.children.length > 0;
+            
+            if (hasIframe || hasImg || (hasAdContent && hasChildren)) {
+              console.log("✅ Ad content detected");
+              clearInterval(adCheckInterval);
+              setAdLoading(false);
+              setAdComplete(true);
+              // Give user time to see the ad
+              setTimeout(() => {
+                onComplete();
+                onClose();
+              }, 4000); // 4 seconds for user to view
+              return;
+            }
+          }
+          
+          // Timeout after max checks
+          if (checkCount >= maxChecks) {
+            console.log("⚠️ Ad check timeout - allowing completion anyway");
+            clearInterval(adCheckInterval);
+            setAdLoading(false);
+            // Even if ad doesn't show, allow user to continue
+            // (ads might be blocked or unavailable)
             setAdComplete(true);
-            // Wait a bit before allowing completion
             setTimeout(() => {
               onComplete();
               onClose();
-            }, 2000);
-          } else {
-            // Ad didn't render, try again or show error
-            setAdLoading(false);
-            scriptLoadedRef.current = false;
-            alert("Ad didn't load. Please try again or choose payment option.");
+            }, 1000);
           }
-        }, 2000);
+        }, 1000); // Check every second
       };
-      script.onerror = () => {
+      
+      script.onerror = (error) => {
+        console.error("❌ Script load error:", error);
+        clearInterval(adCheckInterval);
         setAdLoading(false);
         scriptLoadedRef.current = false;
-        alert("Failed to load ad. Please try again or choose payment option.");
+        // Show user-friendly error
+        alert("Ad service is temporarily unavailable. Please try again or choose the payment option.");
       };
 
+      // Append to document head or body (monetag prefers body)
       document.body.appendChild(script);
     }
   }, [showAd, onComplete, onClose]);
