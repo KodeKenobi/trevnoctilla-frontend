@@ -22,6 +22,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const [hideWhileWaiting, setHideWhileWaiting] = React.useState(false);
   const waitingReturnRef = React.useRef(false);
   const leftOnceRef = React.useRef(false);
+  const [needsManualOpen, setNeedsManualOpen] = React.useState(false);
 
   // Complete when user returns to the tab/window after viewing the ad
   React.useEffect(() => {
@@ -85,14 +86,13 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
         );
       }
 
-      // If still blocked, try to open as regular link
+      // If still blocked, DO NOT navigate current tab; prompt manual open
       if (!popunder) {
-        console.log("⚠️ Popup blocked, opening in same window");
-        window.location.href = monetagUrl;
-        // We will complete when the user returns (focus/visibility handlers)
+        console.log("⚠️ Popup blocked, prompting manual open");
         waitingReturnRef.current = true;
         setAdOpened(true);
-        setHideWhileWaiting(true);
+        setNeedsManualOpen(true);
+        setHideWhileWaiting(false);
         return;
       }
 
@@ -102,11 +102,20 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       setHideWhileWaiting(true);
     } catch (error) {
       console.error("❌ Error opening link:", error);
-      // If we error trying to open, still allow user to continue after returning
+      // If we error, prompt manual open without navigating away
       waitingReturnRef.current = true;
       setAdOpened(true);
-      setHideWhileWaiting(true);
+      setNeedsManualOpen(true);
+      setHideWhileWaiting(false);
     }
+  };
+
+  const handleManualOpenClick = () => {
+    const monetagUrl = "https://otieu.com/4/10115019";
+    window.open(monetagUrl, "_blank", "noopener,noreferrer");
+    leftOnceRef.current = true;
+    setHideWhileWaiting(true);
+    setNeedsManualOpen(false);
   };
 
   const handlePay = () => {
@@ -206,7 +215,18 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                   </div>
                 </button>
               </div>
-              {/* Hide overlay entirely while waiting for return to avoid stacking */}
+              {needsManualOpen && (
+                <div className="rounded-lg border border-[#2a2a2a] bg-[#111] p-4 text-center">
+                  <p className="text-white font-semibold mb-2">Your browser blocked the ad popunder</p>
+                  <p className="text-gray-400 text-sm mb-4">Click below to open the ad in a new tab. Return here afterwards to continue your download.</p>
+                  <button
+                    onClick={handleManualOpenClick}
+                    className="inline-block px-5 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
+                  >
+                    Open Ad in New Tab
+                  </button>
+                </div>
+              )}
               <div className="pt-4 border-t border-[#2a2a2a]">
                 <p className="text-xs text-gray-500 text-center">
                   By continuing, you agree to view advertisements or complete
