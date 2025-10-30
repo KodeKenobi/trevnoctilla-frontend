@@ -168,22 +168,20 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed z-[10000] overflow-y-auto"
-      style={{ top: headerOffset, left: 0, right: 0, bottom: 0 }}
-    >
-      {/* Backdrop (does not cover header) */}
+    <div className="fixed inset-0 z-[100000] overflow-y-auto">
+      {/* Backdrop - covers everything including header */}
       <div
-        className="fixed bg-black bg-opacity-70 transition-opacity z-[10000]"
-        style={{ top: headerOffset, left: 0, right: 0, bottom: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-70 transition-opacity"
+        style={{ zIndex: 100000 }}
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-4" style={{ zIndex: 100001, position: 'relative' }}>
         <div
           className="relative w-full max-w-2xl transform overflow-hidden rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] shadow-xl transition-all"
           onClick={(e) => e.stopPropagation()}
+          style={{ zIndex: 100001 }}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a2a]">
