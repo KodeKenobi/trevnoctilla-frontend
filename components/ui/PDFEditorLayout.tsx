@@ -107,6 +107,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
   isInPreviewMode = false,
 }) => {
   const [showPageThumbnails, setShowPageThumbnails] = useState(true);
+  const [showMobilePages, setShowMobilePages] = useState(false);
 
   const defaultTools: ToolbarTool[] = [
     { id: "undo", name: "Undo", icon: "↶" },
@@ -387,6 +388,15 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
         </div>
 
         <div className="flex items-center space-x-2 sm:space-x-4">
+          {/* Mobile: open pages drawer */}
+          {pages.length > 0 && (
+            <button
+              onClick={() => setShowMobilePages(true)}
+              className="lg:hidden px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded"
+            >
+              Pages
+            </button>
+          )}
           {/* Zoom Controls - Hidden on mobile */}
           <div className="hidden sm:flex items-center space-x-2">
             <button
@@ -530,9 +540,64 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
           )}
 
           {/* Document Area - Full height */}
-          <div className="flex-1 bg-gray-900 overflow-hidden">{children}</div>
+          <div className="flex-1 bg-gray-900 overflow-auto">{children}</div>
         </div>
       </div>
+
+      {/* Mobile Pages Drawer */}
+      {showMobilePages && (
+        <div className="lg:hidden fixed inset-0 z-[10000]">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setShowMobilePages(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 max-h-[70vh] bg-gray-800 border-t border-gray-700 rounded-t-2xl p-4 overflow-y-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-white font-semibold">Pages</h3>
+              <button
+                onClick={() => setShowMobilePages(false)}
+                className="px-3 py-1 text-sm text-gray-300 hover:bg-gray-700 rounded"
+              >
+                Close
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {pages.map((page) => (
+                <button
+                  key={page.pageNumber}
+                  onClick={() => {
+                    onPageChange?.(page.pageNumber);
+                    setShowMobilePages(false);
+                  }}
+                  className={`relative rounded-lg border-2 overflow-hidden ${
+                    page.isActive ? "border-blue-500" : "border-gray-600"
+                  }`}
+                  title={`Page ${page.pageNumber}`}
+                >
+                  <div className="aspect-[3/4] bg-gray-700">
+                    {page.thumbnailUrl ? (
+                      <img
+                        src={page.thumbnailUrl}
+                        alt={`Page ${page.pageNumber}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                        Page {page.pageNumber}
+                      </div>
+                    )}
+                  </div>
+                  <div className="absolute bottom-1 left-1">
+                    <span className="bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                      {page.pageNumber}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Actions Bar - Mobile Responsive */}
       {(onUploadNew || onSave || showViewButton || showDownloadButton) && (
