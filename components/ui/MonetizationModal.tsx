@@ -21,14 +21,16 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const [adOpened, setAdOpened] = React.useState(false);
   const [hideWhileWaiting, setHideWhileWaiting] = React.useState(false);
   const waitingReturnRef = React.useRef(false);
+  const leftOnceRef = React.useRef(false);
 
   // Complete when user returns to the tab/window after viewing the ad
   React.useEffect(() => {
     if (!isOpen) return;
 
     const handleFocus = () => {
-      if (waitingReturnRef.current) {
+      if (waitingReturnRef.current && leftOnceRef.current) {
         waitingReturnRef.current = false;
+        leftOnceRef.current = false;
         onComplete();
         onClose();
         setHideWhileWaiting(false);
@@ -36,18 +38,28 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
     };
 
     const handleVisibility = () => {
-      if (document.visibilityState === "visible" && waitingReturnRef.current) {
+      if (document.visibilityState === "hidden") {
+        leftOnceRef.current = true;
+      }
+      if (document.visibilityState === "visible" && waitingReturnRef.current && leftOnceRef.current) {
         waitingReturnRef.current = false;
+        leftOnceRef.current = false;
         onComplete();
         onClose();
         setHideWhileWaiting(false);
       }
     };
 
+    const handleBlur = () => {
+      leftOnceRef.current = true;
+    };
+
     window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
     document.addEventListener("visibilitychange", handleVisibility);
     return () => {
       window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [isOpen, onClose, onComplete]);
@@ -84,21 +96,6 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
         return;
       }
 
-      // If popunder opened, focus back to main window
-      setTimeout(() => {
-        try {
-          window.focus();
-          if (popunder && !popunder.closed) {
-            try {
-              popunder.blur();
-            } catch (e) {
-              // Cross-origin, ignore
-            }
-          }
-        } catch (e) {
-          // Ignore focus errors
-        }
-      }, 100);
       // Wait for the user to return before completing
       waitingReturnRef.current = true;
       setAdOpened(true);
