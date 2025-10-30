@@ -22,26 +22,6 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const [adLoading, setAdLoading] = useState(false);
   const [adComplete, setAdComplete] = useState(false);
   const adContainerRef = useRef<HTMLDivElement>(null);
-  const [headerOffset, setHeaderOffset] = useState<number>(0);
-
-  // Measure fixed header height and offset modal below it
-  useEffect(() => {
-    if (!isOpen) return;
-    const measure = () => {
-      try {
-        const header = document.querySelector("header");
-        const h = header
-          ? (header as HTMLElement).getBoundingClientRect().height
-          : 0;
-        setHeaderOffset(Math.max(0, Math.floor(h)));
-      } catch (_) {
-        setHeaderOffset(0);
-      }
-    };
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [isOpen]);
   const scriptLoadedRef = useRef(false);
 
   useEffect(() => {
