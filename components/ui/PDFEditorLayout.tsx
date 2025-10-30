@@ -108,6 +108,54 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
 }) => {
   const [showPageThumbnails, setShowPageThumbnails] = useState(true);
   const [showMobilePages, setShowMobilePages] = useState(false);
+  const pinchStateRef = useRef<{ active: boolean; startDist: number; accum: number }>({
+    active: false,
+    startDist: 0,
+    accum: 0,
+  });
+
+  const getTouchDistance = (e: React.TouchEvent) => {
+    if (e.touches.length < 2) return 0;
+    const [a, b] = [e.touches[0], e.touches[1]];
+    const dx = a.clientX - b.clientX;
+    const dy = a.clientY - b.clientY;
+    return Math.hypot(dx, dy);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      pinchStateRef.current.active = true;
+      pinchStateRef.current.startDist = getTouchDistance(e);
+      pinchStateRef.current.accum = 0;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!pinchStateRef.current.active || e.touches.length !== 2) return;
+    const dist = getTouchDistance(e);
+    if (!dist || !pinchStateRef.current.startDist) return;
+    const scale = dist / pinchStateRef.current.startDist;
+    // accumulate logarithmic delta so small hand jitter doesn't trigger zooms
+    const delta = Math.log(scale);
+    pinchStateRef.current.accum += delta;
+    pinchStateRef.current.startDist = dist; // incrementally compare
+
+    // thresholds ~8% scale change per step
+    const step = 0.08;
+    if (pinchStateRef.current.accum > step) {
+      onZoomIn?.();
+      pinchStateRef.current.accum = 0;
+    } else if (pinchStateRef.current.accum < -step) {
+      onZoomOut?.();
+      pinchStateRef.current.accum = 0;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    pinchStateRef.current.active = false;
+    pinchStateRef.current.startDist = 0;
+    pinchStateRef.current.accum = 0;
+  };
 
   const defaultTools: ToolbarTool[] = [
     { id: "undo", name: "Undo", icon: "↶" },
@@ -445,9 +493,32 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
             </button>
           </div>
 
-          {/* Mobile Zoom Display */}
-          <div className="sm:hidden">
-            <span className="text-sm text-gray-300">{zoomLevel}%</span>
+          {/* Mobile zoom controls */}
+          <div className="sm:hidden flex items-center space-x-2">
+            <button
+              onClick={onZoomOut}
+              className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700"
+              title="Zoom Out"
+            >
+              <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+              </svg>
+            </button>
+            <button
+              onClick={onZoomReset}
+              className="px-3 py-1 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded"
+            >
+              {zoomLevel}%
+            </button>
+            <button
+              onClick={onZoomIn}
+              className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700"
+              title="Zoom In"
+            >
+              <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -540,7 +611,14 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
           )}
 
           {/* Document Area - Full height */}
-          <div className="flex-1 bg-gray-900 overflow-auto">{children}</div>
+          <div
+            className="flex-1 bg-gray-900 overflow-auto"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {children}
+          </div>
         </div>
       </div>
 
