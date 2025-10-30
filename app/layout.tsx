@@ -4,6 +4,7 @@ import LayoutClient from "@/components/layout/LayoutClient";
 import { UserProvider } from "@/contexts/UserContext";
 import { ViewProvider } from "@/contexts/ViewContext";
 import { AlertProvider } from "@/contexts/AlertProvider";
+import { MonetizationProvider } from "@/contexts/MonetizationProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
 import Script from "next/script";
 // adConfig removed - using Google AdSense only
@@ -205,7 +206,9 @@ export default function RootLayout({
           <UserProvider>
             <ViewProvider>
               <AlertProvider>
-                <LayoutClient>{children}</LayoutClient>
+                <MonetizationProvider>
+                  <LayoutClient>{children}</LayoutClient>
+                </MonetizationProvider>
               </AlertProvider>
             </ViewProvider>
           </UserProvider>
