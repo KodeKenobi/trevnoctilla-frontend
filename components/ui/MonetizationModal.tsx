@@ -67,46 +67,23 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const handleViewAd = () => {
     const monetagUrl = "https://otieu.com/4/10115019";
     console.log("🎯 Opening monetag link:", monetagUrl);
-
-    // Try to open as a decently sized popup (not tiny)
-    const screenW = window.screen.availWidth || 800;
-    const screenH = window.screen.availHeight || 600;
-    const width = 600;
-    const height = 700;
-    const left = Math.max(0, Math.round((screenW - width) / 2));
-    const top = Math.max(0, Math.round((screenH - height) / 2));
-
     try {
-      let popunder = window.open(
-        monetagUrl,
-        "_blank",
-        `width=${width},height=${height},left=${left},top=${top},noopener,noreferrer`
-      );
-
-      // If that fails, try normal default popup
-      if (!popunder) {
-        popunder = window.open(
-          monetagUrl,
-          "_blank",
-          "noopener,noreferrer"
-        );
-      }
-      // If still blocked, prompt manual open
-      if (!popunder) {
-        console.log("⚠️ Popup blocked, prompting manual open");
+      // Always open as a regular tab
+      let popTab = window.open(monetagUrl, "_blank", "noopener,noreferrer");
+      // If blocked, prompt manual open (button)
+      if (!popTab) {
         waitingReturnRef.current = true;
         setAdOpened(true);
         setNeedsManualOpen(true);
         setHideWhileWaiting(false);
         return;
       }
-      // Wait for the user to return before completing
       waitingReturnRef.current = true;
       setAdOpened(true);
       setHideWhileWaiting(true);
     } catch (error) {
       console.error("❌ Error opening link:", error);
-      // If we error, prompt manual open without navigating away
+      // If we error, prompt manual open
       waitingReturnRef.current = true;
       setAdOpened(true);
       setNeedsManualOpen(true);
