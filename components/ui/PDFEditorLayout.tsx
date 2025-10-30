@@ -108,7 +108,11 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
 }) => {
   const [showPageThumbnails, setShowPageThumbnails] = useState(true);
   const [showMobilePages, setShowMobilePages] = useState(false);
-  const pinchStateRef = useRef<{ active: boolean; startDist: number; accum: number }>({
+  const pinchStateRef = useRef<{
+    active: boolean;
+    startDist: number;
+    accum: number;
+  }>({
     active: false,
     startDist: 0,
     accum: 0,
@@ -124,6 +128,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
+      e.preventDefault();
       pinchStateRef.current.active = true;
       pinchStateRef.current.startDist = getTouchDistance(e);
       pinchStateRef.current.accum = 0;
@@ -132,6 +137,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!pinchStateRef.current.active || e.touches.length !== 2) return;
+    e.preventDefault();
     const dist = getTouchDistance(e);
     if (!dist || !pinchStateRef.current.startDist) return;
     const scale = dist / pinchStateRef.current.startDist;
@@ -500,8 +506,18 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
               className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700"
               title="Zoom Out"
             >
-              <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+              <svg
+                className="w-4 h-4 text-gray-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 12H4"
+                />
               </svg>
             </button>
             <button
@@ -515,8 +531,18 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
               className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700"
               title="Zoom In"
             >
-              <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="w-4 h-4 text-gray-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
             </button>
           </div>
@@ -616,6 +642,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            style={{ touchAction: "none" }}
           >
             {children}
           </div>
