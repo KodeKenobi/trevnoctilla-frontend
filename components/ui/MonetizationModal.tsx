@@ -68,25 +68,30 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
     const monetagUrl = "https://otieu.com/4/10115019";
     console.log("🎯 Opening monetag link:", monetagUrl);
 
-    // Immediately try to open the link
+    // Try to open as a decently sized popup (not tiny)
+    const screenW = window.screen.availWidth || 800;
+    const screenH = window.screen.availHeight || 600;
+    const width = 600;
+    const height = 700;
+    const left = Math.max(0, Math.round((screenW - width) / 2));
+    const top = Math.max(0, Math.round((screenH - height) / 2));
+
     try {
-      // Try opening as popunder first
       let popunder = window.open(
         monetagUrl,
         "_blank",
-        "width=1,height=1,left=-1000,top=-1000,noopener,noreferrer"
+        `width=${width},height=${height},left=${left},top=${top},noopener,noreferrer`
       );
 
-      // If that fails, try normal popup
+      // If that fails, try normal default popup
       if (!popunder) {
         popunder = window.open(
           monetagUrl,
           "_blank",
-          "width=600,height=400,noopener,noreferrer"
+          "noopener,noreferrer"
         );
       }
-
-      // If still blocked, DO NOT navigate current tab; prompt manual open
+      // If still blocked, prompt manual open
       if (!popunder) {
         console.log("⚠️ Popup blocked, prompting manual open");
         waitingReturnRef.current = true;
@@ -95,7 +100,6 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
         setHideWhileWaiting(false);
         return;
       }
-
       // Wait for the user to return before completing
       waitingReturnRef.current = true;
       setAdOpened(true);
