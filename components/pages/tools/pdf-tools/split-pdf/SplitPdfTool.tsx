@@ -147,13 +147,15 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
         throw new Error("Failed to upload PDF");
       }
 
-      const filename = uploadedFile.name;
+      // Get the unique filename from the upload response
+      const uploadData = await uploadResponse.json();
+      const filename = uploadData.filename || uploadedFile.name;
       console.log("✅ PDF uploaded successfully:", filename);
 
       // Get PDF info including page count
       console.log("📊 Fetching PDF info...");
       const pdfInfoResponse = await fetch(
-        `${getApiUrl("")}/api/pdf_info/${filename}`
+        `${getApiUrl("")}/api/pdf_info/${encodeURIComponent(filename)}`
       );
       if (pdfInfoResponse.ok) {
         const pdfInfo = await pdfInfoResponse.json();
@@ -166,7 +168,7 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
           { length: pdfInfo.page_count },
           (_, index) => ({
             pageNumber: index + 1,
-            thumbnailUrl: `${getApiUrl("")}/api/pdf_thumbnail/${filename}/${
+            thumbnailUrl: `${getApiUrl("")}/api/pdf_thumbnail/${encodeURIComponent(filename)}/${
               index + 1
             }`,
             isSelected: true, // Select all pages by default

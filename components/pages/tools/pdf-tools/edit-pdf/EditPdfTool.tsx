@@ -154,13 +154,14 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
         throw new Error("Failed to upload PDF");
       }
 
-      // Use the uploaded file name directly for the convert endpoint
-      const filename = uploadedFile.name;
+      // Get the unique filename from the upload response
+      const uploadData = await uploadResponse.json();
+      const filename = uploadData.filename || uploadedFile.name;
       console.log("✅ [Edit PDF] Upload successful:", filename);
 
       // Get PDF info including page count
       console.log("📊 [Edit PDF] Fetching PDF info...");
-      const pdfInfoResponse = await fetch(`/api/pdf_info/${filename}`);
+      const pdfInfoResponse = await fetch(`${getApiUrl("")}/api/pdf_info/${encodeURIComponent(filename)}`);
       if (pdfInfoResponse.ok) {
         const pdfInfo = await pdfInfoResponse.json();
         console.log("📄 [Edit PDF] PDF info:", pdfInfo);
@@ -172,8 +173,8 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
         setTotalPages(1);
       }
 
-      // Set the converted HTML URL using the original template approach
-      setEditorUrl(`/convert/${filename}`);
+      // Set the converted HTML URL using the backend API URL
+      setEditorUrl(`${getApiUrl("")}/convert/${encodeURIComponent(filename)}`);
 
       // Brief pause before showing completion
       await new Promise((resolve) => setTimeout(resolve, 1000));
