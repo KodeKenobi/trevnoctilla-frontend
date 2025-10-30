@@ -639,15 +639,8 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
             onViewPdf={handleViewPdf}
             onDownloadPdf={handleDownloadPdf}
           >
-            <div className="h-full w-full bg-gray-900 relative overflow-hidden">
-              <div
-                className="w-full h-full"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+            <div className="h-full w-full bg-gray-900 relative overflow-auto">
+              <div className="w-full h-full">
                 <iframe
                   src={editorUrl}
                   className="border-0"
