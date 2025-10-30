@@ -657,7 +657,6 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                     height: "100vh",
                     transform: `scale(${zoomLevel / 100})`,
                     transformOrigin: 'top left',
-                    transformOrigin: "center center",
                   }}
                 />
               </div>
