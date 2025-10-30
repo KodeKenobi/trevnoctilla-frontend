@@ -54,6 +54,7 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [currentUploadStep, setCurrentUploadStep] = useState<number>(0);
+  const [uploadedFilename, setUploadedFilename] = useState<string>("");
 
   // View and download flow state
   const [showViewModal, setShowViewModal] = useState(false);
@@ -157,6 +158,7 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
       // Get the unique filename from the upload response
       const uploadData = await uploadResponse.json();
       const filename = uploadData.filename || uploadedFile.name;
+      setUploadedFilename(filename);
       console.log("✅ [Edit PDF] Upload successful:", filename);
 
       // Get PDF info including page count
@@ -356,7 +358,7 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
     return Array.from({ length: totalPages }, (_, index) => ({
       pageNumber: index + 1,
       isActive: currentPage === index + 1,
-      thumbnailUrl: `/api/pdf_thumbnail/${uploadedFile.name}/${index + 1}`,
+      thumbnailUrl: `${getApiUrl("")}/api/pdf_thumbnail/${encodeURIComponent(uploadedFilename || uploadedFile.name)}/${index + 1}`,
       onClick: () => handlePageChange(index + 1),
     }));
   };
