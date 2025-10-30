@@ -119,14 +119,18 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       };
 
       script.onerror = (error) => {
-        console.error("❌ Script load error:", error);
+        // Suppress console error - ad might be blocked or unavailable
+        // Allow user to continue anyway
         clearInterval(adCheckInterval);
         setAdLoading(false);
         scriptLoadedRef.current = false;
-        // Show user-friendly error
-        alert(
-          "Ad service is temporarily unavailable. Please try again or choose the payment option."
-        );
+        // Don't show alert - just allow completion (ads might be blocked)
+        console.log("⚠️ Ad script failed to load (may be blocked or unavailable) - allowing user to continue");
+        setAdComplete(true);
+        setTimeout(() => {
+          onComplete();
+          onClose();
+        }, 1000);
       };
 
       // Append to document head or body (monetag prefers body)
@@ -157,7 +161,10 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       />
 
       {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4" style={{ zIndex: 100001, position: 'relative' }}>
+      <div
+        className="flex min-h-full items-center justify-center p-4"
+        style={{ zIndex: 100001, position: "relative" }}
+      >
         <div
           className="relative w-full max-w-2xl transform overflow-hidden rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] shadow-xl transition-all"
           onClick={(e) => e.stopPropagation()}
