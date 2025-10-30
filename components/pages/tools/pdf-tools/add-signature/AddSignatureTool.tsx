@@ -665,7 +665,8 @@ export const AddSignatureTool: React.FC<AddSignatureToolProps> = ({
                   style={{
                     width: "100vw",
                     height: "100vh",
-                    transform: `scale(${Math.min(zoomLevel / 100, 0.8)})`,
+                    transform: `scale(${zoomLevel / 100})`,
+                    transformOrigin: 'top left',
                     transformOrigin: "center center",
                   }}
                 />
