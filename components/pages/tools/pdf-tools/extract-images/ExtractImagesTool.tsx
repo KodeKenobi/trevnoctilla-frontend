@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { PDFFileUpload } from "@/components/ui/PDFFileUpload";
-// Monetization removed - using Google AdSense only
+import { useMonetization } from "@/contexts/MonetizationProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { getApiUrl } from "@/lib/config";
 
@@ -25,6 +25,7 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
   setIsProcessing,
   handleFileUpload,
 }) => {
+  const { showModal: showMonetizationModal } = useMonetization();
   const [selectedImage, setSelectedImage] = useState<any>(null);
 
   const [showImageModal, setShowImageModal] = useState(false);
@@ -40,23 +41,41 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
     setShowImageModal(true);
   };
 
-  const downloadSingleImage = (img: any, index: number) => {
-    // Direct download - monetization removed
-    const link = document.createElement("a");
-    link.href = `data:image/png;base64,${img.data}`;
-    link.download = `${uploadedFile?.name.replace(".pdf", "")}_page${img.page}_image${
+  const downloadSingleImage = async (img: any, index: number) => {
+    const fileName = `${uploadedFile?.name.replace(".pdf", "")}_page${img.page}_image${
       img.image_index
     }.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    const completed = await showMonetizationModal({
+      title: "Download Image",
+      message: `Choose how you'd like to download ${fileName}`,
+      fileName,
+      fileType: "image",
+    });
+
+    if (completed) {
+      const link = document.createElement("a");
+      link.href = `data:image/png;base64,${img.data}`;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
-  const downloadAllImages = () => {
+  const downloadAllImages = async () => {
     if (!result?.data?.images || !uploadedFile) return;
 
-    // Direct download - monetization removed
-    window.open(`${getApiUrl("")}/download_images/${uploadedFile.name}`, "_blank");
+    const completed = await showMonetizationModal({
+      title: "Download All Images",
+      message: `Choose how you'd like to download all ${result.data.total_images || 0} images`,
+      fileName: `${uploadedFile.name.replace(".pdf", "")}_images.zip`,
+      fileType: "ZIP",
+    });
+
+    if (completed) {
+      window.open(`${getApiUrl("")}/download_images/${uploadedFile.name}`, "_blank");
+    }
   };
 
   if (!uploadedFile) {

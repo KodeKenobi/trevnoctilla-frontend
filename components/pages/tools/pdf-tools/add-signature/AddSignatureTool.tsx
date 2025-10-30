@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback } from "react";
 import { useAlertModal } from "@/hooks/useAlertModal";
 import { SignatureCanvas } from "@/components/ui/signature-canvas";
 import { PDFEditorLayout } from "@/components/ui/PDFEditorLayout";
-// Monetization removed - using Google AdSense only
+import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
 
 // Simple button component
@@ -44,7 +44,7 @@ export const AddSignatureTool: React.FC<AddSignatureToolProps> = ({
   setIsProcessing,
   handleFileUpload,
 }) => {
-  // Monetization removed - using Google AdSense only
+  const { showModal: showMonetizationModal } = useMonetization();
   const alertModal = useAlertModal();
 
   // Core state
@@ -163,7 +163,9 @@ export const AddSignatureTool: React.FC<AddSignatureToolProps> = ({
 
       // Get PDF info including page count
       console.log("📊 [Add Signature] Fetching PDF info...");
-      const pdfInfoResponse = await fetch(`${getApiUrl("")}/api/pdf_info/${encodeURIComponent(filename)}`);
+      const pdfInfoResponse = await fetch(
+        `${getApiUrl("")}/api/pdf_info/${encodeURIComponent(filename)}`
+      );
       if (pdfInfoResponse.ok) {
         const pdfInfo = await pdfInfoResponse.json();
         console.log("📄 [Add Signature] PDF info:", pdfInfo);
@@ -407,15 +409,23 @@ export const AddSignatureTool: React.FC<AddSignatureToolProps> = ({
   };
 
   // Handle download PDF (with monetization)
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     console.log("📥 handleDownloadPdf called");
     console.log("📥 generatedPdfUrl:", generatedPdfUrl);
     console.log("📥 uploadedFile?.name:", uploadedFile?.name);
 
     if (generatedPdfUrl) {
-      console.log("📥 Direct download");
-      // Direct download - monetization removed
-      window.open(generatedPdfUrl, "_blank");
+      const completed = await showMonetizationModal({
+        title: "Download PDF",
+        message: `Choose how you'd like to download ${uploadedFile?.name || "this PDF"}`,
+        fileName: uploadedFile?.name || "document.pdf",
+        fileType: "PDF",
+        downloadUrl: generatedPdfUrl,
+      });
+
+      if (completed) {
+        window.open(generatedPdfUrl, "_blank");
+      }
     } else {
       console.log("📥 No generatedPdfUrl, cannot download");
     }

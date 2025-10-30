@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-// Monetization removed - using Google AdSense only
+import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
 
 interface QRGeneratorToolProps {
@@ -82,6 +82,7 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
     errorCorrection: "M",
     margin: 4,
   });
+  const { showModal: showMonetizationModal } = useMonetization();
   const [generatedQR, setGeneratedQR] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -109,10 +110,19 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
     }
   };
 
-  const downloadResult = () => {
+  const downloadResult = async () => {
     if (generatedQR) {
-      // Direct download - monetization removed
-      window.open(generatedQR, "_blank");
+      const completed = await showMonetizationModal({
+        title: "Download QR Code",
+        message: "Choose how you'd like to download your QR code",
+        fileName: "qr-code.png",
+        fileType: "image",
+        downloadUrl: generatedQR,
+      });
+
+      if (completed) {
+        window.open(generatedQR, "_blank");
+      }
     }
   };
 

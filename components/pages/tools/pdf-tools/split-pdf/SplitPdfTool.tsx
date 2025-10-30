@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import { useAlertModal } from "@/hooks/useAlertModal";
-// Monetization removed - using Google AdSense only
+import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
 
 // Simple button component
@@ -48,7 +48,7 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
   setIsProcessing,
   handleFileUpload,
 }) => {
-  // Monetization removed - using Google AdSense only
+  const { showModal: showMonetizationModal } = useMonetization();
   const alertModal = useAlertModal();
 
   // Core state
@@ -168,9 +168,9 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
           { length: pdfInfo.page_count },
           (_, index) => ({
             pageNumber: index + 1,
-            thumbnailUrl: `${getApiUrl("")}/api/pdf_thumbnail/${encodeURIComponent(filename)}/${
-              index + 1
-            }`,
+            thumbnailUrl: `${getApiUrl(
+              ""
+            )}/api/pdf_thumbnail/${encodeURIComponent(filename)}/${index + 1}`,
             isSelected: true, // Select all pages by default
           })
         );
@@ -318,34 +318,50 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
   };
 
   // Handle download all as ZIP
-  const handleDownloadAll = () => {
-    // Direct download - monetization removed
+  const handleDownloadAll = async () => {
     const selectedPages = pages.filter((page) => page.isSelected);
     const fileName = uploadedFile?.name?.replace(".pdf", "") || "split_pages";
-    
+
     // Create ZIP download
     if (downloadUrls.length > 0) {
-      const link = document.createElement("a");
-      link.href = downloadUrls[0];
-      link.download = `${fileName}_split_${selectedPages.length}_pages.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const completed = await showMonetizationModal({
+        title: "Download ZIP",
+        message: `Choose how you'd like to download ${selectedPages.length} pages as ZIP`,
+        fileName: `${fileName}_split_${selectedPages.length}_pages.zip`,
+        fileType: "ZIP",
+      });
+
+      if (completed) {
+        const link = document.createElement("a");
+        link.href = downloadUrls[0];
+        link.download = `${fileName}_split_${selectedPages.length}_pages.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     }
   };
 
-  // Handle individual page download - monetization removed
-  const handleDownloadPageWithMonetization = (pageNumber: number) => {
+  // Handle individual page download
+  const handleDownloadPageWithMonetization = async (pageNumber: number) => {
     const fileName = uploadedFile?.name?.replace(".pdf", "") || "page";
-    
-    // Direct download
+
     if (downloadUrls[pageNumber - 1]) {
-      const link = document.createElement("a");
-      link.href = downloadUrls[pageNumber - 1];
-      link.download = `${fileName}_page_${pageNumber}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const completed = await showMonetizationModal({
+        title: "Download Page",
+        message: `Choose how you'd like to download page ${pageNumber}`,
+        fileName: `${fileName}_page_${pageNumber}.pdf`,
+        fileType: "PDF",
+      });
+
+      if (completed) {
+        const link = document.createElement("a");
+        link.href = downloadUrls[pageNumber - 1];
+        link.download = `${fileName}_page_${pageNumber}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     }
   };
 
@@ -698,7 +714,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
             </div>
           )}
         </div>
-
 
         {/* Full-screen Preview Modal */}
         {previewImage && (

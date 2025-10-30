@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import { useAlertModal } from "@/hooks/useAlertModal";
-// Monetization removed - using Google AdSense only
+import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
 
 // Simple button component
@@ -55,6 +55,7 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
   handleFileUpload,
 }) => {
   // Monetization removed - using Google AdSense only
+  const { showModal: showMonetizationModal } = useMonetization();
   const alertModal = useAlertModal();
 
   // Core state for merge functionality
@@ -212,17 +213,26 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
   }, [pdfFiles, alertModal]);
 
   // Handle download merged PDF (with monetization)
-  const handleDownloadMerged = useCallback(() => {
+  const handleDownloadMerged = useCallback(async () => {
     if (mergedPdfUrl) {
-      // Direct download - monetization removed
-      const link = document.createElement("a");
-      link.href = mergedPdfUrl;
-      link.download = "merged_document.pdf";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const completed = await showMonetizationModal({
+        title: "Download Merged PDF",
+        message: "Choose how you'd like to download your merged PDF",
+        fileName: "merged_document.pdf",
+        fileType: "PDF",
+        downloadUrl: mergedPdfUrl,
+      });
+
+      if (completed) {
+        const link = document.createElement("a");
+        link.href = mergedPdfUrl;
+        link.download = "merged_document.pdf";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     }
-  }, [mergedPdfUrl]);
+  }, [mergedPdfUrl, showMonetizationModal]);
 
   // Handle view merged PDF
   const handleViewMerged = useCallback(() => {

@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-// Monetization removed - using Google AdSense only
+import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
 
 interface VideoConverterToolProps {
@@ -28,6 +28,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
 }) => {
   // Monetization removed - direct download
 
+  const { showModal: showMonetizationModal } = useMonetization();
   const [file, setFile] = useState<File | null>(uploadedFile);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -636,21 +637,22 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
     console.log("📥 file?.name:", file?.name);
 
     if (conversionResult) {
-      console.log("📥 Opening monetization modal with:", {
-        fileName: file?.name || "video-file",
+      const completed = await showMonetizationModal({
+        title: "Download Video",
+        message: `Choose how you'd like to download ${file?.name || "this video"}`,
+        fileName: file?.name || "converted-video",
         fileType: "video",
         downloadUrl: conversionResult,
       });
 
-      // Direct download - monetization removed
-      const link = document.createElement("a");
-      link.href = conversionResult;
-      link.download = file?.name || "converted-video";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      console.log("📥 Direct download initiated");
+      if (completed) {
+        const link = document.createElement("a");
+        link.href = conversionResult;
+        link.download = file?.name || "converted-video";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     } else {
       console.error("📥 ERROR: conversionResult is null or undefined!");
     }

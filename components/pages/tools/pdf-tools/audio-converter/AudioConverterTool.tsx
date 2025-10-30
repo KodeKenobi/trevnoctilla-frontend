@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-// Monetization removed - using Google AdSense only
+import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
 
 interface AudioConverterToolProps {
@@ -40,6 +40,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
 
   // Direct download - monetization removed
 
+  const { showModal: showMonetizationModal } = useMonetization();
   const [file, setFile] = useState<File | null>(uploadedFile);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -123,21 +124,22 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
     console.log("🎵 file?.name:", file?.name);
 
     if (conversionResult) {
-      console.log("🎵 Opening monetization modal with:", {
-        fileName: file?.name || "audio-file",
+      const completed = await showMonetizationModal({
+        title: "Download Audio",
+        message: `Choose how you'd like to download ${file?.name || "this audio file"}`,
+        fileName: file?.name || "converted-audio",
         fileType: "audio",
         downloadUrl: conversionResult,
       });
 
-      // Direct download - monetization removed
-      const link = document.createElement("a");
-      link.href = conversionResult;
-      link.download = file?.name || "converted-audio";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      console.log("🎵 Direct download initiated");
+      if (completed) {
+        const link = document.createElement("a");
+        link.href = conversionResult;
+        link.download = file?.name || "converted-audio";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     } else {
       console.error("🎵 ERROR: conversionResult is null or undefined!");
     }

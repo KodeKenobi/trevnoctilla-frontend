@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { PDFFileUpload } from "@/components/ui/PDFFileUpload";
-// Monetization removed - using Google AdSense only
+import { useMonetization } from "@/contexts/MonetizationProvider";
 
 interface ExtractTextToolProps {
   uploadedFile: File | null;
@@ -23,8 +23,8 @@ export const ExtractTextTool: React.FC<ExtractTextToolProps> = ({
   setIsProcessing,
   handleFileUpload,
 }) => {
+  const { showModal: showMonetizationModal } = useMonetization();
   const [previewFormat, setPreviewFormat] = useState<string>("txt");
-  // Monetization removed - using Google AdSense only
 
   const getPreviewContent = () => {
     if (!result?.data?.text || !uploadedFile) return "";
@@ -56,7 +56,7 @@ export const ExtractTextTool: React.FC<ExtractTextToolProps> = ({
     return `data:${mimeType};charset=utf-8,${encodeURIComponent(content)}`;
   };
 
-  const downloadText = (format: string, mimeType: string) => {
+  const downloadText = async (format: string, mimeType: string) => {
     if (!result?.data?.text || !uploadedFile) return;
 
     let content = result.data.text;
@@ -90,14 +90,22 @@ export const ExtractTextTool: React.FC<ExtractTextToolProps> = ({
         break;
     }
 
-    const dataUrl = buildDataUrl(content, mimeType);
-    // Direct download - monetization removed
-    const link = document.createElement("a");
-    link.href = dataUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const completed = await showMonetizationModal({
+      title: "Download Text",
+      message: `Choose how you'd like to download ${fileName}`,
+      fileName,
+      fileType: format.toUpperCase(),
+    });
+
+    if (completed) {
+      const dataUrl = buildDataUrl(content, mimeType);
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   if (!uploadedFile) {

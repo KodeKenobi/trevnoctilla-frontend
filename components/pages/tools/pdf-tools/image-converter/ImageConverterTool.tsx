@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-// Monetization removed - using Google AdSense only
+import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
 
 interface ImageConverterToolProps {
@@ -26,6 +26,7 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
   setIsProcessing,
   handleFileUpload,
 }) => {
+  const { showModal: showMonetizationModal } = useMonetization();
   const [file, setFile] = useState<File | null>(uploadedFile);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -160,10 +161,19 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
     }
   };
 
-  const downloadResult = () => {
+  const downloadResult = async () => {
     if (conversionResult) {
-      // Direct download - monetization removed
-      window.open(conversionResult, "_blank");
+      const completed = await showMonetizationModal({
+        title: "Download Image",
+        message: `Choose how you'd like to download ${file?.name || "this image"}`,
+        fileName: file?.name || "converted-image",
+        fileType: "image",
+        downloadUrl: conversionResult,
+      });
+
+      if (completed) {
+        window.open(conversionResult, "_blank");
+      }
     }
   };
 
