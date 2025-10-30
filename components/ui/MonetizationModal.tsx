@@ -125,7 +125,9 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
         setAdLoading(false);
         scriptLoadedRef.current = false;
         // Don't show alert - just allow completion (ads might be blocked)
-        console.log("⚠️ Ad script failed to load (may be blocked or unavailable) - allowing user to continue");
+        console.log(
+          "⚠️ Ad script failed to load (may be blocked or unavailable) - allowing user to continue"
+        );
         setAdComplete(true);
         setTimeout(() => {
           onComplete();
