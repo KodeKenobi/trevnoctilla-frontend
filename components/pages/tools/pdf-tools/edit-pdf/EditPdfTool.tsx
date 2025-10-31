@@ -219,18 +219,76 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
     }
   }, [editorUrl]);
 
-  // Handle zoom controls
+  // Improved zoom controls with smooth transitions
   const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(prev + 25, 300));
+    setZoomLevel((prev) => Math.min(prev + 10, 300));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(prev - 25, 50));
+    setZoomLevel((prev) => Math.max(prev - 10, 25));
   };
 
   const handleZoomReset = () => {
     setZoomLevel(100);
   };
+
+  const handleZoomChange = (value: number) => {
+    setZoomLevel(value);
+  };
+
+  // Keyboard shortcuts
+  React.useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === "=" || e.key === "+") {
+          e.preventDefault();
+          handleZoomIn();
+        } else if (e.key === "-") {
+          e.preventDefault();
+          handleZoomOut();
+        } else if (e.key === "0") {
+          e.preventDefault();
+          handleZoomReset();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
+
+  // Log scrollbar position
+  React.useEffect(() => {
+    const logScrollPosition = () => {
+      // Find the scrollable container (PDFEditorLayout's document area)
+      const scrollContainer = document.querySelector(
+        ".flex-1.bg-gray-900.overflow-auto"
+      ) as HTMLElement;
+      if (scrollContainer) {
+        console.log("📜 SCROLL POSITION:", {
+          scrollLeft: scrollContainer.scrollLeft,
+          scrollTop: scrollContainer.scrollTop,
+          scrollWidth: scrollContainer.scrollWidth,
+          scrollHeight: scrollContainer.scrollHeight,
+          clientWidth: scrollContainer.clientWidth,
+          clientHeight: scrollContainer.clientHeight,
+        });
+      }
+    };
+
+    // Log on scroll
+    const scrollContainer = document.querySelector(
+      ".flex-1.bg-gray-900.overflow-auto"
+    ) as HTMLElement;
+    if (scrollContainer) {
+      scrollContainer.addEventListener("scroll", logScrollPosition);
+      return () => {
+        scrollContainer.removeEventListener("scroll", logScrollPosition);
+      };
+    }
+  }, []);
+
+  // Simple, working zoom system
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Handle tool selection
   const handleToolSelect = (toolId: string) => {
@@ -358,7 +416,9 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
     return Array.from({ length: totalPages }, (_, index) => ({
       pageNumber: index + 1,
       isActive: currentPage === index + 1,
-      thumbnailUrl: `${getApiUrl("")}/api/pdf_thumbnail/${encodeURIComponent(uploadedFilename || uploadedFile.name)}/${index + 1}`,
+      thumbnailUrl: `${getApiUrl("")}/api/pdf_thumbnail/${encodeURIComponent(
+        uploadedFilename || uploadedFile.name
+      )}/${index + 1}`,
       onClick: () => handlePageChange(index + 1),
     }));
   };
@@ -488,90 +548,24 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
 
   // Processing state
   if (isProcessing && !editorUrl) {
-    const steps = [
-      {
-        id: 0,
-        title: "Uploading PDF",
-        description: "Analyzing document and extracting elements...",
-        completed: uploadProgress >= 25,
-      },
-      {
-        id: 1,
-        title: "Analyzing Structure",
-        description: "Processing document layout with encryption...",
-        completed: uploadProgress >= 60,
-      },
-      {
-        id: 2,
-        title: "Preparing Editor",
-        description: "Setting up secure interface...",
-        completed: uploadProgress >= 100,
-      },
-    ];
+    // Determine status text based on progress
+    let statusText = "Processing PDF...";
+    if (uploadProgress < 30) {
+      statusText = "Uploading PDF...";
+    } else if (uploadProgress < 60) {
+      statusText = "Analyzing document structure...";
+    } else if (uploadProgress < 90) {
+      statusText = "Preparing editor...";
+    } else {
+      statusText = "Almost done...";
+    }
 
     return (
-      <div className="w-full max-w-4xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
-        <div className="p-6 flex items-center justify-center h-full">
+      <div className="w-full max-w-4xl mx-auto bg-gray-800/40 rounded-lg overflow-hidden">
+        <div className="p-6 flex items-center justify-center">
           <div className="w-full max-w-lg">
-            {/* Progress Steps */}
-            <div className="relative">
-              {steps.map((step, index) => (
-                <div
-                  key={step.id}
-                  className="flex items-start space-x-4 relative"
-                >
-                  {/* Checkmark Circle */}
-                  <div className="flex-shrink-0 relative z-10">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                        step.completed
-                          ? "bg-green-500 text-white"
-                          : "bg-gray-600 text-gray-400"
-                      }`}
-                    >
-                      {step.completed ? (
-                        <svg
-                          className="w-5 h-5"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      ) : (
-                        <span className="text-sm font-semibold">
-                          {index + 1}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Step Content */}
-                  <div className="flex-1 min-w-0 pb-6">
-                    <h3
-                      className={`text-lg font-semibold transition-colors duration-300 ${
-                        step.completed ? "text-green-400" : "text-white"
-                      }`}
-                    >
-                      {step.title}
-                    </h3>
-                    <p
-                      className={`text-sm transition-colors duration-300 ${
-                        step.completed ? "text-green-300" : "text-gray-400"
-                      }`}
-                    >
-                      {step.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
             {/* Progress Bar */}
-            <div className="mb-4">
+            <div className="mb-3">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-gray-300">
                   Progress
@@ -587,6 +581,9 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                 />
               </div>
             </div>
+
+            {/* Status Text */}
+            <p className="text-center text-sm text-gray-400">{statusText}</p>
           </div>
         </div>
       </div>
@@ -641,20 +638,17 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
             onViewPdf={handleViewPdf}
             onDownloadPdf={handleDownloadPdf}
           >
-            <div className="h-full w-full bg-gray-900 relative overflow-auto">
-              <div className="w-full h-full">
-                <iframe
-                  src={editorUrl}
-                  className="border-0"
-                  title="PDF Editor"
-                  style={{
-                    width: "100vw",
-                    height: "100vh",
-                    transform: `scale(${zoomLevel / 100})`,
-                    transformOrigin: 'top left',
-                  }}
-                />
-              </div>
+            {/* PDF Editor - Professional Editor Experience */}
+            <div className="h-full w-full bg-gray-900">
+              <iframe
+                ref={iframeRef}
+                src={editorUrl}
+                className="border-0 w-full h-full"
+                title="PDF Editor"
+                style={{
+                  display: "block",
+                }}
+              />
             </div>
           </PDFEditorLayout>
         </div>

@@ -451,15 +451,15 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
               Pages
             </button>
           )}
-          {/* Zoom Controls - Hidden on mobile */}
-          <div className="hidden sm:flex items-center space-x-2">
+          {/* Enhanced Zoom Controls - Modern UI */}
+          <div className="flex items-center space-x-2 sm:space-x-3 bg-gray-800/50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-gray-700">
             <button
               onClick={onZoomOut}
-              className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700"
-              title="Zoom Out"
+              className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-md hover:bg-gray-700 active:bg-gray-600 transition-all duration-150"
+              title="Zoom Out (Ctrl/Cmd -)"
             >
               <svg
-                className="w-4 h-4 text-gray-300"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -467,24 +467,25 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   d="M20 12H4"
                 />
               </svg>
             </button>
             <button
               onClick={onZoomReset}
-              className="px-3 py-1 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-md transition-all duration-150 min-w-[3.5rem] sm:min-w-[4rem]"
+              title="Reset to 100% (Ctrl/Cmd 0)"
             >
               {zoomLevel}%
             </button>
             <button
               onClick={onZoomIn}
-              className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700"
-              title="Zoom In"
+              className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-md hover:bg-gray-700 active:bg-gray-600 transition-all duration-150"
+              title="Zoom In (Ctrl/Cmd +)"
             >
               <svg
-                className="w-4 h-4 text-gray-300"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -492,55 +493,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Mobile zoom controls */}
-          <div className="sm:hidden flex items-center space-x-2">
-            <button
-              onClick={onZoomOut}
-              className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700"
-              title="Zoom Out"
-            >
-              <svg
-                className="w-4 h-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M20 12H4"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={onZoomReset}
-              className="px-3 py-1 text-sm font-medium text-gray-300 hover:bg-gray-700 rounded"
-            >
-              {zoomLevel}%
-            </button>
-            <button
-              onClick={onZoomIn}
-              className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700"
-              title="Zoom In"
-            >
-              <svg
-                className="w-4 h-4 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   d="M12 4v16m8-8H4"
                 />
               </svg>
@@ -608,8 +561,8 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
               (allTools[0]?.id === "sign" ||
                 allTools[0]?.id === "image" ||
                 allTools[0]?.id === "watermark"))) && (
-            <div className="bg-gray-800 border-b border-gray-700 px-2 sm:px-4 py-2 flex-shrink-0">
-              <div className="flex items-center justify-center space-x-1 overflow-x-auto">
+            <div className="bg-gray-800/80 backdrop-blur-sm border-b border-gray-700/50 px-3 sm:px-6 py-3 sm:py-3 flex-shrink-0 shadow-sm">
+              <div className="flex items-center justify-center space-x-2 sm:space-x-3 overflow-x-auto scrollbar-hide">
                 {allTools.map((tool) => (
                   <button
                     key={tool.id}
@@ -617,10 +570,10 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
                       onToolSelect?.(tool.id);
                       tool.onClick?.();
                     }}
-                    className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+                    className={`flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       activeTool === tool.id
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-300 hover:bg-gray-700"
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 scale-105"
+                        : "text-gray-300 hover:bg-gray-700/70 hover:text-white"
                     } ${
                       tool.id === "undo" || tool.id === "redo"
                         ? "hidden sm:flex"
@@ -636,13 +589,15 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
             </div>
           )}
 
-          {/* Document Area - Full height */}
+          {/* Document Area - Clean Editor Viewport */}
           <div
             className="flex-1 bg-gray-900 overflow-auto"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            style={{ touchAction: "none" }}
+            style={{
+              touchAction: "manipulation",
+            }}
           >
             {children}
           </div>
