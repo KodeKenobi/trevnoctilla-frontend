@@ -657,6 +657,7 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
           <PDFEditorLayout
             title="Trevnoctilla"
             fileName={uploadedFile?.name}
+            instructionText="💡 Click on any text in the document to edit it"
             onBack={() => {
               setUploadedFile(null);
               setEditorUrl("");
@@ -701,10 +702,10 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
             <div
               className="w-full h-full bg-gray-900"
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                display: "block",
                 overflow: "auto",
+                width: "100%",
+                height: "100%",
               }}
             >
               <iframe
@@ -716,6 +717,8 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                   display: "block",
                   width: "100%",
                   height: "100%",
+                  margin: 0,
+                  padding: 0,
                 }}
                 onLoad={() => {
                   // Send initial zoom when iframe loads

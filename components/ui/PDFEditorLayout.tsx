@@ -39,6 +39,7 @@ interface PDFEditorLayoutProps {
   onDone?: () => void;
   onBack?: () => void;
   onSearch?: () => void;
+  instructionText?: string; // Instructional text to show in header
 
   // Zoom controls
   zoomLevel?: number;
@@ -83,6 +84,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
   onDone,
   onBack,
   onSearch,
+  instructionText,
   zoomLevel = 100,
   onZoomIn,
   onZoomOut,
@@ -437,6 +439,13 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
           {fileName && (
             <span className="hidden sm:block text-sm text-gray-300 truncate max-w-xs">
               {fileName}
+            </span>
+          )}
+
+          {/* Instruction text - Show when provided */}
+          {instructionText && (
+            <span className="hidden md:flex items-center text-xs sm:text-sm text-gray-400 italic px-2 sm:px-3 py-1 rounded bg-gray-700/50 border border-gray-600/50">
+              {instructionText}
             </span>
           )}
         </div>
