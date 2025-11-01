@@ -3,6 +3,8 @@ export const API_CONFIG = {
   // Always point to hosted API by default; allow override via env
   BASE_URL:
     process.env.NEXT_PUBLIC_API_BASE_URL ||
+    // TEMPORARY: Using localhost for testing zoom fix. Change back to Railway URL when done.
+    //"http://localhost:5000", // Change back to "https://web-production-737b.up.railway.app" after testing
     "https://web-production-737b.up.railway.app",
 
   // API endpoints

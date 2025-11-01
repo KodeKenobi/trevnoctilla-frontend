@@ -66,6 +66,7 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
 
   // Refs
   const isProcessingRef = useRef<boolean>(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Process document function
   const handleProcessDocument = useCallback(async () => {
@@ -178,7 +179,13 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
       }
 
       // Set the converted HTML URL using the backend API URL
-      setEditorUrl(`${getApiUrl("")}/convert/${encodeURIComponent(filename)}`);
+      // Add cache-busting parameter to force reload
+      const cacheBuster = Date.now();
+      setEditorUrl(
+        `${getApiUrl("")}/convert/${encodeURIComponent(
+          filename
+        )}?v=${cacheBuster}`
+      );
 
       // Brief pause before showing completion
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -220,21 +227,76 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
   }, [editorUrl]);
 
   // Improved zoom controls with smooth transitions
-  const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(prev + 10, 300));
-  };
+  const handleZoomIn = useCallback(() => {
+    console.log("🔍 Zoom In button clicked");
+    setZoomLevel((prev) => {
+      const newZoom = Math.min(prev + 10, 300);
+      console.log("🔍 Zoom In: updating from", prev, "to", newZoom);
+      return newZoom;
+    });
+  }, []);
 
-  const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(prev - 10, 25));
-  };
+  const handleZoomOut = useCallback(() => {
+    console.log("🔍 Zoom Out button clicked");
+    setZoomLevel((prev) => {
+      const newZoom = Math.max(prev - 10, 25);
+      console.log("🔍 Zoom Out: updating from", prev, "to", newZoom);
+      return newZoom;
+    });
+  }, []);
 
-  const handleZoomReset = () => {
+  const handleZoomReset = useCallback(() => {
+    console.log("🔍 Zoom Reset clicked");
     setZoomLevel(100);
-  };
+  }, []);
 
   const handleZoomChange = (value: number) => {
     setZoomLevel(value);
   };
+
+  // Send zoom level to iframe when it changes
+  React.useEffect(() => {
+    if (!editorUrl) {
+      console.log("❌ Editor URL not set, skipping zoom message");
+      return;
+    }
+
+    console.log(
+      "🔍 Zoom level changed to:",
+      zoomLevel,
+      "editorUrl:",
+      editorUrl
+    );
+
+    const sendZoomMessage = () => {
+      if (iframeRef.current?.contentWindow) {
+        const zoomValue = zoomLevel / 100; // Convert percentage to decimal (100% = 1.0)
+        console.log(
+          "🔍 Sending zoom message to iframe:",
+          zoomValue,
+          "from zoomLevel:",
+          zoomLevel,
+          "iframe ref exists:",
+          !!iframeRef.current
+        );
+        iframeRef.current.contentWindow.postMessage(
+          {
+            type: "CHANGE_ZOOM",
+            zoom: zoomValue,
+          },
+          "*"
+        );
+      } else {
+        console.log("❌ Iframe ref not ready, retrying in 100ms...");
+        // Retry after a short delay if iframe isn't ready
+        setTimeout(sendZoomMessage, 100);
+      }
+    };
+
+    // Small delay to ensure iframe is loaded
+    const timeoutId = setTimeout(sendZoomMessage, 100);
+    return () => clearTimeout(timeoutId);
+  }, [zoomLevel, editorUrl]);
 
   // Keyboard shortcuts
   React.useEffect(() => {
@@ -254,7 +316,7 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
     };
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, []);
+  }, [handleZoomIn, handleZoomOut, handleZoomReset]);
 
   // Log scrollbar position
   React.useEffect(() => {
@@ -286,9 +348,6 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
       };
     }
   }, []);
-
-  // Simple, working zoom system
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Handle tool selection
   const handleToolSelect = (toolId: string) => {
@@ -639,14 +698,41 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
             onDownloadPdf={handleDownloadPdf}
           >
             {/* PDF Editor - Professional Editor Experience */}
-            <div className="h-full w-full bg-gray-900">
+            <div
+              className="w-full h-full bg-gray-900"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "auto",
+              }}
+            >
               <iframe
                 ref={iframeRef}
                 src={editorUrl}
-                className="border-0 w-full h-full"
+                className="border-0"
                 title="PDF Editor"
                 style={{
                   display: "block",
+                  width: "100%",
+                  height: "100%",
+                }}
+                onLoad={() => {
+                  // Send initial zoom when iframe loads
+                  if (iframeRef.current?.contentWindow) {
+                    const zoomValue = zoomLevel / 100;
+                    console.log(
+                      "🖼️ Iframe loaded, sending initial zoom:",
+                      zoomValue
+                    );
+                    iframeRef.current.contentWindow.postMessage(
+                      {
+                        type: "CHANGE_ZOOM",
+                        zoom: zoomValue,
+                      },
+                      "*"
+                    );
+                  }
                 }}
               />
             </div>
