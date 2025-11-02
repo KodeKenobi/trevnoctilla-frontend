@@ -394,22 +394,9 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
       } else if (event.data.type === "PDF_GENERATED_FOR_PREVIEW") {
         console.log("📄 PDF generated for preview:", event.data.pdfUrl);
 
-        // Convert blob URL to data URL for iframe compatibility
-        console.log("📄 Converting blob to data URL for iframe...");
-        fetch(event.data.pdfUrl)
-          .then((response) => response.blob())
-          .then((blob) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              console.log("✅ Data URL ready for iframe");
-              setGeneratedPdfUrl(reader.result as string);
-            };
-            reader.readAsDataURL(blob);
-          })
-          .catch((error) => {
-            console.error("❌ Error converting blob:", error);
-            setGeneratedPdfUrl(event.data.pdfUrl);
-          });
+        // Use URL directly - backend now sends data URL which works cross-origin
+        console.log("📄 Using PDF URL for iframe preview");
+        setGeneratedPdfUrl(event.data.pdfUrl);
 
         setShowViewButton(true); // Show View button
         setShowDownloadButton(true); // Show Download button
