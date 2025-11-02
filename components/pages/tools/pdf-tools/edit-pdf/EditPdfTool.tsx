@@ -750,6 +750,8 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                     src={
                       generatedPdfUrl.startsWith("data:")
                         ? generatedPdfUrl
+                        : generatedPdfUrl.startsWith("blob:")
+                        ? generatedPdfUrl
                         : `${generatedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`
                     }
                     className="w-full h-full border-0"
