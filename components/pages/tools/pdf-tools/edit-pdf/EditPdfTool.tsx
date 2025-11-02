@@ -416,22 +416,9 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
       } else if (event.data.type === "PDF_GENERATED_FOR_PREVIEW") {
         console.log("📄 PDF generated for preview:", event.data.pdfUrl);
 
-        // Convert blob URL to data URL for iframe compatibility
-        console.log("📄 Converting blob to data URL for iframe...");
-        fetch(event.data.pdfUrl)
-          .then((response) => response.blob())
-          .then((blob) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              console.log("✅ Data URL ready for iframe");
-              setGeneratedPdfUrl(reader.result as string);
-            };
-            reader.readAsDataURL(blob);
-          })
-          .catch((error) => {
-            console.error("❌ Error converting blob:", error);
-            setGeneratedPdfUrl(event.data.pdfUrl);
-          });
+        // Use blob URL directly - it works fine in iframes and allows hash parameters
+        console.log("📄 Using blob URL for iframe preview");
+        setGeneratedPdfUrl(event.data.pdfUrl);
 
         setShowViewButton(true); // Show View button
         setShowDownloadButton(true); // Show Download button
@@ -760,7 +747,11 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
               <div className="flex-1 p-1 sm:p-4 overflow-hidden">
                 <div className="w-full h-full border border-gray-300 rounded-lg overflow-hidden">
                   <iframe
-                    src={`${generatedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                    src={
+                      generatedPdfUrl.startsWith("data:")
+                        ? generatedPdfUrl
+                        : `${generatedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`
+                    }
                     className="w-full h-full border-0"
                     title="PDF Preview"
                     style={{
