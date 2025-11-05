@@ -180,11 +180,18 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
 
       // Set the converted HTML URL using the backend API URL
       // Add cache-busting parameter to force reload
+      // Detect mobile and add mobile parameter
+      const isMobile =
+        window.innerWidth <= 768 ||
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
       const cacheBuster = Date.now();
+      const mobileParam = isMobile ? "&mobile=true" : "";
       setEditorUrl(
         `${getApiUrl("")}/convert/${encodeURIComponent(
           filename
-        )}?v=${cacheBuster}`
+        )}?v=${cacheBuster}${mobileParam}`
       );
 
       // Brief pause before showing completion
