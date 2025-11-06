@@ -43,8 +43,8 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
 
   // View and download flow state
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showViewButton, setShowViewButton] = useState(false);
-  const [showDownloadButton, setShowDownloadButton] = useState(false);
+  const [showViewButton, setShowViewButton] = useState(false); // Show after save
+  const [showDownloadButton, setShowDownloadButton] = useState(false); // Show after view
   const [hasViewedPdf, setHasViewedPdf] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -167,8 +167,8 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
         alertModal.showSuccess("Success", "PDF saved successfully!");
       } else if (event.data.type === "PDF_GENERATED_FOR_PREVIEW") {
         setGeneratedPdfUrl(event.data.pdfUrl);
-        setShowViewButton(true);
-        setShowDownloadButton(true);
+        setShowViewButton(true); // Show Preview button after save
+        setShowDownloadButton(false); // Don't show Download until user views
         setIsSaving(false);
       } else if (event.data.type === "EDIT_MODE_SET") {
         setActiveTool(event.data.mode);
@@ -245,11 +245,12 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
     }
   }, []);
 
-  // Send initial zoom when iframe loads
+  // Send initial zoom and edit mode when iframe loads
   React.useEffect(() => {
     if (editorUrl && iframeRef.current?.contentWindow) {
-      const sendZoom = () => {
+      const initializeEditor = () => {
         if (iframeRef.current?.contentWindow) {
+          // Send initial zoom
           iframeRef.current.contentWindow.postMessage(
             {
               type: "MOBILE_ZOOM",
@@ -257,9 +258,18 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
             },
             "*"
           );
+
+          // Send initial edit mode (edit-text)
+          iframeRef.current.contentWindow.postMessage(
+            {
+              type: "SET_EDIT_MODE",
+              mode: "edit-text",
+            },
+            "*"
+          );
         }
       };
-      const timeoutId = setTimeout(sendZoom, 500);
+      const timeoutId = setTimeout(initializeEditor, 500);
       return () => clearTimeout(timeoutId);
     }
   }, [editorUrl, zoomLevel]);
@@ -297,6 +307,7 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
   const handleViewPdf = () => {
     setShowViewModal(true);
     setHasViewedPdf(true);
+    setShowDownloadButton(true); // Show Download button after user views
   };
 
   // Handle close view modal
@@ -476,7 +487,24 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
                   left: 0,
                 }}
                 onLoad={() => {
-                  // Document loaded
+                  // Document loaded - initialize edit mode
+                  if (iframeRef.current?.contentWindow) {
+                    // Send initial edit mode
+                    setTimeout(() => {
+                      if (iframeRef.current?.contentWindow) {
+                        iframeRef.current.contentWindow.postMessage(
+                          {
+                            type: "SET_EDIT_MODE",
+                            mode: "edit-text",
+                          },
+                          "*"
+                        );
+                        console.log(
+                          "📱 [Mobile Edit PDF] Initial edit mode sent"
+                        );
+                      }
+                    }, 1000);
+                  }
                 }}
                 onError={async () => {
                   console.error("❌ [Mobile Edit PDF] Iframe failed to load");
@@ -522,7 +550,7 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-1">
             <div className="bg-white rounded-lg shadow-xl w-full h-full max-w-full max-h-full flex flex-col">
               <div className="flex items-center justify-between p-4 border-b">
-                <h3 className="text-lg font-semibold">Preview PDF</h3>
+                <h3 className="text-lg font-semibold">PDF Preview</h3>
                 <button
                   onClick={handleCloseViewModal}
                   className="text-gray-500 hover:text-gray-700 text-2xl"

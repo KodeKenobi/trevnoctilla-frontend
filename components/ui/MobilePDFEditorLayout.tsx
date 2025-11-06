@@ -209,16 +209,8 @@ export const MobilePDFEditorLayout: React.FC<MobilePDFEditorLayoutProps> = ({
               </div>
             )}
             {/* Action Buttons */}
-            <div className="flex items-center justify-end px-4 py-3">
+            <div className="flex items-center justify-center px-4 py-3">
               <div className="flex items-center space-x-2">
-                {showViewButton && onViewPdf && (
-                  <button
-                    onClick={onViewPdf}
-                    className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"
-                  >
-                    View
-                  </button>
-                )}
                 {onSave && (
                   <button
                     onClick={onSave}
@@ -227,6 +219,14 @@ export const MobilePDFEditorLayout: React.FC<MobilePDFEditorLayoutProps> = ({
                   >
                     <Save className="w-4 h-4" />
                     <span>Save</span>
+                  </button>
+                )}
+                {showViewButton && onViewPdf && (
+                  <button
+                    onClick={onViewPdf}
+                    className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"
+                  >
+                    Preview
                   </button>
                 )}
                 {showDownloadButton && onDownloadPdf && (
