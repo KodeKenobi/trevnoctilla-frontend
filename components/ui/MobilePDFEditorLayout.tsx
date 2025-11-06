@@ -9,6 +9,9 @@ import {
   FileText,
   Save,
   Download,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
 } from "lucide-react";
 
 interface ToolbarTool {
@@ -42,6 +45,12 @@ interface MobilePDFEditorLayoutProps {
   currentPage?: number;
   onPageChange?: (pageNumber: number) => void;
 
+  // Zoom controls
+  zoomLevel?: number;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onZoomReset?: () => void;
+
   // Main content
   children: React.ReactNode;
 
@@ -67,6 +76,10 @@ export const MobilePDFEditorLayout: React.FC<MobilePDFEditorLayoutProps> = ({
   pages = [],
   currentPage = 1,
   onPageChange,
+  zoomLevel = 1.0,
+  onZoomIn,
+  onZoomOut,
+  onZoomReset,
   children,
   onSave,
   isProcessing = false,
@@ -165,6 +178,36 @@ export const MobilePDFEditorLayout: React.FC<MobilePDFEditorLayoutProps> = ({
             exit={{ y: 100 }}
             className="bg-gray-800 border-t border-gray-700"
           >
+            {/* Zoom Controls */}
+            {(onZoomIn || onZoomOut || onZoomReset) && (
+              <div className="flex items-center justify-center px-4 py-2 border-b border-gray-700">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={onZoomOut}
+                    disabled={zoomLevel <= 0.25}
+                    className="p-2 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                    aria-label="Zoom out"
+                  >
+                    <ZoomOut className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={onZoomReset}
+                    className="px-3 py-1.5 text-white hover:bg-gray-700 rounded-lg transition-colors text-sm font-medium"
+                    aria-label="Reset zoom"
+                  >
+                    {Math.round(zoomLevel * 100)}%
+                  </button>
+                  <button
+                    onClick={onZoomIn}
+                    disabled={zoomLevel >= 3.0}
+                    className="p-2 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                    aria-label="Zoom in"
+                  >
+                    <ZoomIn className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            )}
             {/* Action Buttons */}
             <div className="flex items-center justify-end px-4 py-3">
               <div className="flex items-center space-x-2">

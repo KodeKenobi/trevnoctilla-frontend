@@ -38,6 +38,9 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadedFilename, setUploadedFilename] = useState<string>("");
 
+  // Zoom state
+  const [zoomLevel, setZoomLevel] = useState<number>(1.0); // 1.0 = 100%
+
   // View and download flow state
   const [showViewModal, setShowViewModal] = useState(false);
   const [showViewButton, setShowViewButton] = useState(false);
@@ -192,6 +195,74 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
       );
     }
   };
+
+  // Zoom handlers
+  const handleZoomIn = useCallback(() => {
+    setZoomLevel((prev) => {
+      const newZoom = Math.min(prev + 0.25, 3.0); // Max 300%
+      const iframe = iframeRef.current;
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(
+          {
+            type: "MOBILE_ZOOM",
+            zoom: newZoom,
+          },
+          "*"
+        );
+      }
+      return newZoom;
+    });
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoomLevel((prev) => {
+      const newZoom = Math.max(prev - 0.25, 0.25); // Min 25%
+      const iframe = iframeRef.current;
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(
+          {
+            type: "MOBILE_ZOOM",
+            zoom: newZoom,
+          },
+          "*"
+        );
+      }
+      return newZoom;
+    });
+  }, []);
+
+  const handleZoomReset = useCallback(() => {
+    setZoomLevel(1.0);
+    const iframe = iframeRef.current;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage(
+        {
+          type: "MOBILE_ZOOM",
+          zoom: 1.0,
+        },
+        "*"
+      );
+    }
+  }, []);
+
+  // Send initial zoom when iframe loads
+  React.useEffect(() => {
+    if (editorUrl && iframeRef.current?.contentWindow) {
+      const sendZoom = () => {
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(
+            {
+              type: "MOBILE_ZOOM",
+              zoom: zoomLevel,
+            },
+            "*"
+          );
+        }
+      };
+      const timeoutId = setTimeout(sendZoom, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [editorUrl, zoomLevel]);
 
   // Generate page thumbnails
   const generatePageThumbnails = () => {
@@ -363,6 +434,10 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
             pages={generatePageThumbnails()}
             currentPage={currentPage}
             onPageChange={handlePageChange}
+            zoomLevel={zoomLevel}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onZoomReset={handleZoomReset}
             onSave={handleSaveChanges}
             isProcessing={isSaving}
             showViewButton={showViewButton}
