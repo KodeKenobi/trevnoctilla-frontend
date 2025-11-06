@@ -11,6 +11,7 @@ import { getApiUrl } from "@/lib/config";
 import { ExtractTextTool } from "./extract-text/ExtractTextTool";
 import { ExtractImagesTool } from "./extract-images/ExtractImagesTool";
 import { EditPdfTool } from "./edit-pdf/EditPdfTool";
+import { MobileEditPdfTool } from "./edit-pdf/MobileEditPdfTool";
 import { EditFillSignTool } from "./edit-fill-sign/EditFillSignTool";
 import { AddSignatureTool } from "./add-signature/AddSignatureTool";
 import { AddWatermarkTool } from "./add-watermark/AddWatermarkTool";
@@ -63,6 +64,24 @@ export default function PDFTools() {
     data?: any;
   } | null>(null);
   const [showNotification, setShowNotification] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile =
+        window.innerWidth <= 768 ||
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        );
+      setIsMobile(mobile);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   // Reset state when tab changes
   useEffect(() => {
     if (activeTab !== "add-signature") {
@@ -155,7 +174,11 @@ export default function PDFTools() {
       case "extract-images":
         return <ExtractImagesTool {...commonProps} />;
       case "edit-pdf":
-        return <EditPdfTool {...commonProps} />;
+        return isMobile ? (
+          <MobileEditPdfTool {...commonProps} />
+        ) : (
+          <EditPdfTool {...commonProps} />
+        );
       case "edit-fill-sign":
         return <EditFillSignTool {...commonProps} />;
       case "add-signature":
