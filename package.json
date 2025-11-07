@@ -5,6 +5,7 @@
   "//": "Force rebuild to clear cache",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "if not exist .next\\cache mkdir .next\\cache",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

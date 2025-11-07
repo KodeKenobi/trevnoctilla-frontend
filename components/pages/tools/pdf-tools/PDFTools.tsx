@@ -15,8 +15,11 @@ import { MobileEditPdfTool } from "./edit-pdf/MobileEditPdfTool";
 import { EditFillSignTool } from "./edit-fill-sign/EditFillSignTool";
 import { MobileEditFillSignTool } from "./edit-fill-sign/MobileEditFillSignTool";
 import { AddSignatureTool } from "./add-signature/AddSignatureTool";
+import { MobileAddSignatureTool } from "./add-signature/MobileAddSignatureTool";
 import { AddWatermarkTool } from "./add-watermark/AddWatermarkTool";
+import { MobileAddImageTool } from "./add-image/MobileAddImageTool";
 import { SplitPdfTool } from "./split-pdf/SplitPdfTool";
+import { MobileSplitPdfTool } from "./split-pdf/MobileSplitPdfTool";
 import { MergePdfsTool } from "./merge-pdfs/MergePdfsTool";
 
 const toolCategories = [
@@ -33,7 +36,7 @@ const toolCategories = [
       { id: "edit-pdf", label: "Edit PDF Content" },
       { id: "edit-fill-sign", label: "Edit, Fill and Sign" },
       { id: "add-signature", label: "Add Digital Signature to PDF" },
-      { id: "add-watermark", label: "Add Watermark to PDF" },
+      { id: "add-watermark", label: "Add Image to PDF" },
     ],
   },
   {
@@ -187,11 +190,23 @@ export default function PDFTools() {
           <EditFillSignTool {...commonProps} />
         );
       case "add-signature":
-        return <AddSignatureTool {...commonProps} />;
+        return isMobile ? (
+          <MobileAddSignatureTool {...commonProps} />
+        ) : (
+          <AddSignatureTool {...commonProps} />
+        );
       case "add-watermark":
-        return <AddWatermarkTool {...commonProps} />;
+        return isMobile ? (
+          <MobileAddImageTool {...commonProps} />
+        ) : (
+          <AddWatermarkTool {...commonProps} />
+        );
       case "split-pdf":
-        return <SplitPdfTool {...commonProps} />;
+        return isMobile ? (
+          <MobileSplitPdfTool {...commonProps} />
+        ) : (
+          <SplitPdfTool {...commonProps} />
+        );
       case "merge-pdfs":
         return (
           <MergePdfsTool

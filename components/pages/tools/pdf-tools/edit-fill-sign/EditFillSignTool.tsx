@@ -5,6 +5,7 @@ import { useAlertModal } from "@/hooks/useAlertModal";
 import AlertModal from "@/components/ui/AlertModal";
 import { SignatureCanvas } from "@/components/ui/signature-canvas";
 import { PDFEditorLayout } from "@/components/ui/PDFEditorLayout";
+import { PDFProcessingModal } from "@/components/ui/PDFProcessingModal";
 import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
 
@@ -830,47 +831,30 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
     );
   }
 
-  // Processing state
+  // Processing state - show modal instead of inline progress
   if (isProcessing && !editorUrl) {
-    // Determine status text based on progress
-    let statusText = "Processing PDF...";
-    if (uploadProgress < 30) {
-      statusText = "Uploading PDF...";
-    } else if (uploadProgress < 60) {
-      statusText = "Analyzing document structure...";
-    } else if (uploadProgress < 90) {
-      statusText = "Preparing editor...";
-    } else {
-      statusText = "Almost done...";
-    }
-
     return (
-      <div className="w-full max-w-4xl mx-auto bg-gray-800/40 rounded-lg overflow-hidden">
-        <div className="p-6 flex items-center justify-center">
-          <div className="w-full max-w-lg">
-            {/* Progress Bar */}
-            <div className="mb-3">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-300">
-                  Progress
-                </span>
-                <span className="text-sm font-semibold text-white">
-                  {Math.round(uploadProgress)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-3">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-300 ease-out"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
+      <>
+        <PDFProcessingModal
+          isOpen={true}
+          progress={uploadProgress}
+          fileName={uploadedFile?.name}
+        />
+        {/* Keep the file upload UI visible but dimmed */}
+        <div className="w-full max-w-4xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden opacity-30 pointer-events-none">
+          <div className="p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Edit, Fill & Sign PDF
+              </h2>
+              <p className="text-gray-400">
+                Upload a PDF to start editing, filling forms, and adding
+                signatures
+              </p>
             </div>
-
-            {/* Status Text */}
-            <p className="text-center text-sm text-gray-400">{statusText}</p>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 

@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback } from "react";
 import { useAlertModal } from "@/hooks/useAlertModal";
 import AlertModal from "@/components/ui/AlertModal";
 import { MobilePDFEditorLayout } from "@/components/ui/MobilePDFEditorLayout";
+import { PDFProcessingModal } from "@/components/ui/PDFProcessingModal";
 import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
 
@@ -408,34 +409,29 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
     );
   }
 
-  // Processing state
+  // Processing state - show modal instead of inline progress
   if (isProcessing && !editorUrl) {
     return (
-      <div className="w-full max-w-4xl mx-auto bg-gray-800/40 rounded-lg overflow-hidden">
-        <div className="p-6 flex items-center justify-center">
-          <div className="w-full max-w-lg">
-            <div className="mb-3">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-300">
-                  Progress
-                </span>
-                <span className="text-sm font-semibold text-white">
-                  {Math.round(uploadProgress)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-700 rounded-full h-3">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-300 ease-out"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
+      <>
+        <PDFProcessingModal
+          isOpen={true}
+          progress={uploadProgress}
+          fileName={uploadedFile?.name}
+        />
+        {/* Keep the file upload UI visible but dimmed */}
+        <div className="w-full max-w-4xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden opacity-30 pointer-events-none">
+          <div className="p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Edit PDF Content
+              </h2>
+              <p className="text-gray-400">
+                Upload a PDF file to start editing
+              </p>
             </div>
-            <p className="text-center text-sm text-gray-400">
-              Processing PDF...
-            </p>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 

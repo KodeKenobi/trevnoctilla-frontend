@@ -1,0 +1,237 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FileText, CheckCircle2, Loader2 } from "lucide-react";
+
+interface PDFProcessingModalProps {
+  isOpen: boolean;
+  progress: number;
+  fileName?: string;
+}
+
+export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
+  isOpen,
+  progress,
+  fileName,
+}) => {
+  const [statusText, setStatusText] = useState("Uploading PDF...");
+  const [statusIcon, setStatusIcon] = useState<
+    "upload" | "process" | "prepare" | "complete"
+  >("upload");
+  const gradientId = React.useMemo(
+    () => `gradient-${Math.random().toString(36).substr(2, 9)}`,
+    []
+  );
+
+  useEffect(() => {
+    if (progress < 25) {
+      setStatusText("Uploading PDF...");
+      setStatusIcon("upload");
+    } else if (progress < 50) {
+      setStatusText("Analyzing document structure...");
+      setStatusIcon("process");
+    } else if (progress < 75) {
+      setStatusText("Processing content...");
+      setStatusIcon("process");
+    } else if (progress < 95) {
+      setStatusText("Preparing editor...");
+      setStatusIcon("prepare");
+    } else if (progress < 100) {
+      setStatusText("Almost done...");
+      setStatusIcon("prepare");
+    } else {
+      setStatusText("Complete!");
+      setStatusIcon("complete");
+    }
+  }, [progress]);
+
+  if (!isOpen) return null;
+
+  const circumference = 2 * Math.PI * 45; // radius = 45
+  const offset = circumference - (progress / 100) * circumference;
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[10000] p-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+              duration: 0.4,
+            }}
+            className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl shadow-2xl border border-gray-700/50 p-6 sm:p-8 max-w-md w-full mx-auto"
+          >
+            {/* Header with file name */}
+            {fileName && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="mb-6 text-center"
+              >
+                <div className="flex items-center justify-center gap-2 text-gray-400 text-sm mb-2">
+                  <FileText className="w-4 h-4" />
+                  <span className="truncate max-w-[280px]">{fileName}</span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Circular Progress Indicator */}
+            <div className="flex justify-center mb-8">
+              <div className="relative w-32 h-32 sm:w-40 sm:h-40">
+                {/* Background circle */}
+                <svg
+                  className="w-full h-full transform -rotate-90"
+                  viewBox="0 0 100 100"
+                >
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="rgba(75, 85, 99, 0.3)"
+                    strokeWidth="8"
+                  />
+                  {/* Progress circle */}
+                  <motion.circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke={`url(#${gradientId})`}
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    initial={{ strokeDashoffset: circumference }}
+                    animate={{ strokeDashoffset: offset }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  />
+                  <defs>
+                    <linearGradient
+                      id={gradientId}
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
+                      <stop offset="0%" stopColor="#3b82f6" />
+                      <stop offset="50%" stopColor="#8b5cf6" />
+                      <stop offset="100%" stopColor="#06b6d4" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+
+                {/* Center content */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  {statusIcon === "complete" ? (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 200,
+                        damping: 15,
+                      }}
+                    >
+                      <CheckCircle2 className="w-12 h-12 sm:w-16 sm:h-16 text-green-400" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    >
+                      <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 text-blue-400" />
+                    </motion.div>
+                  )}
+                  <motion.div
+                    key={progress}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="mt-2 text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent"
+                  >
+                    {Math.round(progress)}%
+                  </motion.div>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Text */}
+            <motion.div
+              key={statusText}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-center mb-6"
+            >
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                {statusText}
+              </h3>
+              <p className="text-sm sm:text-base text-gray-400">
+                {progress >= 100
+                  ? "Your document is ready!"
+                  : "Please wait while we process your document"}
+              </p>
+            </motion.div>
+
+            {/* Progress Bar */}
+            <div className="w-full">
+              <div className="flex justify-between text-xs sm:text-sm text-gray-400 mb-2">
+                <span>Progress</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              <div className="w-full bg-gray-700/50 rounded-full h-2 sm:h-3 overflow-hidden backdrop-blur-sm">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 shadow-lg"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+              </div>
+            </div>
+
+            {/* Animated dots */}
+            {progress < 100 && (
+              <div className="flex justify-center gap-1.5 mt-6">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-2 h-2 bg-blue-400 rounded-full"
+                    animate={{
+                      scale: [1, 1.3, 1],
+                      opacity: [0.5, 1, 0.5],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      delay: i * 0.2,
+                      ease: "easeInOut",
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};

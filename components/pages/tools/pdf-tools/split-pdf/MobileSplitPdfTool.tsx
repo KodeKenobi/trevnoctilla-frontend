@@ -5,24 +5,9 @@ import { useAlertModal } from "@/hooks/useAlertModal";
 import { PDFProcessingModal } from "@/components/ui/PDFProcessingModal";
 import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
+import { X, Download, Eye } from "lucide-react";
 
-// Simple button component
-const Button: React.FC<{
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  className?: string;
-}> = ({ children, onClick, disabled, className = "" }) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    className={`px-4 py-2 rounded-lg font-medium transition-colors ${className}`}
-  >
-    {children}
-  </button>
-);
-
-interface SplitPdfToolProps {
+interface MobileSplitPdfToolProps {
   uploadedFile: File | null;
   setUploadedFile: (file: File | null) => void;
   result: { type: "success" | "error"; message: string; data?: any } | null;
@@ -40,7 +25,7 @@ interface PageInfo {
   isSelected: boolean;
 }
 
-export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
+export const MobileSplitPdfTool: React.FC<MobileSplitPdfToolProps> = ({
   uploadedFile,
   setUploadedFile,
   result,
@@ -56,7 +41,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
   const [totalPages, setTotalPages] = useState<number>(0);
   const [pages, setPages] = useState<PageInfo[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [currentUploadStep, setCurrentUploadStep] = useState<number>(0);
   const [isSplitting, setIsSplitting] = useState<boolean>(false);
   const [splitProgress, setSplitProgress] = useState<number>(0);
   const [downloadUrls, setDownloadUrls] = useState<string[]>([]);
@@ -75,53 +59,26 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
     isProcessingRef.current = true;
     setIsProcessing(true);
     setUploadProgress(0);
-    setCurrentUploadStep(0);
 
-    // Smooth progress simulation with realistic timing
+    // Smooth progress simulation
     const simulateProgress = () => {
       return new Promise<void>((resolve) => {
         let progress = 0;
-        let step = 0;
-        let interval: NodeJS.Timeout | null = null;
-        const totalDuration = 5000; // 5 seconds for split PDF
         const updateInterval = 100;
+        const totalDuration = 5000; // 5 seconds
         const totalSteps = totalDuration / updateInterval;
         const progressIncrement = 100 / totalSteps;
 
-        const updateProgress = () => {
-          let increment = progressIncrement;
-
-          if (
-            (progress >= 20 && progress < 25) ||
-            (progress >= 55 && progress < 60)
-          ) {
-            increment = progressIncrement * 0.3;
-          }
-
-          progress += increment;
-
-          if (progress >= 25 && step === 0) {
-            step = 1;
-            setCurrentUploadStep(1);
-          } else if (progress >= 60 && step === 1) {
-            step = 2;
-            setCurrentUploadStep(2);
-          }
-
+        const interval = setInterval(() => {
+          progress += progressIncrement;
           const clampedProgress = Math.min(progress, 100);
           setUploadProgress(clampedProgress);
 
           if (clampedProgress >= 100) {
-            if (interval) {
-              clearInterval(interval);
-            }
+            clearInterval(interval);
             resolve();
           }
-        };
-
-        setTimeout(() => {
-          interval = setInterval(updateProgress, updateInterval);
-        }, 500);
+        }, updateInterval);
       });
     };
 
@@ -133,38 +90,27 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
       const formData = new FormData();
       formData.append("pdf", uploadedFile);
 
-      console.log("🚀 Starting PDF upload to backend...");
       const uploadResponse = await fetch(`${getApiUrl("")}/api/upload`, {
         method: "POST",
         body: formData,
       });
 
       if (!uploadResponse.ok) {
-        console.error(
-          "❌ PDF upload failed:",
-          uploadResponse.status,
-          uploadResponse.statusText
-        );
         throw new Error("Failed to upload PDF");
       }
 
-      // Get the unique filename from the upload response
       const uploadData = await uploadResponse.json();
       const filename = uploadData.filename || uploadedFile.name;
-      console.log("✅ PDF uploaded successfully:", filename);
 
       // Get PDF info including page count
-      console.log("📊 Fetching PDF info...");
       const pdfInfoResponse = await fetch(
         `${getApiUrl("")}/api/pdf_info/${encodeURIComponent(filename)}`
       );
       if (pdfInfoResponse.ok) {
         const pdfInfo = await pdfInfoResponse.json();
-        console.log("📄 PDF info:", pdfInfo);
         setTotalPages(pdfInfo.page_count);
 
         // Generate page thumbnails
-        console.log("🖼️ Generating page thumbnails...");
         const pageList: PageInfo[] = Array.from(
           { length: pdfInfo.page_count },
           (_, index) => ({
@@ -175,7 +121,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
             isSelected: true, // Select all pages by default
           })
         );
-        console.log("✅ Generated", pageList.length, "page thumbnails");
         setPages(pageList);
       } else {
         throw new Error("Failed to get PDF info");
@@ -197,13 +142,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
       handleProcessDocument();
     }
   }, [uploadedFile, totalPages, handleProcessDocument]);
-
-  // Reset processing ref when component unmounts or file changes
-  React.useEffect(() => {
-    return () => {
-      isProcessingRef.current = false;
-    };
-  }, [uploadedFile]);
 
   // Handle page selection toggle
   const handlePageToggle = (pageNumber: number) => {
@@ -258,10 +196,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
       }, 200);
 
       // Call split API
-      console.log(
-        "✂️ Calling split API with pages:",
-        selectedPages.map((page) => page.pageNumber)
-      );
       const response = await fetch(`${getApiUrl("")}/api/split_pdf`, {
         method: "POST",
         headers: {
@@ -281,7 +215,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
       }
 
       const result = await response.json();
-      // Construct full URLs using the backend base URL
       const fullDownloadUrls = result.downloadUrls.map((url: string) =>
         url.startsWith("http") ? url : `${getApiUrl("")}${url}`
       );
@@ -323,7 +256,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
     const selectedPages = pages.filter((page) => page.isSelected);
     const fileName = uploadedFile?.name?.replace(".pdf", "") || "split_pages";
 
-    // Create ZIP download
     if (downloadUrls.length > 0) {
       const completed = await showMonetizationModal({
         title: "Download ZIP",
@@ -368,78 +300,69 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
 
   // Get PDF view URL for preview
   const getPdfViewUrl = (pageNumber: number) => {
-    // Use the viewUrls array that's populated after splitting
     if (viewUrls.length > 0 && viewUrls[pageNumber - 1]) {
-      console.log("🔗 Using view URL from array:", viewUrls[pageNumber - 1]);
       return viewUrls[pageNumber - 1];
     }
-    // Fallback to constructing URL if viewUrls not available
     const fileName = uploadedFile?.name?.replace(".pdf", "") || "";
-    const fallbackUrl = `${getApiUrl(
-      ""
-    )}/view_split/${fileName}_page_${pageNumber}.pdf`;
-    console.log("🔗 Using fallback view URL:", fallbackUrl);
-    return fallbackUrl;
+    return `${getApiUrl("")}/view_split/${fileName}_page_${pageNumber}.pdf`;
   };
 
   // File upload state
   if (!uploadedFile) {
     return (
-      <>
-        <div className="w-full max-w-4xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
-          <div className="p-6">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-white mb-2">
-                Split PDF into Individual Pages
-              </h2>
-              <p className="text-gray-400">
-                Upload a PDF file to split into separate pages
-              </p>
-            </div>
+      <div className="w-full max-w-4xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
+        <div className="p-6">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-white mb-2">
+              Split PDF into Individual Pages
+            </h2>
+            <p className="text-gray-400">
+              Upload a PDF file to split into separate pages
+            </p>
+          </div>
 
-            <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
-              <div className="mb-4">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  stroke="currentColor"
-                  fill="none"
-                  viewBox="0 0 48 48"
-                >
-                  <path
-                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <div className="mb-4">
-                <label
-                  htmlFor="file-upload"
-                  className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                >
-                  Choose PDF File
-                </label>
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleFileUpload(file);
-                    }
-                  }}
-                  className="hidden"
+          <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
+            <div className="mb-4">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 48 48"
+              >
+                <path
+                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
-              </div>
-              <p className="text-gray-400 text-sm">
-                Drag and drop your PDF here, or click to browse
-              </p>
+              </svg>
             </div>
+            <div className="mb-4">
+              <label
+                htmlFor="mobile-split-file-upload"
+                className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              >
+                Choose PDF File
+              </label>
+              <input
+                id="mobile-split-file-upload"
+                type="file"
+                accept=".pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleFileUpload(file);
+                  }
+                }}
+                className="hidden"
+              />
+            </div>
+            <p className="text-gray-400 text-sm">
+              Drag and drop your PDF here, or click to browse
+            </p>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -475,39 +398,42 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
 
     return (
       <div className="w-full max-w-6xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-2">
-                Select Pages to Split
-              </h2>
-              <p className="text-gray-400">
-                Choose which pages you want to extract from your PDF
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-300">
-                {selectedCount} of {totalPages} pages selected
+        <div className="p-4 sm:p-6">
+          {/* Mobile-optimized header */}
+          <div className="mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">
+                  Select Pages to Split
+                </h2>
+                <p className="text-sm sm:text-base text-gray-400">
+                  Choose which pages you want to extract
+                </p>
               </div>
-              <div className="flex space-x-2">
-                <Button
-                  onClick={handleSelectAll}
-                  className="bg-gray-600 hover:bg-gray-700 text-white text-sm"
-                >
-                  Select All
-                </Button>
-                <Button
-                  onClick={handleDeselectAll}
-                  className="bg-gray-600 hover:bg-gray-700 text-white text-sm"
-                >
-                  Deselect All
-                </Button>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+                <div className="text-xs sm:text-sm text-gray-300 text-center sm:text-left">
+                  {selectedCount} of {totalPages} selected
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSelectAll}
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs sm:text-sm rounded-lg transition-colors"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    onClick={handleDeselectAll}
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs sm:text-sm rounded-lg transition-colors"
+                  >
+                    Deselect All
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Page Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+          {/* Page Grid - Mobile optimized */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {pages.map((page) => (
               <div
                 key={page.pageNumber}
@@ -525,15 +451,15 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="absolute top-2 left-2">
+                <div className="absolute top-1 sm:top-2 left-1 sm:left-2">
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center ${
                       page.isSelected ? "bg-blue-500" : "bg-gray-600"
                     }`}
                   >
                     {page.isSelected && (
                       <svg
-                        className="w-4 h-4 text-white"
+                        className="w-3 h-3 sm:w-4 sm:h-4 text-white"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -546,8 +472,8 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
                     )}
                   </div>
                 </div>
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
+                <div className="absolute bottom-1 sm:bottom-2 left-1/2 transform -translate-x-1/2">
+                  <div className="bg-purple-600 text-white text-xs px-2 py-0.5 sm:py-1 rounded-full">
                     Page {page.pageNumber}
                   </div>
                 </div>
@@ -555,31 +481,31 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
             ))}
           </div>
 
-          {/* Split Button */}
-          <div className="flex justify-center">
-            <Button
+          {/* Split Button - Mobile optimized */}
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <button
               onClick={handleSplitPdf}
               disabled={selectedCount === 0 || isSplitting}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 text-base sm:text-lg rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isSplitting ? (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-center space-x-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   <span>Splitting PDF... {splitProgress}%</span>
                 </div>
               ) : (
                 `Split ${selectedCount} Page${selectedCount !== 1 ? "s" : ""}`
               )}
-            </Button>
+            </button>
           </div>
 
-          {/* Download Options */}
+          {/* Download Options - Mobile optimized */}
           {showDownloadOptions && downloadUrls.length > 0 && (
-            <div className="mt-8 p-6 bg-gray-700/50 rounded-lg">
-              <h3 className="text-xl font-bold text-white mb-4">
+            <div className="mt-4 sm:mt-8 p-4 sm:p-6 bg-gray-700/50 rounded-lg">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-4">
                 Download Split Pages
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                 {pages
                   .filter((page) => page.isSelected)
                   .map((page) => (
@@ -590,74 +516,74 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
                           alt={`Page ${page.pageNumber}`}
                           className="w-full h-full object-cover rounded-lg"
                         />
-                        {/* View overlay on hover */}
-                        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center rounded-lg">
-                          <Button
+                        {/* View overlay on hover/touch */}
+                        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center rounded-lg">
+                          <button
                             onClick={() =>
                               setPreviewImage(getPdfViewUrl(page.pageNumber))
                             }
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1"
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded-lg"
                           >
                             View
-                          </Button>
+                          </button>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Button
+                        <button
                           onClick={() =>
                             setPreviewImage(getPdfViewUrl(page.pageNumber))
                           }
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-xs w-full"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-2 rounded-lg transition-colors flex items-center justify-center gap-1"
                         >
-                          View Page {page.pageNumber}
-                        </Button>
-                        <Button
+                          <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span>View</span>
+                        </button>
+                        <button
                           onClick={() =>
                             handleDownloadPageWithMonetization(page.pageNumber)
                           }
-                          className="bg-green-600 hover:bg-green-700 text-white text-xs w-full"
+                          className="w-full bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm py-2 rounded-lg transition-colors flex items-center justify-center gap-1"
                         >
-                          Download Page {page.pageNumber}
-                        </Button>
+                          <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span>Download</span>
+                        </button>
                       </div>
                     </div>
                   ))}
               </div>
-              <div className="mt-6 text-center">
-                <Button
+              <div className="mt-4 sm:mt-6 text-center">
+                <button
                   onClick={handleDownloadAll}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg font-semibold rounded-lg"
+                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold rounded-lg transition-colors"
                 >
                   Download All as ZIP
-                </Button>
+                </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Full-screen Preview Modal */}
+        {/* Full-screen Preview Modal - Mobile optimized */}
         {previewImage && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl max-h-[90vh] w-full mx-4">
-              <div className="flex items-center justify-between p-4 border-b">
-                <h3 className="text-lg font-semibold">Preview PDF</h3>
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[9999] p-2 sm:p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-full max-h-full w-full h-full sm:max-w-4xl sm:max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between p-3 sm:p-4 border-b">
+                <h3 className="text-base sm:text-lg font-semibold">
+                  Preview PDF
+                </h3>
                 <button
                   onClick={() => setPreviewImage(null)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-gray-500 hover:text-gray-700 text-xl sm:text-2xl p-1"
                 >
-                  ×
+                  <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               </div>
-              <div className="p-4">
-                <div className="w-full h-[70vh] border border-gray-300 rounded-lg overflow-hidden">
+              <div className="flex-1 p-2 sm:p-4 overflow-hidden">
+                <div className="w-full h-full border border-gray-300 rounded-lg overflow-hidden">
                   <iframe
                     src={previewImage}
                     className="w-full h-full border-0"
                     title="PDF Preview"
-                    style={{
-                      marginTop: "-40px",
-                      height: "calc(100% + 40px)",
-                    }}
                   />
                 </div>
               </div>
@@ -678,7 +604,7 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
               {result.type === "success" ? "Success!" : "Error"}
             </h2>
             <p className="text-gray-400 mb-6">{result.message}</p>
-            <Button
+            <button
               onClick={() => {
                 setResult(null);
                 setUploadedFile(null);
@@ -687,10 +613,10 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
                 setShowDownloadOptions(false);
                 setDownloadUrls([]);
               }}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
             >
               Process Another PDF
-            </Button>
+            </button>
           </div>
         </div>
       </div>
