@@ -91,8 +91,8 @@ export const metadata: Metadata = {
     icon: [
       { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
       { url: "/favicon.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon.png", sizes: "192x192", type: "image/png" },
-      { url: "/favicon.png", sizes: "512x512", type: "image/png" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
     shortcut: "/favicon.ico",
     apple: [{ url: "/favicon.png", sizes: "180x180", type: "image/png" }],
@@ -118,15 +118,16 @@ export default function RootLayout({
         ></script>
 
         {/* Ezoic Header Script */}
-        <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
         <script
           dangerouslySetInnerHTML={{
             __html: `
               window.ezstandalone = window.ezstandalone || {};
               ezstandalone.cmd = ezstandalone.cmd || [];
+              window._ezaq = window._ezaq || [];
             `,
           }}
         />
+        <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
 
         {/* Google AdSense - Updated */}
         <script
@@ -138,8 +139,18 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="icon" href="/favicon.png" sizes="32x32" type="image/png" />
-        <link rel="icon" href="/favicon.png" sizes="192x192" type="image/png" />
-        <link rel="icon" href="/favicon.png" sizes="512x512" type="image/png" />
+        <link
+          rel="icon"
+          href="/icons/icon-192.png"
+          sizes="192x192"
+          type="image/png"
+        />
+        <link
+          rel="icon"
+          href="/icons/icon-512.png"
+          sizes="512x512"
+          type="image/png"
+        />
         <link rel="apple-touch-icon" href="/favicon.png" sizes="180x180" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0ea5e9" />
@@ -179,25 +190,6 @@ export default function RootLayout({
                 name: "Trevnoctilla",
               },
             }),
-          }}
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              console.log("🔍 Favicon debugging:");
-              console.log("Current origin:", window.location.origin);
-              console.log("Favicon.png URL:", window.location.origin + "/favicon.png");
-              console.log("Logo.png URL:", window.location.origin + "/logo.png");
-              
-              // Test if files exist
-              fetch("/favicon.png")
-                .then(response => console.log("✅ Favicon.png status:", response.status))
-                .catch(error => console.error("❌ Favicon.png error:", error));
-                
-              fetch("/logo.png")
-                .then(response => console.log("✅ Logo.png status:", response.status))
-                .catch(error => console.error("❌ Logo.png error:", error));
-            `,
           }}
         />
       </head>

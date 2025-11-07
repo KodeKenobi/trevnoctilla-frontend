@@ -13,6 +13,7 @@ import { ExtractImagesTool } from "./extract-images/ExtractImagesTool";
 import { EditPdfTool } from "./edit-pdf/EditPdfTool";
 import { MobileEditPdfTool } from "./edit-pdf/MobileEditPdfTool";
 import { EditFillSignTool } from "./edit-fill-sign/EditFillSignTool";
+import { MobileEditFillSignTool } from "./edit-fill-sign/MobileEditFillSignTool";
 import { AddSignatureTool } from "./add-signature/AddSignatureTool";
 import { AddWatermarkTool } from "./add-watermark/AddWatermarkTool";
 import { SplitPdfTool } from "./split-pdf/SplitPdfTool";
@@ -180,7 +181,11 @@ export default function PDFTools() {
           <EditPdfTool {...commonProps} />
         );
       case "edit-fill-sign":
-        return <EditFillSignTool {...commonProps} />;
+        return isMobile ? (
+          <MobileEditFillSignTool {...commonProps} />
+        ) : (
+          <EditFillSignTool {...commonProps} />
+        );
       case "add-signature":
         return <AddSignatureTool {...commonProps} />;
       case "add-watermark":

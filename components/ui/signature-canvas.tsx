@@ -45,21 +45,103 @@ export const SignatureCanvas = ({
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
   }, [canvasWidth, canvasHeight]);
 
+  // Add touch event listeners with passive: false to allow preventDefault
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    let drawing = false;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+
+      drawing = true;
+      setIsDrawing(true);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (!drawing) return;
+
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      if (drawing) {
+        drawing = false;
+        setIsDrawing(false);
+        setHasSignature(true);
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const signatureData = canvas.toDataURL("image/png");
+          onSignatureChange(signatureData);
+        }
+      }
+    };
+
+    // Add touch listeners with passive: false
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+    canvas.addEventListener("touchcancel", handleTouchEnd, { passive: false });
+
+    return () => {
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
+      canvas.removeEventListener("touchcancel", handleTouchEnd);
+    };
+  }, [onSignatureChange]);
+
   // Update canvas size when props change
   useEffect(() => {
     setCanvasWidth(width);
     setCanvasHeight(height);
   }, [width, height]);
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Get coordinates from mouse or touch event
+  const getCoordinates = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    const clientX = "touches" in e ? e.touches[0]?.clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0]?.clientY : e.clientY;
+
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top,
+    };
+  };
+
+  const startDrawing = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    e.preventDefault();
     setIsDrawing(true);
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
+    const { x, y } = getCoordinates(e);
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -67,16 +149,16 @@ export const SignatureCanvas = ({
     ctx.moveTo(x, y);
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const draw = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    e.preventDefault();
     if (!isDrawing) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
+    const { x, y } = getCoordinates(e);
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -84,7 +166,12 @@ export const SignatureCanvas = ({
     ctx.stroke();
   };
 
-  const stopDrawing = () => {
+  const stopDrawing = (
+    e?:
+      | React.MouseEvent<HTMLCanvasElement>
+      | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    if (e) e.preventDefault();
     if (isDrawing) {
       setIsDrawing(false);
       setHasSignature(true);
@@ -159,7 +246,7 @@ export const SignatureCanvas = ({
       <div className="border-2 border-gray-300 rounded-lg overflow-hidden shadow-sm">
         <canvas
           ref={canvasRef}
-          className="cursor-crosshair"
+          className="cursor-crosshair touch-none"
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
