@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import { useAlertModal } from "@/hooks/useAlertModal";
+import AlertModal from "@/components/ui/AlertModal";
 import { MobilePDFEditorLayout } from "@/components/ui/MobilePDFEditorLayout";
 import { SignatureCanvas } from "@/components/ui/signature-canvas";
 import { useMonetization } from "@/contexts/MonetizationProvider";
@@ -48,6 +49,13 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
   const [showViewButton, setShowViewButton] = useState(false); // Show after save
   const [showDownloadButton, setShowDownloadButton] = useState(false); // Show after view
   const [hasViewedPdf, setHasViewedPdf] = useState(false);
+
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    id: string;
+    message: string;
+  } | null>(null);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -266,12 +274,33 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
         console.log(
           "✅ [Mobile Edit Fill Sign] Signature inserted successfully"
         );
+      } else if (event.data.type === "SHOW_CONFIRMATION") {
+        console.log("❓ Confirmation requested:", event.data.message);
+        console.log("❓ Confirmation ID:", event.data.id);
+        console.log("❓ Setting confirmation modal state");
+        const modalState = {
+          isOpen: true,
+          id: event.data.id,
+          message: event.data.message,
+        };
+        setConfirmationModal(modalState);
+        console.log("❓ Confirmation modal state set:", modalState);
       }
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [alertModal]);
+
+  // Debug: Log when confirmation modal state changes
+  React.useEffect(() => {
+    if (confirmationModal) {
+      console.log("❓ Confirmation modal state updated:", confirmationModal);
+      console.log("❓ Modal should be visible:", confirmationModal.isOpen);
+    } else {
+      console.log("❓ Confirmation modal cleared");
+    }
+  }, [confirmationModal]);
 
   // Handle page change
   const handlePageChange = (pageNumber: number) => {
@@ -806,6 +835,94 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
               </div>
             </div>
           </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {confirmationModal && confirmationModal.isOpen && (
+          <AlertModal
+            isOpen={true}
+            onClose={() => {
+              console.log("❓ Confirmation modal onClose called");
+              // Send cancel response
+              const iframe = iframeRef.current;
+              console.log("❓ Iframe ref:", iframe);
+              if (iframe?.contentWindow) {
+                console.log(
+                  "❓ Sending CONFIRMATION_RESPONSE (cancel):",
+                  confirmationModal.id
+                );
+                iframe.contentWindow.postMessage(
+                  {
+                    type: "CONFIRMATION_RESPONSE",
+                    id: confirmationModal.id,
+                    confirmed: false,
+                  },
+                  "*"
+                );
+              } else {
+                console.error("❓ Iframe or contentWindow not available");
+              }
+              setConfirmationModal(null);
+            }}
+            title="Confirm Action"
+            message={confirmationModal.message}
+            type="warning"
+            primaryButton={{
+              text: "Cancel",
+              onClick: () => {
+                console.log("❓ Cancel button clicked");
+                // Send cancel response
+                const iframe = iframeRef.current;
+                console.log("❓ Iframe ref:", iframe);
+                if (iframe?.contentWindow) {
+                  console.log(
+                    "❓ Sending CONFIRMATION_RESPONSE (cancel):",
+                    confirmationModal.id
+                  );
+                  iframe.contentWindow.postMessage(
+                    {
+                      type: "CONFIRMATION_RESPONSE",
+                      id: confirmationModal.id,
+                      confirmed: false,
+                    },
+                    "*"
+                  );
+                } else {
+                  console.error("❓ Iframe or contentWindow not available");
+                }
+                setConfirmationModal(null);
+              },
+              variant: "secondary",
+            }}
+            secondaryButton={{
+              text: "Confirm",
+              onClick: () => {
+                console.log("❓ Confirm button clicked");
+                // Send confirm response
+                const iframe = iframeRef.current;
+                console.log("❓ Iframe ref:", iframe);
+                if (iframe?.contentWindow) {
+                  console.log(
+                    "❓ Sending CONFIRMATION_RESPONSE (confirm):",
+                    confirmationModal.id
+                  );
+                  iframe.contentWindow.postMessage(
+                    {
+                      type: "CONFIRMATION_RESPONSE",
+                      id: confirmationModal.id,
+                      confirmed: true,
+                    },
+                    "*"
+                  );
+                } else {
+                  console.error("❓ Iframe or contentWindow not available");
+                }
+                setConfirmationModal(null);
+              },
+              variant: "danger",
+            }}
+            showCloseButton={false}
+          />
         )}
       </div>
     );

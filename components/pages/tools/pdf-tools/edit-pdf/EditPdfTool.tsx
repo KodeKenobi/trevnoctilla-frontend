@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import { useAlertModal } from "@/hooks/useAlertModal";
+import AlertModal from "@/components/ui/AlertModal";
 import { PDFEditorLayout } from "@/components/ui/PDFEditorLayout";
 import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
@@ -63,6 +64,13 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
   const [hasViewedPdf, setHasViewedPdf] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    id: string;
+    message: string;
+  } | null>(null);
 
   // Refs
   const isProcessingRef = useRef<boolean>(false);
@@ -430,6 +438,13 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
         setShowViewButton(true); // Show View button
         setShowDownloadButton(true); // Show Download button
         setIsSaving(false); // Clear loading state
+      } else if (event.data.type === "SHOW_CONFIRMATION") {
+        console.log("❓ Confirmation requested:", event.data.message);
+        setConfirmationModal({
+          isOpen: true,
+          id: event.data.id,
+          message: event.data.message,
+        });
       } else {
         console.log("❓ Unknown message type:", event.data.type);
       }
@@ -771,6 +786,76 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
               </div>
             </div>
           </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {confirmationModal && (
+          <AlertModal
+            isOpen={confirmationModal.isOpen}
+            onClose={() => {
+              // Send cancel response
+              const iframe = document.querySelector(
+                'iframe[title="PDF Editor"]'
+              ) as HTMLIFrameElement;
+              if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage(
+                  {
+                    type: "CONFIRMATION_RESPONSE",
+                    id: confirmationModal.id,
+                    confirmed: false,
+                  },
+                  "*"
+                );
+              }
+              setConfirmationModal(null);
+            }}
+            title="Confirm Action"
+            message={confirmationModal.message}
+            type="warning"
+            primaryButton={{
+              text: "Cancel",
+              onClick: () => {
+                // Send cancel response
+                const iframe = document.querySelector(
+                  'iframe[title="PDF Editor"]'
+                ) as HTMLIFrameElement;
+                if (iframe && iframe.contentWindow) {
+                  iframe.contentWindow.postMessage(
+                    {
+                      type: "CONFIRMATION_RESPONSE",
+                      id: confirmationModal.id,
+                      confirmed: false,
+                    },
+                    "*"
+                  );
+                }
+                setConfirmationModal(null);
+              },
+              variant: "secondary",
+            }}
+            secondaryButton={{
+              text: "Confirm",
+              onClick: () => {
+                // Send confirm response
+                const iframe = document.querySelector(
+                  'iframe[title="PDF Editor"]'
+                ) as HTMLIFrameElement;
+                if (iframe && iframe.contentWindow) {
+                  iframe.contentWindow.postMessage(
+                    {
+                      type: "CONFIRMATION_RESPONSE",
+                      id: confirmationModal.id,
+                      confirmed: true,
+                    },
+                    "*"
+                  );
+                }
+                setConfirmationModal(null);
+              },
+              variant: "danger",
+            }}
+            showCloseButton={false}
+          />
         )}
 
         {/* Monetization removed - using Google AdSense only */}

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import { useAlertModal } from "@/hooks/useAlertModal";
+import AlertModal from "@/components/ui/AlertModal";
 import { MobilePDFEditorLayout } from "@/components/ui/MobilePDFEditorLayout";
 import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
@@ -46,6 +47,13 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
   const [showViewButton, setShowViewButton] = useState(false); // Show after save
   const [showDownloadButton, setShowDownloadButton] = useState(false); // Show after view
   const [hasViewedPdf, setHasViewedPdf] = useState(false);
+
+  // Confirmation modal state
+  const [confirmationModal, setConfirmationModal] = useState<{
+    isOpen: boolean;
+    id: string;
+    message: string;
+  } | null>(null);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -172,6 +180,13 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
         setIsSaving(false);
       } else if (event.data.type === "EDIT_MODE_SET") {
         setActiveTool(event.data.mode);
+      } else if (event.data.type === "SHOW_CONFIRMATION") {
+        console.log("❓ Confirmation requested:", event.data.message);
+        setConfirmationModal({
+          isOpen: true,
+          id: event.data.id,
+          message: event.data.message,
+        });
       }
     };
 
@@ -578,6 +593,70 @@ export const MobileEditPdfTool: React.FC<MobileEditPdfToolProps> = ({
               </div>
             </div>
           </div>
+        )}
+
+        {/* Confirmation Modal */}
+        {confirmationModal && (
+          <AlertModal
+            isOpen={confirmationModal.isOpen}
+            onClose={() => {
+              // Send cancel response
+              const iframe = iframeRef.current;
+              if (iframe?.contentWindow) {
+                iframe.contentWindow.postMessage(
+                  {
+                    type: "CONFIRMATION_RESPONSE",
+                    id: confirmationModal.id,
+                    confirmed: false,
+                  },
+                  "*"
+                );
+              }
+              setConfirmationModal(null);
+            }}
+            title="Confirm Action"
+            message={confirmationModal.message}
+            type="warning"
+            primaryButton={{
+              text: "Cancel",
+              onClick: () => {
+                // Send cancel response
+                const iframe = iframeRef.current;
+                if (iframe?.contentWindow) {
+                  iframe.contentWindow.postMessage(
+                    {
+                      type: "CONFIRMATION_RESPONSE",
+                      id: confirmationModal.id,
+                      confirmed: false,
+                    },
+                    "*"
+                  );
+                }
+                setConfirmationModal(null);
+              },
+              variant: "secondary",
+            }}
+            secondaryButton={{
+              text: "Confirm",
+              onClick: () => {
+                // Send confirm response
+                const iframe = iframeRef.current;
+                if (iframe?.contentWindow) {
+                  iframe.contentWindow.postMessage(
+                    {
+                      type: "CONFIRMATION_RESPONSE",
+                      id: confirmationModal.id,
+                      confirmed: true,
+                    },
+                    "*"
+                  );
+                }
+                setConfirmationModal(null);
+              },
+              variant: "danger",
+            }}
+            showCloseButton={false}
+          />
         )}
       </div>
     );
