@@ -330,7 +330,7 @@ export default function ApiDocsPage() {
                   <p className="text-gray-400 mt-1">Merge multiple PDFs</p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /api/split_pdf</code>
+                  <code className="text-cyan-400">POST /split_pdf</code>
                   <p className="text-gray-400 mt-1">Split PDF into pages</p>
                 </div>
                 <div className="text-sm">
@@ -584,7 +584,7 @@ export default function ApiDocsPage() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/api/split_pdf</code>
+                    <code className="text-cyan-400">/split_pdf</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     Split PDF into pages or ranges

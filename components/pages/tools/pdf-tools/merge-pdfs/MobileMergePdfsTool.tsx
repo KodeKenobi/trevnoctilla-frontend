@@ -5,22 +5,16 @@ import { useAlertModal } from "@/hooks/useAlertModal";
 import { PDFProcessingModal } from "@/components/ui/PDFProcessingModal";
 import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
-
-// Simple button component
-const Button: React.FC<{
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  className?: string;
-}> = ({ children, onClick, disabled, className = "" }) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    className={`px-4 py-2 rounded-lg font-medium transition-colors ${className}`}
-  >
-    {children}
-  </button>
-);
+import {
+  X,
+  ArrowUp,
+  ArrowDown,
+  Trash2,
+  Plus,
+  FileText,
+  Eye,
+  Download,
+} from "lucide-react";
 
 interface PdfFile {
   id: string;
@@ -30,7 +24,7 @@ interface PdfFile {
   thumbnailUrl?: string;
 }
 
-interface MergePdfsToolProps {
+interface MobileMergePdfsToolProps {
   uploadedFile: File | null;
   setUploadedFile: (file: File | null) => void;
   uploadedFiles: File[];
@@ -44,7 +38,7 @@ interface MergePdfsToolProps {
   handleFileUpload: (file: File) => void;
 }
 
-export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
+export const MobileMergePdfsTool: React.FC<MobileMergePdfsToolProps> = ({
   uploadedFile,
   setUploadedFile,
   uploadedFiles,
@@ -55,7 +49,6 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
   setIsProcessing,
   handleFileUpload,
 }) => {
-  // Monetization removed - using Google AdSense only
   const { showModal: showMonetizationModal } = useMonetization();
   const alertModal = useAlertModal();
 
@@ -72,9 +65,7 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
 
   // Handle file upload
   const handleFileUploadMultiple = useCallback((files: FileList) => {
-    console.log("DEBUG: handleFileUploadMultiple called with files:", files);
     const newPdfFiles: PdfFile[] = Array.from(files).map((file) => {
-      console.log("DEBUG: Processing file:", file.name, file.size, file.type);
       return {
         id: Math.random().toString(36).substr(2, 9),
         file,
@@ -83,12 +74,7 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
       };
     });
 
-    console.log("DEBUG: Created newPdfFiles:", newPdfFiles);
-    setPdfFiles((prev) => {
-      const updated = [...prev, ...newPdfFiles];
-      console.log("DEBUG: Updated pdfFiles:", updated);
-      return updated;
-    });
+    setPdfFiles((prev) => [...prev, ...newPdfFiles]);
   }, []);
 
   // Handle file removal
@@ -120,8 +106,6 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
 
   // Handle merge PDFs
   const handleMergePdfs = useCallback(async () => {
-    console.log("DEBUG: handleMergePdfs called with pdfFiles:", pdfFiles);
-
     if (pdfFiles.length < 2) {
       alertModal.showError(
         "Error",
@@ -161,19 +145,10 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
 
       // Upload files and merge
       const formData = new FormData();
-      console.log("DEBUG: Preparing to upload files:", pdfFiles);
-      pdfFiles.forEach((pdfFile, index) => {
-        console.log(`DEBUG: Adding file ${index}:`, pdfFile.name, pdfFile.file);
+      pdfFiles.forEach((pdfFile) => {
         formData.append("files", pdfFile.file);
       });
 
-      console.log("DEBUG: FormData entries:");
-      const entries = Array.from(formData.entries());
-      entries.forEach(([key, value]) => {
-        console.log(key, value);
-      });
-
-      console.log("🔗 Calling merge API...");
       const response = await fetch(`${getApiUrl("")}/merge_pdfs`, {
         method: "POST",
         body: formData,
@@ -184,15 +159,12 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("❌ Merge failed with status:", response.status);
-        console.error("❌ Error response:", errorText);
         throw new Error(
           `Failed to merge PDFs: ${response.status} - ${errorText}`
         );
       }
 
       const result = await response.json();
-      console.log("✅ Merge result:", result);
 
       // Construct full URL using the backend base URL
       const fullDownloadUrl = result.download_url.startsWith("http")
@@ -210,6 +182,7 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
       alertModal.showError("Error", "Failed to merge PDFs");
     } finally {
       setIsMerging(false);
+      setMergeProgress(0);
     }
   }, [pdfFiles, alertModal]);
 
@@ -242,31 +215,6 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
     }
   }, [mergedPdfUrl]);
 
-  // Handle monetization completion
-  // Direct download - monetization removed
-  const handleDirectDownload = useCallback(() => {
-    if (mergedPdfUrl) {
-      const link = document.createElement("a");
-      link.href = mergedPdfUrl;
-      link.download = "merged_document.pdf";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  }, [mergedPdfUrl]);
-
-  // Direct download - monetization removed
-  const handleDirectDownload2 = useCallback(() => {
-    if (mergedPdfUrl) {
-      const link = document.createElement("a");
-      link.href = mergedPdfUrl;
-      link.download = "merged_document.pdf";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  }, [mergedPdfUrl]);
-
   // Format file size
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
@@ -280,41 +228,29 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
   if (pdfFiles.length === 0) {
     return (
       <div className="w-full max-w-6xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
               Merge Multiple PDFs
             </h2>
-            <p className="text-gray-400">
+            <p className="text-sm sm:text-base text-gray-400">
               Upload multiple PDF files to merge into one document
             </p>
           </div>
 
-          <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
+          <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 sm:p-8 text-center">
             <div className="mb-4">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 48 48"
-              >
-                <path
-                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <FileText className="mx-auto h-12 w-12 text-gray-400" />
             </div>
             <div className="mb-4">
               <label
-                htmlFor="file-upload"
-                className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                htmlFor="mobile-merge-file-upload"
+                className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors inline-block"
               >
                 Choose PDF Files
               </label>
               <input
-                id="file-upload"
+                id="mobile-merge-file-upload"
                 type="file"
                 accept=".pdf"
                 multiple
@@ -361,28 +297,34 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
     );
   }
 
-  // File management interface
+  // File management interface - Mobile optimized
   return (
     <div className="w-full max-w-6xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              Merge PDFs ({pdfFiles.length} files)
-            </h2>
-            <p className="text-gray-400">
-              Arrange your PDF files in the order you want them merged
-            </p>
+      <div className="p-4 sm:p-6">
+        {/* Mobile-optimized header */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">
+                Merge PDFs ({pdfFiles.length} files)
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-400">
+                Arrange your PDF files in the order you want them merged
+              </p>
+            </div>
           </div>
-          <div className="flex space-x-3">
+
+          {/* Action buttons - Mobile optimized */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <label
-              htmlFor="add-more-files"
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors"
+              htmlFor="mobile-add-more-files"
+              className="flex-1 sm:flex-none bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg cursor-pointer transition-colors text-center sm:text-left flex items-center justify-center gap-2"
             >
-              Add More Files
+              <Plus className="w-4 h-4" />
+              <span>Add More Files</span>
             </label>
             <input
-              id="add-more-files"
+              id="mobile-add-more-files"
               type="file"
               accept=".pdf"
               multiple
@@ -393,112 +335,118 @@ export const MergePdfsTool: React.FC<MergePdfsToolProps> = ({
               }}
               className="hidden"
             />
-            <Button
+            <button
               onClick={handleMergePdfs}
               disabled={pdfFiles.length < 2}
-              className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Merge PDFs
-            </Button>
+            </button>
           </div>
         </div>
 
-        {/* File List */}
-        <div className="space-y-3 mb-6">
+        {/* File List - Mobile optimized cards */}
+        <div className="space-y-3 mb-4 sm:mb-6">
           {pdfFiles.map((pdfFile, index) => (
             <div
               key={pdfFile.id}
-              className="bg-gray-700/50 rounded-lg p-4 flex items-center justify-between"
+              className="bg-gray-700/50 rounded-lg p-3 sm:p-4 border border-gray-600/50"
             >
-              <div className="flex items-center space-x-4 flex-1 min-w-0">
-                <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex-shrink-0">
+              {/* File info row */}
+              <div className="flex items-start gap-3 mb-3">
+                <div className="bg-red-600 text-white px-3 py-1.5 rounded-full text-sm font-semibold flex-shrink-0 min-w-[2.5rem] text-center">
                   {index + 1}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-white font-medium break-words">
+                <div className="flex-1 min-w-0">
+                  <div className="text-white font-medium text-sm sm:text-base break-words mb-1">
                     {pdfFile.name}
                   </div>
-                  <div className="text-gray-400 text-sm">
+                  <div className="text-gray-400 text-xs sm:text-sm">
                     {formatFileSize(pdfFile.size)}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button
+
+              {/* Action buttons - Mobile optimized */}
+              <div className="flex items-center gap-2">
+                <button
                   onClick={() => handleMoveFile(pdfFile.id, "up")}
                   disabled={index === 0}
-                  className="bg-gray-600 hover:bg-gray-700 text-white text-sm disabled:opacity-50"
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-sm py-2 px-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
                 >
-                  ↑
-                </Button>
-                <Button
+                  <ArrowUp className="w-4 h-4" />
+                  <span className="hidden sm:inline">Up</span>
+                </button>
+                <button
                   onClick={() => handleMoveFile(pdfFile.id, "down")}
                   disabled={index === pdfFiles.length - 1}
-                  className="bg-gray-600 hover:bg-gray-700 text-white text-sm disabled:opacity-50"
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-sm py-2 px-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
                 >
-                  ↓
-                </Button>
-                <Button
+                  <ArrowDown className="w-4 h-4" />
+                  <span className="hidden sm:inline">Down</span>
+                </button>
+                <button
                   onClick={() => handleRemoveFile(pdfFile.id)}
-                  className="bg-red-600 hover:bg-red-700 text-white text-sm"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1"
                 >
-                  Remove
-                </Button>
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Remove</span>
+                </button>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Download Options */}
+        {/* Download Options - Mobile optimized */}
         {showDownloadOptions && mergedPdfUrl && (
-          <div className="mt-8 p-6 bg-gray-700/50 rounded-lg">
-            <h3 className="text-xl font-bold text-white mb-4">
-              Merge Complete!
+          <div className="mt-4 sm:mt-8 p-4 sm:p-6 bg-gray-700/50 rounded-lg">
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-4">
+              Merge Complete! 🎉
             </h3>
-            <p className="text-gray-400 mb-6">
+            <p className="text-sm sm:text-base text-gray-400 mb-4 sm:mb-6">
               Your PDFs have been successfully merged. You can now view or
               download the merged document.
             </p>
-            <div className="flex space-x-4">
-              <Button
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <button
                 onClick={handleViewMerged}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
               >
-                View Merged PDF
-              </Button>
-              <Button
+                <Eye className="w-4 h-4" />
+                <span>View Merged PDF</span>
+              </button>
+              <button
                 onClick={handleDownloadMerged}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
               >
-                Download Merged PDF
-              </Button>
+                <Download className="w-4 h-4" />
+                <span>Download</span>
+              </button>
             </div>
           </div>
         )}
 
-        {/* Full-screen Preview Modal */}
+        {/* Full-screen Preview Modal - Mobile optimized */}
         {previewImage && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl max-h-[90vh] w-full mx-4">
-              <div className="flex items-center justify-between p-4 border-b">
-                <h3 className="text-lg font-semibold">Preview Merged PDF</h3>
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[9999] p-2 sm:p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-full max-h-full w-full h-full sm:max-w-4xl sm:max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between p-3 sm:p-4 border-b">
+                <h3 className="text-base sm:text-lg font-semibold">
+                  Preview Merged PDF
+                </h3>
                 <button
                   onClick={() => setPreviewImage(null)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-gray-500 hover:text-gray-700 p-1"
                 >
-                  ×
+                  <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               </div>
-              <div className="p-4">
-                <div className="w-full h-[70vh] border border-gray-300 rounded-lg overflow-hidden">
+              <div className="flex-1 p-2 sm:p-4 overflow-hidden">
+                <div className="w-full h-full border border-gray-300 rounded-lg overflow-hidden">
                   <iframe
                     src={previewImage}
                     className="w-full h-full border-0"
                     title="PDF Preview"
-                    style={{
-                      marginTop: "-40px",
-                      height: "calc(100% + 40px)",
-                    }}
                   />
                 </div>
               </div>

@@ -196,7 +196,7 @@ export const MobileSplitPdfTool: React.FC<MobileSplitPdfToolProps> = ({
       }, 200);
 
       // Call split API
-      const response = await fetch(`${getApiUrl("")}/api/split_pdf`, {
+      const response = await fetch(`${getApiUrl("")}/split_pdf`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

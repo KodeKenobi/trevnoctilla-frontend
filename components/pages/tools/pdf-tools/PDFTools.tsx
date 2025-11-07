@@ -21,6 +21,7 @@ import { MobileAddImageTool } from "./add-image/MobileAddImageTool";
 import { SplitPdfTool } from "./split-pdf/SplitPdfTool";
 import { MobileSplitPdfTool } from "./split-pdf/MobileSplitPdfTool";
 import { MergePdfsTool } from "./merge-pdfs/MergePdfsTool";
+import { MobileMergePdfsTool } from "./merge-pdfs/MobileMergePdfsTool";
 
 const toolCategories = [
   {
@@ -208,7 +209,13 @@ export default function PDFTools() {
           <SplitPdfTool {...commonProps} />
         );
       case "merge-pdfs":
-        return (
+        return isMobile ? (
+          <MobileMergePdfsTool
+            {...commonProps}
+            uploadedFiles={uploadedFiles}
+            setUploadedFiles={setUploadedFiles}
+          />
+        ) : (
           <MergePdfsTool
             {...commonProps}
             uploadedFiles={uploadedFiles}
