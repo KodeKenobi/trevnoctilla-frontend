@@ -78,9 +78,11 @@ function generatePayFastSignature(data: Record<string, string>): string {
     .join("&");
 
   // Add passphrase if provided (PayFast requires this at the end)
+  // According to PayFast docs, passphrase should be URL encoded the same way as other parameters
   let pfParamStringWithPassphrase = pfParamString;
   if (PAYFAST_CONFIG.PASSPHRASE && PAYFAST_CONFIG.PASSPHRASE.trim()) {
     const passphrase = PAYFAST_CONFIG.PASSPHRASE.trim();
+    // URL encode passphrase the same way as other parameters
     let passphraseEncoded = encodeURIComponent(passphrase);
     passphraseEncoded = passphraseEncoded.replace(/%20/g, "+");
     passphraseEncoded = passphraseEncoded.replace(
