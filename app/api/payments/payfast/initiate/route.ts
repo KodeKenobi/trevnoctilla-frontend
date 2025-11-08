@@ -57,28 +57,35 @@ function generatePayFastSignature(data: Record<string, string>): string {
 
   // Create parameter string - PayFast requires PHP's urlencode() format
   // PHP urlencode(): space -> +, special chars -> %XX (uppercase)
+  // Important: encodeURIComponent already handles most encoding, we just need to:
+  // 1. Replace %20 with + (space encoding)
+  // 2. Ensure hex codes are uppercase
   const pfParamString = Object.keys(filteredData)
     .sort()
     .map((key) => {
       const value = filteredData[key];
-      // Use encodeURIComponent then convert to PHP urlencode() format
-      // Replace %20 with +, and convert hex to uppercase
-      const encoded = encodeURIComponent(value)
-        .replace(/%20/g, "+")
-        .replace(/%([0-9A-F]{2})/g, (match, hex) => `%${hex.toUpperCase()}`);
+      // Encode the value
+      let encoded = encodeURIComponent(value);
+      // Replace %20 with + (PHP urlencode format)
+      encoded = encoded.replace(/%20/g, "+");
+      // Convert hex codes to uppercase (e.g., %3a -> %3A)
+      encoded = encoded.replace(/%([0-9a-f]{2})/gi, (match, hex) => `%${hex.toUpperCase()}`);
       return `${key}=${encoded}`;
     })
     .join("&");
 
   // Add passphrase if provided (PayFast requires this at the end)
   let pfParamStringWithPassphrase = pfParamString;
-  if (PAYFAST_CONFIG.PASSPHRASE) {
+  if (PAYFAST_CONFIG.PASSPHRASE && PAYFAST_CONFIG.PASSPHRASE.trim()) {
     const passphrase = PAYFAST_CONFIG.PASSPHRASE.trim();
-    const passphraseEncoded = encodeURIComponent(passphrase)
-      .replace(/%20/g, "+")
-      .replace(/%([0-9A-F]{2})/g, (match, hex) => `%${hex.toUpperCase()}`);
+    let passphraseEncoded = encodeURIComponent(passphrase);
+    passphraseEncoded = passphraseEncoded.replace(/%20/g, "+");
+    passphraseEncoded = passphraseEncoded.replace(/%([0-9a-f]{2})/gi, (match, hex) => `%${hex.toUpperCase()}`);
     pfParamStringWithPassphrase = `${pfParamString}&passphrase=${passphraseEncoded}`;
   }
+
+  // Debug: log the parameter string (remove in production)
+  console.log("PayFast Parameter String:", pfParamStringWithPassphrase);
 
   // Generate MD5 hash (lowercase)
   return crypto
@@ -154,19 +161,24 @@ export async function POST(request: NextRequest) {
       amount: parseFloat(amount).toFixed(2),
       item_name: item_name,
       item_description: item_description || item_name,
-      custom_str1: custom_str1 || "",
-      custom_str2: custom_str2 || "",
     };
 
-    // Only add optional fields if provided (email is optional - PayFast will collect it if missing)
-    if (body.name_first) paymentData.name_first = body.name_first;
-    if (body.name_last) paymentData.name_last = body.name_last;
-    if (body.email_address) paymentData.email_address = body.email_address;
-    if (body.cell_number) paymentData.cell_number = body.cell_number;
+    // Only add optional fields if provided (empty values cause signature mismatch)
+    if (body.name_first && body.name_first.trim()) paymentData.name_first = body.name_first.trim();
+    if (body.name_last && body.name_last.trim()) paymentData.name_last = body.name_last.trim();
+    if (body.email_address && body.email_address.trim()) paymentData.email_address = body.email_address.trim();
+    if (body.cell_number && body.cell_number.trim()) paymentData.cell_number = body.cell_number.trim();
+    if (custom_str1 && custom_str1.trim()) paymentData.custom_str1 = custom_str1.trim();
+    if (custom_str2 && custom_str2.trim()) paymentData.custom_str2 = custom_str2.trim();
 
     // Generate signature
     const signature = generatePayFastSignature(paymentData);
     paymentData.signature = signature;
+
+    // Debug logging (remove in production)
+    console.log("PayFast Payment Data:", JSON.stringify(paymentData, null, 2));
+    console.log("PayFast Signature:", signature);
+    console.log("PayFast Passphrase exists:", !!PAYFAST_CONFIG.PASSPHRASE);
 
     // Return payment data and URL
     return NextResponse.json({
