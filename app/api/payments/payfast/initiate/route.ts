@@ -46,21 +46,19 @@ function generatePayFastSignature(data: Record<string, string>): string {
   });
 
   // Create parameter string - PayFast requires specific encoding
+  // PayFast uses PHP's urlencode() which converts space to +, not %20
   const pfParamString = Object.keys(filteredData)
     .sort()
     .map((key) => {
-      // PayFast expects URL encoding where space becomes +, not %20
-      const value = filteredData[key]
-        .replace(/%/g, "%25") // Escape existing % signs first
-        .replace(/ /g, "+") // Space becomes +
-        .replace(/[!'()*]/g, (c) => encodeURIComponent(c)); // Encode special chars
-      return `${key}=${value}`;
+      // Use encodeURIComponent but replace %20 with + (PayFast format)
+      const encoded = encodeURIComponent(filteredData[key]).replace(/%20/g, "+");
+      return `${key}=${encoded}`;
     })
     .join("&");
 
   // Add passphrase if provided (PayFast requires this at the end)
   const pfParamStringWithPassphrase = PAYFAST_CONFIG.PASSPHRASE
-    ? `${pfParamString}&passphrase=${PAYFAST_CONFIG.PASSPHRASE.replace(/ /g, "+")}`
+    ? `${pfParamString}&passphrase=${encodeURIComponent(PAYFAST_CONFIG.PASSPHRASE).replace(/%20/g, "+")}`
     : pfParamString;
 
   // Generate MD5 hash
