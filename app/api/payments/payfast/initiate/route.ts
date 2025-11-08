@@ -31,13 +31,14 @@ const PAYFAST_CONFIG = {
  * PayFast signature requirements:
  * 1. Sort parameters alphabetically
  * 2. Exclude empty values and signature field
- * 3. URL encode values (space becomes +, not %20)
- * 4. Join with &
- * 5. Append passphrase if provided
- * 6. Generate MD5 hash
+ * 3. Trim whitespace from values
+ * 4. URL encode values (uppercase encoding, space becomes +)
+ * 5. Join with &
+ * 6. Append passphrase if provided
+ * 7. Generate MD5 hash (lowercase)
  */
 function generatePayFastSignature(data: Record<string, string>): string {
-  // Filter out empty values and signature field, then sort alphabetically
+  // Filter out empty values and signature field, trim whitespace
   const filteredData: Record<string, string> = {};
   Object.keys(data).forEach((key) => {
     if (
@@ -46,32 +47,40 @@ function generatePayFastSignature(data: Record<string, string>): string {
       data[key] !== null &&
       data[key] !== undefined
     ) {
-      filteredData[key] = String(data[key]);
+      // Trim whitespace as required by PayFast
+      const value = String(data[key]).trim();
+      if (value !== "") {
+        filteredData[key] = value;
+      }
     }
   });
 
-  // Create parameter string - PayFast requires specific encoding
-  // PayFast uses PHP's urlencode() which converts space to +, not %20
+  // Create parameter string - PayFast requires PHP's urlencode() format
+  // PHP urlencode(): space -> +, special chars -> %XX (uppercase)
   const pfParamString = Object.keys(filteredData)
     .sort()
     .map((key) => {
-      // Use encodeURIComponent but replace %20 with + (PayFast format)
-      const encoded = encodeURIComponent(filteredData[key]).replace(
-        /%20/g,
-        "+"
-      );
+      const value = filteredData[key];
+      // Use encodeURIComponent then convert to PHP urlencode() format
+      // Replace %20 with +, and convert hex to uppercase
+      const encoded = encodeURIComponent(value)
+        .replace(/%20/g, "+")
+        .replace(/%([0-9A-F]{2})/g, (match, hex) => `%${hex.toUpperCase()}`);
       return `${key}=${encoded}`;
     })
     .join("&");
 
   // Add passphrase if provided (PayFast requires this at the end)
-  const pfParamStringWithPassphrase = PAYFAST_CONFIG.PASSPHRASE
-    ? `${pfParamString}&passphrase=${encodeURIComponent(
-        PAYFAST_CONFIG.PASSPHRASE
-      ).replace(/%20/g, "+")}`
-    : pfParamString;
+  let pfParamStringWithPassphrase = pfParamString;
+  if (PAYFAST_CONFIG.PASSPHRASE) {
+    const passphrase = PAYFAST_CONFIG.PASSPHRASE.trim();
+    const passphraseEncoded = encodeURIComponent(passphrase)
+      .replace(/%20/g, "+")
+      .replace(/%([0-9A-F]{2})/g, (match, hex) => `%${hex.toUpperCase()}`);
+    pfParamStringWithPassphrase = `${pfParamString}&passphrase=${passphraseEncoded}`;
+  }
 
-  // Generate MD5 hash
+  // Generate MD5 hash (lowercase)
   return crypto
     .createHash("md5")
     .update(pfParamStringWithPassphrase)
