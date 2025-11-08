@@ -4,9 +4,18 @@ import crypto from "crypto";
 // PayFast configuration
 const PAYFAST_CONFIG = {
   // Use sandbox for testing, production for live
-  MERCHANT_ID: process.env.PAYFAST_MERCHANT_ID || "",
-  MERCHANT_KEY: process.env.PAYFAST_MERCHANT_KEY || "",
-  PASSPHRASE: process.env.PAYFAST_PASSPHRASE || "",
+  MERCHANT_ID:
+    process.env.PAYFAST_MERCHANT_ID ||
+    process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID ||
+    "",
+  MERCHANT_KEY:
+    process.env.PAYFAST_MERCHANT_KEY ||
+    process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY ||
+    "",
+  PASSPHRASE:
+    process.env.PAYFAST_PASSPHRASE ||
+    process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE ||
+    "",
   // Use sandbox URL for testing: https://sandbox.payfast.co.za/eng/process
   // Use production URL for live: https://www.payfast.co.za/eng/process
   PAYFAST_URL:
@@ -60,8 +69,16 @@ export async function POST(request: NextRequest) {
 
     // Validate PayFast configuration
     if (!PAYFAST_CONFIG.MERCHANT_ID || !PAYFAST_CONFIG.MERCHANT_KEY) {
+      console.error("PayFast config missing:", {
+        MERCHANT_ID: PAYFAST_CONFIG.MERCHANT_ID ? "exists" : "missing",
+        MERCHANT_KEY: PAYFAST_CONFIG.MERCHANT_KEY ? "exists" : "missing",
+        PASSPHRASE: PAYFAST_CONFIG.PASSPHRASE ? "exists" : "missing",
+      });
       return NextResponse.json(
-        { error: "PayFast configuration is missing" },
+        {
+          error:
+            "PayFast configuration is missing. Please check your .env.local file and restart the server.",
+        },
         { status: 500 }
       );
     }
@@ -116,7 +133,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("PayFast initiate payment error:", error);
     return NextResponse.json(
-      { error: "Failed to initiate payment" },
+      {
+        error: `Failed to initiate payment: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+      },
       { status: 500 }
     );
   }

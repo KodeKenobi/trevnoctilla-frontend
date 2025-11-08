@@ -3,9 +3,18 @@ import crypto from "crypto";
 
 // PayFast configuration
 const PAYFAST_CONFIG = {
-  MERCHANT_ID: process.env.PAYFAST_MERCHANT_ID || "",
-  MERCHANT_KEY: process.env.PAYFAST_MERCHANT_KEY || "",
-  PASSPHRASE: process.env.PAYFAST_PASSPHRASE || "",
+  MERCHANT_ID:
+    process.env.PAYFAST_MERCHANT_ID ||
+    process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID ||
+    "",
+  MERCHANT_KEY:
+    process.env.PAYFAST_MERCHANT_KEY ||
+    process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY ||
+    "",
+  PASSPHRASE:
+    process.env.PAYFAST_PASSPHRASE ||
+    process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE ||
+    "",
 };
 
 /**
