@@ -22,6 +22,10 @@ import { SplitPdfTool } from "./split-pdf/SplitPdfTool";
 import { MobileSplitPdfTool } from "./split-pdf/MobileSplitPdfTool";
 import { MergePdfsTool } from "./merge-pdfs/MergePdfsTool";
 import { MobileMergePdfsTool } from "./merge-pdfs/MobileMergePdfsTool";
+import { PdfToHtmlTool } from "./pdf-to-html/PdfToHtmlTool";
+import { MobilePdfToHtmlTool } from "./pdf-to-html/MobilePdfToHtmlTool";
+import { HtmlToPdfTool } from "./html-to-pdf/HtmlToPdfTool";
+import { MobileHtmlToPdfTool } from "./html-to-pdf/MobileHtmlToPdfTool";
 
 const toolCategories = [
   {
@@ -29,6 +33,8 @@ const toolCategories = [
     tools: [
       { id: "extract-text", label: "Extract Text from PDF" },
       { id: "extract-images", label: "Extract Images from PDF" },
+      { id: "pdf-to-html", label: "Convert PDF to HTML" },
+      { id: "html-to-pdf", label: "Convert HTML to PDF" },
     ],
   },
   {
@@ -178,6 +184,18 @@ export default function PDFTools() {
         return <ExtractTextTool {...commonProps} />;
       case "extract-images":
         return <ExtractImagesTool {...commonProps} />;
+      case "pdf-to-html":
+        return isMobile ? (
+          <MobilePdfToHtmlTool {...commonProps} />
+        ) : (
+          <PdfToHtmlTool {...commonProps} />
+        );
+      case "html-to-pdf":
+        return isMobile ? (
+          <MobileHtmlToPdfTool {...commonProps} />
+        ) : (
+          <HtmlToPdfTool {...commonProps} />
+        );
       case "edit-pdf":
         return isMobile ? (
           <MobileEditPdfTool {...commonProps} />

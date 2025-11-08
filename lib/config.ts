@@ -28,6 +28,7 @@ export const API_CONFIG = {
       PDF_WATERMARK: "/convert/pdf-watermark",
       PDF_EXTRACT_TEXT: "/convert/pdf-extract-text",
       PDF_EXTRACT_IMAGES: "/convert/pdf-extract-images",
+      PDF_TO_HTML: "/convert_pdf_to_word",
       VIDEO_CONVERT: "/convert/video",
       AUDIO_CONVERT: "/convert/audio",
       IMAGE_CONVERT: "/convert/image",

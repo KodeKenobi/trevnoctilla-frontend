@@ -1,16 +1,20 @@
-const path = require('path');
+const path = require("path");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["localhost", "web-production-737b.up.railway.app", "web-production-ef253.up.railway.app"],
+    domains: [
+      "localhost",
+      "web-production-737b.up.railway.app",
+      "web-production-ef253.up.railway.app",
+    ],
     unoptimized: true, // Disable image optimization for static files
   },
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.resolve(__dirname),
-      '@/lib': path.resolve(__dirname, 'lib'),
+      "@": path.resolve(__dirname),
+      "@/lib": path.resolve(__dirname, "lib"),
     };
     return config;
   },
@@ -48,6 +52,10 @@ const nextConfig = {
         destination: `${backendUrl}/download_converted/:path*`,
       },
       {
+        source: "/preview_html/:path*",
+        destination: `${backendUrl}/preview_html/:path*`,
+      },
+      {
         source: "/save_html/:path*",
         destination: `${backendUrl}/save_html/:path*`,
       },
@@ -60,8 +68,8 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/ads.txt',
-        destination: 'https://srv.adstxtmanager.com/19390/trevnoctilla.com',
+        source: "/ads.txt",
+        destination: "https://srv.adstxtmanager.com/19390/trevnoctilla.com",
         permanent: true,
       },
     ];

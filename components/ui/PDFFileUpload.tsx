@@ -7,6 +7,8 @@ interface PDFFileUploadProps {
   description: string;
   onFileSelect: (file: File) => void;
   accept?: string;
+  buttonText?: string;
+  dragText?: string;
 }
 
 export const PDFFileUpload: React.FC<PDFFileUploadProps> = ({
@@ -14,6 +16,8 @@ export const PDFFileUpload: React.FC<PDFFileUploadProps> = ({
   description,
   onFileSelect,
   accept = ".pdf",
+  buttonText = "Choose File",
+  dragText = "Drag and drop your file here, or click to browse",
 }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -51,7 +55,7 @@ export const PDFFileUpload: React.FC<PDFFileUploadProps> = ({
               htmlFor="file-upload"
               className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
             >
-              Choose PDF File
+              {buttonText}
             </label>
             <input
               id="file-upload"
@@ -61,9 +65,7 @@ export const PDFFileUpload: React.FC<PDFFileUploadProps> = ({
               className="hidden"
             />
           </div>
-          <p className="text-gray-400 text-sm">
-            Drag and drop your PDF here, or click to browse
-          </p>
+          <p className="text-gray-400 text-sm">{dragText}</p>
         </div>
       </div>
     </div>
