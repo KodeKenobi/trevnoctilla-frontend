@@ -55,41 +55,25 @@ function generatePayFastSignature(data: Record<string, string>): string {
     }
   });
 
-  // Create parameter string - PayFast requires PHP's urlencode() format
-  // PHP urlencode(): space -> +, special chars -> %XX (uppercase)
-  // Important: encodeURIComponent already handles most encoding, we just need to:
-  // 1. Replace %20 with + (space encoding)
-  // 2. Ensure hex codes are uppercase
+  // Create parameter string for signature calculation
+  // PayFast expects the signature to be calculated on RAW (unencoded) values
+  // The values will be URL-encoded when submitted via form, but signature uses raw values
   const pfParamString = Object.keys(filteredData)
     .sort()
     .map((key) => {
       const value = filteredData[key];
-      // Encode the value
-      let encoded = encodeURIComponent(value);
-      // Replace %20 with + (PHP urlencode format)
-      encoded = encoded.replace(/%20/g, "+");
-      // Convert hex codes to uppercase (e.g., %3a -> %3A)
-      encoded = encoded.replace(
-        /%([0-9a-f]{2})/gi,
-        (match, hex) => `%${hex.toUpperCase()}`
-      );
-      return `${key}=${encoded}`;
+      // Use RAW value for signature calculation (no URL encoding)
+      return `${key}=${value}`;
     })
     .join("&");
 
   // Add passphrase if provided (PayFast requires this at the end)
-  // PayFast expects passphrase to be URL encoded in the signature calculation
+  // PayFast expects passphrase to be appended WITHOUT URL encoding
   let pfParamStringWithPassphrase = pfParamString;
   if (PAYFAST_CONFIG.PASSPHRASE && PAYFAST_CONFIG.PASSPHRASE.trim()) {
     const passphrase = PAYFAST_CONFIG.PASSPHRASE.trim();
-    // URL encode passphrase for signature calculation (PHP urlencode format)
-    let passphraseEncoded = encodeURIComponent(passphrase);
-    passphraseEncoded = passphraseEncoded.replace(/%20/g, "+");
-    passphraseEncoded = passphraseEncoded.replace(
-      /%([0-9a-f]{2})/gi,
-      (match, hex) => `%${hex.toUpperCase()}`
-    );
-    pfParamStringWithPassphrase = `${pfParamString}&passphrase=${passphraseEncoded}`;
+    // Append passphrase as-is (NOT URL encoded) - this is PayFast's requirement
+    pfParamStringWithPassphrase = `${pfParamString}&passphrase=${passphrase}`;
   }
 
   // Debug: log the parameter string and signature components
