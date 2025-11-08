@@ -5,7 +5,7 @@
   "//": "Force rebuild to clear cache",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "mkdir -p .next/cache || true",
+    "prebuild": "mkdir -p .next/cache && touch .next/cache/.gitkeep && chmod -R 755 .next || true",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
