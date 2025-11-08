@@ -28,22 +28,39 @@ const PAYFAST_CONFIG = {
 
 /**
  * Generate PayFast signature for payment data
+ * PayFast signature requirements:
+ * 1. Sort parameters alphabetically
+ * 2. Exclude empty values and signature field
+ * 3. URL encode values (space becomes +, not %20)
+ * 4. Join with &
+ * 5. Append passphrase if provided
+ * 6. Generate MD5 hash
  */
 function generatePayFastSignature(data: Record<string, string>): string {
-  // Create parameter string
-  const pfParamString = Object.keys(data)
-    .filter((key) => data[key] !== "" && key !== "signature")
+  // Filter out empty values and signature field, then sort alphabetically
+  const filteredData: Record<string, string> = {};
+  Object.keys(data).forEach((key) => {
+    if (key !== "signature" && data[key] !== "" && data[key] !== null && data[key] !== undefined) {
+      filteredData[key] = String(data[key]);
+    }
+  });
+
+  // Create parameter string - PayFast requires specific encoding
+  const pfParamString = Object.keys(filteredData)
     .sort()
-    .map(
-      (key) => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`
-    )
+    .map((key) => {
+      // PayFast expects URL encoding where space becomes +, not %20
+      const value = filteredData[key]
+        .replace(/%/g, "%25") // Escape existing % signs first
+        .replace(/ /g, "+") // Space becomes +
+        .replace(/[!'()*]/g, (c) => encodeURIComponent(c)); // Encode special chars
+      return `${key}=${value}`;
+    })
     .join("&");
 
-  // Add passphrase if provided
+  // Add passphrase if provided (PayFast requires this at the end)
   const pfParamStringWithPassphrase = PAYFAST_CONFIG.PASSPHRASE
-    ? `${pfParamString}&passphrase=${encodeURIComponent(
-        PAYFAST_CONFIG.PASSPHRASE
-      )}`
+    ? `${pfParamString}&passphrase=${PAYFAST_CONFIG.PASSPHRASE.replace(/ /g, "+")}`
     : pfParamString;
 
   // Generate MD5 hash
