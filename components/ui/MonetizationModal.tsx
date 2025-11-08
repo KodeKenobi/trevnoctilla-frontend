@@ -156,28 +156,87 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
       const data = await response.json();
 
-      // Create form and submit to PayFast
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = data.payment_url;
-      form.enctype = "application/x-www-form-urlencoded";
-      form.acceptCharset = "UTF-8";
-
-      // Add all payment data as hidden inputs
+      // TEMPORARY: Use fetch to capture PayFast response for debugging
+      const formData = new FormData();
       Object.keys(data.payment_data).forEach((key) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = String(data.payment_data[key]);
-        form.appendChild(input);
+        formData.append(key, String(data.payment_data[key]));
       });
 
-      document.body.appendChild(form);
-      form.submit();
+      console.log("=== PayFast Form Data Being Sent ===");
+      console.log("URL:", data.payment_url);
+      console.log("Data:", Object.fromEntries(formData.entries()));
 
-      // Note: onComplete will be called after successful payment via callback
-      // For now, we'll close the modal and let the payment page handle completion
-      onClose();
+      try {
+        const payfastResponse = await fetch(data.payment_url, {
+          method: "POST",
+          body: formData,
+          redirect: "manual", // Don't follow redirects
+        });
+
+        const responseText = await payfastResponse.text();
+        console.log("=== PayFast Response ===");
+        console.log("Status:", payfastResponse.status);
+        console.log("Response:", responseText);
+
+        // Extract error message from HTML if present
+        const errorMatch = responseText.match(/<h[1-6][^>]*>([^<]+)<\/h[1-6]>/i) || 
+                          responseText.match(/Error[:\s]+([^<\n]+)/i) ||
+                          responseText.match(/<p[^>]*>([^<]+)<\/p>/i);
+        
+        if (errorMatch) {
+          setPaymentError(`PayFast Error: ${errorMatch[1]}`);
+          setIsProcessingPayment(false);
+          return;
+        }
+
+        // If we get here and it's not a redirect, show the response
+        if (!payfastResponse.ok && payfastResponse.status !== 302) {
+          setPaymentError(`PayFast returned status ${payfastResponse.status}. Check console for details.`);
+          setIsProcessingPayment(false);
+          return;
+        }
+
+        // If redirect (302), submit form normally
+        if (payfastResponse.status === 302 || payfastResponse.ok) {
+          const form = document.createElement("form");
+          form.method = "POST";
+          form.action = data.payment_url;
+          form.enctype = "application/x-www-form-urlencoded";
+          form.acceptCharset = "UTF-8";
+
+          Object.keys(data.payment_data).forEach((key) => {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = key;
+            input.value = String(data.payment_data[key]);
+            form.appendChild(input);
+          });
+
+          document.body.appendChild(form);
+          form.submit();
+          onClose();
+        }
+      } catch (fetchError) {
+        console.error("PayFast fetch error:", fetchError);
+        // Fallback to form submission
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = data.payment_url;
+        form.enctype = "application/x-www-form-urlencoded";
+        form.acceptCharset = "UTF-8";
+
+        Object.keys(data.payment_data).forEach((key) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(data.payment_data[key]);
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        onClose();
+      }
     } catch (error) {
       console.error("Payment initiation error:", error);
       setPaymentError(
