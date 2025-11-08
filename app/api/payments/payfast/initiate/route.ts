@@ -40,7 +40,12 @@ function generatePayFastSignature(data: Record<string, string>): string {
   // Filter out empty values and signature field, then sort alphabetically
   const filteredData: Record<string, string> = {};
   Object.keys(data).forEach((key) => {
-    if (key !== "signature" && data[key] !== "" && data[key] !== null && data[key] !== undefined) {
+    if (
+      key !== "signature" &&
+      data[key] !== "" &&
+      data[key] !== null &&
+      data[key] !== undefined
+    ) {
       filteredData[key] = String(data[key]);
     }
   });
@@ -51,14 +56,19 @@ function generatePayFastSignature(data: Record<string, string>): string {
     .sort()
     .map((key) => {
       // Use encodeURIComponent but replace %20 with + (PayFast format)
-      const encoded = encodeURIComponent(filteredData[key]).replace(/%20/g, "+");
+      const encoded = encodeURIComponent(filteredData[key]).replace(
+        /%20/g,
+        "+"
+      );
       return `${key}=${encoded}`;
     })
     .join("&");
 
   // Add passphrase if provided (PayFast requires this at the end)
   const pfParamStringWithPassphrase = PAYFAST_CONFIG.PASSPHRASE
-    ? `${pfParamString}&passphrase=${encodeURIComponent(PAYFAST_CONFIG.PASSPHRASE).replace(/%20/g, "+")}`
+    ? `${pfParamString}&passphrase=${encodeURIComponent(
+        PAYFAST_CONFIG.PASSPHRASE
+      ).replace(/%20/g, "+")}`
     : pfParamString;
 
   // Generate MD5 hash

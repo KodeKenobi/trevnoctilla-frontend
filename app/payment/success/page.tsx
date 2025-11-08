@@ -139,14 +139,16 @@ function PaymentSuccessContent() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a]">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-[#8b5cf6] animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a]">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-[#8b5cf6] animate-spin mx-auto mb-4" />
+            <p className="text-gray-400">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <PaymentSuccessContent />
     </Suspense>
   );
