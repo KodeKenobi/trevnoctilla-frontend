@@ -4,8 +4,34 @@ export const API_CONFIG = {
   BASE_URL:
     process.env.NEXT_PUBLIC_API_BASE_URL ||
     // TEMPORARY: Using localhost for testing zoom fix. Change back to Railway URL when done.
-    "http://localhost:5000", // Change back to "https://web-production-737b.up.railway.app" after testing
-  // "https://web-production-737b.up.railway.app",
+    // "http://localhost:5000", // Change back to "https://web-production-737b.up.railway.app" after testing
+    "https://web-production-737b.up.railway.app",
+
+  // PayFast Configuration
+  PAYFAST: {
+    MERCHANT_ID: process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID || "",
+    MERCHANT_KEY: process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY || "",
+    // Use sandbox for testing: https://sandbox.payfast.co.za/eng/process
+    // Use production for live: https://www.payfast.co.za/eng/process
+    PAYFAST_URL:
+      process.env.NEXT_PUBLIC_PAYFAST_URL ||
+      "https://sandbox.payfast.co.za/eng/process",
+    RETURN_URL:
+      process.env.NEXT_PUBLIC_PAYFAST_RETURN_URL ||
+      `${
+        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+      }/payment/success`,
+    CANCEL_URL:
+      process.env.NEXT_PUBLIC_PAYFAST_CANCEL_URL ||
+      `${
+        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+      }/payment/cancel`,
+    NOTIFY_URL:
+      process.env.NEXT_PUBLIC_PAYFAST_NOTIFY_URL ||
+      `${
+        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+      }/api/payments/payfast/notify`,
+  },
 
   // API endpoints
   ENDPOINTS: {

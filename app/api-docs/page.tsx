@@ -161,7 +161,8 @@ export default function ApiDocsPage() {
     },
     pdf_to_html: {
       title: "PDF to HTML Conversion",
-      description: "Convert PDF documents to HTML while preserving exact layout",
+      description:
+        "Convert PDF documents to HTML while preserving exact layout",
       endpoint: "POST /convert_pdf_to_html",
       code: `curl -X POST "https://web-production-737b.up.railway.app/convert_pdf_to_html" \\
   -F "pdf=@document.pdf" \\
@@ -375,12 +376,20 @@ export default function ApiDocsPage() {
                   <p className="text-gray-400 mt-1">Extract images from PDFs</p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /convert_pdf_to_html</code>
-                  <p className="text-gray-400 mt-1">Convert PDF to HTML with layout preservation</p>
+                  <code className="text-cyan-400">
+                    POST /convert_pdf_to_html
+                  </code>
+                  <p className="text-gray-400 mt-1">
+                    Convert PDF to HTML with layout preservation
+                  </p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /convert_html_to_pdf</code>
-                  <p className="text-gray-400 mt-1">Convert HTML to PDF with 100% accuracy</p>
+                  <code className="text-cyan-400">
+                    POST /convert_html_to_pdf
+                  </code>
+                  <p className="text-gray-400 mt-1">
+                    Convert HTML to PDF with 100% accuracy
+                  </p>
                 </div>
               </div>
             </div>
@@ -664,7 +673,9 @@ export default function ApiDocsPage() {
                   <td className="py-4 text-gray-300">
                     Convert PDF to HTML with exact layout preservation
                   </td>
-                  <td className="py-4 text-gray-400">pdf (file), method (optional: pymupdf/pdf2htmlex)</td>
+                  <td className="py-4 text-gray-400">
+                    pdf (file), method (optional: pymupdf/pdf2htmlex)
+                  </td>
                 </tr>
                 <tr className="border-b border-gray-800">
                   <td className="py-4">
@@ -678,7 +689,9 @@ export default function ApiDocsPage() {
                   <td className="py-4 text-gray-300">
                     Convert HTML to PDF with 100% layout accuracy
                   </td>
-                  <td className="py-4 text-gray-400">html or file (HTML file)</td>
+                  <td className="py-4 text-gray-400">
+                    html or file (HTML file)
+                  </td>
                 </tr>
                 <tr className="border-b border-gray-800">
                   <td className="py-4">

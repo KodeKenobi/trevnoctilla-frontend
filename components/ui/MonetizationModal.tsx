@@ -2,6 +2,7 @@
 
 import React from "react";
 import { X, Play, CreditCard } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
 
 interface MonetizationModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   title = "Continue with Ad or Payment",
   message = "Choose how you'd like to proceed",
 }) => {
+  const { user } = useUser();
   const [adOpened, setAdOpened] = React.useState(false);
   const [hideWhileWaiting, setHideWhileWaiting] = React.useState(false);
   const waitingReturnRef = React.useRef(false);
@@ -42,7 +44,11 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       if (document.visibilityState === "hidden") {
         leftOnceRef.current = true;
       }
-      if (document.visibilityState === "visible" && waitingReturnRef.current && leftOnceRef.current) {
+      if (
+        document.visibilityState === "visible" &&
+        waitingReturnRef.current &&
+        leftOnceRef.current
+      ) {
         waitingReturnRef.current = false;
         leftOnceRef.current = false;
         onComplete();
@@ -99,11 +105,70 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
     setNeedsManualOpen(false);
   };
 
-  const handlePay = () => {
-    // TODO: Integrate payment processing (Stripe, PayPal, etc.)
-    // For now, just complete
-    onComplete();
-    onClose();
+  const [isProcessingPayment, setIsProcessingPayment] = React.useState(false);
+  const [paymentError, setPaymentError] = React.useState<string | null>(null);
+
+  const handlePay = async () => {
+    setIsProcessingPayment(true);
+    setPaymentError(null);
+
+    try {
+      // Get user info from context
+      const userEmail = user?.email || "";
+      // User interface doesn't have name field, so we'll use email prefix or empty
+      const userName = "";
+
+      // Initiate PayFast payment
+      const response = await fetch("/api/payments/payfast/initiate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: "1.00", // $1 payment
+          item_name: "Premium Access",
+          item_description: "Unlock premium features and remove ads",
+          email_address: userEmail,
+          name_first: userName?.split(" ")[0] || "",
+          name_last: userName?.split(" ").slice(1).join(" ") || "",
+          custom_str1: `payment_${Date.now()}`, // Track payment ID
+          custom_str2: window.location.href, // Track where payment was initiated from
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to initiate payment");
+      }
+
+      const data = await response.json();
+
+      // Create form and submit to PayFast
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = data.payment_url;
+
+      // Add all payment data as hidden inputs
+      Object.keys(data.payment_data).forEach((key) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = data.payment_data[key];
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+
+      // Note: onComplete will be called after successful payment via callback
+      // For now, we'll close the modal and let the payment page handle completion
+      onClose();
+    } catch (error) {
+      console.error("Payment initiation error:", error);
+      setPaymentError(
+        error instanceof Error ? error.message : "Failed to process payment"
+      );
+      setIsProcessingPayment(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -176,30 +241,56 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                 {/* Pay Option */}
                 <button
                   onClick={handlePay}
-                  className="group relative p-6 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:scale-105"
+                  disabled={isProcessingPayment}
+                  className="group relative p-6 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   <div className="flex flex-col items-center space-y-3">
                     <div className="relative">
                       <div className="absolute inset-0 bg-white rounded-full blur-lg opacity-30"></div>
                       <div className="relative bg-white/10 p-4 rounded-full">
-                        <CreditCard className="w-8 h-8 text-white" />
+                        {isProcessingPayment ? (
+                          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <CreditCard className="w-8 h-8 text-white" />
+                        )}
                       </div>
                     </div>
                     <div className="text-center">
                       <h4 className="text-lg font-semibold text-white mb-1">
-                        Pay $1
+                        {isProcessingPayment ? "Processing..." : "Pay $1"}
                       </h4>
                       <p className="text-sm text-white/80">
-                        Instant access, no ads
+                        {isProcessingPayment
+                          ? "Redirecting to payment..."
+                          : "Instant access, no ads"}
                       </p>
                     </div>
                   </div>
                 </button>
               </div>
+              {paymentError && (
+                <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-center">
+                  <p className="text-red-400 font-semibold mb-2">
+                    Payment Error
+                  </p>
+                  <p className="text-red-300 text-sm">{paymentError}</p>
+                  <button
+                    onClick={() => setPaymentError(null)}
+                    className="mt-3 inline-block px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-all"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              )}
               {needsManualOpen && (
                 <div className="rounded-lg border border-[#2a2a2a] bg-[#111] p-4 text-center">
-                  <p className="text-white font-semibold mb-2">Your browser blocked the ad popunder</p>
-                  <p className="text-gray-400 text-sm mb-4">Click below to open the ad in a new tab. Return here afterwards to continue your download.</p>
+                  <p className="text-white font-semibold mb-2">
+                    Your browser blocked the ad popunder
+                  </p>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Click below to open the ad in a new tab. Return here
+                    afterwards to continue your download.
+                  </p>
                   <button
                     onClick={handleManualOpenClick}
                     className="inline-block px-5 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"

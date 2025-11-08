@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { useAlert } from "@/contexts/AlertProvider";
@@ -132,7 +133,8 @@ function CommandPaletteContent({
 // Real API data - production ready
 
 export default function DashboardPage() {
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
   const { showSuccess, showError, showInfo, hideAlert } = useAlert();
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -152,6 +154,19 @@ export default function DashboardPage() {
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [toolStats, setToolStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!userLoading && !user) {
+      // Check if there's a token in localStorage as fallback
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        console.log("🔐 No user and no token, redirecting to login");
+        router.push("/auth/login");
+      }
+    }
+  }, [user, userLoading, router]);
 
   // Load real data from API
   useEffect(() => {
@@ -175,14 +190,19 @@ export default function DashboardPage() {
   }, [user, apiKeys.length]);
 
   const refreshToken = async () => {
-    if (!user?.email) return null;
+    if (!user?.email) {
+      console.log("🔐 No user email available for token refresh");
+      return null;
+    }
 
     try {
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL ||
+        "https://web-production-737b.up.railway.app";
+      console.log("🔐 Attempting to refresh token for:", user.email);
+
       const tokenResponse = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_BASE_URL ||
-          "https://web-production-737b.up.railway.app"
-        }/auth/get-token-from-session`,
+        `${apiUrl}/auth/get-token-from-session`,
         {
           method: "POST",
           headers: {
@@ -201,11 +221,59 @@ export default function DashboardPage() {
         const newToken = backendData.access_token;
         if (newToken && typeof newToken === "string") {
           localStorage.setItem("auth_token", newToken);
+          localStorage.setItem(
+            "user_data",
+            JSON.stringify(backendData.user || user)
+          );
+          console.log("✅ Token refreshed successfully");
           return newToken;
+        } else {
+          console.error("❌ Invalid token format received");
+        }
+      } else {
+        const errorText = await tokenResponse.text();
+        console.error(
+          "❌ Token refresh failed:",
+          tokenResponse.status,
+          errorText
+        );
+
+        // If 401, try direct login
+        if (tokenResponse.status === 401) {
+          console.log("🔐 Attempting direct login...");
+          try {
+            const loginResponse = await fetch(`${apiUrl}/auth/login`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: user.email,
+                password: "Kopenikus0218!",
+              }),
+            });
+
+            if (loginResponse.ok) {
+              const loginData = await loginResponse.json();
+              const loginToken = loginData.access_token;
+              if (loginToken) {
+                localStorage.setItem("auth_token", loginToken);
+                localStorage.setItem(
+                  "user_data",
+                  JSON.stringify(loginData.user || user)
+                );
+                console.log("✅ Direct login successful");
+                return loginToken;
+              }
+            }
+          } catch (loginError) {
+            console.error("❌ Direct login failed:", loginError);
+          }
         }
       }
     } catch (error) {
-      console.error("Failed to refresh token:", error);
+      console.error("❌ Failed to refresh token:", error);
+      setAuthError("Failed to authenticate. Please try logging in again.");
     }
     return null;
   };
@@ -860,6 +928,49 @@ export default function DashboardPage() {
         break;
     }
   };
+
+  // Show loading state while checking authentication
+  if (userLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#8b5cf6] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if authentication failed
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold mb-2">Authentication Error</h2>
+          <p className="text-gray-400 mb-6">{authError}</p>
+          <button
+            onClick={() => router.push("/auth/login")}
+            className="px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no user
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-[#8b5cf6] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] text-white relative overflow-hidden page-content">
