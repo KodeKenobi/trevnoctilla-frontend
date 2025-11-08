@@ -92,8 +92,11 @@ function generatePayFastSignature(data: Record<string, string>): string {
     pfParamStringWithPassphrase = `${pfParamString}&passphrase=${passphraseEncoded}`;
   }
 
-  // Debug: log the parameter string (remove in production)
-  console.log("PayFast Parameter String:", pfParamStringWithPassphrase);
+  // Debug: log the parameter string and signature components
+  console.log("=== PayFast Signature Debug ===");
+  console.log("Parameter String (for signature):", pfParamStringWithPassphrase);
+  console.log("Passphrase used:", PAYFAST_CONFIG.PASSPHRASE ? "YES" : "NO");
+  console.log("Passphrase length:", PAYFAST_CONFIG.PASSPHRASE?.length || 0);
 
   // Generate MD5 hash (lowercase)
   return crypto
