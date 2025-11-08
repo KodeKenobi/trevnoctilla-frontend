@@ -107,14 +107,29 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
   const [isProcessingPayment, setIsProcessingPayment] = React.useState(false);
   const [paymentError, setPaymentError] = React.useState<string | null>(null);
+  const [paymentEmail, setPaymentEmail] = React.useState("");
+
+  // Initialize payment email with user email, but allow override
+  React.useEffect(() => {
+    if (user?.email && !paymentEmail) {
+      setPaymentEmail(user.email);
+    }
+  }, [user?.email, paymentEmail]);
 
   const handlePay = async () => {
     setIsProcessingPayment(true);
     setPaymentError(null);
 
+    // Validate email
+    if (!paymentEmail || !paymentEmail.includes("@")) {
+      setPaymentError("Please enter a valid email address for payment");
+      setIsProcessingPayment(false);
+      return;
+    }
+
     try {
-      // Get user info from context
-      const userEmail = user?.email || "";
+      // Use the payment email entered by user (or fallback to user email)
+      const userEmail = paymentEmail || user?.email || "";
       // User interface doesn't have name field, so we'll use email prefix or empty
       const userName = "";
 
@@ -137,7 +152,13 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to initiate payment");
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage =
+          errorData.error ||
+          (response.status === 400
+            ? "Payment failed. Please use a different email address than your merchant account."
+            : "Failed to initiate payment");
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -239,34 +260,56 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                 </button>
 
                 {/* Pay Option */}
-                <button
-                  onClick={handlePay}
-                  disabled={isProcessingPayment}
-                  className="group relative p-6 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                >
-                  <div className="flex flex-col items-center space-y-3">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-white rounded-full blur-lg opacity-30"></div>
-                      <div className="relative bg-white/10 p-4 rounded-full">
-                        {isProcessingPayment ? (
-                          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          <CreditCard className="w-8 h-8 text-white" />
-                        )}
+                <div className="space-y-3">
+                  <div className="mb-3">
+                    <label
+                      htmlFor="payment-email"
+                      className="block text-sm font-medium text-gray-300 mb-2"
+                    >
+                      Payment Email
+                    </label>
+                    <input
+                      id="payment-email"
+                      type="email"
+                      value={paymentEmail}
+                      onChange={(e) => setPaymentEmail(e.target.value)}
+                      placeholder="Enter your payment email"
+                      className="w-full px-4 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#8b5cf6] transition-colors"
+                      disabled={isProcessingPayment}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Use a different email than your merchant account
+                    </p>
+                  </div>
+                  <button
+                    onClick={handlePay}
+                    disabled={isProcessingPayment || !paymentEmail}
+                    className="w-full group relative p-6 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  >
+                    <div className="flex flex-col items-center space-y-3">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-white rounded-full blur-lg opacity-30"></div>
+                        <div className="relative bg-white/10 p-4 rounded-full">
+                          {isProcessingPayment ? (
+                            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <CreditCard className="w-8 h-8 text-white" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <h4 className="text-lg font-semibold text-white mb-1">
+                          {isProcessingPayment ? "Processing..." : "Pay $1"}
+                        </h4>
+                        <p className="text-sm text-white/80">
+                          {isProcessingPayment
+                            ? "Redirecting to payment..."
+                            : "Instant access, no ads"}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-center">
-                      <h4 className="text-lg font-semibold text-white mb-1">
-                        {isProcessingPayment ? "Processing..." : "Pay $1"}
-                      </h4>
-                      <p className="text-sm text-white/80">
-                        {isProcessingPayment
-                          ? "Redirecting to payment..."
-                          : "Instant access, no ads"}
-                      </p>
-                    </div>
-                  </div>
-                </button>
+                  </button>
+                </div>
               </div>
               {paymentError && (
                 <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-center">
