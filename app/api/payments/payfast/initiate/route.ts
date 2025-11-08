@@ -73,11 +73,17 @@ export async function POST(request: NextRequest) {
         MERCHANT_ID: PAYFAST_CONFIG.MERCHANT_ID ? "exists" : "missing",
         MERCHANT_KEY: PAYFAST_CONFIG.MERCHANT_KEY ? "exists" : "missing",
         PASSPHRASE: PAYFAST_CONFIG.PASSPHRASE ? "exists" : "missing",
+        env_check: {
+          PAYFAST_MERCHANT_ID: !!process.env.PAYFAST_MERCHANT_ID,
+          NEXT_PUBLIC_PAYFAST_MERCHANT_ID: !!process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID,
+          PAYFAST_MERCHANT_KEY: !!process.env.PAYFAST_MERCHANT_KEY,
+          NEXT_PUBLIC_PAYFAST_MERCHANT_KEY: !!process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY,
+        },
       });
       return NextResponse.json(
         {
           error:
-            "PayFast configuration is missing. Please check your .env.local file and restart the server.",
+            "PayFast configuration is missing. Please set PAYFAST_MERCHANT_ID, PAYFAST_MERCHANT_KEY, and PAYFAST_PASSPHRASE environment variables in your hosting platform.",
         },
         { status: 500 }
       );
