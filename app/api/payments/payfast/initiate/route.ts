@@ -78,12 +78,18 @@ function generatePayFastSignature(data: Record<string, string>): string {
     .join("&");
 
   // Add passphrase if provided (PayFast requires this at the end)
-  // PayFast expects passphrase to be appended WITHOUT URL encoding
+  // PayFast expects passphrase to be URL encoded in the signature calculation
   let pfParamStringWithPassphrase = pfParamString;
   if (PAYFAST_CONFIG.PASSPHRASE && PAYFAST_CONFIG.PASSPHRASE.trim()) {
     const passphrase = PAYFAST_CONFIG.PASSPHRASE.trim();
-    // Append passphrase WITHOUT encoding (PayFast requirement)
-    pfParamStringWithPassphrase = `${pfParamString}&passphrase=${passphrase}`;
+    // URL encode passphrase for signature calculation (PHP urlencode format)
+    let passphraseEncoded = encodeURIComponent(passphrase);
+    passphraseEncoded = passphraseEncoded.replace(/%20/g, "+");
+    passphraseEncoded = passphraseEncoded.replace(
+      /%([0-9a-f]{2})/gi,
+      (match, hex) => `%${hex.toUpperCase()}`
+    );
+    pfParamStringWithPassphrase = `${pfParamString}&passphrase=${passphraseEncoded}`;
   }
 
   // Debug: log the parameter string and signature components
