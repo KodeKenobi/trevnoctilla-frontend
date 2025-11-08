@@ -55,15 +55,28 @@ function generatePayFastSignature(data: Record<string, string>): string {
     }
   });
 
-  // Create parameter string for signature calculation
-  // PayFast expects the signature to be calculated on RAW (unencoded) values
-  // The values will be URL-encoded when submitted via form, but signature uses raw values
+  // Create parameter string - PayFast requires PHP's urlencode() format
+  // PHP urlencode() is different from JavaScript encodeURIComponent()
+  // Key differences: space -> +, and some special chars encoded differently
+  function phpUrlEncode(str: string): string {
+    return encodeURIComponent(str)
+      .replace(/%20/g, "+") // Space to +
+      .replace(/'/g, "%27") // Single quote
+      .replace(/\(/g, "%28") // Left paren
+      .replace(/\)/g, "%29") // Right paren
+      .replace(/\*/g, "%2A") // Asterisk
+      .replace(/!/g, "%21") // Exclamation
+      .replace(/~/g, "%7E") // Tilde
+      .replace(/%([0-9a-f]{2})/gi, (match, hex) => `%${hex.toUpperCase()}`); // Uppercase hex
+  }
+
   const pfParamString = Object.keys(filteredData)
     .sort()
     .map((key) => {
       const value = filteredData[key];
-      // Use RAW value for signature calculation (no URL encoding)
-      return `${key}=${value}`;
+      // URL encode using PHP urlencode() format
+      const encoded = phpUrlEncode(value);
+      return `${key}=${encoded}`;
     })
     .join("&");
 
