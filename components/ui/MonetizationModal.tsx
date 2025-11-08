@@ -107,29 +107,21 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
   const [isProcessingPayment, setIsProcessingPayment] = React.useState(false);
   const [paymentError, setPaymentError] = React.useState<string | null>(null);
-  const [paymentEmail, setPaymentEmail] = React.useState("");
-
-  // Initialize payment email with user email, but allow override
-  React.useEffect(() => {
-    if (user?.email && !paymentEmail) {
-      setPaymentEmail(user.email);
-    }
-  }, [user?.email, paymentEmail]);
+  const [showEmailField, setShowEmailField] = React.useState(false);
 
   const handlePay = async () => {
     setIsProcessingPayment(true);
     setPaymentError(null);
 
-    // Validate email
-    if (!paymentEmail || !paymentEmail.includes("@")) {
-      setPaymentError("Please enter a valid email address for payment");
-      setIsProcessingPayment(false);
-      return;
-    }
-
     try {
-      // Use the payment email entered by user (or fallback to user email)
-      const userEmail = paymentEmail || user?.email || "";
+      // Use user's email from their account (PayFast requires this)
+      const userEmail = user?.email || "";
+      
+      if (!userEmail) {
+        setPaymentError("Please log in to make a payment");
+        setIsProcessingPayment(false);
+        return;
+      }
       // User interface doesn't have name field, so we'll use email prefix or empty
       const userName = "";
 
@@ -153,12 +145,17 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMessage =
-          errorData.error ||
-          (response.status === 400
-            ? "Payment failed. Please use a different email address than your merchant account."
-            : "Failed to initiate payment");
-        throw new Error(errorMessage);
+        const errorMessage = errorData.error || "Failed to initiate payment";
+        
+        // If it's a same-account error, show email field to allow change
+        if (response.status === 400 && errorMessage.includes("same account")) {
+          setShowEmailField(true);
+          setPaymentError("Please use a different email address than your merchant account");
+        } else {
+          setPaymentError(errorMessage);
+        }
+        setIsProcessingPayment(false);
+        return;
       }
 
       const data = await response.json();
@@ -182,6 +179,61 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
       // Note: onComplete will be called after successful payment via callback
       // For now, we'll close the modal and let the payment page handle completion
+      onClose();
+    } catch (error) {
+      console.error("Payment initiation error:", error);
+      setPaymentError(
+        error instanceof Error ? error.message : "Failed to process payment"
+      );
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const handlePayWithEmail = async (customEmail: string) => {
+    setIsProcessingPayment(true);
+    setPaymentError(null);
+
+    try {
+      const response = await fetch("/api/payments/payfast/initiate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: "1.00",
+          item_name: "Premium Access",
+          item_description: "Unlock premium features and remove ads",
+          email_address: customEmail,
+          name_first: "",
+          name_last: "",
+          custom_str1: `payment_${Date.now()}`,
+          custom_str2: window.location.href,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        setPaymentError(errorData.error || "Failed to initiate payment");
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      const data = await response.json();
+
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = data.payment_url;
+
+      Object.keys(data.payment_data).forEach((key) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = data.payment_data[key];
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
       onClose();
     } catch (error) {
       console.error("Payment initiation error:", error);
@@ -261,29 +313,38 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
                 {/* Pay Option */}
                 <div className="space-y-3">
-                  <div className="mb-3">
-                    <label
-                      htmlFor="payment-email"
-                      className="block text-sm font-medium text-gray-300 mb-2"
-                    >
-                      Payment Email
-                    </label>
-                    <input
-                      id="payment-email"
-                      type="email"
-                      value={paymentEmail}
-                      onChange={(e) => setPaymentEmail(e.target.value)}
-                      placeholder="Enter your payment email"
-                      className="w-full px-4 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#8b5cf6] transition-colors"
-                      disabled={isProcessingPayment}
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      Use a different email than your merchant account
-                    </p>
-                  </div>
+                  {showEmailField && (
+                    <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                      <label
+                        htmlFor="payment-email"
+                        className="block text-sm font-medium text-yellow-400 mb-2"
+                      >
+                        Alternative Payment Email
+                      </label>
+                      <input
+                        id="payment-email"
+                        type="email"
+                        defaultValue={user?.email || ""}
+                        placeholder="Enter a different email"
+                        className="w-full px-4 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 transition-colors"
+                        disabled={isProcessingPayment}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !isProcessingPayment) {
+                            const email = (e.target as HTMLInputElement).value;
+                            if (email && email.includes("@")) {
+                              handlePayWithEmail(email);
+                            }
+                          }
+                        }}
+                      />
+                      <p className="mt-1 text-xs text-yellow-500/80">
+                        Your account email matches the merchant account. Use a different email.
+                      </p>
+                    </div>
+                  )}
                   <button
                     onClick={handlePay}
-                    disabled={isProcessingPayment || !paymentEmail}
+                    disabled={isProcessingPayment}
                     className="w-full group relative p-6 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
                     <div className="flex flex-col items-center space-y-3">
