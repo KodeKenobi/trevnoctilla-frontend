@@ -160,13 +160,15 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       const form = document.createElement("form");
       form.method = "POST";
       form.action = data.payment_url;
+      form.enctype = "application/x-www-form-urlencoded";
+      form.acceptCharset = "UTF-8";
 
       // Add all payment data as hidden inputs
       Object.keys(data.payment_data).forEach((key) => {
         const input = document.createElement("input");
         input.type = "hidden";
         input.name = key;
-        input.value = data.payment_data[key];
+        input.value = String(data.payment_data[key]);
         form.appendChild(input);
       });
 
