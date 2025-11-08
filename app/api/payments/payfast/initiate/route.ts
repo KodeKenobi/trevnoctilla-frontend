@@ -69,7 +69,10 @@ function generatePayFastSignature(data: Record<string, string>): string {
       // Replace %20 with + (PHP urlencode format)
       encoded = encoded.replace(/%20/g, "+");
       // Convert hex codes to uppercase (e.g., %3a -> %3A)
-      encoded = encoded.replace(/%([0-9a-f]{2})/gi, (match, hex) => `%${hex.toUpperCase()}`);
+      encoded = encoded.replace(
+        /%([0-9a-f]{2})/gi,
+        (match, hex) => `%${hex.toUpperCase()}`
+      );
       return `${key}=${encoded}`;
     })
     .join("&");
@@ -80,7 +83,10 @@ function generatePayFastSignature(data: Record<string, string>): string {
     const passphrase = PAYFAST_CONFIG.PASSPHRASE.trim();
     let passphraseEncoded = encodeURIComponent(passphrase);
     passphraseEncoded = passphraseEncoded.replace(/%20/g, "+");
-    passphraseEncoded = passphraseEncoded.replace(/%([0-9a-f]{2})/gi, (match, hex) => `%${hex.toUpperCase()}`);
+    passphraseEncoded = passphraseEncoded.replace(
+      /%([0-9a-f]{2})/gi,
+      (match, hex) => `%${hex.toUpperCase()}`
+    );
     pfParamStringWithPassphrase = `${pfParamString}&passphrase=${passphraseEncoded}`;
   }
 
@@ -164,12 +170,18 @@ export async function POST(request: NextRequest) {
     };
 
     // Only add optional fields if provided (empty values cause signature mismatch)
-    if (body.name_first && body.name_first.trim()) paymentData.name_first = body.name_first.trim();
-    if (body.name_last && body.name_last.trim()) paymentData.name_last = body.name_last.trim();
-    if (body.email_address && body.email_address.trim()) paymentData.email_address = body.email_address.trim();
-    if (body.cell_number && body.cell_number.trim()) paymentData.cell_number = body.cell_number.trim();
-    if (custom_str1 && custom_str1.trim()) paymentData.custom_str1 = custom_str1.trim();
-    if (custom_str2 && custom_str2.trim()) paymentData.custom_str2 = custom_str2.trim();
+    if (body.name_first && body.name_first.trim())
+      paymentData.name_first = body.name_first.trim();
+    if (body.name_last && body.name_last.trim())
+      paymentData.name_last = body.name_last.trim();
+    if (body.email_address && body.email_address.trim())
+      paymentData.email_address = body.email_address.trim();
+    if (body.cell_number && body.cell_number.trim())
+      paymentData.cell_number = body.cell_number.trim();
+    if (custom_str1 && custom_str1.trim())
+      paymentData.custom_str1 = custom_str1.trim();
+    if (custom_str2 && custom_str2.trim())
+      paymentData.custom_str2 = custom_str2.trim();
 
     // Generate signature
     const signature = generatePayFastSignature(paymentData);
