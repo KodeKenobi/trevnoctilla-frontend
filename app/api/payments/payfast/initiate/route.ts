@@ -75,9 +75,11 @@ export async function POST(request: NextRequest) {
         PASSPHRASE: PAYFAST_CONFIG.PASSPHRASE ? "exists" : "missing",
         env_check: {
           PAYFAST_MERCHANT_ID: !!process.env.PAYFAST_MERCHANT_ID,
-          NEXT_PUBLIC_PAYFAST_MERCHANT_ID: !!process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID,
+          NEXT_PUBLIC_PAYFAST_MERCHANT_ID:
+            !!process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID,
           PAYFAST_MERCHANT_KEY: !!process.env.PAYFAST_MERCHANT_KEY,
-          NEXT_PUBLIC_PAYFAST_MERCHANT_KEY: !!process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY,
+          NEXT_PUBLIC_PAYFAST_MERCHANT_KEY:
+            !!process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY,
         },
       });
       return NextResponse.json(
@@ -95,6 +97,7 @@ export async function POST(request: NextRequest) {
       .substr(2, 9)}`;
 
     // Prepare payment data
+    // Note: email_address is optional in PayFast - they'll collect it on their page if not provided
     const paymentData: Record<string, string> = {
       merchant_id: PAYFAST_CONFIG.MERCHANT_ID,
       merchant_key: PAYFAST_CONFIG.MERCHANT_KEY,
@@ -113,10 +116,6 @@ export async function POST(request: NextRequest) {
         `${
           process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
         }/api/payments/payfast/notify`,
-      name_first: body.name_first || "",
-      name_last: body.name_last || "",
-      email_address: body.email_address || "",
-      cell_number: body.cell_number || "",
       m_payment_id: paymentId,
       amount: parseFloat(amount).toFixed(2),
       item_name: item_name,
@@ -124,6 +123,12 @@ export async function POST(request: NextRequest) {
       custom_str1: custom_str1 || "",
       custom_str2: custom_str2 || "",
     };
+
+    // Only add optional fields if provided (email is optional - PayFast will collect it if missing)
+    if (body.name_first) paymentData.name_first = body.name_first;
+    if (body.name_last) paymentData.name_last = body.name_last;
+    if (body.email_address) paymentData.email_address = body.email_address;
+    if (body.cell_number) paymentData.cell_number = body.cell_number;
 
     // Generate signature
     const signature = generatePayFastSignature(paymentData);

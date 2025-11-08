@@ -114,15 +114,9 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
     setPaymentError(null);
 
     try {
-      // Use user's email from their account (PayFast requires this)
+      // Email is optional - only use if user is signed in
+      // PayFast will handle payments without email (they'll just ask for it on their page)
       const userEmail = user?.email || "";
-      
-      if (!userEmail) {
-        setPaymentError("Please log in to make a payment");
-        setIsProcessingPayment(false);
-        return;
-      }
-      // User interface doesn't have name field, so we'll use email prefix or empty
       const userName = "";
 
       // Initiate PayFast payment
@@ -146,11 +140,13 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.error || "Failed to initiate payment";
-        
+
         // If it's a same-account error, show email field to allow change
         if (response.status === 400 && errorMessage.includes("same account")) {
           setShowEmailField(true);
-          setPaymentError("Please use a different email address than your merchant account");
+          setPaymentError(
+            "Please use a different email address than your merchant account"
+          );
         } else {
           setPaymentError(errorMessage);
         }
@@ -338,7 +334,8 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                         }}
                       />
                       <p className="mt-1 text-xs text-yellow-500/80">
-                        Your account email matches the merchant account. Use a different email.
+                        Your account email matches the merchant account. Use a
+                        different email.
                       </p>
                     </div>
                   )}
