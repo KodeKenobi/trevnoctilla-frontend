@@ -159,6 +159,43 @@ export default function ApiDocsPage() {
   "processing_time": 0.15
 }`,
     },
+    pdf_to_html: {
+      title: "PDF to HTML Conversion",
+      description: "Convert PDF documents to HTML while preserving exact layout",
+      endpoint: "POST /convert_pdf_to_html",
+      code: `curl -X POST "https://web-production-737b.up.railway.app/convert_pdf_to_html" \\
+  -F "pdf=@document.pdf" \\
+  -F "method=pymupdf"`,
+      response: `{
+  "status": "success",
+  "message": "PDF converted to HTML successfully using PyMuPDF",
+  "converted_filename": "document_converted.html",
+  "original_format": "PDF",
+  "converted_format": "HTML",
+  "method_used": "PyMuPDF",
+  "original_size": 245760,
+  "html_size": 512000,
+  "download_url": "/download_converted/document_converted.html",
+  "preview_url": "/preview_html/document_converted.html"
+}`,
+    },
+    html_to_pdf: {
+      title: "HTML to PDF Conversion",
+      description: "Convert HTML files to PDF with 100% layout accuracy",
+      endpoint: "POST /convert_html_to_pdf",
+      code: `curl -X POST "https://web-production-737b.up.railway.app/convert_html_to_pdf" \\
+  -F "html=@document.html"`,
+      response: `{
+  "status": "success",
+  "message": "HTML converted to PDF successfully",
+  "converted_filename": "document_converted.pdf",
+  "original_format": "HTML",
+  "converted_format": "PDF",
+  "original_size": 512000,
+  "pdf_size": 245760,
+  "download_url": "/download_edited/document_converted.pdf"
+}`,
+    },
   };
 
   const features = [
@@ -336,6 +373,14 @@ export default function ApiDocsPage() {
                 <div className="text-sm">
                   <code className="text-cyan-400">POST /extract_images</code>
                   <p className="text-gray-400 mt-1">Extract images from PDFs</p>
+                </div>
+                <div className="text-sm">
+                  <code className="text-cyan-400">POST /convert_pdf_to_html</code>
+                  <p className="text-gray-400 mt-1">Convert PDF to HTML with layout preservation</p>
+                </div>
+                <div className="text-sm">
+                  <code className="text-cyan-400">POST /convert_html_to_pdf</code>
+                  <p className="text-gray-400 mt-1">Convert HTML to PDF with 100% accuracy</p>
                 </div>
               </div>
             </div>
@@ -606,6 +651,34 @@ export default function ApiDocsPage() {
                     Extract images from PDFs
                   </td>
                   <td className="py-4 text-gray-400">file (PDF)</td>
+                </tr>
+                <tr className="border-b border-gray-800">
+                  <td className="py-4">
+                    <span className="bg-green-600 text-white px-2 py-1 rounded text-sm">
+                      POST
+                    </span>
+                  </td>
+                  <td className="py-4">
+                    <code className="text-cyan-400">/convert_pdf_to_html</code>
+                  </td>
+                  <td className="py-4 text-gray-300">
+                    Convert PDF to HTML with exact layout preservation
+                  </td>
+                  <td className="py-4 text-gray-400">pdf (file), method (optional: pymupdf/pdf2htmlex)</td>
+                </tr>
+                <tr className="border-b border-gray-800">
+                  <td className="py-4">
+                    <span className="bg-green-600 text-white px-2 py-1 rounded text-sm">
+                      POST
+                    </span>
+                  </td>
+                  <td className="py-4">
+                    <code className="text-cyan-400">/convert_html_to_pdf</code>
+                  </td>
+                  <td className="py-4 text-gray-300">
+                    Convert HTML to PDF with 100% layout accuracy
+                  </td>
+                  <td className="py-4 text-gray-400">html or file (HTML file)</td>
                 </tr>
                 <tr className="border-b border-gray-800">
                   <td className="py-4">
