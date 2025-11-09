@@ -113,17 +113,21 @@ export async function POST(request: NextRequest) {
     console.log("Payment Status:", data.payment_status);
     console.log("Expected Merchant ID:", PAYFAST_CONFIG.MERCHANT_ID);
     console.log("Expected Merchant Key:", PAYFAST_CONFIG.MERCHANT_KEY);
-    console.log("Passphrase configured:", PAYFAST_CONFIG.PASSPHRASE ? "YES" : "NO");
+    console.log(
+      "Passphrase configured:",
+      PAYFAST_CONFIG.PASSPHRASE ? "YES" : "NO"
+    );
 
     // Verify signature first
     if (!verifyPayFastSignature(data)) {
       console.error("PayFast signature verification failed");
       console.error("Received data:", data);
       // Still return 200 to prevent PayFast from retrying, but log the error
-      return NextResponse.json(
-        { status: "error", message: "Invalid signature" },
-        { status: 200 }
-      );
+      // PayFast expects plain text response
+      return new NextResponse("INVALID", {
+        status: 200,
+        headers: { "Content-Type": "text/plain" },
+      });
     }
 
     // Verify merchant ID and key
@@ -139,10 +143,11 @@ export async function POST(request: NextRequest) {
       // CRITICAL: PayFast requires 200 OK response, not 400
       // Returning 400 causes PayFast to show "Unable to verify payment"
       // Still return 200 to prevent PayFast from retrying, but log the error
-      return NextResponse.json(
-        { status: "error", message: "Invalid merchant credentials" },
-        { status: 200 }
-      );
+      // PayFast expects plain text response
+      return new NextResponse("INVALID", {
+        status: 200,
+        headers: { "Content-Type": "text/plain" },
+      });
     }
 
     const paymentStatus = data.payment_status;
@@ -188,12 +193,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Always return 200 OK to PayFast
-    // PayFast will retry if it doesn't receive a 200 response
-    return NextResponse.json({ status: "ok" }, { status: 200 });
+    // PayFast expects plain text response, not JSON
+    // Return "VALID" to confirm successful processing
+    return new NextResponse("VALID", {
+      status: 200,
+      headers: { "Content-Type": "text/plain" },
+    });
   } catch (error) {
     console.error("PayFast ITN processing error:", error);
     // Still return 200 to prevent PayFast from retrying
-    return NextResponse.json({ status: "error" }, { status: 200 });
+    // PayFast expects plain text response
+    return new NextResponse("INVALID", {
+      status: 200,
+      headers: { "Content-Type": "text/plain" },
+    });
   }
 }
 
@@ -223,6 +236,9 @@ export async function GET(request: NextRequest) {
     return POST(newRequest);
   } catch (error) {
     console.error("PayFast ITN GET processing error:", error);
-    return NextResponse.json({ status: "error" }, { status: 200 });
+    return new NextResponse("INVALID", {
+      status: 200,
+      headers: { "Content-Type": "text/plain" },
+    });
   }
 }
