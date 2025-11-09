@@ -98,7 +98,23 @@ function verifyPayFastSignature(data: Record<string, string>): boolean {
  * This endpoint receives payment status updates from PayFast
  */
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  const requestId = `ITN-${Date.now()}-${Math.random()
+    .toString(36)
+    .substr(2, 9)}`;
+
   try {
+    // Log request details immediately
+    console.log(`\n${"=".repeat(80)}`);
+    console.log(`[${requestId}] === PayFast ITN CALLBACK RECEIVED ===`);
+    console.log(`[${requestId}] Timestamp: ${new Date().toISOString()}`);
+    console.log(`[${requestId}] URL: ${request.url}`);
+    console.log(`[${requestId}] Method: ${request.method}`);
+    console.log(
+      `[${requestId}] Headers:`,
+      Object.fromEntries(request.headers.entries())
+    );
+
     // Parse form data from PayFast
     // PayFast sends ITN as application/x-www-form-urlencoded
     // CRITICAL: PayFast requires a fast response (< 30 seconds)
@@ -107,8 +123,9 @@ export async function POST(request: NextRequest) {
     let formData: FormData;
     try {
       formData = await request.formData();
+      console.log(`[${requestId}] ✅ Form data parsed successfully`);
     } catch (error) {
-      console.error("Error parsing form data:", error);
+      console.error(`[${requestId}] ❌ Error parsing form data:`, error);
       // Return INVALID but still 200 OK
       return new NextResponse("INVALID", {
         status: 200,
@@ -124,49 +141,93 @@ export async function POST(request: NextRequest) {
     });
 
     // Log received ITN data (for debugging)
-    console.log("=== PayFast ITN Received ===");
-    console.log("Data:", JSON.stringify(data, null, 2));
-    console.log("Merchant ID:", data.merchant_id);
-    console.log("Merchant Key:", data.merchant_key);
-    console.log("Payment Status:", data.payment_status);
-    console.log("Expected Merchant ID:", PAYFAST_CONFIG.MERCHANT_ID);
-    console.log("Expected Merchant Key:", PAYFAST_CONFIG.MERCHANT_KEY);
+    console.log(`[${requestId}] === PayFast ITN Data ===`);
+    console.log(`[${requestId}] All fields:`, Object.keys(data));
+    console.log(`[${requestId}] Full data:`, JSON.stringify(data, null, 2));
+    console.log(`[${requestId}] Merchant ID (received):`, data.merchant_id);
+    console.log(`[${requestId}] Merchant Key (received):`, data.merchant_key);
+    console.log(`[${requestId}] Payment Status:`, data.payment_status);
+    console.log(`[${requestId}] Signature (received):`, data.signature);
     console.log(
-      "Passphrase configured:",
+      `[${requestId}] Expected Merchant ID:`,
+      PAYFAST_CONFIG.MERCHANT_ID
+    );
+    console.log(
+      `[${requestId}] Expected Merchant Key:`,
+      PAYFAST_CONFIG.MERCHANT_KEY
+    );
+    console.log(
+      `[${requestId}] Passphrase configured:`,
       PAYFAST_CONFIG.PASSPHRASE ? "YES" : "NO"
     );
 
     // Verify signature first
-    if (!verifyPayFastSignature(data)) {
-      console.error("PayFast signature verification failed");
-      console.error("Received data:", data);
+    console.log(`[${requestId}] 🔐 Verifying signature...`);
+    const signatureValid = verifyPayFastSignature(data);
+    if (!signatureValid) {
+      console.error(`[${requestId}] ❌ SIGNATURE VERIFICATION FAILED`);
+      console.error(
+        `[${requestId}] This is why PayFast shows "Unable to verify payment"`
+      );
+      console.error(
+        `[${requestId}] Received data:`,
+        JSON.stringify(data, null, 2)
+      );
       // Still return 200 to prevent PayFast from retrying, but log the error
       // PayFast expects plain text response
+      const responseTime = Date.now() - startTime;
+      console.log(`[${requestId}] ⏱️ Response time: ${responseTime}ms`);
+      console.log(`[${requestId}] 📤 Returning: INVALID (200 OK)`);
+      console.log(`${"=".repeat(80)}\n`);
       return new NextResponse("INVALID", {
         status: 200,
         headers: { "Content-Type": "text/plain" },
       });
     }
+    console.log(`[${requestId}] ✅ Signature verified successfully`);
 
     // Verify merchant ID and key
+    console.log(`[${requestId}] 🔍 Verifying merchant credentials...`);
     if (
       data.merchant_id !== PAYFAST_CONFIG.MERCHANT_ID ||
       data.merchant_key !== PAYFAST_CONFIG.MERCHANT_KEY
     ) {
-      console.error("PayFast merchant credentials mismatch");
-      console.error("Expected Merchant ID:", PAYFAST_CONFIG.MERCHANT_ID);
-      console.error("Received Merchant ID:", data.merchant_id);
-      console.error("Expected Merchant Key:", PAYFAST_CONFIG.MERCHANT_KEY);
-      console.error("Received Merchant Key:", data.merchant_key);
+      console.error(`[${requestId}] ❌ MERCHANT CREDENTIALS MISMATCH`);
+      console.error(
+        `[${requestId}] This is why PayFast shows "Unable to verify payment"`
+      );
+      console.error(
+        `[${requestId}] Expected Merchant ID:`,
+        PAYFAST_CONFIG.MERCHANT_ID
+      );
+      console.error(`[${requestId}] Received Merchant ID:`, data.merchant_id);
+      console.error(
+        `[${requestId}] Match:`,
+        data.merchant_id === PAYFAST_CONFIG.MERCHANT_ID
+      );
+      console.error(
+        `[${requestId}] Expected Merchant Key:`,
+        PAYFAST_CONFIG.MERCHANT_KEY
+      );
+      console.error(`[${requestId}] Received Merchant Key:`, data.merchant_key);
+      console.error(
+        `[${requestId}] Match:`,
+        data.merchant_key === PAYFAST_CONFIG.MERCHANT_KEY
+      );
       // CRITICAL: PayFast requires 200 OK response, not 400
       // Returning 400 causes PayFast to show "Unable to verify payment"
       // Still return 200 to prevent PayFast from retrying, but log the error
       // PayFast expects plain text response
+      const responseTime = Date.now() - startTime;
+      console.log(`[${requestId}] ⏱️ Response time: ${responseTime}ms`);
+      console.log(`[${requestId}] 📤 Returning: INVALID (200 OK)`);
+      console.log(`${"=".repeat(80)}\n`);
       return new NextResponse("INVALID", {
         status: 200,
         headers: { "Content-Type": "text/plain" },
       });
     }
+    console.log(`[${requestId}] ✅ Merchant credentials verified`);
 
     const paymentStatus = data.payment_status;
     const mPaymentId = data.m_payment_id;
@@ -214,6 +275,11 @@ export async function POST(request: NextRequest) {
     // PayFast expects plain text response "VALID" or "INVALID"
     // CRITICAL: Response must be fast (< 30 seconds) or PayFast shows "Unable to verify payment"
     // Return "VALID" to confirm successful processing
+    const responseTime = Date.now() - startTime;
+    console.log(`[${requestId}] ✅ Payment processed successfully`);
+    console.log(`[${requestId}] ⏱️ Response time: ${responseTime}ms`);
+    console.log(`[${requestId}] 📤 Returning: VALID (200 OK)`);
+    console.log(`${"=".repeat(80)}\n`);
     return new NextResponse("VALID", {
       status: 200,
       headers: {
@@ -222,7 +288,15 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("PayFast ITN processing error:", error);
+    const responseTime = Date.now() - startTime;
+    console.error(`[${requestId}] ❌ EXCEPTION in ITN processing:`, error);
+    console.error(
+      `[${requestId}] Error stack:`,
+      error instanceof Error ? error.stack : "No stack"
+    );
+    console.log(`[${requestId}] ⏱️ Response time: ${responseTime}ms`);
+    console.log(`[${requestId}] 📤 Returning: INVALID (200 OK)`);
+    console.log(`${"=".repeat(80)}\n`);
     // Still return 200 to prevent PayFast from retrying
     // PayFast expects plain text response
     return new NextResponse("INVALID", {
