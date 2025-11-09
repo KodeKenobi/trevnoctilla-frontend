@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "mkdir -p .next/cache || true",
-    "build": "next build",
+    "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "start": "next start",
     "lint": "next lint",
     "test:payfast": "node test-payfast.js"
