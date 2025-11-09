@@ -74,10 +74,18 @@ export default function PayFastForm({
     } else {
       data.cancel_url = `${finalBaseUrl}/payment/cancel`;
     }
+    // CRITICAL: Always use /payment/notify (not /api/payments/payfast/notify)
+    // The endpoint was moved to /payment/notify for consistency
     if (notify_url) {
-      data.notify_url = notify_url.includes("localhost")
-        ? `${productionBaseUrl}/payment/notify`
-        : notify_url;
+      // Fix old path if it's using the old /api/payments/payfast/notify path
+      if (notify_url.includes("/api/payments/payfast/notify")) {
+        const baseUrl = notify_url.split("/api/payments/payfast/notify")[0];
+        data.notify_url = `${baseUrl}/payment/notify`;
+      } else if (notify_url.includes("localhost")) {
+        data.notify_url = `${productionBaseUrl}/payment/notify`;
+      } else {
+        data.notify_url = notify_url;
+      }
     } else {
       data.notify_url = `${finalBaseUrl}/payment/notify`;
     }
@@ -164,10 +172,17 @@ export default function PayFastForm({
       );
     }
     // CRITICAL: notify_url MUST always be included for PayFast ITN callbacks
-    // Even if empty, we should include it with a default value
+    // Always use /payment/notify (not /api/payments/payfast/notify)
     const productionBaseUrl = "https://www.trevnoctilla.com";
-    const finalNotifyUrl =
+    let finalNotifyUrl =
       paymentData.notify_url || `${productionBaseUrl}/payment/notify`;
+    
+    // Fix old path if it's still using the old /api/payments/payfast/notify path
+    if (finalNotifyUrl.includes("/api/payments/payfast/notify")) {
+      const baseUrl = finalNotifyUrl.split("/api/payments/payfast/notify")[0];
+      finalNotifyUrl = `${baseUrl}/payment/notify`;
+    }
+    
     inputs.push(
       <input
         key="notify_url"
