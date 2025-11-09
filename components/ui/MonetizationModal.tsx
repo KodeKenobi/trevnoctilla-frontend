@@ -3,6 +3,7 @@
 import React from "react";
 import { X, Play, CreditCard } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
+import { API_CONFIG } from "@/lib/config";
 import PayFastForm from "./PayFastForm";
 
 interface MonetizationModalProps {
@@ -246,6 +247,9 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                     amount="1.00"
                     item_name="Premium Access"
                     item_description="Unlock premium features and remove ads"
+                    return_url={API_CONFIG.PAYFAST.RETURN_URL}
+                    cancel_url={API_CONFIG.PAYFAST.CANCEL_URL}
+                    notify_url={API_CONFIG.PAYFAST.NOTIFY_URL}
                     custom_str1={`payment_${Date.now()}`}
                     custom_str2={window.location.href}
                     formRef={payFastFormRef}
