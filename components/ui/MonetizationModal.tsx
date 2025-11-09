@@ -117,6 +117,12 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
     setIsProcessingPayment(true);
     setPaymentError(null);
 
+    // Store the current page URL so we can return here if payment is cancelled
+    if (typeof window !== "undefined") {
+      const currentPath = window.location.pathname + window.location.search;
+      localStorage.setItem("payment_return_path", currentPath);
+    }
+
     // Submit PayFast form first, then close modal
     setTimeout(() => {
       if (payFastFormRef.current) {

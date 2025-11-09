@@ -1,11 +1,34 @@
 "use client";
 
-import Link from "next/link";
 import { XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function PaymentCancelPage() {
   const router = useRouter();
+  const [returnPath, setReturnPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get the stored return path from before payment was initiated
+    if (typeof window !== "undefined") {
+      const storedPath = localStorage.getItem("payment_return_path");
+      if (storedPath) {
+        setReturnPath(storedPath);
+        // Clear it so it doesn't persist for future payments
+        localStorage.removeItem("payment_return_path");
+      }
+    }
+  }, []);
+
+  const handleGoBack = () => {
+    if (returnPath) {
+      // Redirect to where the user was before payment
+      router.push(returnPath);
+    } else {
+      // Fallback: go back in browser history (not to dashboard)
+      router.back();
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a] p-4">
@@ -24,17 +47,11 @@ export default function PaymentCancelPage() {
         </p>
         <div className="space-y-3">
           <button
-            onClick={() => router.back()}
+            onClick={handleGoBack}
             className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
           >
             Go Back
           </button>
-          <Link
-            href="/dashboard"
-            className="block w-full px-6 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-gray-300 rounded-lg font-medium transition-all"
-          >
-            Go to Dashboard
-          </Link>
         </div>
       </div>
     </div>
