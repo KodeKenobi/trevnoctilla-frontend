@@ -19,33 +19,72 @@ const PAYFAST_CONFIG = {
 
 /**
  * Verify PayFast signature
+ * PayFast ITN signature verification uses URL-encoded values (as PayFast sends them)
+ * This matches how PayFast calculates signatures for ITN notifications
  */
 function verifyPayFastSignature(data: Record<string, string>): boolean {
   const receivedSignature = data.signature || "";
 
-  // Create parameter string (excluding signature)
-  const pfParamString = Object.keys(data)
-    .filter((key) => data[key] !== "" && key !== "signature")
-    .sort()
-    .map(
-      (key) => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, "+")}`
-    )
-    .join("&");
+  // Filter out empty values and signature field
+  const filteredData: Record<string, string> = {};
+  Object.keys(data).forEach((key) => {
+    if (
+      key !== "signature" &&
+      key !== "merchant_key" && // Excluded from signature
+      data[key] !== "" &&
+      data[key] !== null &&
+      data[key] !== undefined
+    ) {
+      const value = String(data[key]).trim();
+      if (value !== "") {
+        filteredData[key] = value;
+      }
+    }
+  });
 
-  // Add passphrase if provided
-  const pfParamStringWithPassphrase = PAYFAST_CONFIG.PASSPHRASE
-    ? `${pfParamString}&passphrase=${encodeURIComponent(
-        PAYFAST_CONFIG.PASSPHRASE
-      )}`
-    : pfParamString;
+  // PayFast ITN signature uses URL-encoded values in the order they appear
+  // Build parameter string with URL-encoded values
+  let pfParamString = "";
+  Object.keys(filteredData).forEach((key) => {
+    const value = filteredData[key];
+    // URL-encode value (uppercase encoding, spaces as '+')
+    const encodedValue = encodeURIComponent(value)
+      .replace(/%20/g, "+")
+      .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
+    pfParamString += `${key}=${encodedValue}&`;
+  });
 
-  // Generate expected signature
+  // Remove last ampersand
+  pfParamString = pfParamString.slice(0, -1);
+
+  // Add passphrase if provided (also URL-encoded)
+  if (PAYFAST_CONFIG.PASSPHRASE && PAYFAST_CONFIG.PASSPHRASE.trim()) {
+    const passphrase = PAYFAST_CONFIG.PASSPHRASE.trim();
+    const encodedPassphrase = encodeURIComponent(passphrase)
+      .replace(/%20/g, "+")
+      .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
+    pfParamString += `&passphrase=${encodedPassphrase}`;
+  }
+
+  // Generate MD5 hash (lowercase)
   const expectedSignature = crypto
     .createHash("md5")
-    .update(pfParamStringWithPassphrase)
+    .update(pfParamString)
     .digest("hex");
 
-  return receivedSignature.toLowerCase() === expectedSignature.toLowerCase();
+  const isValid =
+    receivedSignature.toLowerCase() === expectedSignature.toLowerCase();
+
+  // Debug logging
+  if (!isValid) {
+    console.error("=== PayFast Signature Verification Failed ===");
+    console.log("Received Signature:", receivedSignature);
+    console.log("Expected Signature:", expectedSignature);
+    console.log("Parameter String:", pfParamString);
+    console.log("Passphrase used:", PAYFAST_CONFIG.PASSPHRASE ? "YES" : "NO");
+  }
+
+  return isValid;
 }
 
 /**
@@ -55,17 +94,30 @@ function verifyPayFastSignature(data: Record<string, string>): boolean {
 export async function POST(request: NextRequest) {
   try {
     // Parse form data from PayFast
+    // PayFast sends ITN as application/x-www-form-urlencoded
     const formData = await request.formData();
     const data: Record<string, string> = {};
 
     formData.forEach((value, key) => {
+      // Values are already URL-decoded by Next.js when parsing formData
       data[key] = value.toString();
     });
 
-    // Verify signature
+    // Log received ITN data (for debugging)
+    console.log("=== PayFast ITN Received ===");
+    console.log("Data:", JSON.stringify(data, null, 2));
+    console.log("Merchant ID:", data.merchant_id);
+    console.log("Payment Status:", data.payment_status);
+
+    // Verify signature first
     if (!verifyPayFastSignature(data)) {
       console.error("PayFast signature verification failed");
-      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+      console.error("Received data:", data);
+      // Still return 200 to prevent PayFast from retrying, but log the error
+      return NextResponse.json(
+        { status: "error", message: "Invalid signature" },
+        { status: 200 }
+      );
     }
 
     // Verify merchant ID and key
@@ -134,5 +186,30 @@ export async function POST(request: NextRequest) {
 
 // Also handle GET requests (PayFast may send GET for some notifications)
 export async function GET(request: NextRequest) {
-  return POST(request);
+  try {
+    // Parse query parameters from PayFast
+    const searchParams = request.nextUrl.searchParams;
+    const data: Record<string, string> = {};
+
+    searchParams.forEach((value, key) => {
+      data[key] = value;
+    });
+
+    // Convert to form data format and process
+    const formData = new FormData();
+    Object.keys(data).forEach((key) => {
+      formData.append(key, data[key]);
+    });
+
+    // Create a new request with form data
+    const newRequest = new NextRequest(request.url, {
+      method: "POST",
+      body: formData,
+    });
+
+    return POST(newRequest);
+  } catch (error) {
+    console.error("PayFast ITN GET processing error:", error);
+    return NextResponse.json({ status: "error" }, { status: 200 });
+  }
 }

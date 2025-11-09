@@ -3,6 +3,7 @@
 import React from "react";
 import { X, Play, CreditCard } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
+import PayFastForm from "./PayFastForm";
 
 interface MonetizationModalProps {
   isOpen: boolean;
@@ -108,197 +109,38 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const [isProcessingPayment, setIsProcessingPayment] = React.useState(false);
   const [paymentError, setPaymentError] = React.useState<string | null>(null);
   const [showEmailField, setShowEmailField] = React.useState(false);
+  const payFastFormRef = React.useRef<HTMLFormElement>(null);
 
-  const handlePay = async () => {
+  const handlePay = (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsProcessingPayment(true);
     setPaymentError(null);
 
-    try {
-      // Email is optional - only use if user is signed in
-      // PayFast will handle payments without email (they'll just ask for it on their page)
-      const userEmail = user?.email || "";
-      const userName = "";
-
-      // Initiate PayFast payment
-      const response = await fetch("/api/payments/payfast/initiate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: "1.00", // $1 payment
-          item_name: "Premium Access",
-          item_description: "Unlock premium features and remove ads",
-          email_address: userEmail,
-          name_first: userName?.split(" ")[0] || "",
-          name_last: userName?.split(" ").slice(1).join(" ") || "",
-          custom_str1: `payment_${Date.now()}`, // Track payment ID
-          custom_str2: window.location.href, // Track where payment was initiated from
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || "Failed to initiate payment";
-
-        // If it's a same-account error, show email field to allow change
-        if (response.status === 400 && errorMessage.includes("same account")) {
-          setShowEmailField(true);
-          setPaymentError(
-            "Please use a different email address than your merchant account"
-          );
-        } else {
-          setPaymentError(errorMessage);
-        }
-        setIsProcessingPayment(false);
-        return;
-      }
-
-      const data = await response.json();
-
-      // TEMPORARY: Use fetch to capture PayFast response for debugging
-      const formData = new FormData();
-      Object.keys(data.payment_data).forEach((key) => {
-        formData.append(key, String(data.payment_data[key]));
-      });
-
-      console.log("=== PayFast Form Data Being Sent ===");
-      console.log("URL:", data.payment_url);
-      console.log("Data:", Object.fromEntries(formData.entries()));
-
-      try {
-        const payfastResponse = await fetch(data.payment_url, {
-          method: "POST",
-          body: formData,
-          redirect: "manual", // Don't follow redirects
-        });
-
-        const responseText = await payfastResponse.text();
-        console.log("=== PayFast Response ===");
-        console.log("Status:", payfastResponse.status);
-        console.log("Response:", responseText);
-
-        // Extract error message from HTML if present
-        const errorMatch = responseText.match(/<h[1-6][^>]*>([^<]+)<\/h[1-6]>/i) || 
-                          responseText.match(/Error[:\s]+([^<\n]+)/i) ||
-                          responseText.match(/<p[^>]*>([^<]+)<\/p>/i);
-        
-        if (errorMatch) {
-          setPaymentError(`PayFast Error: ${errorMatch[1]}`);
-          setIsProcessingPayment(false);
-          return;
-        }
-
-        // If we get here and it's not a redirect, show the response
-        if (!payfastResponse.ok && payfastResponse.status !== 302) {
-          setPaymentError(`PayFast returned status ${payfastResponse.status}. Check console for details.`);
-          setIsProcessingPayment(false);
-          return;
-        }
-
-        // If redirect (302), submit form normally
-        if (payfastResponse.status === 302 || payfastResponse.ok) {
-          const form = document.createElement("form");
-          form.method = "POST";
-          form.action = data.payment_url;
-          form.enctype = "application/x-www-form-urlencoded";
-          form.acceptCharset = "UTF-8";
-
-          Object.keys(data.payment_data).forEach((key) => {
-            const input = document.createElement("input");
-            input.type = "hidden";
-            input.name = key;
-            input.value = String(data.payment_data[key]);
-            form.appendChild(input);
-          });
-
-          document.body.appendChild(form);
-          form.submit();
+    // Submit PayFast form first, then close modal
+    setTimeout(() => {
+      if (payFastFormRef.current) {
+        console.log("Submitting PayFast form...");
+        payFastFormRef.current.submit();
+        // Close modal after form submission starts
+        setTimeout(() => {
           onClose();
-        }
-      } catch (fetchError) {
-        console.error("PayFast fetch error:", fetchError);
-        // Fallback to form submission
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = data.payment_url;
-        form.enctype = "application/x-www-form-urlencoded";
-        form.acceptCharset = "UTF-8";
-
-        Object.keys(data.payment_data).forEach((key) => {
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = key;
-          input.value = String(data.payment_data[key]);
-          form.appendChild(input);
-        });
-
-        document.body.appendChild(form);
-        form.submit();
-        onClose();
+        }, 100);
+      } else {
+        console.error("PayFast form ref is null!");
+        setPaymentError(
+          "Payment form not found. Please refresh and try again."
+        );
+        setIsProcessingPayment(false);
       }
-    } catch (error) {
-      console.error("Payment initiation error:", error);
-      setPaymentError(
-        error instanceof Error ? error.message : "Failed to process payment"
-      );
-      setIsProcessingPayment(false);
-    }
+    }, 50);
   };
 
-  const handlePayWithEmail = async (customEmail: string) => {
+  const handlePayWithEmail = (customEmail: string) => {
     setIsProcessingPayment(true);
     setPaymentError(null);
-
-    try {
-      const response = await fetch("/api/payments/payfast/initiate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: "1.00",
-          item_name: "Premium Access",
-          item_description: "Unlock premium features and remove ads",
-          email_address: customEmail,
-          name_first: "",
-          name_last: "",
-          custom_str1: `payment_${Date.now()}`,
-          custom_str2: window.location.href,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        setPaymentError(errorData.error || "Failed to initiate payment");
-        setIsProcessingPayment(false);
-        return;
-      }
-
-      const data = await response.json();
-
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = data.payment_url;
-
-      Object.keys(data.payment_data).forEach((key) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = data.payment_data[key];
-        form.appendChild(input);
-      });
-
-      document.body.appendChild(form);
-      form.submit();
-      onClose();
-    } catch (error) {
-      console.error("Payment initiation error:", error);
-      setPaymentError(
-        error instanceof Error ? error.message : "Failed to process payment"
-      );
-      setIsProcessingPayment(false);
-    }
+    // Close modal before redirect
+    onClose();
+    // Form will auto-submit via PayFastForm component
   };
 
   if (!isOpen) return null;
@@ -400,6 +242,14 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                       </p>
                     </div>
                   )}
+                  <PayFastForm
+                    amount="1.00"
+                    item_name="Premium Access"
+                    item_description="Unlock premium features and remove ads"
+                    custom_str1={`payment_${Date.now()}`}
+                    custom_str2={window.location.href}
+                    formRef={payFastFormRef}
+                  />
                   <button
                     onClick={handlePay}
                     disabled={isProcessingPayment}
