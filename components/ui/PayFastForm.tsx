@@ -59,9 +59,28 @@ export default function PayFastForm({
     data.merchant_key = API_CONFIG.PAYFAST.MERCHANT_KEY || "irqvo1c2j9l08";
 
     // 2. Return URLs (OPTIONAL - only if provided)
-    if (return_url) data.return_url = return_url;
-    if (cancel_url) data.cancel_url = cancel_url;
-    if (notify_url) data.notify_url = notify_url;
+    // Always use production URLs (PayFast requires publicly accessible URLs)
+    if (return_url) {
+      data.return_url = return_url.includes("localhost")
+        ? `${productionBaseUrl}/payment/success`
+        : return_url;
+    } else {
+      data.return_url = `${finalBaseUrl}/payment/success`;
+    }
+    if (cancel_url) {
+      data.cancel_url = cancel_url.includes("localhost")
+        ? `${productionBaseUrl}/payment/cancel`
+        : cancel_url;
+    } else {
+      data.cancel_url = `${finalBaseUrl}/payment/cancel`;
+    }
+    if (notify_url) {
+      data.notify_url = notify_url.includes("localhost")
+        ? `${productionBaseUrl}/payment/notify`
+        : notify_url;
+    } else {
+      data.notify_url = `${finalBaseUrl}/payment/notify`;
+    }
 
     // 3. FICA ID Number (OPTIONAL)
     if (fica_idnumber) data.fica_idnumber = fica_idnumber.trim();

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
+// Ensure this route is publicly accessible (no auth required)
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 // PayFast configuration
 const PAYFAST_CONFIG = {
   MERCHANT_ID:
@@ -97,7 +101,21 @@ export async function POST(request: NextRequest) {
   try {
     // Parse form data from PayFast
     // PayFast sends ITN as application/x-www-form-urlencoded
-    const formData = await request.formData();
+    // CRITICAL: PayFast requires a fast response (< 30 seconds)
+    // We must respond quickly to prevent "Unable to verify payment" error
+
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch (error) {
+      console.error("Error parsing form data:", error);
+      // Return INVALID but still 200 OK
+      return new NextResponse("INVALID", {
+        status: 200,
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+
     const data: Record<string, string> = {};
 
     formData.forEach((value, key) => {
@@ -192,12 +210,16 @@ export async function POST(request: NextRequest) {
         console.log(`Unknown payment status: ${paymentStatus}`);
     }
 
-    // Always return 200 OK to PayFast
-    // PayFast expects plain text response, not JSON
+    // Always return 200 OK to PayFast IMMEDIATELY
+    // PayFast expects plain text response "VALID" or "INVALID"
+    // CRITICAL: Response must be fast (< 30 seconds) or PayFast shows "Unable to verify payment"
     // Return "VALID" to confirm successful processing
     return new NextResponse("VALID", {
       status: 200,
-      headers: { "Content-Type": "text/plain" },
+      headers: {
+        "Content-Type": "text/plain",
+        "Cache-Control": "no-cache",
+      },
     });
   } catch (error) {
     console.error("PayFast ITN processing error:", error);
