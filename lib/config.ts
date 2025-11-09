@@ -30,7 +30,7 @@ export const API_CONFIG = {
       process.env.NEXT_PUBLIC_PAYFAST_NOTIFY_URL ||
       `${
         process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/payments/payfast/notify`,
+      }/payment/notify`,
   },
 
   // API endpoints

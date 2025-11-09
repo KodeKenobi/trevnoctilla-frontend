@@ -197,8 +197,7 @@ export async function POST(request: NextRequest) {
     paymentData.cancel_url =
       PAYFAST_CONFIG.CANCEL_URL || `${finalBaseUrl}/payment/cancel`;
     paymentData.notify_url =
-      PAYFAST_CONFIG.NOTIFY_URL ||
-      `${finalBaseUrl}/api/payments/payfast/notify`;
+      PAYFAST_CONFIG.NOTIFY_URL || `${finalBaseUrl}/payment/notify`;
 
     // Only add optional fields if provided (empty values cause signature mismatch)
     if (body.name_first && body.name_first.trim())
