@@ -5,8 +5,8 @@
   "//": "Force rebuild to clear cache",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "if not exist .next\\cache mkdir .next\\cache",
-    "build": "set NEXT_TELEMETRY_DISABLED=1 && next build",
+    "prebuild": "mkdir -p .next/cache || true",
+    "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "start": "next start",
     "lint": "next lint",
     "test:payfast": "node test-payfast.js"
