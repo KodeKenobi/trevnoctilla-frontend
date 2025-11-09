@@ -176,13 +176,13 @@ export default function PayFastForm({
     const productionBaseUrl = "https://www.trevnoctilla.com";
     let finalNotifyUrl =
       paymentData.notify_url || `${productionBaseUrl}/payment/notify`;
-    
+
     // Fix old path if it's still using the old /api/payments/payfast/notify path
     if (finalNotifyUrl.includes("/api/payments/payfast/notify")) {
       const baseUrl = finalNotifyUrl.split("/api/payments/payfast/notify")[0];
       finalNotifyUrl = `${baseUrl}/payment/notify`;
     }
-    
+
     inputs.push(
       <input
         key="notify_url"

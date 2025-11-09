@@ -5,6 +5,17 @@ import crypto from "crypto";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Log ALL requests to this endpoint (even before processing)
+// This helps debug if PayFast is calling but failing before we log
+if (typeof process !== "undefined") {
+  process.on("uncaughtException", (error) => {
+    console.error("UNCAUGHT EXCEPTION in notify endpoint:", error);
+  });
+  process.on("unhandledRejection", (reason) => {
+    console.error("UNHANDLED REJECTION in notify endpoint:", reason);
+  });
+}
+
 // PayFast configuration
 const PAYFAST_CONFIG = {
   MERCHANT_ID:
@@ -23,7 +34,7 @@ const PAYFAST_CONFIG = {
 
 /**
  * Verify PayFast signature
- * PayFast ITN signature verification uses URL-encoded values (as PayFast sends them)
+ * PayFast ITN signature verification uses RAW values (NOT URL-encoded)
  * This matches how PayFast calculates signatures for ITN notifications
  */
 function verifyPayFastSignature(data: Record<string, string>): boolean {
@@ -46,30 +57,24 @@ function verifyPayFastSignature(data: Record<string, string>): boolean {
     }
   });
 
-  // PayFast ITN signature uses URL-encoded values
+  // PayFast ITN signature uses RAW values (NOT URL-encoded)
   // Parameters should be sorted alphabetically by key name (as per PayFast docs)
-  // Build parameter string with URL-encoded values
+  // Build parameter string with raw values
   const sortedKeys = Object.keys(filteredData).sort();
   let pfParamString = "";
   sortedKeys.forEach((key) => {
     const value = filteredData[key];
-    // URL-encode value (uppercase encoding, spaces as '+')
-    const encodedValue = encodeURIComponent(value)
-      .replace(/%20/g, "+")
-      .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
-    pfParamString += `${key}=${encodedValue}&`;
+    // Use raw value (not URL-encoded) for ITN signature verification
+    pfParamString += `${key}=${value}&`;
   });
 
   // Remove last ampersand
   pfParamString = pfParamString.slice(0, -1);
 
-  // Add passphrase if provided (also URL-encoded)
+  // Add passphrase if provided (raw, not URL-encoded)
   if (PAYFAST_CONFIG.PASSPHRASE && PAYFAST_CONFIG.PASSPHRASE.trim()) {
     const passphrase = PAYFAST_CONFIG.PASSPHRASE.trim();
-    const encodedPassphrase = encodeURIComponent(passphrase)
-      .replace(/%20/g, "+")
-      .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
-    pfParamString += `&passphrase=${encodedPassphrase}`;
+    pfParamString += `&passphrase=${passphrase}`;
   }
 
   // Generate MD5 hash (lowercase)

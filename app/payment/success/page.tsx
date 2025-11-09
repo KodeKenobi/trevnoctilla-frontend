@@ -16,19 +16,52 @@ function PaymentSuccessContent() {
   useEffect(() => {
     // Verify payment status from PayFast callback
     const verifyPayment = async () => {
+      // Log ALL parameters from PayFast return_url callback
+      console.log("=== PayFast Return URL Callback ===");
+      const allParams: Record<string, string | null> = {};
+      searchParams.forEach((value, key) => {
+        allParams[key] = value;
+      });
+      console.log(
+        "All return URL parameters:",
+        JSON.stringify(allParams, null, 2)
+      );
+
       const mPaymentId = searchParams.get("m_payment_id");
       const pfPaymentId = searchParams.get("pf_payment_id");
       const paymentStatus = searchParams.get("payment_status");
+      const signature = searchParams.get("signature");
 
+      console.log("m_payment_id:", mPaymentId);
+      console.log("pf_payment_id:", pfPaymentId);
+      console.log("payment_status:", paymentStatus);
+      console.log("signature:", signature);
+
+      // For $0.00 payments (wallet-funded), PayFast might not send ITN
+      // but will include payment status in return_url
       if (paymentStatus === "COMPLETE") {
         setPaymentStatus("success");
-        // TODO: Update payment status in your database
+        console.log("✅ Payment marked as COMPLETE from return_url");
+        // TODO: Update payment status in database
         // TODO: Grant user premium access
         // TODO: Send confirmation email
       } else if (paymentStatus === "PENDING") {
         setPaymentStatus("pending");
-      } else {
+        console.log("⏳ Payment marked as PENDING from return_url");
+      } else if (paymentStatus) {
         setPaymentStatus("failed");
+        console.log(
+          "❌ Payment marked as FAILED from return_url:",
+          paymentStatus
+        );
+      } else {
+        // No payment_status in URL - might be $0.00 payment issue
+        console.warn(
+          "⚠️ No payment_status in return_url - might be $0.00 payment issue"
+        );
+        // For $0.00 payments, if we reach here, consider it successful
+        // (user was redirected back, which means PayFast processed it)
+        setPaymentStatus("success");
       }
 
       setIsVerifying(false);

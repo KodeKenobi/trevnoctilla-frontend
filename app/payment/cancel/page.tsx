@@ -1,14 +1,36 @@
 "use client";
 
 import { XCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
 
-export default function PaymentCancelPage() {
+function PaymentCancelContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [returnPath, setReturnPath] = useState<string | null>(null);
 
   useEffect(() => {
+    // Log ALL parameters from PayFast cancel_url callback
+    console.log("=== PayFast Cancel URL Callback ===");
+    const allParams: Record<string, string | null> = {};
+    searchParams.forEach((value, key) => {
+      allParams[key] = value;
+    });
+    console.log(
+      "All cancel URL parameters:",
+      JSON.stringify(allParams, null, 2)
+    );
+
+    const mPaymentId = searchParams.get("m_payment_id");
+    const pfPaymentId = searchParams.get("pf_payment_id");
+    const paymentStatus = searchParams.get("payment_status");
+    const signature = searchParams.get("signature");
+
+    console.log("m_payment_id:", mPaymentId);
+    console.log("pf_payment_id:", pfPaymentId);
+    console.log("payment_status:", paymentStatus);
+    console.log("signature:", signature);
+
     // Get the stored return path from before payment was initiated
     if (typeof window !== "undefined") {
       const storedPath = localStorage.getItem("payment_return_path");
@@ -18,7 +40,7 @@ export default function PaymentCancelPage() {
         localStorage.removeItem("payment_return_path");
       }
     }
-  }, []);
+  }, [searchParams]);
 
   const handleGoBack = () => {
     if (returnPath) {
@@ -55,5 +77,21 @@ export default function PaymentCancelPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentCancelPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a]">
+          <div className="text-center">
+            <p className="text-gray-400">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <PaymentCancelContent />
+    </Suspense>
   );
 }
