@@ -42,10 +42,12 @@ function verifyPayFastSignature(data: Record<string, string>): boolean {
     }
   });
 
-  // PayFast ITN signature uses URL-encoded values in the order they appear
+  // PayFast ITN signature uses URL-encoded values
+  // Parameters should be sorted alphabetically by key name (as per PayFast docs)
   // Build parameter string with URL-encoded values
+  const sortedKeys = Object.keys(filteredData).sort();
   let pfParamString = "";
-  Object.keys(filteredData).forEach((key) => {
+  sortedKeys.forEach((key) => {
     const value = filteredData[key];
     // URL-encode value (uppercase encoding, spaces as '+')
     const encodedValue = encodeURIComponent(value)
@@ -107,7 +109,11 @@ export async function POST(request: NextRequest) {
     console.log("=== PayFast ITN Received ===");
     console.log("Data:", JSON.stringify(data, null, 2));
     console.log("Merchant ID:", data.merchant_id);
+    console.log("Merchant Key:", data.merchant_key);
     console.log("Payment Status:", data.payment_status);
+    console.log("Expected Merchant ID:", PAYFAST_CONFIG.MERCHANT_ID);
+    console.log("Expected Merchant Key:", PAYFAST_CONFIG.MERCHANT_KEY);
+    console.log("Passphrase configured:", PAYFAST_CONFIG.PASSPHRASE ? "YES" : "NO");
 
     // Verify signature first
     if (!verifyPayFastSignature(data)) {
@@ -126,9 +132,16 @@ export async function POST(request: NextRequest) {
       data.merchant_key !== PAYFAST_CONFIG.MERCHANT_KEY
     ) {
       console.error("PayFast merchant credentials mismatch");
+      console.error("Expected Merchant ID:", PAYFAST_CONFIG.MERCHANT_ID);
+      console.error("Received Merchant ID:", data.merchant_id);
+      console.error("Expected Merchant Key:", PAYFAST_CONFIG.MERCHANT_KEY);
+      console.error("Received Merchant Key:", data.merchant_key);
+      // CRITICAL: PayFast requires 200 OK response, not 400
+      // Returning 400 causes PayFast to show "Unable to verify payment"
+      // Still return 200 to prevent PayFast from retrying, but log the error
       return NextResponse.json(
-        { error: "Invalid merchant credentials" },
-        { status: 400 }
+        { status: "error", message: "Invalid merchant credentials" },
+        { status: 200 }
       );
     }
 
