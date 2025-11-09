@@ -163,16 +163,19 @@ export default function PayFastForm({
         />
       );
     }
-    if (paymentData.notify_url) {
-      inputs.push(
-        <input
-          key="notify_url"
-          type="hidden"
-          name="notify_url"
-          value={paymentData.notify_url}
-        />
-      );
-    }
+    // CRITICAL: notify_url MUST always be included for PayFast ITN callbacks
+    // Even if empty, we should include it with a default value
+    const productionBaseUrl = "https://www.trevnoctilla.com";
+    const finalNotifyUrl =
+      paymentData.notify_url || `${productionBaseUrl}/payment/notify`;
+    inputs.push(
+      <input
+        key="notify_url"
+        type="hidden"
+        name="notify_url"
+        value={finalNotifyUrl}
+      />
+    );
 
     // 3. FICA ID Number
     if (paymentData.fica_idnumber) {
@@ -213,10 +216,28 @@ export default function PayFastForm({
   // Ensure form is in DOM and log payment data
   useEffect(() => {
     if (formRef.current) {
-      console.log("PayFastForm mounted, form ref:", formRef.current);
-      console.log("Payment data:", paymentData);
+      console.log("=== PayFastForm Payment Data ===");
+      console.log("Form ref:", formRef.current);
+      console.log("Full payment data:", paymentData);
       console.log("merchant_id:", paymentData.merchant_id);
       console.log("merchant_key:", paymentData.merchant_key);
+      console.log("🔗 notify_url:", paymentData.notify_url);
+      console.log("🔗 return_url:", paymentData.return_url);
+      console.log("🔗 cancel_url:", paymentData.cancel_url);
+      console.log("Form action:", formRef.current.action);
+
+      // Verify notify_url is in the form
+      const notifyInput = formRef.current.querySelector(
+        'input[name="notify_url"]'
+      );
+      if (notifyInput) {
+        console.log(
+          "✅ notify_url field found in form:",
+          (notifyInput as HTMLInputElement).value
+        );
+      } else {
+        console.error("❌ notify_url field MISSING from form!");
+      }
     }
   }, []);
 

@@ -307,10 +307,21 @@ export async function POST(request: NextRequest) {
 }
 
 // Also handle GET requests (PayFast may send GET for some notifications)
+// Also allow GET for testing endpoint accessibility
 export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+
+  // If it's a test request (no PayFast data), return success to confirm endpoint is accessible
+  if (searchParams.size === 0 || searchParams.get("test") === "true") {
+    console.log("✅ PayFast notify endpoint is accessible (test request)");
+    return new NextResponse("ENDPOINT_ACCESSIBLE", {
+      status: 200,
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
+
   try {
     // Parse query parameters from PayFast
-    const searchParams = request.nextUrl.searchParams;
     const data: Record<string, string> = {};
 
     searchParams.forEach((value, key) => {
