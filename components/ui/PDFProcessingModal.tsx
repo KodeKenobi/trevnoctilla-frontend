@@ -19,10 +19,6 @@ export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
   const [statusIcon, setStatusIcon] = useState<
     "upload" | "process" | "prepare" | "complete"
   >("upload");
-  const gradientId = React.useMemo(
-    () => `gradient-${Math.random().toString(36).substr(2, 9)}`,
-    []
-  );
 
   useEffect(() => {
     if (progress < 25) {
@@ -47,9 +43,6 @@ export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
   }, [progress]);
 
   if (!isOpen) return null;
-
-  const circumference = 2 * Math.PI * 45; // radius = 45
-  const offset = circumference - (progress / 100) * circumference;
 
   return (
     <AnimatePresence>
@@ -89,88 +82,32 @@ export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
               </motion.div>
             )}
 
-            {/* Circular Progress Indicator */}
-            <div className="flex justify-center mb-8">
-              <div className="relative w-32 h-32 sm:w-40 sm:h-40">
-                {/* Background circle */}
-                <svg
-                  className="w-full h-full transform -rotate-90"
-                  viewBox="0 0 100 100"
+            {/* Status Icon */}
+            <div className="flex justify-center mb-6">
+              {statusIcon === "complete" ? (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 200,
+                    damping: 15,
+                  }}
                 >
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    fill="none"
-                    stroke="rgba(75, 85, 99, 0.3)"
-                    strokeWidth="8"
-                  />
-                  {/* Progress circle */}
-                  <motion.circle
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    fill="none"
-                    stroke={`url(#${gradientId})`}
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeDasharray={circumference}
-                    initial={{ strokeDashoffset: circumference }}
-                    animate={{ strokeDashoffset: offset }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  />
-                  <defs>
-                    <linearGradient
-                      id={gradientId}
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="100%"
-                    >
-                      <stop offset="0%" stopColor="#3b82f6" />
-                      <stop offset="50%" stopColor="#8b5cf6" />
-                      <stop offset="100%" stopColor="#06b6d4" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-
-                {/* Center content */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  {statusIcon === "complete" ? (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 200,
-                        damping: 15,
-                      }}
-                    >
-                      <CheckCircle2 className="w-12 h-12 sm:w-16 sm:h-16 text-green-400" />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                    >
-                      <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 text-blue-400" />
-                    </motion.div>
-                  )}
-                  <motion.div
-                    key={progress}
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                    className="mt-2 text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent"
-                  >
-                    {Math.round(progress)}%
-                  </motion.div>
-                </div>
-              </div>
+                  <CheckCircle2 className="w-16 h-16 sm:w-20 sm:h-20 text-green-400" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  <Loader2 className="w-16 h-16 sm:w-20 sm:h-20 text-blue-400" />
+                </motion.div>
+              )}
             </div>
 
             {/* Status Text */}

@@ -285,14 +285,12 @@ export default function PDFTools() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 page-content">
-      {/* Progress Modal for extract-text */}
-      {activeTab === "extract-text" && (
-        <PDFProcessingModal
-          isOpen={isProcessing}
-          progress={uploadProgress}
-          fileName={uploadedFile?.name}
-        />
-      )}
+      {/* Progress Modal for ALL tools */}
+      <PDFProcessingModal
+        isOpen={isProcessing}
+        progress={uploadProgress}
+        fileName={uploadedFile?.name}
+      />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
