@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, CheckCircle2, Loader2 } from "lucide-react";
+import { FileText } from "lucide-react";
 
 interface PDFProcessingModalProps {
   isOpen: boolean;
@@ -16,29 +16,20 @@ export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
   fileName,
 }) => {
   const [statusText, setStatusText] = useState("Uploading PDF...");
-  const [statusIcon, setStatusIcon] = useState<
-    "upload" | "process" | "prepare" | "complete"
-  >("upload");
 
   useEffect(() => {
     if (progress < 25) {
       setStatusText("Uploading PDF...");
-      setStatusIcon("upload");
     } else if (progress < 50) {
       setStatusText("Analyzing document structure...");
-      setStatusIcon("process");
     } else if (progress < 75) {
       setStatusText("Processing content...");
-      setStatusIcon("process");
     } else if (progress < 95) {
       setStatusText("Preparing editor...");
-      setStatusIcon("prepare");
     } else if (progress < 100) {
       setStatusText("Almost done...");
-      setStatusIcon("prepare");
     } else {
       setStatusText("Complete!");
-      setStatusIcon("complete");
     }
   }, [progress]);
 
@@ -82,33 +73,6 @@ export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
               </motion.div>
             )}
 
-            {/* Status Icon */}
-            <div className="flex justify-center mb-6">
-              {statusIcon === "complete" ? (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 15,
-                  }}
-                >
-                  <CheckCircle2 className="w-16 h-16 sm:w-20 sm:h-20 text-green-400" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                >
-                  <Loader2 className="w-16 h-16 sm:w-20 sm:h-20 text-blue-400" />
-                </motion.div>
-              )}
-            </div>
 
             {/* Status Text */}
             <motion.div
@@ -119,10 +83,10 @@ export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
               transition={{ duration: 0.3 }}
               className="text-center mb-6"
             >
-              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
+              <h3 className="text-xl sm:text-2xl font-light text-white mb-2">
                 {statusText}
               </h3>
-              <p className="text-sm sm:text-base text-gray-400">
+              <p className="text-sm sm:text-base font-light text-gray-400">
                 {progress >= 100
                   ? "Your document is ready!"
                   : "Please wait while we process your document"}
