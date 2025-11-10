@@ -346,9 +346,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                           </div>
                           <div className="flex-1 text-left">
                             <h4 className="text-base font-medium text-white mb-0.5">
-                              {isProcessingPayment
-                                ? "Processing..."
-                                : `Pay R${zarAmount} (~$1 USD)`}
+                              {isProcessingPayment ? "Processing..." : "Pay $1"}
                             </h4>
                             <p className="text-xs text-white/70">
                               {isProcessingPayment
