@@ -28,7 +28,9 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const waitingReturnRef = React.useRef(false);
   const leftOnceRef = React.useRef(false);
   const [needsManualOpen, setNeedsManualOpen] = React.useState(false);
-  const [zarAmount, setZarAmount] = React.useState<string>("20.00");
+  const [zarAmount, setZarAmount] = React.useState<string | null>(null);
+  const [isLoadingRate, setIsLoadingRate] = React.useState(false);
+  const [rateError, setRateError] = React.useState<string | null>(null);
 
   // Complete when user returns to the tab/window after viewing the ad
   React.useEffect(() => {
@@ -114,20 +116,51 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const [showEmailField, setShowEmailField] = React.useState(false);
   const payFastFormRef = React.useRef<HTMLFormElement>(null);
 
+  // Fetch exchange rate when modal opens
+  React.useEffect(() => {
+    if (!isOpen) {
+      // Reset state when modal closes
+      setZarAmount(null);
+      setRateError(null);
+      setIsLoadingRate(false);
+      return;
+    }
+
+    // Fetch rate when modal opens (only if not already loaded)
+    if (!zarAmount && !isLoadingRate) {
+      setIsLoadingRate(true);
+      setRateError(null);
+
+      convertUSDToZAR(1.0)
+        .then((zar) => {
+          setZarAmount(zar.toFixed(2));
+          setIsLoadingRate(false);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch exchange rate:", error);
+          setRateError(
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch exchange rate. Please check your internet connection and try again."
+          );
+          setIsLoadingRate(false);
+        });
+    }
+  }, [isOpen, zarAmount, isLoadingRate]);
+
   const handlePay = async (e: React.MouseEvent) => {
     e.preventDefault();
+
+    // Ensure we have a valid exchange rate before proceeding
+    if (!zarAmount) {
+      setPaymentError(
+        "Exchange rate not available. Please wait for the rate to load or try again."
+      );
+      return;
+    }
+
     setIsProcessingPayment(true);
     setPaymentError(null);
-
-    // Fetch latest exchange rate and convert $1 USD to ZAR before payment
-    try {
-      const zar = await convertUSDToZAR(1.0);
-      setZarAmount(zar.toFixed(2));
-    } catch (error) {
-      console.error("Failed to fetch exchange rate:", error);
-      // Fallback to default rate if conversion fails
-      setZarAmount("20.00");
-    }
 
     // Store the current page URL so we can return here if payment is cancelled
     if (typeof window !== "undefined") {
@@ -260,44 +293,73 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                       </p>
                     </div>
                   )}
-                  <PayFastForm
-                    amount={zarAmount}
-                    item_name="Premium Access"
-                    item_description="Unlock premium features and remove ads"
-                    return_url={API_CONFIG.PAYFAST.RETURN_URL}
-                    cancel_url={API_CONFIG.PAYFAST.CANCEL_URL}
-                    notify_url={API_CONFIG.PAYFAST.NOTIFY_URL}
-                    custom_str1={`payment_${Date.now()}`}
-                    custom_str2={window.location.href}
-                    formRef={payFastFormRef}
-                  />
-                  <button
-                    onClick={handlePay}
-                    disabled={isProcessingPayment}
-                    className="w-full group relative p-4 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:shadow-lg hover:shadow-[#22c55e]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex-1"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0">
-                        <div className="bg-white/20 p-2.5 rounded-lg">
-                          {isProcessingPayment ? (
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          ) : (
-                            <CreditCard className="w-5 h-5 text-white" />
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex-1 text-left">
-                        <h4 className="text-base font-medium text-white mb-0.5">
-                          {isProcessingPayment ? "Processing..." : "Pay $1"}
-                        </h4>
-                        <p className="text-xs text-white/70">
-                          {isProcessingPayment
-                            ? "Redirecting to payment..."
-                            : "Instant access, no ads"}
+                  {rateError ? (
+                    <div className="w-full p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                      <p className="text-sm text-red-400 mb-2">{rateError}</p>
+                      <button
+                        onClick={() => {
+                          setZarAmount(null);
+                          setRateError(null);
+                          setIsLoadingRate(false);
+                        }}
+                        className="text-xs text-red-300 hover:text-red-200 underline"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  ) : isLoadingRate ? (
+                    <div className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 border-2 border-[#22c55e] border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-sm text-gray-300">
+                          Fetching current exchange rate...
                         </p>
                       </div>
                     </div>
-                  </button>
+                  ) : zarAmount ? (
+                    <>
+                      <PayFastForm
+                        amount={zarAmount}
+                        item_name="Premium Access"
+                        item_description="Unlock premium features and remove ads"
+                        return_url={API_CONFIG.PAYFAST.RETURN_URL}
+                        cancel_url={API_CONFIG.PAYFAST.CANCEL_URL}
+                        notify_url={API_CONFIG.PAYFAST.NOTIFY_URL}
+                        custom_str1={`payment_${Date.now()}`}
+                        custom_str2={window.location.href}
+                        formRef={payFastFormRef}
+                      />
+                      <button
+                        onClick={handlePay}
+                        disabled={isProcessingPayment || !zarAmount}
+                        className="w-full group relative p-4 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:shadow-lg hover:shadow-[#22c55e]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex-1"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
+                            <div className="bg-white/20 p-2.5 rounded-lg">
+                              {isProcessingPayment ? (
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <CreditCard className="w-5 h-5 text-white" />
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex-1 text-left">
+                            <h4 className="text-base font-medium text-white mb-0.5">
+                              {isProcessingPayment
+                                ? "Processing..."
+                                : `Pay R${zarAmount} (~$1 USD)`}
+                            </h4>
+                            <p className="text-xs text-white/70">
+                              {isProcessingPayment
+                                ? "Redirecting to payment..."
+                                : "Instant access, no ads"}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    </>
+                  ) : null}
                 </div>
               </div>
               {paymentError && (

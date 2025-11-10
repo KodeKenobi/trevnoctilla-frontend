@@ -94,4 +94,3 @@ If you can't find the Passphrase:
 1. Check PayFast's documentation: [https://developers.payfast.co.za/docs](https://developers.payfast.co.za/docs)
 2. Contact PayFast support: [https://support.payfast.help/](https://support.payfast.help/)
 3. Look for "Security Settings" or "API Settings" in your PayFast dashboard
-
