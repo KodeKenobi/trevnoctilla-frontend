@@ -209,7 +209,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                 {/* View Ad Option */}
                 <button
                   onClick={handleViewAd}
-                  className="group relative p-4 bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] rounded-lg border border-[#8b5cf6]/30 hover:border-[#8b5cf6] transition-all hover:shadow-lg hover:shadow-[#8b5cf6]/20"
+                  className="group relative p-4 bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] rounded-lg border border-[#8b5cf6]/30 hover:border-[#8b5cf6] transition-all hover:shadow-lg hover:shadow-[#8b5cf6]/20 h-full"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0">
@@ -229,7 +229,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                 </button>
 
                 {/* Pay Option */}
-                <div className="space-y-3">
+                <div className="flex flex-col">
                   {showEmailField && (
                     <div className="mb-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                       <label
@@ -274,7 +274,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                   <button
                     onClick={handlePay}
                     disabled={isProcessingPayment}
-                    className="w-full group relative p-4 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:shadow-lg hover:shadow-[#22c55e]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                    className="w-full group relative p-4 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:shadow-lg hover:shadow-[#22c55e]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex-1"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0">
