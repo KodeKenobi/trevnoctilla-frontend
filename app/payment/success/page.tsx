@@ -17,14 +17,19 @@ function PaymentSuccessContent() {
   const [isSubscription, setIsSubscription] = useState(false);
   const [isDownloadPayment, setIsDownloadPayment] = useState(false);
 
-  // Check localStorage for download URL (fallback if PayFast doesn't return it in URL)
-  // Also check for any recent downloads in case user closed modal before downloading
+  // Check localStorage for download URL IMMEDIATELY on page load
+  // This is critical because PayFast may not return parameters in the URL
   useEffect(() => {
     if (typeof window !== "undefined") {
       // Check if download URL was stored before payment
       const storedDownloadUrl = localStorage.getItem("payment_download_url");
       if (storedDownloadUrl) {
+        console.log(
+          "📥 Found download URL in localStorage:",
+          storedDownloadUrl
+        );
         setDownloadUrl(storedDownloadUrl);
+        setIsDownloadPayment(true);
         // Don't clear it - keep it for later access
       }
 
@@ -36,17 +41,23 @@ function PaymentSuccessContent() {
 
       // Check for recent downloads (in case user closed modal before downloading)
       // This will be updated when payment data is loaded, but check here as fallback
-      const recentDownloads = JSON.parse(
-        localStorage.getItem("recent_downloads") || "[]"
-      );
-      if (recentDownloads.length > 0 && !downloadUrl) {
-        // Show most recent download if available and no download URL from params yet
-        const mostRecent = recentDownloads[0];
-        // Only show if it's recent (within last 24 hours)
-        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-        if (mostRecent.timestamp > oneDayAgo) {
-          setDownloadUrl(mostRecent.url);
-          setIsDownloadPayment(true);
+      if (!storedDownloadUrl) {
+        const recentDownloads = JSON.parse(
+          localStorage.getItem("recent_downloads") || "[]"
+        );
+        if (recentDownloads.length > 0) {
+          // Show most recent download if available
+          const mostRecent = recentDownloads[0];
+          // Only show if it's recent (within last 24 hours)
+          const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+          if (mostRecent.timestamp > oneDayAgo) {
+            console.log(
+              "📥 Found recent download in localStorage:",
+              mostRecent.url
+            );
+            setDownloadUrl(mostRecent.url);
+            setIsDownloadPayment(true);
+          }
         }
       }
     }
@@ -160,13 +171,104 @@ function PaymentSuccessContent() {
           paymentStatus
         );
       } else {
-        // No payment_status in URL - might be $0.00 payment issue
+        // No payment_status in URL - PayFast sometimes doesn't return params
         console.warn(
-          "⚠️ No payment_status in return_url - might be $0.00 payment issue"
+          "⚠️ No payment_status in return_url - PayFast may not have returned parameters"
         );
-        // For $0.00 payments, if we reach here, consider it successful
-        // (user was redirected back, which means PayFast processed it)
-        setPaymentStatus("success");
+        // If user reached success page, payment likely succeeded
+        // Check if we have download URL in localStorage to confirm it's a $1 payment
+        if (typeof window !== "undefined") {
+          const storedDownloadUrl = localStorage.getItem(
+            "payment_download_url"
+          );
+          if (storedDownloadUrl) {
+            // User paid $1 and we have download URL - mark as success
+            setPaymentStatus("success");
+            if (!downloadUrl) {
+              setDownloadUrl(storedDownloadUrl);
+              setIsDownloadPayment(true);
+            }
+            console.log(
+              "✅ Payment likely successful - found download URL in localStorage"
+            );
+          } else {
+            // Check recent downloads as fallback
+            const recentDownloads = JSON.parse(
+              localStorage.getItem("recent_downloads") || "[]"
+            );
+            if (recentDownloads.length > 0) {
+              const mostRecent = recentDownloads[0];
+              const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+              if (mostRecent.timestamp > oneDayAgo) {
+                setPaymentStatus("success");
+                if (!downloadUrl) {
+                  setDownloadUrl(mostRecent.url);
+                  setIsDownloadPayment(true);
+                }
+                console.log(
+                  "✅ Payment likely successful - found recent download in localStorage"
+                );
+              } else {
+                setPaymentStatus("success"); // Default to success if redirected here
+              }
+            } else {
+              setPaymentStatus("success"); // Default to success if redirected here
+            }
+          }
+        } else {
+          setPaymentStatus("success"); // Default to success if redirected here
+        }
+      }
+
+      // ALWAYS check localStorage again after processing (in case it wasn't set initially)
+      if (typeof window !== "undefined" && !downloadUrl) {
+        const storedDownloadUrl = localStorage.getItem("payment_download_url");
+        if (storedDownloadUrl) {
+          setDownloadUrl(storedDownloadUrl);
+          setIsDownloadPayment(true);
+          console.log(
+            "✅ Retrieved download URL from localStorage:",
+            storedDownloadUrl
+          );
+        } else {
+          // Check recent downloads one more time
+          const recentDownloads = JSON.parse(
+            localStorage.getItem("recent_downloads") || "[]"
+          );
+          if (recentDownloads.length > 0) {
+            const mostRecent = recentDownloads[0];
+            const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+            if (mostRecent.timestamp > oneDayAgo) {
+              setDownloadUrl(mostRecent.url);
+              setIsDownloadPayment(true);
+              console.log(
+                "✅ Retrieved download URL from recent downloads:",
+                mostRecent.url
+              );
+            }
+          }
+        }
+      }
+
+      // Log all localStorage keys related to downloads for debugging
+      if (typeof window !== "undefined") {
+        console.log("🔍 Checking localStorage for download data...");
+        console.log(
+          "payment_download_url:",
+          localStorage.getItem("payment_download_url")
+        );
+        console.log(
+          "recent_downloads:",
+          localStorage.getItem("recent_downloads")
+        );
+        // Log all download_* keys
+        const allKeys = Object.keys(localStorage);
+        const downloadKeys = allKeys.filter((key) =>
+          key.startsWith("download_")
+        );
+        downloadKeys.forEach((key) => {
+          console.log(`${key}:`, localStorage.getItem(key));
+        });
       }
 
       setIsVerifying(false);
@@ -206,6 +308,12 @@ function PaymentSuccessContent() {
                 : isSubscription
                 ? "Your subscription has been activated successfully. You now have premium access."
                 : "Your payment has been processed successfully."}
+              {!downloadUrl && !isSubscription && (
+                <span className="block mt-2 text-xs text-yellow-400">
+                  If you paid for a download, check your browser console for the
+                  download link.
+                </span>
+              )}
             </p>
             <div className="space-y-3">
               {/* ONLY show download/close buttons for $1 download payments */}
