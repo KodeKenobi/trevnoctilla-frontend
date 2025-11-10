@@ -116,14 +116,14 @@ export default function PayFastForm({
 
   /**
    * Generate PayFast signature according to their documentation
-   * 
+   *
    * Steps (as per PayFast PHP example):
    * 1. Concatenate name-value pairs in the order they appear in the data object (NOT alphabetical)
    * 2. URL encode values using urlencode() style (uppercase encoding, spaces as '+')
    * 3. Exclude empty values and signature field
    * 4. Add passphrase at the end (also URL-encoded)
    * 5. MD5 hash the result
-   * 
+   *
    * PayFast PHP example:
    * foreach( $data as $key => $val ) {
    *   if($val !== '') {
@@ -135,7 +135,7 @@ export default function PayFastForm({
    *   $getString .= '&passphrase='. urlencode( trim( $passPhrase ) );
    * }
    * return md5( $getString );
-   * 
+   *
    * IMPORTANT: Include ALL fields in the order they appear in paymentData object
    * JavaScript objects maintain insertion order for string keys (ES2015+)
    */
@@ -173,7 +173,13 @@ export default function PayFastForm({
     }
 
     // Add passphrase if provided (also URL-encoded)
+    // CRITICAL: Passphrase is required for PayFast signature verification
     const passphrase = API_CONFIG.PAYFAST.PASSPHRASE || "";
+    if (!passphrase || passphrase.trim() === "") {
+      console.error("❌ PAYFAST PASSPHRASE IS MISSING!");
+      console.error("Please set NEXT_PUBLIC_PAYFAST_PASSPHRASE in your environment variables.");
+      console.error("Without the passphrase, PayFast will reject the signature.");
+    }
     if (passphrase && passphrase.trim() !== "") {
       const trimmedPassphrase = passphrase.trim();
       const encodedPassphrase = encodeURIComponent(trimmedPassphrase)
@@ -184,10 +190,10 @@ export default function PayFastForm({
 
     // Generate MD5 hash using crypto-js
     const hash = CryptoJS.MD5(paramString).toString();
-    
+
     console.log("🔐 PayFast Signature Generation:");
     console.log("=== PAYMENT DATA (in order) ===");
-    Object.keys(paymentData).forEach(key => {
+    Object.keys(paymentData).forEach((key) => {
       if (key !== "signature") {
         console.log(`${key}: ${paymentData[key]}`);
       }
@@ -200,7 +206,7 @@ export default function PayFastForm({
     console.log("=== GENERATED SIGNATURE ===");
     console.log(hash);
     console.log("=== END SIGNATURE DEBUG ===");
-    
+
     return hash;
   };
 
