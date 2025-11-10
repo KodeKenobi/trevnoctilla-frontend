@@ -12,6 +12,7 @@ interface ExtractTextToolProps {
   isProcessing: boolean;
   setIsProcessing: (processing: boolean) => void;
   handleFileUpload: (file: File) => void;
+  uploadProgress?: number;
 }
 
 export const ExtractTextTool: React.FC<ExtractTextToolProps> = ({

@@ -26,6 +26,7 @@ import { PdfToHtmlTool } from "./pdf-to-html/PdfToHtmlTool";
 import { MobilePdfToHtmlTool } from "./pdf-to-html/MobilePdfToHtmlTool";
 import { HtmlToPdfTool } from "./html-to-pdf/HtmlToPdfTool";
 import { MobileHtmlToPdfTool } from "./html-to-pdf/MobileHtmlToPdfTool";
+import { PDFProcessingModal } from "@/components/ui/PDFProcessingModal";
 
 const toolCategories = [
   {
@@ -69,6 +70,7 @@ export default function PDFTools() {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [showToolsGrid, setShowToolsGrid] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [result, setResult] = useState<{
     type: "success" | "error";
     message: string;
@@ -120,6 +122,33 @@ export default function PDFTools() {
     // Most tools now handle their own processing with the advanced editor pattern
     setIsProcessing(true);
     setResult(null);
+    setUploadProgress(0);
+
+    // Progress simulation for extract-text (large files can take time)
+    const simulateProgress = () => {
+      return new Promise<void>((resolve) => {
+        let progress = 0;
+        const totalDuration = file.size > 5 * 1024 * 1024 ? 10000 : 6000; // 10s for large files, 6s for small
+        const updateInterval = 100;
+        const totalSteps = totalDuration / updateInterval;
+        const progressIncrement = 85 / totalSteps; // Go to 85%, then wait for response
+
+        const updateProgress = () => {
+          if (progress < 85) {
+            progress += progressIncrement;
+            setUploadProgress(Math.min(progress, 85));
+            setTimeout(updateProgress, updateInterval);
+          } else {
+            resolve();
+          }
+        };
+
+        updateProgress();
+      });
+    };
+
+    // Start progress simulation
+    const progressPromise = simulateProgress();
 
     try {
       const formData = new FormData();
@@ -142,10 +171,17 @@ export default function PDFTools() {
           return;
       }
 
-      const response = await fetch(`${getApiUrl("")}${endpoint}`, {
-        method: "POST",
-        body: formData,
-      });
+      // Wait for progress to reach 85% or fetch to complete
+      const [_, response] = await Promise.all([
+        progressPromise,
+        fetch(`${getApiUrl("")}${endpoint}`, {
+          method: "POST",
+          body: formData,
+        }),
+      ]);
+
+      // Complete progress to 100%
+      setUploadProgress(100);
 
       if (!response.ok) {
         throw new Error("Failed to process file");
@@ -165,6 +201,7 @@ export default function PDFTools() {
       });
     } finally {
       setIsProcessing(false);
+      setUploadProgress(0);
     }
   };
 
@@ -177,6 +214,7 @@ export default function PDFTools() {
       isProcessing,
       setIsProcessing,
       handleFileUpload,
+      uploadProgress,
     };
 
     switch (activeTab) {
@@ -247,6 +285,14 @@ export default function PDFTools() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 page-content">
+      {/* Progress Modal for extract-text */}
+      {activeTab === "extract-text" && (
+        <PDFProcessingModal
+          isOpen={isProcessing}
+          progress={uploadProgress}
+          fileName={uploadedFile?.name}
+        />
+      )}
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">

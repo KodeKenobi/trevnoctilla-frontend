@@ -5,6 +5,7 @@ import { X, Play, CreditCard } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { API_CONFIG } from "@/lib/config";
 import PayFastForm from "./PayFastForm";
+import { convertUSDToZAR } from "@/lib/currency";
 
 interface MonetizationModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const waitingReturnRef = React.useRef(false);
   const leftOnceRef = React.useRef(false);
   const [needsManualOpen, setNeedsManualOpen] = React.useState(false);
+  const [zarAmount, setZarAmount] = React.useState<string>("20.00");
 
   // Complete when user returns to the tab/window after viewing the ad
   React.useEffect(() => {
@@ -112,10 +114,20 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const [showEmailField, setShowEmailField] = React.useState(false);
   const payFastFormRef = React.useRef<HTMLFormElement>(null);
 
-  const handlePay = (e: React.MouseEvent) => {
+  const handlePay = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsProcessingPayment(true);
     setPaymentError(null);
+
+    // Fetch latest exchange rate and convert $1 USD to ZAR before payment
+    try {
+      const zar = await convertUSDToZAR(1.0);
+      setZarAmount(zar.toFixed(2));
+    } catch (error) {
+      console.error("Failed to fetch exchange rate:", error);
+      // Fallback to default rate if conversion fails
+      setZarAmount("20.00");
+    }
 
     // Store the current page URL so we can return here if payment is cancelled
     if (typeof window !== "undefined") {
@@ -250,7 +262,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                     </div>
                   )}
                   <PayFastForm
-                    amount="20.00"
+                    amount={zarAmount}
                     item_name="Premium Access"
                     item_description="Unlock premium features and remove ads"
                     return_url={API_CONFIG.PAYFAST.RETURN_URL}
