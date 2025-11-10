@@ -3,7 +3,6 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CheckCircle, Loader2 } from "lucide-react";
-import Link from "next/link";
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -113,31 +112,10 @@ function PaymentSuccessContent() {
               Your payment has been processed successfully. You now have premium
               access.
             </p>
-            {itnDebug && itnDebug.errors && itnDebug.errors.length > 0 && (
-              <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-left">
-                <p className="text-red-400 font-semibold mb-2">
-                  ⚠️ ITN Verification Issues:
-                </p>
-                <ul className="text-sm text-red-300 space-y-1">
-                  {itnDebug.errors.map((error: string, idx: number) => (
-                    <li key={idx}>• {error}</li>
-                  ))}
-                </ul>
-                <p className="text-xs text-gray-400 mt-2">
-                  Check Railway logs for details (Request ID: {itnDebug.requestId})
-                </p>
-              </div>
-            )}
             <div className="space-y-3">
-              <Link
-                href="/dashboard"
-                className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
-              >
-                Go to Dashboard
-              </Link>
               <button
                 onClick={() => router.back()}
-                className="block w-full px-6 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-gray-300 rounded-lg font-medium transition-all"
+                className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
               >
                 Continue
               </button>
@@ -155,12 +133,12 @@ function PaymentSuccessContent() {
               Your payment is being processed. This may take a few minutes for
               EFT payments.
             </p>
-            <Link
-              href="/dashboard"
+            <button
+              onClick={() => router.back()}
               className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
             >
-              Go to Dashboard
-            </Link>
+              Continue
+            </button>
           </>
         ) : (
           <>
@@ -185,12 +163,6 @@ function PaymentSuccessContent() {
               >
                 Try Again
               </button>
-              <Link
-                href="/dashboard"
-                className="block w-full px-6 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-gray-300 rounded-lg font-medium transition-all"
-              >
-                Go to Dashboard
-              </Link>
             </div>
           </>
         )}
