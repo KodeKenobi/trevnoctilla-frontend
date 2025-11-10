@@ -8,6 +8,7 @@ function PaymentCancelContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [returnPath, setReturnPath] = useState<string | null>(null);
+  const [itnDebug, setItnDebug] = useState<any>(null);
 
   useEffect(() => {
     // Log ALL parameters from PayFast cancel_url callback
@@ -40,6 +41,22 @@ function PaymentCancelContent() {
         localStorage.removeItem("payment_return_path");
       }
     }
+
+    // Fetch ITN debug info to see what happened
+    const fetchDebugInfo = async () => {
+      try {
+        const debugResponse = await fetch(
+          "https://www.trevnoctilla.com/api/payments/debug"
+        );
+        const debugData = await debugResponse.json();
+        if (debugData.lastITN) {
+          setItnDebug(debugData.lastITN);
+        }
+      } catch (error) {
+        console.error("Failed to fetch ITN debug info:", error);
+      }
+    };
+    fetchDebugInfo();
   }, [searchParams]);
 
   const handleGoBack = () => {
@@ -67,6 +84,21 @@ function PaymentCancelContent() {
         <p className="text-gray-400 mb-6">
           You cancelled the payment process. No charges were made.
         </p>
+        {itnDebug && itnDebug.errors && itnDebug.errors.length > 0 && (
+          <div className="mb-6 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg text-left">
+            <p className="text-yellow-400 font-semibold mb-2">
+              ⚠️ ITN Verification Issues (before cancellation):
+            </p>
+            <ul className="text-sm text-yellow-300 space-y-1">
+              {itnDebug.errors.map((error: string, idx: number) => (
+                <li key={idx}>• {error}</li>
+              ))}
+            </ul>
+            <p className="text-xs text-gray-400 mt-2">
+              Check Railway logs for details (Request ID: {itnDebug.requestId})
+            </p>
+          </div>
+        )}
         <div className="space-y-3">
           <button
             onClick={handleGoBack}

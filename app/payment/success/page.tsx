@@ -12,6 +12,7 @@ function PaymentSuccessContent() {
   const [paymentStatus, setPaymentStatus] = useState<
     "success" | "pending" | "failed"
   >("pending");
+  const [itnDebug, setItnDebug] = useState<any>(null);
 
   useEffect(() => {
     // Verify payment status from PayFast callback
@@ -36,6 +37,19 @@ function PaymentSuccessContent() {
       console.log("pf_payment_id:", pfPaymentId);
       console.log("payment_status:", paymentStatus);
       console.log("signature:", signature);
+
+      // Fetch ITN debug info to see what happened
+      try {
+        const debugResponse = await fetch(
+          "https://www.trevnoctilla.com/api/payments/debug"
+        );
+        const debugData = await debugResponse.json();
+        if (debugData.lastITN) {
+          setItnDebug(debugData.lastITN);
+        }
+      } catch (error) {
+        console.error("Failed to fetch ITN debug info:", error);
+      }
 
       // For $0.00 payments (wallet-funded), PayFast might not send ITN
       // but will include payment status in return_url
@@ -99,6 +113,21 @@ function PaymentSuccessContent() {
               Your payment has been processed successfully. You now have premium
               access.
             </p>
+            {itnDebug && itnDebug.errors && itnDebug.errors.length > 0 && (
+              <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-left">
+                <p className="text-red-400 font-semibold mb-2">
+                  ⚠️ ITN Verification Issues:
+                </p>
+                <ul className="text-sm text-red-300 space-y-1">
+                  {itnDebug.errors.map((error: string, idx: number) => (
+                    <li key={idx}>• {error}</li>
+                  ))}
+                </ul>
+                <p className="text-xs text-gray-400 mt-2">
+                  Check Railway logs for details (Request ID: {itnDebug.requestId})
+                </p>
+              </div>
+            )}
             <div className="space-y-3">
               <Link
                 href="/dashboard"
