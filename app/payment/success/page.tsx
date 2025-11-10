@@ -14,22 +14,40 @@ function PaymentSuccessContent() {
   const [itnDebug, setItnDebug] = useState<any>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [returnPath, setReturnPath] = useState<string | null>(null);
+  const [isSubscription, setIsSubscription] = useState(false);
+  const [isDownloadPayment, setIsDownloadPayment] = useState(false);
 
   // Check localStorage for download URL (fallback if PayFast doesn't return it in URL)
+  // Also check for any recent downloads in case user closed modal before downloading
   useEffect(() => {
     if (typeof window !== "undefined") {
       // Check if download URL was stored before payment
       const storedDownloadUrl = localStorage.getItem("payment_download_url");
       if (storedDownloadUrl) {
         setDownloadUrl(storedDownloadUrl);
-        // Clear it after use
-        localStorage.removeItem("payment_download_url");
+        // Don't clear it - keep it for later access
       }
 
       // Check for return path
       const storedReturnPath = localStorage.getItem("payment_return_path");
       if (storedReturnPath) {
         setReturnPath(storedReturnPath);
+      }
+
+      // Check for recent downloads (in case user closed modal before downloading)
+      // This will be updated when payment data is loaded, but check here as fallback
+      const recentDownloads = JSON.parse(
+        localStorage.getItem("recent_downloads") || "[]"
+      );
+      if (recentDownloads.length > 0 && !downloadUrl) {
+        // Show most recent download if available and no download URL from params yet
+        const mostRecent = recentDownloads[0];
+        // Only show if it's recent (within last 24 hours)
+        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+        if (mostRecent.timestamp > oneDayAgo) {
+          setDownloadUrl(mostRecent.url);
+          setIsDownloadPayment(true);
+        }
       }
     }
   }, []);
@@ -52,12 +70,54 @@ function PaymentSuccessContent() {
       const pfPaymentId = searchParams.get("pf_payment_id");
       const paymentStatus = searchParams.get("payment_status");
       const signature = searchParams.get("signature");
+      const amount = searchParams.get("amount");
+      const itemName = searchParams.get("item_name");
+      const subscriptionType = searchParams.get("subscription_type");
+
       // Get download URL from custom_str1 (stored by MonetizationModal)
       const urlFromParams = searchParams.get("custom_str1");
       const pathFromParams = searchParams.get("custom_str2");
 
+      // Determine if this is a $1 download payment or subscription
+      // $1 payments: amount ~= 1.00, no subscription_type, downloadUrl in custom_str1
+      // Subscriptions: has subscription_type, or item_name contains "Subscription"
+      const paymentIsSubscription =
+        !!subscriptionType ||
+        (itemName?.toLowerCase().includes("subscription") ?? false);
+      const paymentIsDownload =
+        !paymentIsSubscription && (urlFromParams?.startsWith("http") ?? false);
+
+      setIsSubscription(paymentIsSubscription);
+      setIsDownloadPayment(paymentIsDownload);
+
       // Store in state for use in UI
-      if (urlFromParams) setDownloadUrl(urlFromParams);
+      if (urlFromParams && urlFromParams.startsWith("http")) {
+        setDownloadUrl(urlFromParams);
+        // Store download URL with payment ID for later access
+        if (mPaymentId && typeof window !== "undefined") {
+          const downloadData = {
+            url: urlFromParams,
+            paymentId: mPaymentId,
+            timestamp: Date.now(),
+            itemName: itemName || "File Download",
+          };
+          localStorage.setItem(
+            `download_${mPaymentId}`,
+            JSON.stringify(downloadData)
+          );
+          // Also store in a list of recent downloads
+          const recentDownloads = JSON.parse(
+            localStorage.getItem("recent_downloads") || "[]"
+          );
+          recentDownloads.unshift(downloadData);
+          // Keep only last 10 downloads
+          const limitedDownloads = recentDownloads.slice(0, 10);
+          localStorage.setItem(
+            "recent_downloads",
+            JSON.stringify(limitedDownloads)
+          );
+        }
+      }
       if (pathFromParams) setReturnPath(pathFromParams);
 
       console.log("m_payment_id:", mPaymentId);
@@ -141,32 +201,57 @@ function PaymentSuccessContent() {
               Payment Successful!
             </h1>
             <p className="text-gray-400 mb-6">
-              Your payment has been processed successfully.{" "}
-              {downloadUrl
-                ? "Click the button below to download your file."
-                : "You now have premium access."}
+              {isDownloadPayment && downloadUrl
+                ? "Your payment has been processed successfully. Click the button below to download your file."
+                : isSubscription
+                ? "Your subscription has been activated successfully. You now have premium access."
+                : "Your payment has been processed successfully."}
             </p>
             <div className="space-y-3">
-              {downloadUrl && (
+              {/* ONLY show download/close buttons for $1 download payments */}
+              {isDownloadPayment && downloadUrl && (
+                <>
+                  <button
+                    onClick={() => window.open(downloadUrl, "_blank")}
+                    className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all"
+                  >
+                    Download File
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (returnPath) {
+                        router.push(returnPath);
+                      } else {
+                        router.back();
+                      }
+                    }}
+                    className="block w-full px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all"
+                  >
+                    Close
+                  </button>
+                </>
+              )}
+              {/* For subscriptions or other payments, show standard button */}
+              {!isDownloadPayment && (
                 <button
-                  onClick={() => window.open(downloadUrl, "_blank")}
-                  className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all"
+                  onClick={() => {
+                    if (isSubscription) {
+                      router.push("/dashboard");
+                    } else if (returnPath) {
+                      router.push(returnPath);
+                    } else {
+                      router.back();
+                    }
+                  }}
+                  className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
                 >
-                  Download File
+                  {isSubscription
+                    ? "Go to Dashboard"
+                    : returnPath
+                    ? "Return to Page"
+                    : "Continue"}
                 </button>
               )}
-              <button
-                onClick={() => {
-                  if (returnPath) {
-                    router.push(returnPath);
-                  } else {
-                    router.back();
-                  }
-                }}
-                className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
-              >
-                {returnPath ? "Return to Page" : "Continue"}
-              </button>
             </div>
           </>
         ) : paymentStatus === "pending" ? (

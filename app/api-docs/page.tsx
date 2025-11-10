@@ -294,20 +294,7 @@ export default function ApiDocsPage() {
       return;
     }
 
-    // CRITICAL: Require authentication before subscription
-    if (!user) {
-      // Redirect to login/register with return URL to come back here
-      const returnUrl = encodeURIComponent(
-        window.location.pathname + window.location.search
-      );
-      router.push(
-        `/auth/login?return=${returnUrl}&subscription=${encodeURIComponent(
-          plan.name
-        )}`
-      );
-      return;
-    }
-
+    // Allow subscriptions without authentication - users can subscribe anonymously
     setIsProcessingSubscription(true);
     setSelectedPlan(plan.name);
 
@@ -326,24 +313,7 @@ export default function ApiDocsPage() {
     }
   };
 
-  // Check for subscription parameter after login redirect
-  React.useEffect(() => {
-    if (!loading && user) {
-      const searchParams = new URLSearchParams(window.location.search);
-      const subscriptionPlan = searchParams.get("subscription");
-      if (subscriptionPlan) {
-        // User just logged in, trigger subscription for the plan
-        const plan = pricing.find((p) => p.name === subscriptionPlan);
-        if (plan && plan.isSubscription) {
-          // Clear the subscription param from URL
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, "", newUrl);
-          // Trigger subscription
-          handleSubscribe(plan);
-        }
-      }
-    }
-  }, [user, loading]);
+  // Note: Subscriptions no longer require authentication - removed login redirect logic
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 page-content">
