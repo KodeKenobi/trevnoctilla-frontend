@@ -150,17 +150,58 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
   const handlePay = async (e: React.MouseEvent) => {
     e.preventDefault();
-
-    // Ensure we have a valid exchange rate before proceeding
-    if (!zarAmount) {
-      setPaymentError(
-        "Exchange rate not available. Please wait for the rate to load or try again."
-      );
-      return;
-    }
-
     setIsProcessingPayment(true);
     setPaymentError(null);
+
+    // Fetch exchange rate silently if not already loaded
+    let finalZarAmount = zarAmount;
+    if (!finalZarAmount) {
+      // Try to get from cache first (instant, no loading)
+      if (typeof window !== "undefined") {
+        const cached = localStorage.getItem("usd_to_zar_rate");
+        if (cached) {
+          try {
+            const cache = JSON.parse(cached);
+            finalZarAmount = cache.rate.toFixed(2);
+            setZarAmount(finalZarAmount);
+          } catch (e) {
+            // Cache invalid, will fetch below
+          }
+        }
+      }
+
+      // If no cache, fetch from API (silently, no user-visible loading)
+      if (!finalZarAmount) {
+        try {
+          const zar = await convertUSDToZAR(1.0);
+          finalZarAmount = zar.toFixed(2);
+          setZarAmount(finalZarAmount);
+        } catch (error) {
+          console.error("Failed to fetch exchange rate:", error);
+          // If API fails and no cache, try expired cache as last resort
+          if (typeof window !== "undefined") {
+            const cached = localStorage.getItem("usd_to_zar_rate");
+            if (cached) {
+              try {
+                const cache = JSON.parse(cached);
+                finalZarAmount = cache.rate.toFixed(2);
+                setZarAmount(finalZarAmount);
+              } catch (e) {
+                // All options exhausted - will use form default
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Update form amount if needed
+    if (finalZarAmount && payFastFormRef.current) {
+      const amountInput = payFastFormRef.current.querySelector('input[name="amount"]') as HTMLInputElement;
+      if (amountInput) {
+        amountInput.value = finalZarAmount;
+      }
+    }
 
     // Store the current page URL so we can return here if payment is cancelled
     if (typeof window !== "undefined") {
@@ -168,23 +209,18 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       localStorage.setItem("payment_return_path", currentPath);
     }
 
-    // Submit PayFast form first, then close modal
-    setTimeout(() => {
-      if (payFastFormRef.current) {
-        console.log("Submitting PayFast form...");
-        payFastFormRef.current.submit();
-        // Close modal after form submission starts
-        setTimeout(() => {
-          onClose();
-        }, 100);
-      } else {
-        console.error("PayFast form ref is null!");
-        setPaymentError(
-          "Payment form not found. Please refresh and try again."
-        );
-        setIsProcessingPayment(false);
-      }
-    }, 50);
+    // Submit PayFast form immediately - no visible delay
+    if (payFastFormRef.current) {
+      payFastFormRef.current.submit();
+      // Close modal immediately
+      onClose();
+    } else {
+      console.error("PayFast form ref is null!");
+      setPaymentError(
+        "Payment form not found. Please refresh and try again."
+      );
+      setIsProcessingPayment(false);
+    }
   };
 
   const handlePayWithEmail = (customEmail: string) => {
@@ -293,71 +329,38 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                       </p>
                     </div>
                   )}
-                  {rateError ? (
-                    <div className="w-full p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                      <p className="text-sm text-red-400 mb-2">{rateError}</p>
-                      <button
-                        onClick={() => {
-                          setZarAmount(null);
-                          setRateError(null);
-                          setIsLoadingRate(false);
-                        }}
-                        className="text-xs text-red-300 hover:text-red-200 underline"
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  ) : isLoadingRate ? (
-                    <div className="w-full p-4 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-5 h-5 border-2 border-[#22c55e] border-t-transparent rounded-full animate-spin"></div>
-                        <p className="text-sm text-gray-300">
-                          Fetching current exchange rate...
+                  <PayFastForm
+                    amount={zarAmount || "1.00"}
+                    item_name="Premium Access"
+                    item_description="Unlock premium features and remove ads"
+                    return_url={API_CONFIG.PAYFAST.RETURN_URL}
+                    cancel_url={API_CONFIG.PAYFAST.CANCEL_URL}
+                    notify_url={API_CONFIG.PAYFAST.NOTIFY_URL}
+                    custom_str1={`payment_${Date.now()}`}
+                    custom_str2={window.location.href}
+                    formRef={payFastFormRef}
+                  />
+                  <button
+                    onClick={handlePay}
+                    disabled={isProcessingPayment}
+                    className="w-full group relative p-4 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:shadow-lg hover:shadow-[#22c55e]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex-1"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="bg-white/20 p-2.5 rounded-lg">
+                          <CreditCard className="w-5 h-5 text-white" />
+                        </div>
+                      </div>
+                      <div className="flex-1 text-left">
+                        <h4 className="text-base font-medium text-white mb-0.5">
+                          Pay $1
+                        </h4>
+                        <p className="text-xs text-white/70">
+                          Instant access, no ads
                         </p>
                       </div>
                     </div>
-                  ) : zarAmount ? (
-                    <>
-                      <PayFastForm
-                        amount={zarAmount}
-                        item_name="Premium Access"
-                        item_description="Unlock premium features and remove ads"
-                        return_url={API_CONFIG.PAYFAST.RETURN_URL}
-                        cancel_url={API_CONFIG.PAYFAST.CANCEL_URL}
-                        notify_url={API_CONFIG.PAYFAST.NOTIFY_URL}
-                        custom_str1={`payment_${Date.now()}`}
-                        custom_str2={window.location.href}
-                        formRef={payFastFormRef}
-                      />
-                      <button
-                        onClick={handlePay}
-                        disabled={isProcessingPayment || !zarAmount}
-                        className="w-full group relative p-4 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:shadow-lg hover:shadow-[#22c55e]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex-1"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex-shrink-0">
-                            <div className="bg-white/20 p-2.5 rounded-lg">
-                              {isProcessingPayment ? (
-                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              ) : (
-                                <CreditCard className="w-5 h-5 text-white" />
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex-1 text-left">
-                            <h4 className="text-base font-medium text-white mb-0.5">
-                              {isProcessingPayment ? "Processing..." : "Pay $1"}
-                            </h4>
-                            <p className="text-xs text-white/70">
-                              {isProcessingPayment
-                                ? "Redirecting to payment..."
-                                : "Instant access, no ads"}
-                            </p>
-                          </div>
-                        </div>
-                      </button>
-                    </>
-                  ) : null}
+                  </button>
                 </div>
               </div>
               {paymentError && (

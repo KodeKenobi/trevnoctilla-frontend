@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { API_CONFIG } from "@/lib/config";
 
 interface PayFastFormProps {
-  amount: string | null;
+  amount: string;
   item_name: string;
   item_description?: string;
   return_url?: string;
@@ -59,10 +59,6 @@ export default function PayFastForm({
         setIsLoadingSignature(true);
 
         // Build request data from props (what we want to send)
-        if (!amount) {
-          throw new Error("Amount is required");
-        }
-
         const requestData: Record<string, string> = {
           amount: parseFloat(amount).toFixed(2),
           item_name: String(item_name).trim(),
