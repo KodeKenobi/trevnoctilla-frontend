@@ -1,23 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-
-// Store last ITN attempt in memory (for debugging only)
-let lastITNAttempt: {
-  timestamp: string;
-  requestId: string;
-  data: any;
-  errors: string[];
-  status: "success" | "failed";
-} | null = null;
-
-export function setLastITNAttempt(attempt: typeof lastITNAttempt) {
-  lastITNAttempt = attempt;
-}
-
-// Export for debug route
-if (typeof global !== "undefined") {
-  (global as any).getLastITNAttempt = () => lastITNAttempt;
-}
+import { setLastITNAttempt } from "@/lib/payfast-debug";
 
 // Ensure this route is publicly accessible (no auth required)
 export const runtime = "nodejs";

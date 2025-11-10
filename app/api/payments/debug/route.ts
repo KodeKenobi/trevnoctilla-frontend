@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
+import { getLastITNAttempt } from "@/lib/payfast-debug";
 
 export async function GET() {
-  // Get last ITN attempt from global (set by notify route)
-  const getLastITNAttempt = (global as any).getLastITNAttempt;
-  const lastITN = getLastITNAttempt ? getLastITNAttempt() : null;
-
+  const lastITN = getLastITNAttempt();
+  
   return NextResponse.json({
     lastITN,
     timestamp: new Date().toISOString(),
