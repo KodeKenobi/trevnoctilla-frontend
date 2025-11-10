@@ -20,15 +20,22 @@ import {
   Database,
   QrCode,
 } from "lucide-react";
-import { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
+import PayFastForm from "@/components/ui/PayFastForm";
+import { convertUSDToZAR } from "@/lib/currency";
 
 export default function ApiDocsPage() {
   const { user, loading } = useUser();
   const router = useRouter();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("pdf");
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [zarAmount, setZarAmount] = useState<string | null>(null);
+  const [isProcessingSubscription, setIsProcessingSubscription] =
+    useState(false);
+  const subscriptionFormRef = useRef<HTMLFormElement>(null);
 
   const copyToClipboard = (code: string, id: string) => {
     navigator.clipboard.writeText(code);
@@ -226,6 +233,7 @@ export default function ApiDocsPage() {
     {
       name: "Testing",
       price: "Free",
+      usdAmount: 0,
       description: "Perfect for development and testing",
       features: [
         "50 API calls/month",
@@ -237,10 +245,12 @@ export default function ApiDocsPage() {
       ],
       cta: "Start Testing",
       popular: false,
+      isSubscription: false,
     },
     {
       name: "Production",
       price: "$29/month",
+      usdAmount: 29,
       description: "For production applications",
       features: [
         "5,000 API calls/month",
@@ -251,12 +261,14 @@ export default function ApiDocsPage() {
         "Admin dashboard access",
         "Priority support",
       ],
-      cta: "Get Started",
+      cta: "Subscribe Now",
       popular: true,
+      isSubscription: true,
     },
     {
       name: "Enterprise",
       price: "$49/month",
+      usdAmount: 49,
       description: "For large-scale applications",
       features: [
         "Unlimited API calls",
@@ -266,10 +278,72 @@ export default function ApiDocsPage() {
         "Custom SLAs",
         "White-label options",
       ],
-      cta: "Contact Sales",
+      cta: "Subscribe Now",
       popular: false,
+      isSubscription: true,
     },
   ];
+
+  const handleSubscribe = async (plan: (typeof pricing)[0]) => {
+    if (!plan.isSubscription || plan.usdAmount === 0) {
+      if (plan.name === "Testing") {
+        handleGetStarted();
+      } else if (plan.name === "Enterprise") {
+        window.open("mailto:api@trevnoctilla.com", "_blank");
+      }
+      return;
+    }
+
+    // CRITICAL: Require authentication before subscription
+    if (!user) {
+      // Redirect to login/register with return URL to come back here
+      const returnUrl = encodeURIComponent(
+        window.location.pathname + window.location.search
+      );
+      router.push(
+        `/auth/login?return=${returnUrl}&subscription=${encodeURIComponent(
+          plan.name
+        )}`
+      );
+      return;
+    }
+
+    setIsProcessingSubscription(true);
+    setSelectedPlan(plan.name);
+
+    try {
+      // Convert USD to ZAR
+      const zar = await convertUSDToZAR(plan.usdAmount);
+      setZarAmount(zar.toFixed(2));
+
+      // Don't manually submit - let PayFastForm handle auto-submit
+      // The form will auto-submit once payment data is loaded
+    } catch (error) {
+      console.error("Failed to fetch exchange rate:", error);
+      setIsProcessingSubscription(false);
+      setSelectedPlan(null);
+      setZarAmount(null);
+    }
+  };
+
+  // Check for subscription parameter after login redirect
+  React.useEffect(() => {
+    if (!loading && user) {
+      const searchParams = new URLSearchParams(window.location.search);
+      const subscriptionPlan = searchParams.get("subscription");
+      if (subscriptionPlan) {
+        // User just logged in, trigger subscription for the plan
+        const plan = pricing.find((p) => p.name === subscriptionPlan);
+        if (plan && plan.isSubscription) {
+          // Clear the subscription param from URL
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, "", newUrl);
+          // Trigger subscription
+          handleSubscribe(plan);
+        }
+      }
+    }
+  }, [user, loading]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 page-content">
@@ -841,21 +915,61 @@ export default function ApiDocsPage() {
                 </ul>
 
                 <motion.button
-                  onClick={handleGetStarted}
+                  onClick={() => handleSubscribe(plan)}
+                  disabled={
+                    isProcessingSubscription && selectedPlan === plan.name
+                  }
                   className={`w-full py-3 px-6 rounded-xl font-bold transition-all duration-300 mt-auto ${
                     plan.popular
                       ? "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
                       : "border-2 border-gray-600 hover:border-cyan-400 text-gray-300 hover:text-white"
+                  } ${
+                    isProcessingSubscription && selectedPlan === plan.name
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
                   }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={
+                    isProcessingSubscription && selectedPlan === plan.name
+                      ? {}
+                      : { scale: 1.02 }
+                  }
+                  whileTap={
+                    isProcessingSubscription && selectedPlan === plan.name
+                      ? {}
+                      : { scale: 0.98 }
+                  }
                 >
-                  {plan.cta}
+                  {isProcessingSubscription && selectedPlan === plan.name
+                    ? "Processing..."
+                    : plan.cta}
                 </motion.button>
               </motion.div>
             ))}
           </div>
         </motion.div>
+
+        {/* Subscription Forms - Hidden, auto-submit when triggered */}
+        {selectedPlan &&
+          zarAmount &&
+          pricing
+            .filter((p) => p.name === selectedPlan && p.isSubscription)
+            .map((plan) => (
+              <PayFastForm
+                key={plan.name}
+                formRef={subscriptionFormRef}
+                amount={zarAmount}
+                item_name={`${plan.name} Subscription - ${plan.price}`}
+                item_description={plan.description}
+                subscription_type="1"
+                frequency="3"
+                cycles="0"
+                subscription_notify_email={true}
+                subscription_notify_webhook={true}
+                subscription_notify_buyer={true}
+                autoSubmit={true}
+                className="hidden"
+              />
+            ))}
 
         {/* CTA Section */}
         <motion.div

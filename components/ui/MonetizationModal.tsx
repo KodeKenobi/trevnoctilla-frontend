@@ -13,6 +13,8 @@ interface MonetizationModalProps {
   onComplete: () => void; // Called when user views ad or pays
   title?: string;
   message?: string;
+  downloadUrl?: string; // URL to download after payment
+  fileName?: string; // Name of file being downloaded
 }
 
 const MonetizationModal: React.FC<MonetizationModalProps> = ({
@@ -21,6 +23,8 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   onComplete,
   title = "Continue with Ad or Payment",
   message = "Choose how you'd like to proceed",
+  downloadUrl,
+  fileName,
 }) => {
   const { user } = useUser();
   const [adOpened, setAdOpened] = React.useState(false);
@@ -197,16 +201,22 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
     // Update form amount if needed
     if (finalZarAmount && payFastFormRef.current) {
-      const amountInput = payFastFormRef.current.querySelector('input[name="amount"]') as HTMLInputElement;
+      const amountInput = payFastFormRef.current.querySelector(
+        'input[name="amount"]'
+      ) as HTMLInputElement;
       if (amountInput) {
         amountInput.value = finalZarAmount;
       }
     }
 
-    // Store the current page URL so we can return here if payment is cancelled
+    // Store the current page URL and download URL so we can return here if payment is cancelled
+    // Also store download URL for success page fallback
     if (typeof window !== "undefined") {
       const currentPath = window.location.pathname + window.location.search;
       localStorage.setItem("payment_return_path", currentPath);
+      if (downloadUrl) {
+        localStorage.setItem("payment_download_url", downloadUrl);
+      }
     }
 
     // Submit PayFast form immediately - no visible delay
@@ -216,9 +226,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       onClose();
     } else {
       console.error("PayFast form ref is null!");
-      setPaymentError(
-        "Payment form not found. Please refresh and try again."
-      );
+      setPaymentError("Payment form not found. Please refresh and try again.");
       setIsProcessingPayment(false);
     }
   };
@@ -336,8 +344,8 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                     return_url={API_CONFIG.PAYFAST.RETURN_URL}
                     cancel_url={API_CONFIG.PAYFAST.CANCEL_URL}
                     notify_url={API_CONFIG.PAYFAST.NOTIFY_URL}
-                    custom_str1={`payment_${Date.now()}`}
-                    custom_str2={window.location.href}
+                    custom_str1={downloadUrl || ""} // Pass download URL so it's available after payment
+                    custom_str2={window.location.href} // Pass current page URL for return
                     formRef={payFastFormRef}
                   />
                   <button

@@ -124,8 +124,22 @@ function generatePayFastSignature(data: Record<string, string>): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { amount, item_name, item_description, custom_str1, custom_str2 } =
-      body;
+    const {
+      amount,
+      item_name,
+      item_description,
+      custom_str1,
+      custom_str2,
+      // Subscription fields
+      subscription_type,
+      billing_date,
+      recurring_amount,
+      frequency,
+      cycles,
+      subscription_notify_email,
+      subscription_notify_webhook,
+      subscription_notify_buyer,
+    } = body;
 
     // Validate required fields
     if (!amount || !item_name) {
@@ -133,6 +147,61 @@ export async function POST(request: NextRequest) {
         { error: "Amount and item_name are required" },
         { status: 400 }
       );
+    }
+
+    // Validate subscription fields if subscription_type is provided
+    if (subscription_type) {
+      // subscription_type: 1 = subscription, 2 = tokenization
+      if (subscription_type !== "1" && subscription_type !== "2") {
+        return NextResponse.json(
+          {
+            error:
+              "subscription_type must be '1' (subscription) or '2' (tokenization)",
+          },
+          { status: 400 }
+        );
+      }
+
+      // For subscriptions (type 1), frequency and cycles are REQUIRED
+      if (subscription_type === "1") {
+        if (!frequency || !cycles) {
+          return NextResponse.json(
+            { error: "frequency and cycles are required for subscriptions" },
+            { status: 400 }
+          );
+        }
+        // Validate frequency (1-6)
+        if (!["1", "2", "3", "4", "5", "6"].includes(String(frequency))) {
+          return NextResponse.json(
+            {
+              error:
+                "frequency must be 1-6 (Daily, Weekly, Monthly, Quarterly, Biannually, Annual)",
+            },
+            { status: 400 }
+          );
+        }
+        // Validate cycles (0 for indefinite, or positive integer)
+        const cyclesNum = parseInt(String(cycles));
+        if (isNaN(cyclesNum) || cyclesNum < 0) {
+          return NextResponse.json(
+            { error: "cycles must be 0 (indefinite) or a positive integer" },
+            { status: 400 }
+          );
+        }
+        // CRITICAL: Passphrase is REQUIRED for subscriptions
+        if (
+          !PAYFAST_CONFIG.PASSPHRASE ||
+          PAYFAST_CONFIG.PASSPHRASE.trim() === ""
+        ) {
+          return NextResponse.json(
+            {
+              error:
+                "PASSPHRASE is REQUIRED for subscriptions. Please set PAYFAST_PASSPHRASE environment variable.",
+            },
+            { status: 400 }
+          );
+        }
+      }
     }
 
     // Validate PayFast configuration
@@ -219,7 +288,47 @@ export async function POST(request: NextRequest) {
     if (custom_str2 && custom_str2.trim())
       paymentData.custom_str2 = custom_str2.trim();
 
+    // Add subscription fields if provided
+    if (subscription_type) {
+      paymentData.subscription_type = String(subscription_type);
+
+      // Subscription-specific fields (type 1)
+      if (subscription_type === "1") {
+        paymentData.frequency = String(frequency);
+        paymentData.cycles = String(cycles);
+
+        if (billing_date && billing_date.trim()) {
+          paymentData.billing_date = String(billing_date).trim();
+        }
+        if (recurring_amount) {
+          const recurringAmount = parseFloat(String(recurring_amount));
+          if (!isNaN(recurringAmount) && recurringAmount >= 5.0) {
+            paymentData.recurring_amount = recurringAmount.toFixed(2);
+          }
+        }
+        if (subscription_notify_email !== undefined) {
+          paymentData.subscription_notify_email = String(
+            subscription_notify_email === true ||
+              subscription_notify_email === "true"
+          );
+        }
+        if (subscription_notify_webhook !== undefined) {
+          paymentData.subscription_notify_webhook = String(
+            subscription_notify_webhook === true ||
+              subscription_notify_webhook === "true"
+          );
+        }
+        if (subscription_notify_buyer !== undefined) {
+          paymentData.subscription_notify_buyer = String(
+            subscription_notify_buyer === true ||
+              subscription_notify_buyer === "true"
+          );
+        }
+      }
+    }
+
     // Generate signature
+    // CRITICAL: For subscriptions, passphrase MUST be included in signature
     const signature = generatePayFastSignature(paymentData);
     paymentData.signature = signature;
 

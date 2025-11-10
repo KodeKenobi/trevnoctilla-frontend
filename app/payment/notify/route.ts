@@ -179,9 +179,15 @@ export async function POST(request: NextRequest) {
         `[${requestId}] Received data:`,
         JSON.stringify(data, null, 2)
       );
-      console.error(`[${requestId}] Expected Merchant ID:`, PAYFAST_CONFIG.MERCHANT_ID);
+      console.error(
+        `[${requestId}] Expected Merchant ID:`,
+        PAYFAST_CONFIG.MERCHANT_ID
+      );
       console.error(`[${requestId}] Received Merchant ID:`, data.merchant_id);
-      console.error(`[${requestId}] Expected Merchant Key:`, PAYFAST_CONFIG.MERCHANT_KEY);
+      console.error(
+        `[${requestId}] Expected Merchant Key:`,
+        PAYFAST_CONFIG.MERCHANT_KEY
+      );
       console.error(`[${requestId}] Received Merchant Key:`, data.merchant_key);
 
       // Store for debugging
@@ -196,8 +202,9 @@ export async function POST(request: NextRequest) {
       // CRITICAL: For wallet payments, PayFast calls notify BEFORE payment
       // If we return INVALID, wallet payment is rejected
       // Check if this is a pre-payment verification (no payment_status yet)
-      const isPrePaymentVerification = !data.payment_status || data.payment_status === "";
-      
+      const isPrePaymentVerification =
+        !data.payment_status || data.payment_status === "";
+
       if (isPrePaymentVerification) {
         // For pre-payment verification, check merchant credentials only
         // If merchant ID/key match, allow it to proceed
@@ -205,10 +212,14 @@ export async function POST(request: NextRequest) {
           data.merchant_id === PAYFAST_CONFIG.MERCHANT_ID &&
           data.merchant_key === PAYFAST_CONFIG.MERCHANT_KEY
         ) {
-          console.log(`[${requestId}] ⚠️ Signature failed but merchant credentials match - allowing pre-payment verification`);
+          console.log(
+            `[${requestId}] ⚠️ Signature failed but merchant credentials match - allowing pre-payment verification`
+          );
           const responseTime = Date.now() - startTime;
           console.log(`[${requestId}] ⏱️ Response time: ${responseTime}ms`);
-          console.log(`[${requestId}] 📤 Returning: VALID (200 OK) - Pre-payment verification`);
+          console.log(
+            `[${requestId}] 📤 Returning: VALID (200 OK) - Pre-payment verification`
+          );
           console.log(`${"=".repeat(80)}\n`);
           return new NextResponse("VALID", {
             status: 200,
@@ -290,41 +301,110 @@ export async function POST(request: NextRequest) {
     const pfPaymentId = data.pf_payment_id;
     const amount = parseFloat(data.amount_gross || "0");
 
+    // Subscription fields (if present)
+    const token = data.token || null;
+    const subscriptionType = data.subscription_type || null;
+    const billingDate = data.billing_date || null;
+    const recurringAmount = data.recurring_amount || null;
+    const frequency = data.frequency || null;
+    const cycles = data.cycles || null;
+
     // Log payment notification
-    console.log("PayFast ITN received:", {
-      payment_status: paymentStatus,
-      m_payment_id: mPaymentId,
-      pf_payment_id: pfPaymentId,
-      amount: amount,
-    });
+    console.log(`[${requestId}] === PayFast ITN Payment Details ===`);
+    console.log(`[${requestId}] Payment Status:`, paymentStatus);
+    console.log(`[${requestId}] Merchant Payment ID:`, mPaymentId);
+    console.log(`[${requestId}] PayFast Payment ID:`, pfPaymentId);
+    console.log(`[${requestId}] Amount:`, amount);
+
+    // Log subscription details if present
+    if (token || subscriptionType) {
+      console.log(`[${requestId}] === Subscription Details ===`);
+      console.log(`[${requestId}] Token:`, token);
+      console.log(`[${requestId}] Subscription Type:`, subscriptionType);
+      console.log(`[${requestId}] Billing Date:`, billingDate);
+      console.log(`[${requestId}] Recurring Amount:`, recurringAmount);
+      console.log(`[${requestId}] Frequency:`, frequency);
+      console.log(`[${requestId}] Cycles:`, cycles);
+    }
 
     // Handle different payment statuses
     switch (paymentStatus) {
       case "COMPLETE":
         // Payment successful - update your database, send confirmation email, etc.
+        console.log(
+          `[${requestId}] ✅ Payment ${mPaymentId} completed successfully`
+        );
+
+        // If this is a subscription payment, store the token
+        if (token && subscriptionType) {
+          console.log(`[${requestId}] 📝 Storing subscription token: ${token}`);
+          // TODO: Store token in database associated with user account
+          // TODO: Update user subscription status
+          // Example database operation:
+          // await db.subscriptions.create({
+          //   token: token,
+          //   user_id: userId,
+          //   plan_name: item_name,
+          //   amount: amount,
+          //   recurring_amount: recurringAmount,
+          //   frequency: frequency,
+          //   cycles: cycles,
+          //   status: 'active',
+          //   created_at: new Date(),
+          // });
+        }
+
         // TODO: Update payment status in database
         // TODO: Grant user access to premium features
         // TODO: Send confirmation email
-        console.log(`Payment ${mPaymentId} completed successfully`);
         break;
 
       case "FAILED":
         // Payment failed
-        console.log(`Payment ${mPaymentId} failed`);
+        console.log(`[${requestId}] ❌ Payment ${mPaymentId} failed`);
+        // TODO: Update payment status in database
+        // TODO: Notify user of payment failure
         break;
 
       case "PENDING":
         // Payment is pending (e.g., EFT payment)
-        console.log(`Payment ${mPaymentId} is pending`);
+        console.log(`[${requestId}] ⏳ Payment ${mPaymentId} is pending`);
+        // TODO: Update payment status in database
         break;
 
       case "CANCELLED":
         // Payment was cancelled
-        console.log(`Payment ${mPaymentId} was cancelled`);
+        console.log(`[${requestId}] 🚫 Payment ${mPaymentId} was cancelled`);
+        // TODO: Update payment status in database
+        // TODO: Cancel subscription if applicable
         break;
 
       default:
-        console.log(`Unknown payment status: ${paymentStatus}`);
+        console.log(
+          `[${requestId}] ⚠️ Unknown payment status: ${paymentStatus}`
+        );
+    }
+
+    // Handle subscription webhook notifications (trial, promo, update)
+    // These come with type field instead of payment_status
+    const webhookType = data.type;
+    if (
+      webhookType &&
+      (webhookType === "subscription.free-trial" ||
+        webhookType === "subscription.promo" ||
+        webhookType === "subscription.update")
+    ) {
+      console.log(`[${requestId}] === Subscription Webhook Notification ===`);
+      console.log(`[${requestId}] Webhook Type:`, webhookType);
+      console.log(`[${requestId}] Token:`, token);
+      console.log(`[${requestId}] Initial Amount:`, data.initial_amount);
+      console.log(`[${requestId}] Subscription Amount:`, data.amount);
+      console.log(`[${requestId}] Next Run Date:`, data.next_run);
+
+      // TODO: Handle subscription webhook notifications
+      // - subscription.free-trial: Trial ending soon
+      // - subscription.promo: Promotional period ending
+      // - subscription.update: Subscription updated (amount, frequency, etc.)
     }
 
     // Store successful attempt for debugging

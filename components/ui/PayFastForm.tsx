@@ -17,6 +17,15 @@ interface PayFastFormProps {
   cell_number?: string;
   custom_str1?: string;
   custom_str2?: string;
+  // Subscription fields
+  subscription_type?: "1" | "2";
+  billing_date?: string;
+  recurring_amount?: string;
+  frequency?: "1" | "2" | "3" | "4" | "5" | "6";
+  cycles?: string;
+  subscription_notify_email?: boolean;
+  subscription_notify_webhook?: boolean;
+  subscription_notify_buyer?: boolean;
   autoSubmit?: boolean;
   className?: string;
   formRef?: React.RefObject<HTMLFormElement>;
@@ -36,12 +45,21 @@ export default function PayFastForm({
   cell_number,
   custom_str1,
   custom_str2,
+  subscription_type,
+  billing_date,
+  recurring_amount,
+  frequency,
+  cycles,
+  subscription_notify_email,
+  subscription_notify_webhook,
+  subscription_notify_buyer,
   autoSubmit = false,
   className = "hidden",
   formRef: externalFormRef,
 }: PayFastFormProps) {
   const internalFormRef = useRef<HTMLFormElement>(null);
   const formRef = externalFormRef || internalFormRef;
+  const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
 
   // Payment data comes from API response (includes signature)
   // This ensures the signature matches the exact data sent to PayFast
@@ -59,7 +77,7 @@ export default function PayFastForm({
         setIsLoadingSignature(true);
 
         // Build request data from props (what we want to send)
-        const requestData: Record<string, string> = {
+        const requestData: Record<string, any> = {
           amount: parseFloat(amount).toFixed(2),
           item_name: String(item_name).trim(),
         };
@@ -72,6 +90,27 @@ export default function PayFastForm({
         if (name_last) requestData.name_last = name_last.trim();
         if (email_address) requestData.email_address = email_address.trim();
         if (cell_number) requestData.cell_number = cell_number.trim();
+
+        // Add subscription fields if provided
+        if (subscription_type) {
+          requestData.subscription_type = subscription_type;
+          if (subscription_type === "1") {
+            // Subscription fields
+            if (frequency) requestData.frequency = frequency;
+            if (cycles) requestData.cycles = cycles;
+            if (billing_date) requestData.billing_date = billing_date.trim();
+            if (recurring_amount)
+              requestData.recurring_amount =
+                parseFloat(recurring_amount).toFixed(2);
+            if (subscription_notify_email !== undefined)
+              requestData.subscription_notify_email = subscription_notify_email;
+            if (subscription_notify_webhook !== undefined)
+              requestData.subscription_notify_webhook =
+                subscription_notify_webhook;
+            if (subscription_notify_buyer !== undefined)
+              requestData.subscription_notify_buyer = subscription_notify_buyer;
+          }
+        }
 
         const response = await fetch("/api/payments/payfast/initiate", {
           method: "POST",
@@ -115,6 +154,14 @@ export default function PayFastForm({
     name_last,
     email_address,
     cell_number,
+    subscription_type,
+    billing_date,
+    recurring_amount,
+    frequency,
+    cycles,
+    subscription_notify_email,
+    subscription_notify_webhook,
+    subscription_notify_buyer,
   ]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -124,14 +171,58 @@ export default function PayFastForm({
     }
   };
 
-  // Auto-submit if requested
+  // Auto-submit if requested - but only after payment data is loaded
   useEffect(() => {
-    if (autoSubmit && formRef.current) {
+    if (
+      autoSubmit &&
+      !hasAutoSubmitted &&
+      formRef.current &&
+      paymentData &&
+      !isLoadingSignature
+    ) {
+      // Wait a bit to ensure form is fully rendered with all fields
       setTimeout(() => {
-        formRef.current?.submit();
-      }, 100);
+        if (formRef.current && paymentData && !hasAutoSubmitted) {
+          // Verify form has all required fields before submitting
+          const requiredFields = [
+            "merchant_id",
+            "merchant_key",
+            "amount",
+            "item_name",
+            "signature",
+          ];
+          const allFieldsPresent = requiredFields.every((field) => {
+            const input = formRef.current?.querySelector(
+              `input[name="${field}"]`
+            );
+            return input && (input as HTMLInputElement).value;
+          });
+
+          if (allFieldsPresent) {
+            console.log(
+              "🚀 Auto-submitting PayFast form with payment data:",
+              paymentData
+            );
+            setHasAutoSubmitted(true);
+            formRef.current.submit();
+          } else {
+            console.error(
+              "❌ Cannot auto-submit: Missing required fields in form"
+            );
+            console.log(
+              "Form inputs:",
+              Array.from(formRef.current.querySelectorAll("input")).map(
+                (inp: HTMLInputElement) => ({
+                  name: inp.name,
+                  value: inp.value,
+                })
+              )
+            );
+          }
+        }
+      }, 500);
     }
-  }, [autoSubmit]);
+  }, [autoSubmit, paymentData, isLoadingSignature, hasAutoSubmitted]);
 
   // Render inputs in EXACT order as per PayFast documentation
   // CRITICAL: Use paymentData from API response (includes signature)

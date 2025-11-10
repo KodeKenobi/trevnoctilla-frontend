@@ -12,6 +12,27 @@ function PaymentSuccessContent() {
     "success" | "pending" | "failed"
   >("pending");
   const [itnDebug, setItnDebug] = useState<any>(null);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [returnPath, setReturnPath] = useState<string | null>(null);
+
+  // Check localStorage for download URL (fallback if PayFast doesn't return it in URL)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Check if download URL was stored before payment
+      const storedDownloadUrl = localStorage.getItem("payment_download_url");
+      if (storedDownloadUrl) {
+        setDownloadUrl(storedDownloadUrl);
+        // Clear it after use
+        localStorage.removeItem("payment_download_url");
+      }
+
+      // Check for return path
+      const storedReturnPath = localStorage.getItem("payment_return_path");
+      if (storedReturnPath) {
+        setReturnPath(storedReturnPath);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Verify payment status from PayFast callback
@@ -31,11 +52,20 @@ function PaymentSuccessContent() {
       const pfPaymentId = searchParams.get("pf_payment_id");
       const paymentStatus = searchParams.get("payment_status");
       const signature = searchParams.get("signature");
+      // Get download URL from custom_str1 (stored by MonetizationModal)
+      const urlFromParams = searchParams.get("custom_str1");
+      const pathFromParams = searchParams.get("custom_str2");
+
+      // Store in state for use in UI
+      if (urlFromParams) setDownloadUrl(urlFromParams);
+      if (pathFromParams) setReturnPath(pathFromParams);
 
       console.log("m_payment_id:", mPaymentId);
       console.log("pf_payment_id:", pfPaymentId);
       console.log("payment_status:", paymentStatus);
       console.log("signature:", signature);
+      console.log("download_url:", downloadUrl);
+      console.log("return_path:", returnPath);
 
       // Fetch ITN debug info to see what happened
       try {
@@ -55,6 +85,8 @@ function PaymentSuccessContent() {
       if (paymentStatus === "COMPLETE") {
         setPaymentStatus("success");
         console.log("✅ Payment marked as COMPLETE from return_url");
+        // Don't auto-download - let user click the button for better UX and to avoid popup blockers
+
         // TODO: Update payment status in database
         // TODO: Grant user premium access
         // TODO: Send confirmation email
@@ -109,15 +141,31 @@ function PaymentSuccessContent() {
               Payment Successful!
             </h1>
             <p className="text-gray-400 mb-6">
-              Your payment has been processed successfully. You now have premium
-              access.
+              Your payment has been processed successfully.{" "}
+              {downloadUrl
+                ? "Click the button below to download your file."
+                : "You now have premium access."}
             </p>
             <div className="space-y-3">
+              {downloadUrl && (
+                <button
+                  onClick={() => window.open(downloadUrl, "_blank")}
+                  className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all"
+                >
+                  Download File
+                </button>
+              )}
               <button
-                onClick={() => router.back()}
+                onClick={() => {
+                  if (returnPath) {
+                    router.push(returnPath);
+                  } else {
+                    router.back();
+                  }
+                }}
                 className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
               >
-                Continue
+                {returnPath ? "Return to Page" : "Continue"}
               </button>
             </div>
           </>
