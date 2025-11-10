@@ -95,6 +95,8 @@ export default function PayFastForm({
     if (fica_idnumber) data.fica_idnumber = fica_idnumber.trim();
 
     // 4. Payment details
+    // Generate unique payment ID (m_payment_id) as per PayFast example
+    data.m_payment_id = custom_str1 || `payment_${Date.now()}`;
     data.amount = parseFloat(amount).toFixed(2);
     data.item_name = String(item_name).trim();
 
@@ -114,14 +116,14 @@ export default function PayFastForm({
 
   /**
    * Generate PayFast signature according to their documentation
-   *
+   * 
    * Steps (as per PayFast PHP example):
    * 1. Concatenate name-value pairs in the order they appear in the data object (NOT alphabetical)
    * 2. URL encode values using urlencode() style (uppercase encoding, spaces as '+')
    * 3. Exclude empty values and signature field
    * 4. Add passphrase at the end (also URL-encoded)
    * 5. MD5 hash the result
-   *
+   * 
    * PayFast PHP example:
    * foreach( $data as $key => $val ) {
    *   if($val !== '') {
@@ -133,14 +135,19 @@ export default function PayFastForm({
    *   $getString .= '&passphrase='. urlencode( trim( $passPhrase ) );
    * }
    * return md5( $getString );
+   * 
+   * IMPORTANT: Include ALL fields in the order they appear in paymentData object
+   * JavaScript objects maintain insertion order for string keys (ES2015+)
    */
   const generateSignature = (): string => {
-    // Build parameter string in the order fields appear in paymentData
-    // PayFast requires fields in the order they appear, NOT alphabetical
+    // Build parameter string in the EXACT order fields appear in paymentData
+    // PayFast requires fields in insertion order, NOT alphabetical
+    // JavaScript objects maintain insertion order, so we iterate directly
     let paramString = "";
 
     // Iterate through paymentData in insertion order (as it appears in the object)
     // Exclude empty values and signature field itself
+    // This matches the PHP foreach loop exactly
     for (const key in paymentData) {
       const value = paymentData[key];
       if (
@@ -161,7 +168,9 @@ export default function PayFastForm({
     }
 
     // Remove last ampersand
-    paramString = paramString.slice(0, -1);
+    if (paramString.endsWith("&")) {
+      paramString = paramString.slice(0, -1);
+    }
 
     // Add passphrase if provided (also URL-encoded)
     const passphrase = API_CONFIG.PAYFAST.PASSPHRASE || "";
@@ -175,11 +184,23 @@ export default function PayFastForm({
 
     // Generate MD5 hash using crypto-js
     const hash = CryptoJS.MD5(paramString).toString();
-
+    
     console.log("🔐 PayFast Signature Generation:");
-    console.log("Parameter String:", paramString);
-    console.log("Generated Signature:", hash);
-
+    console.log("=== PAYMENT DATA (in order) ===");
+    Object.keys(paymentData).forEach(key => {
+      if (key !== "signature") {
+        console.log(`${key}: ${paymentData[key]}`);
+      }
+    });
+    console.log("=== SIGNATURE STRING ===");
+    console.log(paramString);
+    console.log("=== PASSPHRASE ===");
+    console.log("Has passphrase:", !!passphrase);
+    console.log("Passphrase length:", passphrase ? passphrase.length : 0);
+    console.log("=== GENERATED SIGNATURE ===");
+    console.log(hash);
+    console.log("=== END SIGNATURE DEBUG ===");
+    
     return hash;
   };
 
