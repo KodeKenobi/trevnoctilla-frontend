@@ -11,6 +11,7 @@ export const API_CONFIG = {
   PAYFAST: {
     MERCHANT_ID: process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID || "",
     MERCHANT_KEY: process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY || "",
+    PASSPHRASE: process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE || "",
     // Use sandbox for testing: https://sandbox.payfast.co.za/eng/process
     // Use production for live: https://www.payfast.co.za/eng/process
     PAYFAST_URL:

@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import { API_CONFIG } from "@/lib/config";
+import CryptoJS from "crypto-js";
 
 interface PayFastFormProps {
   amount: string;
@@ -110,6 +111,79 @@ export default function PayFastForm({
   };
 
   const paymentData = buildPaymentData();
+
+  /**
+   * Generate PayFast signature according to their documentation
+   *
+   * Steps (as per PayFast PHP example):
+   * 1. Concatenate name-value pairs in the order they appear in the data object (NOT alphabetical)
+   * 2. URL encode values using urlencode() style (uppercase encoding, spaces as '+')
+   * 3. Exclude empty values and signature field
+   * 4. Add passphrase at the end (also URL-encoded)
+   * 5. MD5 hash the result
+   *
+   * PayFast PHP example:
+   * foreach( $data as $key => $val ) {
+   *   if($val !== '') {
+   *     $pfOutput .= $key .'='. urlencode( trim( $val ) ) .'&';
+   *   }
+   * }
+   * $getString = substr( $pfOutput, 0, -1 );
+   * if( $passPhrase !== null ) {
+   *   $getString .= '&passphrase='. urlencode( trim( $passPhrase ) );
+   * }
+   * return md5( $getString );
+   */
+  const generateSignature = (): string => {
+    // Build parameter string in the order fields appear in paymentData
+    // PayFast requires fields in the order they appear, NOT alphabetical
+    let paramString = "";
+
+    // Iterate through paymentData in insertion order (as it appears in the object)
+    // Exclude empty values and signature field itself
+    for (const key in paymentData) {
+      const value = paymentData[key];
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        key !== "signature"
+      ) {
+        const trimmedValue = String(value).trim();
+        if (trimmedValue !== "") {
+          // URL encode with uppercase encoding and spaces as '+' (PHP urlencode() style)
+          const encodedValue = encodeURIComponent(trimmedValue)
+            .replace(/%20/g, "+")
+            .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
+          paramString += `${key}=${encodedValue}&`;
+        }
+      }
+    }
+
+    // Remove last ampersand
+    paramString = paramString.slice(0, -1);
+
+    // Add passphrase if provided (also URL-encoded)
+    const passphrase = API_CONFIG.PAYFAST.PASSPHRASE || "";
+    if (passphrase && passphrase.trim() !== "") {
+      const trimmedPassphrase = passphrase.trim();
+      const encodedPassphrase = encodeURIComponent(trimmedPassphrase)
+        .replace(/%20/g, "+")
+        .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
+      paramString += `&passphrase=${encodedPassphrase}`;
+    }
+
+    // Generate MD5 hash using crypto-js
+    const hash = CryptoJS.MD5(paramString).toString();
+
+    console.log("🔐 PayFast Signature Generation:");
+    console.log("Parameter String:", paramString);
+    console.log("Generated Signature:", hash);
+
+    return hash;
+  };
+
+  const signature = generateSignature();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -225,6 +299,11 @@ export default function PayFastForm({
       }
     });
 
+    // 5. Signature (MUST be last, after all other fields)
+    inputs.push(
+      <input key="signature" type="hidden" name="signature" value={signature} />
+    );
+
     return inputs;
   };
 
@@ -239,6 +318,7 @@ export default function PayFastForm({
       console.log("🔗 notify_url:", paymentData.notify_url);
       console.log("🔗 return_url:", paymentData.return_url);
       console.log("🔗 cancel_url:", paymentData.cancel_url);
+      console.log("🔐 signature:", signature);
       console.log("Form action:", formRef.current.action);
 
       // Verify notify_url is in the form
@@ -252,6 +332,19 @@ export default function PayFastForm({
         );
       } else {
         console.error("❌ notify_url field MISSING from form!");
+      }
+
+      // Verify signature is in the form
+      const signatureInput = formRef.current.querySelector(
+        'input[name="signature"]'
+      );
+      if (signatureInput) {
+        console.log(
+          "✅ signature field found in form:",
+          (signatureInput as HTMLInputElement).value
+        );
+      } else {
+        console.error("❌ signature field MISSING from form!");
       }
     }
   }, []);
