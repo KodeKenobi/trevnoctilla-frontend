@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 
+// Store last ITN attempt in memory (for debugging only)
+let lastITNAttempt: {
+  timestamp: string;
+  requestId: string;
+  data: any;
+  errors: string[];
+  status: "success" | "failed";
+} | null = null;
+
+export function setLastITNAttempt(attempt: typeof lastITNAttempt) {
+  lastITNAttempt = attempt;
+}
+
+// Export for debug route
+if (typeof global !== "undefined") {
+  (global as any).getLastITNAttempt = () => lastITNAttempt;
+}
+
 // Ensure this route is publicly accessible (no auth required)
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -170,14 +188,22 @@ export async function POST(request: NextRequest) {
     console.log(`[${requestId}] 🔐 Verifying signature...`);
     const signatureValid = verifyPayFastSignature(data);
     if (!signatureValid) {
-      console.error(`[${requestId}] ❌ SIGNATURE VERIFICATION FAILED`);
-      console.error(
-        `[${requestId}] This is why PayFast shows "Unable to verify payment"`
-      );
+      const errorMsg = `SIGNATURE VERIFICATION FAILED - This is why PayFast shows "Unable to verify payment"`;
+      console.error(`[${requestId}] ❌ ${errorMsg}`);
       console.error(
         `[${requestId}] Received data:`,
         JSON.stringify(data, null, 2)
       );
+
+      // Store for debugging
+      setLastITNAttempt({
+        timestamp: new Date().toISOString(),
+        requestId,
+        data,
+        errors: [errorMsg],
+        status: "failed",
+      });
+
       // Still return 200 to prevent PayFast from retrying, but log the error
       // PayFast expects plain text response
       const responseTime = Date.now() - startTime;
@@ -197,10 +223,8 @@ export async function POST(request: NextRequest) {
       data.merchant_id !== PAYFAST_CONFIG.MERCHANT_ID ||
       data.merchant_key !== PAYFAST_CONFIG.MERCHANT_KEY
     ) {
-      console.error(`[${requestId}] ❌ MERCHANT CREDENTIALS MISMATCH`);
-      console.error(
-        `[${requestId}] This is why PayFast shows "Unable to verify payment"`
-      );
+      const errorMsg = `MERCHANT CREDENTIALS MISMATCH - This is why PayFast shows "Unable to verify payment"`;
+      console.error(`[${requestId}] ❌ ${errorMsg}`);
       console.error(
         `[${requestId}] Expected Merchant ID:`,
         PAYFAST_CONFIG.MERCHANT_ID
@@ -219,6 +243,20 @@ export async function POST(request: NextRequest) {
         `[${requestId}] Match:`,
         data.merchant_key === PAYFAST_CONFIG.MERCHANT_KEY
       );
+
+      // Store for debugging
+      setLastITNAttempt({
+        timestamp: new Date().toISOString(),
+        requestId,
+        data,
+        errors: [
+          errorMsg,
+          `Expected Merchant ID: ${PAYFAST_CONFIG.MERCHANT_ID}, Received: ${data.merchant_id}`,
+          `Expected Merchant Key: ${PAYFAST_CONFIG.MERCHANT_KEY}, Received: ${data.merchant_key}`,
+        ],
+        status: "failed",
+      });
+
       // CRITICAL: PayFast requires 200 OK response, not 400
       // Returning 400 causes PayFast to show "Unable to verify payment"
       // Still return 200 to prevent PayFast from retrying, but log the error
@@ -275,6 +313,15 @@ export async function POST(request: NextRequest) {
       default:
         console.log(`Unknown payment status: ${paymentStatus}`);
     }
+
+    // Store successful attempt for debugging
+    setLastITNAttempt({
+      timestamp: new Date().toISOString(),
+      requestId,
+      data,
+      errors: [],
+      status: "success",
+    });
 
     // Always return 200 OK to PayFast IMMEDIATELY
     // PayFast expects plain text response "VALID" or "INVALID"
