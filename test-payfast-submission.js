@@ -1,22 +1,25 @@
 /**
  * PayFast Form Submission Test Script
- * 
+ *
  * This script tests the actual PayFast form submission
  * by generating the form HTML and signature.
- * 
+ *
  * Usage: node test-payfast-submission.js
  */
 
-const crypto = require('crypto');
-const https = require('https');
-const querystring = require('querystring');
+const crypto = require("crypto");
+const https = require("https");
+const querystring = require("querystring");
 
 // PayFast Configuration
 const PAYFAST_CONFIG = {
   MERCHANT_ID: process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID || "10043520",
   MERCHANT_KEY: process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY || "irqvo1c2j9l08",
-  PASSPHRASE: process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE || "Trevnoctilla_PayFast_Test",
-  PAYFAST_URL: process.env.NEXT_PUBLIC_PAYFAST_URL || "https://sandbox.payfast.co.za/eng/process",
+  PASSPHRASE:
+    process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE || "Trevnoctilla_PayFast_Test",
+  PAYFAST_URL:
+    process.env.NEXT_PUBLIC_PAYFAST_URL ||
+    "https://sandbox.payfast.co.za/eng/process",
 };
 
 /**
@@ -64,7 +67,7 @@ function generatePayFastSignature(paymentData, passphrase) {
  */
 function buildPaymentData() {
   const productionBaseUrl = "https://www.trevnoctilla.com";
-  
+
   const data = {};
   data.merchant_id = PAYFAST_CONFIG.MERCHANT_ID;
   data.merchant_key = PAYFAST_CONFIG.MERCHANT_KEY;
@@ -110,13 +113,17 @@ function testPayFastSubmission() {
 
   console.log("\n📝 Passphrase Status:");
   console.log(`  Has passphrase: ${!!PAYFAST_CONFIG.PASSPHRASE}`);
-  console.log(`  Passphrase length: ${PAYFAST_CONFIG.PASSPHRASE ? PAYFAST_CONFIG.PASSPHRASE.length : 0}`);
+  console.log(
+    `  Passphrase length: ${
+      PAYFAST_CONFIG.PASSPHRASE ? PAYFAST_CONFIG.PASSPHRASE.length : 0
+    }`
+  );
 
   // Generate HTML form
   console.log("\n" + "=".repeat(80));
   console.log("Generated HTML Form");
   console.log("=".repeat(80));
-  
+
   let htmlForm = `<form action="${PAYFAST_CONFIG.PAYFAST_URL}" method="post">\n`;
   for (const key in paymentData) {
     htmlForm += `  <input type="hidden" name="${key}" value="${paymentData[key]}" />\n`;
@@ -144,11 +151,11 @@ function testPayFastSubmission() {
     hostname: url.hostname,
     port: 443,
     path: url.pathname,
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Length': Buffer.byteLength(formData),
-      'User-Agent': 'PayFast-Test-Script/1.0',
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Content-Length": Buffer.byteLength(formData),
+      "User-Agent": "PayFast-Test-Script/1.0",
     },
   };
 
@@ -159,12 +166,12 @@ function testPayFastSubmission() {
     console.log(`\n📥 Response Status: ${res.statusCode} ${res.statusMessage}`);
     console.log(`📋 Response Headers:`, res.headers);
 
-    let responseData = '';
-    res.on('data', (chunk) => {
+    let responseData = "";
+    res.on("data", (chunk) => {
       responseData += chunk;
     });
 
-    res.on('end', () => {
+    res.on("end", () => {
       console.log(`\n📄 Response Body (first 500 chars):`);
       console.log(responseData.substring(0, 500));
 
@@ -187,7 +194,7 @@ function testPayFastSubmission() {
     });
   });
 
-  req.on('error', (error) => {
+  req.on("error", (error) => {
     console.error(`\n❌ Request error: ${error.message}`);
   });
 

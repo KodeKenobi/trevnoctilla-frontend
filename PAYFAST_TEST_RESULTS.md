@@ -9,6 +9,7 @@
 ## Test Results
 
 ### ✅ Signature Generation Test
+
 - **Status**: PASSED
 - **Signature Format**: Valid MD5 hash (32 characters, lowercase hex)
 - **URL Encoding**: Correct (uppercase encoding, spaces as '+')
@@ -16,6 +17,7 @@
 - **Passphrase**: Included correctly
 
 ### ✅ PayFast Submission Test
+
 - **Status**: SUCCESS
 - **Response**: 302 Found (PayFast accepted the form)
 - **Signature**: Generated correctly with passphrase
@@ -24,6 +26,7 @@
 ## Issue Identified
 
 The passphrase is **missing in the browser** even though:
+
 - ✅ It's set on Railway (`NEXT_PUBLIC_PAYFAST_PASSPHRASE=Trevnoctilla_PayFast_Test`)
 - ✅ It works in Node.js test scripts
 - ✅ The signature generation logic is correct
@@ -56,6 +59,7 @@ node check-env-vars.js
 ## Expected Browser Console Output
 
 When the passphrase is correctly loaded, you should see:
+
 ```
 === PASSPHRASE ===
 Has passphrase: true

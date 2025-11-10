@@ -133,3 +133,4 @@ NEXT_PUBLIC_BASE_URL=https://trevnoctilla.com
 - [ ] Verified the domain is accessible (can visit it in browser)
 - [ ] Redeployed after setting the variable
 - [ ] Tested PayFast payment flow
+

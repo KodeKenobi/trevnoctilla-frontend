@@ -1,24 +1,25 @@
 /**
  * PayFast Signature Generation Test Script
- * 
+ *
  * This script tests the PayFast signature generation logic
  * to verify it matches PayFast's expected format.
- * 
+ *
  * Usage: node test-payfast-signature.js
  */
 
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 // PayFast Configuration
 const PAYFAST_CONFIG = {
   MERCHANT_ID: process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID || "10043520",
   MERCHANT_KEY: process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY || "irqvo1c2j9l08",
-  PASSPHRASE: process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE || "Trevnoctilla_PayFast_Test",
+  PASSPHRASE:
+    process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE || "Trevnoctilla_PayFast_Test",
 };
 
 /**
  * Generate PayFast signature according to their PHP example
- * 
+ *
  * Steps (as per PayFast PHP example):
  * 1. Concatenate name-value pairs in the order they appear in the data object (NOT alphabetical)
  * 2. URL encode values using urlencode() style (uppercase encoding, spaces as '+')
@@ -75,7 +76,7 @@ function generatePayFastSignature(paymentData, passphrase) {
  */
 function buildPaymentData() {
   const productionBaseUrl = "https://www.trevnoctilla.com";
-  
+
   // Build data object in EXACT order as per PayFast docs
   const data = {};
 
@@ -121,7 +122,11 @@ console.log("\n✅ Generated Signature:");
 console.log(hash);
 console.log("\n📝 Passphrase:");
 console.log(`  Has passphrase: ${!!PAYFAST_CONFIG.PASSPHRASE}`);
-console.log(`  Passphrase length: ${PAYFAST_CONFIG.PASSPHRASE ? PAYFAST_CONFIG.PASSPHRASE.length : 0}`);
+console.log(
+  `  Passphrase length: ${
+    PAYFAST_CONFIG.PASSPHRASE ? PAYFAST_CONFIG.PASSPHRASE.length : 0
+  }`
+);
 
 // Test 2: Verify signature string format
 console.log("\n" + "=".repeat(80));
@@ -146,7 +151,11 @@ const expectedFields = [
 console.log("\n✅ Checking if all expected fields are present:");
 expectedFields.forEach((field) => {
   const isPresent = paramString.includes(`${field}=`);
-  console.log(`  ${isPresent ? "✅" : "❌"} ${field}: ${isPresent ? "Present" : "Missing"}`);
+  console.log(
+    `  ${isPresent ? "✅" : "❌"} ${field}: ${
+      isPresent ? "Present" : "Missing"
+    }`
+  );
 });
 
 // Test 3: URL encoding verification
@@ -186,8 +195,14 @@ console.log("TEST 4: MD5 Hash Format Verification");
 console.log("=".repeat(80));
 
 console.log(`\n✅ Signature length: ${hash.length} characters (expected: 32)`);
-console.log(`✅ Signature format: ${/^[a-f0-9]{32}$/.test(hash) ? "Valid MD5 hex" : "Invalid format"}`);
-console.log(`✅ Signature (lowercase): ${hash === hash.toLowerCase() ? "Yes" : "No"}`);
+console.log(
+  `✅ Signature format: ${
+    /^[a-f0-9]{32}$/.test(hash) ? "Valid MD5 hex" : "Invalid format"
+  }`
+);
+console.log(
+  `✅ Signature (lowercase): ${hash === hash.toLowerCase() ? "Yes" : "No"}`
+);
 
 // Test 5: Compare with PayFast expected format
 console.log("\n" + "=".repeat(80));
@@ -203,7 +218,9 @@ console.log("  - MD5 hash (lowercase hex)");
 console.log("\n✅ Our implementation:");
 console.log(`  - Field order: ${Object.keys(paymentData).join(", ")}`);
 console.log(`  - URL encoding: Uppercase encoding, spaces as '+'`);
-console.log(`  - Passphrase: ${PAYFAST_CONFIG.PASSPHRASE ? "Included" : "Missing"}`);
+console.log(
+  `  - Passphrase: ${PAYFAST_CONFIG.PASSPHRASE ? "Included" : "Missing"}`
+);
 console.log(`  - MD5 hash: ${hash}`);
 
 // Summary
@@ -211,13 +228,17 @@ console.log("\n" + "=".repeat(80));
 console.log("SUMMARY");
 console.log("=".repeat(80));
 
-const allTestsPassed = 
+const allTestsPassed =
   hash.length === 32 &&
   /^[a-f0-9]{32}$/.test(hash) &&
   paramString.includes("passphrase=") &&
-  expectedFields.every(field => paramString.includes(`${field}=`));
+  expectedFields.every((field) => paramString.includes(`${field}=`));
 
-console.log(`\n${allTestsPassed ? "✅" : "❌"} All tests: ${allTestsPassed ? "PASSED" : "FAILED"}`);
+console.log(
+  `\n${allTestsPassed ? "✅" : "❌"} All tests: ${
+    allTestsPassed ? "PASSED" : "FAILED"
+  }`
+);
 
 if (!PAYFAST_CONFIG.PASSPHRASE) {
   console.log("\n⚠️  WARNING: Passphrase is missing!");

@@ -73,7 +73,6 @@ export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
               </motion.div>
             )}
 
-
             {/* Status Text */}
             <motion.div
               key={statusText}

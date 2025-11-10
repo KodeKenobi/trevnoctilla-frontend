@@ -29,91 +29,92 @@ const PAYFAST_CONFIG = {
 /**
  * Generate PayFast signature for payment data
  *
- * PayFast signature requirements (from PHP example in docs):
- * 1. Iterate through data array in order (as it appears)
- * 2. Exclude empty values and signature field
- * 3. URL-encode values using urlencode() style (spaces as +, uppercase encoding)
- * 4. Exclude merchant_key from signature
- * 5. Add passphrase at the end (also URL-encoded)
- * 6. MD5 hash the entire string (lowercase hex)
+ * This function exactly matches PayFast's PHP generateSignature() function:
  *
- * CRITICAL: PayFast PHP example iterates array in insertion order, not sorted!
- * The order matters - must match how fields appear in the data object.
+ * PHP version:
+ * function generateSignature($data, $passPhrase = null) {
+ *   $pfOutput = '';
+ *   foreach( $data as $key => $val ) {
+ *     if($val !== '') {
+ *       $pfOutput .= $key .'='. urlencode( trim( $val ) ) .'&';
+ *     }
+ *   }
+ *   $getString = substr( $pfOutput, 0, -1 );
+ *   if( $passPhrase !== null ) {
+ *     $getString .= '&passphrase='. urlencode( trim( $passPhrase ) );
+ *   }
+ *   return md5( $getString );
+ * }
+ *
+ * Key requirements:
+ * 1. Iterate through data in insertion order (as it appears)
+ * 2. Exclude empty values (val !== '')
+ * 3. Exclude signature field itself
+ * 4. URL-encode values using urlencode() style (spaces as +, uppercase encoding)
+ * 5. Add passphrase at the end if provided (also URL-encoded)
+ * 6. MD5 hash the entire string (lowercase hex)
  */
 function generatePayFastSignature(data: Record<string, string>): string {
-  // PayFast PHP example:
-  // foreach( $data as $key => $val ) {
-  //   if($val !== '') {
-  //     $pfOutput .= $key .'='. urlencode( trim( $val ) ) .'&';
-  //   }
-  // }
-  // $getString = substr( $pfOutput, 0, -1 );
-  // if( $passPhrase !== null ) {
-  //   $getString .= '&passphrase='. urlencode( trim( $passPhrase ) );
-  // }
-  // return md5( $getString );
+  // Create parameter string (matches PHP: $pfOutput = '')
+  let pfOutput = "";
 
-  // Build parameter string following PayFast PHP example exactly
-  // PayFast PHP example:
-  // foreach( $data as $key => $val ) {
-  //   if($val !== '') {
-  //     $pfOutput .= $key .'='. urlencode( trim( $val ) ) .'&';
-  //   }
-  // }
-  // $getString = substr( $pfOutput, 0, -1 );
-  // if( $passPhrase !== null ) {
-  //   $getString .= '&passphrase='. urlencode( trim( $passPhrase ) );
-  // }
-  // return md5( $getString );
-
-  // Iterate through data in insertion order (as it appears in object)
-  // Include ALL fields except signature field itself (as per PayFast PHP example)
-  // The test script confirms this works - PayFast accepts forms with all fields in signature
-  let pfParamString = "";
-
+  // Iterate through data in insertion order (matches PHP: foreach( $data as $key => $val ))
   for (const key in data) {
-    if (
-      key !== "signature" &&
-      data[key] !== undefined &&
-      data[key] !== null &&
-      data[key] !== ""
-    ) {
-      const value = String(data[key]).trim();
-      if (value !== "") {
+    // Exclude signature field (not in PHP example, but standard practice)
+    if (key === "signature") {
+      continue;
+    }
+
+    const val = data[key];
+
+    // PHP checks: if($val !== '')
+    // In TypeScript, we need to handle undefined/null, but match PHP behavior for empty strings
+    if (val !== undefined && val !== null && String(val) !== "") {
+      // PHP: urlencode( trim( $val ) )
+      const trimmedVal = String(val).trim();
+      if (trimmedVal !== "") {
         // PayFast PHP urlencode() style:
         // - Spaces as +
         // - Uppercase encoding (http%3A%2F%2F)
         // - Special chars encoded
-        const encodedValue = encodeURIComponent(value)
+        const encodedValue = encodeURIComponent(trimmedVal)
           .replace(/%20/g, "+")
           .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
-        pfParamString += `${key}=${encodedValue}&`;
+
+        // PHP: $pfOutput .= $key .'='. urlencode( trim( $val ) ) .'&';
+        pfOutput += `${key}=${encodedValue}&`;
       }
     }
   }
 
+  // PHP: $getString = substr( $pfOutput, 0, -1 );
   // Remove last ampersand
-  pfParamString = pfParamString.slice(0, -1);
+  let getString = pfOutput.slice(0, -1);
 
-  // Add passphrase if provided (also URL-encoded, matching PHP example)
-  if (PAYFAST_CONFIG.PASSPHRASE && PAYFAST_CONFIG.PASSPHRASE.trim() !== "") {
-    const passphrase = String(PAYFAST_CONFIG.PASSPHRASE).trim();
-    const encodedPassphrase = encodeURIComponent(passphrase)
-      .replace(/%20/g, "+")
-      .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
-    pfParamString += `&passphrase=${encodedPassphrase}`;
+  // PHP: if( $passPhrase !== null ) {
+  //       $getString .= '&passphrase='. urlencode( trim( $passPhrase ) );
+  //     }
+  if (
+    PAYFAST_CONFIG.PASSPHRASE !== null &&
+    PAYFAST_CONFIG.PASSPHRASE !== undefined
+  ) {
+    const trimmedPassPhrase = String(PAYFAST_CONFIG.PASSPHRASE).trim();
+    if (trimmedPassPhrase !== "") {
+      const encodedPassphrase = encodeURIComponent(trimmedPassPhrase)
+        .replace(/%20/g, "+")
+        .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
+      getString += `&passphrase=${encodedPassphrase}`;
+    }
   }
 
   // CRITICAL DEBUG: Log the exact string being hashed
   console.log("🔐 EXACT SIGNATURE STRING (copy this to verify):");
-  console.log(pfParamString);
-  console.log("🔐 String length:", pfParamString.length);
+  console.log(getString);
+  console.log("🔐 String length:", getString.length);
 
+  // PHP: return md5( $getString );
   // Generate MD5 hash (lowercase hex)
-  const signature = crypto
-    .createHash("md5")
-    .update(pfParamString)
-    .digest("hex");
+  const signature = crypto.createHash("md5").update(getString).digest("hex");
 
   console.log("Generated Signature:", signature);
 
