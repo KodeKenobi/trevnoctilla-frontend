@@ -23,13 +23,10 @@ function PaymentSuccessContent() {
     if (typeof window !== "undefined") {
       // Check if download URL was stored before payment
       const storedDownloadUrl = localStorage.getItem("payment_download_url");
-      if (storedDownloadUrl) {
-        console.log(
-          "📥 Found download URL in localStorage:",
-          storedDownloadUrl
-        );
+      if (storedDownloadUrl && storedDownloadUrl.trim()) {
         setDownloadUrl(storedDownloadUrl);
         setIsDownloadPayment(true);
+        setPaymentStatus("success");
         // Don't clear it - keep it for later access
       }
 
@@ -41,7 +38,7 @@ function PaymentSuccessContent() {
 
       // Check for recent downloads (in case user closed modal before downloading)
       // This will be updated when payment data is loaded, but check here as fallback
-      if (!storedDownloadUrl) {
+      if (!storedDownloadUrl || !storedDownloadUrl.trim()) {
         const recentDownloads = JSON.parse(
           localStorage.getItem("recent_downloads") || "[]"
         );
@@ -50,13 +47,10 @@ function PaymentSuccessContent() {
           const mostRecent = recentDownloads[0];
           // Only show if it's recent (within last 24 hours)
           const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-          if (mostRecent.timestamp > oneDayAgo) {
-            console.log(
-              "📥 Found recent download in localStorage:",
-              mostRecent.url
-            );
+          if (mostRecent.timestamp > oneDayAgo && mostRecent.url) {
             setDownloadUrl(mostRecent.url);
             setIsDownloadPayment(true);
+            setPaymentStatus("success");
           }
         }
       }
@@ -181,16 +175,13 @@ function PaymentSuccessContent() {
           const storedDownloadUrl = localStorage.getItem(
             "payment_download_url"
           );
-          if (storedDownloadUrl) {
+          if (storedDownloadUrl && storedDownloadUrl.trim()) {
             // User paid $1 and we have download URL - mark as success
             setPaymentStatus("success");
             if (!downloadUrl) {
               setDownloadUrl(storedDownloadUrl);
               setIsDownloadPayment(true);
             }
-            console.log(
-              "✅ Payment likely successful - found download URL in localStorage"
-            );
           } else {
             // Check recent downloads as fallback
             const recentDownloads = JSON.parse(
@@ -199,15 +190,12 @@ function PaymentSuccessContent() {
             if (recentDownloads.length > 0) {
               const mostRecent = recentDownloads[0];
               const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-              if (mostRecent.timestamp > oneDayAgo) {
+              if (mostRecent.timestamp > oneDayAgo && mostRecent.url) {
                 setPaymentStatus("success");
                 if (!downloadUrl) {
                   setDownloadUrl(mostRecent.url);
                   setIsDownloadPayment(true);
                 }
-                console.log(
-                  "✅ Payment likely successful - found recent download in localStorage"
-                );
               } else {
                 setPaymentStatus("success"); // Default to success if redirected here
               }
@@ -221,15 +209,12 @@ function PaymentSuccessContent() {
       }
 
       // ALWAYS check localStorage again after processing (in case it wasn't set initially)
+      // This ensures we find the download URL even if PayFast doesn't return it
       if (typeof window !== "undefined" && !downloadUrl) {
         const storedDownloadUrl = localStorage.getItem("payment_download_url");
-        if (storedDownloadUrl) {
+        if (storedDownloadUrl && storedDownloadUrl.trim()) {
           setDownloadUrl(storedDownloadUrl);
           setIsDownloadPayment(true);
-          console.log(
-            "✅ Retrieved download URL from localStorage:",
-            storedDownloadUrl
-          );
         } else {
           // Check recent downloads one more time
           const recentDownloads = JSON.parse(
@@ -238,37 +223,12 @@ function PaymentSuccessContent() {
           if (recentDownloads.length > 0) {
             const mostRecent = recentDownloads[0];
             const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-            if (mostRecent.timestamp > oneDayAgo) {
+            if (mostRecent.timestamp > oneDayAgo && mostRecent.url) {
               setDownloadUrl(mostRecent.url);
               setIsDownloadPayment(true);
-              console.log(
-                "✅ Retrieved download URL from recent downloads:",
-                mostRecent.url
-              );
             }
           }
         }
-      }
-
-      // Log all localStorage keys related to downloads for debugging
-      if (typeof window !== "undefined") {
-        console.log("🔍 Checking localStorage for download data...");
-        console.log(
-          "payment_download_url:",
-          localStorage.getItem("payment_download_url")
-        );
-        console.log(
-          "recent_downloads:",
-          localStorage.getItem("recent_downloads")
-        );
-        // Log all download_* keys
-        const allKeys = Object.keys(localStorage);
-        const downloadKeys = allKeys.filter((key) =>
-          key.startsWith("download_")
-        );
-        downloadKeys.forEach((key) => {
-          console.log(`${key}:`, localStorage.getItem(key));
-        });
       }
 
       setIsVerifying(false);
@@ -308,12 +268,6 @@ function PaymentSuccessContent() {
                 : isSubscription
                 ? "Your subscription has been activated successfully. You now have premium access."
                 : "Your payment has been processed successfully."}
-              {!downloadUrl && !isSubscription && (
-                <span className="block mt-2 text-xs text-yellow-400">
-                  If you paid for a download, check your browser console for the
-                  download link.
-                </span>
-              )}
             </p>
             <div className="space-y-3">
               {/* ONLY show download/close buttons for $1 download payments */}
