@@ -190,14 +190,14 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a2a]">
             <div>
-              <h3 className="text-xl font-bold text-white">{title}</h3>
-              <p className="text-sm text-gray-400 mt-1">{message}</p>
+              <h3 className="text-lg font-semibold text-white">{title}</h3>
+              <p className="text-sm text-gray-400 mt-0.5">{message}</p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-[#2a2a2a] rounded-lg"
+              className="text-gray-400 hover:text-white transition-colors p-1.5 hover:bg-[#2a2a2a] rounded-lg"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
@@ -205,25 +205,24 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
           <div className="p-6">
             {/* Initial choice screen */}
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* View Ad Option */}
                 <button
                   onClick={handleViewAd}
-                  className="group relative p-6 bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] rounded-lg border border-[#8b5cf6]/30 hover:border-[#8b5cf6] transition-all hover:scale-105"
+                  className="group relative p-4 bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] rounded-lg border border-[#8b5cf6]/30 hover:border-[#8b5cf6] transition-all hover:shadow-lg hover:shadow-[#8b5cf6]/20"
                 >
-                  <div className="flex flex-col items-center space-y-3">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-white rounded-full blur-lg opacity-30"></div>
-                      <div className="relative bg-white/10 p-4 rounded-full">
-                        <Play className="w-8 h-8 text-white" />
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      <div className="bg-white/20 p-2.5 rounded-lg">
+                        <Play className="w-5 h-5 text-white fill-white" />
                       </div>
                     </div>
-                    <div className="text-center">
-                      <h4 className="text-lg font-semibold text-white mb-1">
+                    <div className="flex-1 text-left">
+                      <h4 className="text-base font-medium text-white mb-0.5">
                         View Ad
                       </h4>
-                      <p className="text-sm text-white/80">
-                        Watch a short advertisement to continue
+                      <p className="text-xs text-white/70">
+                        Watch a short advertisement
                       </p>
                     </div>
                   </div>
@@ -232,10 +231,10 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                 {/* Pay Option */}
                 <div className="space-y-3">
                   {showEmailField && (
-                    <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                    <div className="mb-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                       <label
                         htmlFor="payment-email"
-                        className="block text-sm font-medium text-yellow-400 mb-2"
+                        className="block text-xs font-medium text-yellow-400 mb-1.5"
                       >
                         Alternative Payment Email
                       </label>
@@ -244,7 +243,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                         type="email"
                         defaultValue={user?.email || ""}
                         placeholder="Enter a different email"
-                        className="w-full px-4 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 transition-colors"
+                        className="w-full px-3 py-1.5 text-sm bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 transition-colors"
                         disabled={isProcessingPayment}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !isProcessingPayment) {
@@ -255,7 +254,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                           }
                         }}
                       />
-                      <p className="mt-1 text-xs text-yellow-500/80">
+                      <p className="mt-1 text-xs text-yellow-500/70">
                         Your account email matches the merchant account. Use a
                         different email.
                       </p>
@@ -275,24 +274,23 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                   <button
                     onClick={handlePay}
                     disabled={isProcessingPayment}
-                    className="w-full group relative p-6 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="w-full group relative p-4 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:shadow-lg hover:shadow-[#22c55e]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
                   >
-                    <div className="flex flex-col items-center space-y-3">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-white rounded-full blur-lg opacity-30"></div>
-                        <div className="relative bg-white/10 p-4 rounded-full">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="bg-white/20 p-2.5 rounded-lg">
                           {isProcessingPayment ? (
-                            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                           ) : (
-                            <CreditCard className="w-8 h-8 text-white" />
+                            <CreditCard className="w-5 h-5 text-white" />
                           )}
                         </div>
                       </div>
-                      <div className="text-center">
-                        <h4 className="text-lg font-semibold text-white mb-1">
+                      <div className="flex-1 text-left">
+                        <h4 className="text-base font-medium text-white mb-0.5">
                           {isProcessingPayment ? "Processing..." : "Pay $1"}
                         </h4>
-                        <p className="text-sm text-white/80">
+                        <p className="text-xs text-white/70">
                           {isProcessingPayment
                             ? "Redirecting to payment..."
                             : "Instant access, no ads"}
@@ -333,7 +331,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                   </button>
                 </div>
               )}
-              <div className="pt-4 border-t border-[#2a2a2a]">
+              <div className="pt-3 border-t border-[#2a2a2a]">
                 <p className="text-xs text-gray-500 text-center">
                   By continuing, you agree to view advertisements or complete
                   payment
