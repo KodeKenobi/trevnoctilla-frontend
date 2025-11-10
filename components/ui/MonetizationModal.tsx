@@ -250,7 +250,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                     </div>
                   )}
                   <PayFastForm
-                    amount="1.00"
+                    amount="20.00"
                     item_name="Premium Access"
                     item_description="Unlock premium features and remove ads"
                     return_url={API_CONFIG.PAYFAST.RETURN_URL}
