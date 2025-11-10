@@ -67,17 +67,13 @@ function generatePayFastSignature(data: Record<string, string>): string {
   // return md5( $getString );
 
   // Iterate through data in insertion order (as it appears in object)
-  // Exclude: signature, merchant_key, return_url, cancel_url, notify_url
-  // Redirect URLs are sent to PayFast but NOT included in signature
+  // Include ALL fields except signature field itself (as per PayFast PHP example)
+  // The test script confirms this works - PayFast accepts forms with all fields in signature
   let pfParamString = "";
 
   for (const key in data) {
     if (
       key !== "signature" &&
-      key !== "merchant_key" &&
-      key !== "return_url" &&
-      key !== "cancel_url" &&
-      key !== "notify_url" &&
       data[key] !== undefined &&
       data[key] !== null &&
       data[key] !== ""
@@ -180,24 +176,24 @@ export async function POST(request: NextRequest) {
       ? productionBaseUrl
       : baseUrl;
 
-    // PayFast minimum required fields (exactly what testing form asks for)
-    // CRITICAL: Only merchant_id, amount, item_name are in signature
-    // return_url, cancel_url, notify_url are sent but NOT in signature
+    // Build payment data in EXACT order as per PayFast documentation
+    // Match the test script structure that successfully works with PayFast
     const paymentData: Record<string, string> = {
+      // 1. Merchant details (REQUIRED - must be first)
       merchant_id: PAYFAST_CONFIG.MERCHANT_ID,
       merchant_key: PAYFAST_CONFIG.MERCHANT_KEY,
+
+      // 2. Return URLs
+      return_url:
+        PAYFAST_CONFIG.RETURN_URL || `${finalBaseUrl}/payment/success`,
+      cancel_url: PAYFAST_CONFIG.CANCEL_URL || `${finalBaseUrl}/payment/cancel`,
+      notify_url: PAYFAST_CONFIG.NOTIFY_URL || `${finalBaseUrl}/payment/notify`,
+
+      // 3. Payment details
+      m_payment_id: paymentId,
       amount: parseFloat(amount).toFixed(2),
       item_name: String(item_name).trim(),
     };
-
-    // Add redirect URLs (required for PayFast to know where to send user)
-    // NOTE: These are sent to PayFast but NOT included in signature calculation
-    paymentData.return_url =
-      PAYFAST_CONFIG.RETURN_URL || `${finalBaseUrl}/payment/success`;
-    paymentData.cancel_url =
-      PAYFAST_CONFIG.CANCEL_URL || `${finalBaseUrl}/payment/cancel`;
-    paymentData.notify_url =
-      PAYFAST_CONFIG.NOTIFY_URL || `${finalBaseUrl}/payment/notify`;
 
     // Only add optional fields if provided (empty values cause signature mismatch)
     if (body.name_first && body.name_first.trim())
@@ -214,6 +210,9 @@ export async function POST(request: NextRequest) {
     // }
     if (body.cell_number && body.cell_number.trim())
       paymentData.cell_number = body.cell_number.trim();
+    // Add optional fields if provided
+    if (item_description && item_description.trim())
+      paymentData.item_description = item_description.trim();
     if (custom_str1 && custom_str1.trim())
       paymentData.custom_str1 = custom_str1.trim();
     if (custom_str2 && custom_str2.trim())

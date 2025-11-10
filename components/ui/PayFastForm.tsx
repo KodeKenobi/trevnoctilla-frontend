@@ -139,7 +139,9 @@ export default function PayFastForm({
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to generate signature: ${response.statusText}`);
+          throw new Error(
+            `Failed to generate signature: ${response.statusText}`
+          );
         }
 
         const data = await response.json();
