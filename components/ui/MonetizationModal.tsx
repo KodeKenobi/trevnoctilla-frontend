@@ -239,6 +239,20 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
     // Form will auto-submit via PayFastForm component
   };
 
+  // Test function: Log download URL and trigger download (same as View Ad - no PayFast)
+  const handlePayTest = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    // Log the download URL from prop (same source View Ad uses)
+    console.log("📥 [TEST] Download URL:", downloadUrl);
+    console.log("📥 [TEST] File name:", fileName);
+
+    // Just call onComplete() like View Ad does - this triggers the download in the parent component
+    // The parent component (tool) handles the actual download with window.open(downloadUrl)
+    onComplete();
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -349,7 +363,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                     formRef={payFastFormRef}
                   />
                   <button
-                    onClick={handlePay}
+                    onClick={handlePayTest}
                     disabled={isProcessingPayment}
                     className="w-full group relative p-4 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:shadow-lg hover:shadow-[#22c55e]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex-1"
                   >

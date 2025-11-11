@@ -16,7 +16,7 @@ function PaymentSuccessContent() {
   const [returnPath, setReturnPath] = useState<string | null>(null);
   const [isSubscription, setIsSubscription] = useState(false);
   const [isDownloadPayment, setIsDownloadPayment] = useState(false);
-  
+
   // Helper function to get download URL from anywhere
   const getDownloadUrl = (): string | null => {
     if (downloadUrl) return downloadUrl;
@@ -24,7 +24,9 @@ function PaymentSuccessContent() {
       const stored = localStorage.getItem("payment_download_url");
       if (stored && stored.trim().startsWith("http")) return stored;
       // Check recent downloads
-      const recent = JSON.parse(localStorage.getItem("recent_downloads") || "[]");
+      const recent = JSON.parse(
+        localStorage.getItem("recent_downloads") || "[]"
+      );
       if (recent.length > 0) {
         const mostRecent = recent[0];
         const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
@@ -288,9 +290,37 @@ function PaymentSuccessContent() {
     verifyPayment();
   }, [searchParams]);
 
+  // Handle download - triggers file save dialog
+  const handleDownload = () => {
+    const url = getDownloadUrl();
+    if (url) {
+      // Create anchor element to trigger download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = ""; // Let browser determine filename
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Also open in new tab as fallback
+      window.open(url, "_blank");
+    }
+  };
+
+  // Handle close - return to where user was (not PayFast)
+  const handleClose = () => {
+    if (returnPath) {
+      router.push(returnPath);
+    } else {
+      // Fallback to home if no return path
+      router.push("/");
+    }
+  };
+
   if (isVerifying) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a]">
+      <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-[#8b5cf6] animate-spin mx-auto mb-4" />
           <p className="text-gray-400">Verifying payment...</p>
@@ -300,130 +330,124 @@ function PaymentSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a] p-4">
-      <div className="max-w-md w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-8 text-center">
-        {paymentStatus === "success" ? (
-          <>
-            <div className="mb-6">
-              <div className="relative inline-block">
-                <div className="absolute inset-0 bg-green-500 rounded-full blur-lg opacity-30"></div>
-                <CheckCircle className="w-16 h-16 text-green-500 relative" />
-              </div>
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Payment Successful!
-            </h1>
-            <p className="text-gray-400 mb-6">
-              {(() => {
-                const url = getDownloadUrl();
-                if (url && !isSubscription) {
-                  return "Your payment has been processed successfully. Click the button below to download your file.";
-                }
-                if (isSubscription) {
-                  return "Your subscription has been activated successfully. You now have premium access.";
-                }
-                return "Your payment has been processed successfully.";
-              })()}
-            </p>
-            <div className="space-y-3">
-              {(() => {
-                const url = getDownloadUrl();
-                // ALWAYS show download button if URL exists and it's not a subscription
-                if (url && !isSubscription) {
-                  return (
-                    <>
-                      <button
-                        onClick={() => window.open(url, "_blank")}
-                        className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all"
-                      >
-                        Download File
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (returnPath) {
-                            router.push(returnPath);
-                          } else {
-                            router.back();
-                          }
-                        }}
-                        className="block w-full px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all"
-                      >
-                        Close
-                      </button>
-                    </>
-                  );
-                }
-                // For subscriptions or other payments, show standard button
-                return (
-                  <button
-                    onClick={() => {
-                      if (isSubscription) {
-                        router.push("/dashboard");
-                      } else if (returnPath) {
-                        router.push(returnPath);
-                      } else {
-                        router.back();
-                      }
-                    }}
-                    className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
-                  >
-                    {isSubscription
-                      ? "Go to Dashboard"
-                      : returnPath
-                      ? "Return to Page"
-                      : "Continue"}
-                  </button>
-                );
-              })()}
-            </div>
-          </>
-        ) : paymentStatus === "pending" ? (
-          <>
-            <div className="mb-6">
-              <Loader2 className="w-16 h-16 text-yellow-500 animate-spin mx-auto" />
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Payment Pending
-            </h1>
-            <p className="text-gray-400 mb-6">
-              Your payment is being processed. This may take a few minutes for
-              EFT payments.
-            </p>
-            <button
-              onClick={() => router.back()}
-              className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
-            >
-              Continue
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="mb-6">
-              <div className="relative inline-block">
-                <div className="absolute inset-0 bg-red-500 rounded-full blur-lg opacity-30"></div>
-                <div className="w-16 h-16 text-red-500 relative text-4xl">
-                  ✕
+    <>
+      {/* Backdrop - blocks all interaction with website */}
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]" />
+
+      {/* Modal Content - centered overlay */}
+      <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
+        <div className="max-w-md w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-8 text-center shadow-2xl pointer-events-auto">
+          {paymentStatus === "success" ? (
+            <>
+              <div className="mb-6">
+                <div className="relative inline-block">
+                  <div className="absolute inset-0 bg-green-500 rounded-full blur-lg opacity-30"></div>
+                  <CheckCircle className="w-16 h-16 text-green-500 relative" />
                 </div>
               </div>
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Payment Failed
-            </h1>
-            <p className="text-gray-400 mb-6">
-              Your payment could not be processed. Please try again.
-            </p>
-            <div className="space-y-3">
+              <h1 className="text-2xl font-bold text-white mb-2">
+                Payment Successful!
+              </h1>
+              <p className="text-gray-400 mb-6">
+                {(() => {
+                  const url = getDownloadUrl();
+                  if (url && !isSubscription) {
+                    return "Your payment has been processed successfully. Click the button below to download your file.";
+                  }
+                  if (isSubscription) {
+                    return "Your subscription has been activated successfully. You now have premium access.";
+                  }
+                  return "Your payment has been processed successfully.";
+                })()}
+              </p>
+              <div className="space-y-3">
+                {(() => {
+                  const url = getDownloadUrl();
+                  // ALWAYS show download button if URL exists and it's not a subscription
+                  if (url && !isSubscription) {
+                    return (
+                      <>
+                        <button
+                          onClick={handleDownload}
+                          className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all shadow-lg"
+                        >
+                          Download File
+                        </button>
+                        <button
+                          onClick={handleClose}
+                          className="block w-full px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all"
+                        >
+                          Close
+                        </button>
+                      </>
+                    );
+                  }
+                  // For subscriptions or other payments, show standard button
+                  return (
+                    <button
+                      onClick={() => {
+                        if (isSubscription) {
+                          router.push("/dashboard");
+                        } else {
+                          handleClose();
+                        }
+                      }}
+                      className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
+                    >
+                      {isSubscription ? "Go to Dashboard" : "Close"}
+                    </button>
+                  );
+                })()}
+              </div>
+            </>
+          ) : paymentStatus === "pending" ? (
+            <>
+              <div className="mb-6">
+                <Loader2 className="w-16 h-16 text-yellow-500 animate-spin mx-auto" />
+              </div>
+              <h1 className="text-2xl font-bold text-white mb-2">
+                Payment Pending
+              </h1>
+              <p className="text-gray-400 mb-6">
+                Your payment is being processed. This may take a few minutes for
+                EFT payments.
+              </p>
               <button
-                onClick={() => router.back()}
+                onClick={handleClose}
                 className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
               >
-                Try Again
+                Close
               </button>
-            </div>
-          </>
-        )}
+            </>
+          ) : (
+            <>
+              <div className="mb-6">
+                <div className="relative inline-block">
+                  <div className="absolute inset-0 bg-red-500 rounded-full blur-lg opacity-30"></div>
+                  <div className="w-16 h-16 text-red-500 relative text-4xl">
+                    ✕
+                  </div>
+                </div>
+              </div>
+              <h1 className="text-2xl font-bold text-white mb-2">
+                Payment Failed
+              </h1>
+              <p className="text-gray-400 mb-6">
+                Your payment could not be processed. Please try again.
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={handleClose}
+                  className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -431,12 +455,15 @@ export default function PaymentSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a]">
-          <div className="text-center">
-            <Loader2 className="w-12 h-12 text-[#8b5cf6] animate-spin mx-auto mb-4" />
-            <p className="text-gray-400">Loading...</p>
+        <>
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]" />
+          <div className="fixed inset-0 z-[101] flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 text-[#8b5cf6] animate-spin mx-auto mb-4" />
+              <p className="text-gray-400">Loading...</p>
+            </div>
           </div>
-        </div>
+        </>
       }
     >
       <PaymentSuccessContent />
