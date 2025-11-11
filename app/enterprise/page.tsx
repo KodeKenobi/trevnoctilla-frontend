@@ -401,7 +401,7 @@ export default function EnterpriseDashboard() {
               value={stats.errorCalls.toLocaleString()}
               icon={AlertCircle}
               changeType={stats.errorCalls > 0 ? "negative" : "neutral"}
-              color={stats.errorCalls > 0 ? "red" : "gray"}
+              color={stats.errorCalls > 0 ? "red" : "blue"}
             />
           </div>
 
