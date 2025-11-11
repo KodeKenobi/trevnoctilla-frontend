@@ -25,7 +25,6 @@ import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
 import PayFastForm from "@/components/ui/PayFastForm";
 import { convertUSDToZAR } from "@/lib/currency";
-import PackageDetailsModal from "@/components/ui/PackageDetailsModal";
 
 export default function ApiDocsPage() {
   const { user, loading } = useUser();
@@ -292,6 +291,8 @@ export default function ApiDocsPage() {
     setModalPlan(plan);
     setShowPackageModal(true);
   };
+
+  // Note: Subscriptions no longer require authentication - removed login redirect logic
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 page-content">
@@ -896,15 +897,28 @@ export default function ApiDocsPage() {
           </div>
         </motion.div>
 
-        {/* Package Details Modal */}
-        <PackageDetailsModal
-          isOpen={showPackageModal}
-          onClose={() => {
-            setShowPackageModal(false);
-            setModalPlan(null);
-          }}
-          plan={modalPlan}
-        />
+        {/* Subscription Forms - Hidden, auto-submit when triggered */}
+        {selectedPlan &&
+          zarAmount &&
+          pricing
+            .filter((p) => p.name === selectedPlan && p.isSubscription)
+            .map((plan) => (
+              <PayFastForm
+                key={plan.name}
+                formRef={subscriptionFormRef}
+                amount={zarAmount}
+                item_name={`${plan.name} Subscription - ${plan.price}`}
+                item_description={plan.description}
+                subscription_type="1"
+                frequency="3"
+                cycles="0"
+                subscription_notify_email={true}
+                subscription_notify_webhook={true}
+                subscription_notify_buyer={true}
+                autoSubmit={true}
+                className="hidden"
+              />
+            ))}
 
         {/* CTA Section */}
         <motion.div

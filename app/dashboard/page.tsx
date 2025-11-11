@@ -159,6 +159,54 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
+  // Check if user should be redirected to enterprise dashboard
+  useEffect(() => {
+    if (user && !userLoading) {
+      // Check if user has enterprise subscription
+      // This can be determined by checking subscription tier from usage stats
+      const checkEnterpriseStatus = async () => {
+        try {
+          const token = localStorage.getItem("auth_token");
+          if (!token) return;
+
+          const usageResponse = await fetch(
+            `${
+              process.env.NEXT_PUBLIC_API_BASE_URL ||
+              "https://web-production-737b.up.railway.app"
+            }/api/client/usage`,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (usageResponse.ok) {
+            const usageData = await usageResponse.json();
+            // Check if user has enterprise tier (unlimited calls or specific tier)
+            const isEnterprise =
+              usageData.subscription_tier?.toLowerCase() === "enterprise" ||
+              usageData.monthly?.limit === -1 || // Unlimited indicates enterprise
+              (usageData.monthly?.limit && usageData.monthly.limit >= 100000); // High limit indicates enterprise
+
+            if (isEnterprise) {
+              router.push("/enterprise");
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Error checking enterprise status:", error);
+        }
+      };
+
+      // Only check if not already on enterprise page
+      if (window.location.pathname !== "/enterprise") {
+        checkEnterpriseStatus();
+      }
+    }
+  }, [user, userLoading, router]);
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!userLoading && !user) {
@@ -990,11 +1038,11 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-[#8b5cf6] to-[#3b82f6] bg-clip-text text-transparent">
-                API Hub
+                User Dashboard
               </h1>
               <p className="text-sm text-gray-400 flex items-center gap-2">
                 <span className="w-2 h-2 bg-[#8b5cf6] rounded-full animate-pulse"></span>
-                {user?.email || "User"}
+                {user?.email || "User"} • Testing & Production Plans
               </p>
             </div>
             <div className="flex items-center gap-4">
