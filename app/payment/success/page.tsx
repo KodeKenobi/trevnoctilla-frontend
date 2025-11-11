@@ -16,6 +16,25 @@ function PaymentSuccessContent() {
   const [returnPath, setReturnPath] = useState<string | null>(null);
   const [isSubscription, setIsSubscription] = useState(false);
   const [isDownloadPayment, setIsDownloadPayment] = useState(false);
+  
+  // Helper function to get download URL from anywhere
+  const getDownloadUrl = (): string | null => {
+    if (downloadUrl) return downloadUrl;
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("payment_download_url");
+      if (stored && stored.trim().startsWith("http")) return stored;
+      // Check recent downloads
+      const recent = JSON.parse(localStorage.getItem("recent_downloads") || "[]");
+      if (recent.length > 0) {
+        const mostRecent = recent[0];
+        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+        if (mostRecent.timestamp > oneDayAgo && mostRecent.url) {
+          return mostRecent.url;
+        }
+      }
+    }
+    return null;
+  };
 
   // Check localStorage for download URL IMMEDIATELY on page load
   // This is critical because PayFast may not return parameters in the URL
@@ -295,77 +314,67 @@ function PaymentSuccessContent() {
               Payment Successful!
             </h1>
             <p className="text-gray-400 mb-6">
-              {(isDownloadPayment || downloadUrl) && !isSubscription
-                ? "Your payment has been processed successfully. Click the button below to download your file."
-                : isSubscription
-                ? "Your subscription has been activated successfully. You now have premium access."
-                : "Your payment has been processed successfully."}
+              {(() => {
+                const url = getDownloadUrl();
+                if (url && !isSubscription) {
+                  return "Your payment has been processed successfully. Click the button below to download your file.";
+                }
+                if (isSubscription) {
+                  return "Your subscription has been activated successfully. You now have premium access.";
+                }
+                return "Your payment has been processed successfully.";
+              })()}
             </p>
             <div className="space-y-3">
-              {/* ALWAYS show download/close buttons if downloadUrl exists OR isDownloadPayment is true */}
-              {(isDownloadPayment || downloadUrl) && !isSubscription ? (
-                <>
-                  {downloadUrl ? (
-                    <button
-                      onClick={() => window.open(downloadUrl, "_blank")}
-                      className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all"
-                    >
-                      Download File
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        // Try to get download URL from localStorage one more time
-                        const storedUrl = localStorage.getItem(
-                          "payment_download_url"
-                        );
-                        if (storedUrl) {
-                          window.open(storedUrl, "_blank");
-                        } else {
-                          alert(
-                            "Download URL not found. Please check your recent downloads or contact support."
-                          );
-                        }
-                      }}
-                      className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all"
-                    >
-                      Download File
-                    </button>
-                  )}
+              {(() => {
+                const url = getDownloadUrl();
+                // ALWAYS show download button if URL exists and it's not a subscription
+                if (url && !isSubscription) {
+                  return (
+                    <>
+                      <button
+                        onClick={() => window.open(url, "_blank")}
+                        className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all"
+                      >
+                        Download File
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (returnPath) {
+                            router.push(returnPath);
+                          } else {
+                            router.back();
+                          }
+                        }}
+                        className="block w-full px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all"
+                      >
+                        Close
+                      </button>
+                    </>
+                  );
+                }
+                // For subscriptions or other payments, show standard button
+                return (
                   <button
                     onClick={() => {
-                      if (returnPath) {
+                      if (isSubscription) {
+                        router.push("/dashboard");
+                      } else if (returnPath) {
                         router.push(returnPath);
                       } else {
                         router.back();
                       }
                     }}
-                    className="block w-full px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all"
+                    className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
                   >
-                    Close
+                    {isSubscription
+                      ? "Go to Dashboard"
+                      : returnPath
+                      ? "Return to Page"
+                      : "Continue"}
                   </button>
-                </>
-              ) : (
-                /* For subscriptions or other payments, show standard button */
-                <button
-                  onClick={() => {
-                    if (isSubscription) {
-                      router.push("/dashboard");
-                    } else if (returnPath) {
-                      router.push(returnPath);
-                    } else {
-                      router.back();
-                    }
-                  }}
-                  className="block w-full px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
-                >
-                  {isSubscription
-                    ? "Go to Dashboard"
-                    : returnPath
-                    ? "Return to Page"
-                    : "Continue"}
-                </button>
-              )}
+                );
+              })()}
             </div>
           </>
         ) : paymentStatus === "pending" ? (
