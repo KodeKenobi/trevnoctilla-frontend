@@ -281,6 +281,8 @@ export default function PayFastForm({
       ref={formRef as React.RefObject<HTMLFormElement>}
       action={API_CONFIG.PAYFAST.PAYFAST_URL}
       method="post"
+      encType="application/x-www-form-urlencoded"
+      acceptCharset="UTF-8"
       onSubmit={handleSubmit}
       className={className}
     >

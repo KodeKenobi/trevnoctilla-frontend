@@ -361,7 +361,8 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                     return_url={API_CONFIG.PAYFAST.RETURN_URL}
                     cancel_url={API_CONFIG.PAYFAST.CANCEL_URL}
                     notify_url={API_CONFIG.PAYFAST.NOTIFY_URL}
-                    custom_str1={downloadUrl || ""} // Pass download URL so it's available after payment
+                    // DO NOT send downloadUrl as custom_str1 - it's too long and causes 403
+                    // Download URL is already stored in localStorage before payment
                     custom_str2={window.location.href} // Pass current page URL for return
                     formRef={payFastFormRef}
                   />
