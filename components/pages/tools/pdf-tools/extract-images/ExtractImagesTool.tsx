@@ -46,16 +46,20 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
       img.page
     }_image${img.image_index}.png`;
 
+    // Create data URL BEFORE showing modal so it can be stored for PayFast payments
+    const dataUrl = `data:image/png;base64,${img.data}`;
+
     const completed = await showMonetizationModal({
       title: "Download Image",
       message: `Choose how you'd like to download ${fileName}`,
       fileName,
       fileType: "image",
+      downloadUrl: dataUrl, // Pass data URL so it's stored for PayFast payments
     });
 
     if (completed) {
       const link = document.createElement("a");
-      link.href = `data:image/png;base64,${img.data}`;
+      link.href = dataUrl;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
@@ -66,20 +70,22 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
   const downloadAllImages = async () => {
     if (!result?.data?.images || !uploadedFile) return;
 
+    // Create download URL BEFORE showing modal so it can be stored for PayFast payments
+    const downloadUrl = `${getApiUrl("")}/download_images/${uploadedFile.name}`;
+    const fileName = `${uploadedFile.name.replace(".pdf", "")}_images.zip`;
+
     const completed = await showMonetizationModal({
       title: "Download All Images",
       message: `Choose how you'd like to download all ${
         result.data.total_images || 0
       } images`,
-      fileName: `${uploadedFile.name.replace(".pdf", "")}_images.zip`,
+      fileName,
       fileType: "ZIP",
+      downloadUrl, // Pass download URL so it's stored for PayFast payments
     });
 
     if (completed) {
-      window.open(
-        `${getApiUrl("")}/download_images/${uploadedFile.name}`,
-        "_blank"
-      );
+      window.open(downloadUrl, "_blank");
     }
   };
 

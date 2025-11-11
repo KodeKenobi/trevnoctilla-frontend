@@ -101,17 +101,20 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
   const downloadHtml = async () => {
     if (!convertedFilename) return;
 
+    // Create download URL BEFORE showing modal so it can be stored for PayFast payments
+    const downloadUrl = `${getApiUrl(
+      "/download_converted"
+    )}/${convertedFilename}`;
+
     const completed = await showMonetizationModal({
       title: "Download HTML",
       message: `Choose how you'd like to download ${convertedFilename}`,
       fileName: convertedFilename,
       fileType: "HTML",
+      downloadUrl, // Pass download URL so it's stored for PayFast payments
     });
 
     if (completed) {
-      const downloadUrl = `${getApiUrl(
-        "/download_converted"
-      )}/${convertedFilename}`;
       window.open(downloadUrl, "_blank");
     }
   };

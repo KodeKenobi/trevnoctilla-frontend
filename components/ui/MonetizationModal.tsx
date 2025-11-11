@@ -210,12 +210,15 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
     }
 
     // Store the current page URL and download URL so we can return here if payment is cancelled
-    // Also store download URL for success page fallback
+    // Also store download URL and fileName for success page fallback
     if (typeof window !== "undefined") {
       const currentPath = window.location.pathname + window.location.search;
       localStorage.setItem("payment_return_path", currentPath);
       if (downloadUrl) {
         localStorage.setItem("payment_download_url", downloadUrl);
+      }
+      if (fileName) {
+        localStorage.setItem("payment_file_name", fileName);
       }
     }
 

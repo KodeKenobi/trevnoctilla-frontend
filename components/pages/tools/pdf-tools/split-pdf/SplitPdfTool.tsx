@@ -322,20 +322,24 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
   const handleDownloadAll = async () => {
     const selectedPages = pages.filter((page) => page.isSelected);
     const fileName = uploadedFile?.name?.replace(".pdf", "") || "split_pages";
+    const fullFileName = `${fileName}_split_${selectedPages.length}_pages.zip`;
 
     // Create ZIP download
     if (downloadUrls.length > 0) {
+      const downloadUrl = downloadUrls[0]; // Get download URL BEFORE showing modal
+
       const completed = await showMonetizationModal({
         title: "Download ZIP",
         message: `Choose how you'd like to download ${selectedPages.length} pages as ZIP`,
-        fileName: `${fileName}_split_${selectedPages.length}_pages.zip`,
+        fileName: fullFileName,
         fileType: "ZIP",
+        downloadUrl, // Pass download URL so it's stored for PayFast payments
       });
 
       if (completed) {
         const link = document.createElement("a");
-        link.href = downloadUrls[0];
-        link.download = `${fileName}_split_${selectedPages.length}_pages.zip`;
+        link.href = downloadUrl;
+        link.download = fullFileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -346,19 +350,23 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
   // Handle individual page download
   const handleDownloadPageWithMonetization = async (pageNumber: number) => {
     const fileName = uploadedFile?.name?.replace(".pdf", "") || "page";
+    const fullFileName = `${fileName}_page_${pageNumber}.pdf`;
 
     if (downloadUrls[pageNumber - 1]) {
+      const downloadUrl = downloadUrls[pageNumber - 1]; // Get download URL BEFORE showing modal
+
       const completed = await showMonetizationModal({
         title: "Download Page",
         message: `Choose how you'd like to download page ${pageNumber}`,
-        fileName: `${fileName}_page_${pageNumber}.pdf`,
+        fileName: fullFileName,
         fileType: "PDF",
+        downloadUrl, // Pass download URL so it's stored for PayFast payments
       });
 
       if (completed) {
         const link = document.createElement("a");
-        link.href = downloadUrls[pageNumber - 1];
-        link.download = `${fileName}_page_${pageNumber}.pdf`;
+        link.href = downloadUrl;
+        link.download = fullFileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

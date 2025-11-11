@@ -13,6 +13,7 @@ function PaymentSuccessContent() {
   >("pending");
   const [itnDebug, setItnDebug] = useState<any>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const [returnPath, setReturnPath] = useState<string | null>(null);
   const [isSubscription, setIsSubscription] = useState(false);
   const [isDownloadPayment, setIsDownloadPayment] = useState(false);
@@ -22,7 +23,15 @@ function PaymentSuccessContent() {
     if (downloadUrl) return downloadUrl;
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("payment_download_url");
-      if (stored && stored.trim().startsWith("http")) return stored;
+      if (stored && stored.trim()) {
+        // Check if it's a data URL or HTTP URL
+        if (
+          stored.trim().startsWith("data:") ||
+          stored.trim().startsWith("http")
+        ) {
+          return stored.trim();
+        }
+      }
       // Check recent downloads
       const recent = JSON.parse(
         localStorage.getItem("recent_downloads") || "[]"
@@ -32,6 +41,29 @@ function PaymentSuccessContent() {
         const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
         if (mostRecent.timestamp > oneDayAgo && mostRecent.url) {
           return mostRecent.url;
+        }
+      }
+    }
+    return null;
+  };
+
+  // Helper function to get filename from anywhere
+  const getFileName = (): string | null => {
+    if (fileName) return fileName;
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("payment_file_name");
+      if (stored && stored.trim()) {
+        return stored.trim();
+      }
+      // Check recent downloads
+      const recent = JSON.parse(
+        localStorage.getItem("recent_downloads") || "[]"
+      );
+      if (recent.length > 0) {
+        const mostRecent = recent[0];
+        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+        if (mostRecent.timestamp > oneDayAgo && mostRecent.itemName) {
+          return mostRecent.itemName;
         }
       }
     }
@@ -53,6 +85,13 @@ function PaymentSuccessContent() {
           storedDownloadUrl
         );
         // Don't clear it - keep it for later access
+      }
+
+      // Check if fileName was stored before payment
+      const storedFileName = localStorage.getItem("payment_file_name");
+      if (storedFileName && storedFileName.trim()) {
+        setFileName(storedFileName);
+        console.log("✅ Found file name in localStorage:", storedFileName);
       }
 
       // Check for return path
@@ -290,21 +329,27 @@ function PaymentSuccessContent() {
     verifyPayment();
   }, [searchParams]);
 
-  // Handle download - triggers file save dialog
+  // Handle download - triggers file save dialog with correct filename
   const handleDownload = () => {
     const url = getDownloadUrl();
+    const file = getFileName();
+
     if (url) {
       // Create anchor element to trigger download
       const link = document.createElement("a");
       link.href = url;
-      link.download = ""; // Let browser determine filename
+      // Use stored filename if available, otherwise let browser determine
+      link.download = file || "";
       link.style.display = "none";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      // Also open in new tab as fallback
-      window.open(url, "_blank");
+      // For data URLs, the download attribute should work
+      // For HTTP URLs, also open in new tab as fallback
+      if (url.startsWith("http")) {
+        window.open(url, "_blank");
+      }
     }
   };
 

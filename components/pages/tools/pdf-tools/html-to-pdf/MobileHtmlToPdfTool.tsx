@@ -91,17 +91,18 @@ export const MobileHtmlToPdfTool: React.FC<MobileHtmlToPdfToolProps> = ({
   const downloadPdf = async () => {
     if (!convertedFilename) return;
 
+    // Create download URL BEFORE showing modal so it can be stored for PayFast payments
+    const downloadUrl = `${getApiUrl("/download_edited")}/${convertedFilename}`;
+
     const completed = await showMonetizationModal({
       title: "Download PDF",
       message: `Choose how you'd like to download ${convertedFilename}`,
       fileName: convertedFilename,
       fileType: "PDF",
+      downloadUrl, // Pass download URL so it's stored for PayFast payments
     });
 
     if (completed) {
-      const downloadUrl = `${getApiUrl(
-        "/download_edited"
-      )}/${convertedFilename}`;
       window.open(downloadUrl, "_blank");
     }
   };
