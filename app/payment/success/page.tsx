@@ -89,19 +89,35 @@ function PaymentSuccessContent() {
       const paymentIsSubscription =
         !!subscriptionType ||
         (itemName?.toLowerCase().includes("subscription") ?? false);
-      const paymentIsDownload =
-        !paymentIsSubscription && (urlFromParams?.startsWith("http") ?? false);
+
+      // Check for download URL from params OR localStorage
+      const storedDownloadUrl =
+        typeof window !== "undefined"
+          ? localStorage.getItem("payment_download_url")
+          : null;
+      const hasDownloadUrl =
+        urlFromParams?.startsWith("http") ||
+        storedDownloadUrl?.startsWith("http");
+
+      const paymentIsDownload = !paymentIsSubscription && !!hasDownloadUrl;
 
       setIsSubscription(paymentIsSubscription);
       setIsDownloadPayment(paymentIsDownload);
 
       // Store in state for use in UI
-      if (urlFromParams && urlFromParams.startsWith("http")) {
-        setDownloadUrl(urlFromParams);
+      // Use download URL from params if available, otherwise use localStorage
+      const finalDownloadUrl = urlFromParams?.startsWith("http")
+        ? urlFromParams
+        : storedDownloadUrl?.startsWith("http")
+        ? storedDownloadUrl
+        : null;
+
+      if (finalDownloadUrl) {
+        setDownloadUrl(finalDownloadUrl);
         // Store download URL with payment ID for later access
         if (mPaymentId && typeof window !== "undefined") {
           const downloadData = {
-            url: urlFromParams,
+            url: finalDownloadUrl,
             paymentId: mPaymentId,
             timestamp: Date.now(),
             itemName: itemName || "File Download",
@@ -291,6 +307,17 @@ function PaymentSuccessContent() {
                   >
                     Close
                   </button>
+                  <p className="text-center text-sm text-gray-500 mt-4">
+                    Or download your file here:{" "}
+                    <a
+                      href={downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 underline break-all"
+                    >
+                      {downloadUrl}
+                    </a>
+                  </p>
                 </>
               )}
               {/* For subscriptions or other payments, show standard button */}
