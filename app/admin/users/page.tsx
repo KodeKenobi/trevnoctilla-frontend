@@ -22,6 +22,8 @@ interface User {
   email: string;
   role: string;
   is_active: boolean;
+  subscription_tier?: string;
+  monthly_call_limit?: number;
   created_at: string;
   last_login: string;
   api_keys_count: number;
@@ -36,6 +38,13 @@ interface UserStats {
   popular_endpoints: Array<{ endpoint: string; count: number }>;
 }
 
+interface MonthlyUsage {
+  used: number;
+  limit: number;
+  remaining: number;
+  percentage: number;
+}
+
 export default function UsersPage() {
   const { user, loading: userLoading } = useUser();
   const [users, setUsers] = useState<User[]>([]);
@@ -45,6 +54,7 @@ export default function UsersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [monthlyUsage, setMonthlyUsage] = useState<MonthlyUsage | null>(null);
   const [showUserDetails, setShowUserDetails] = useState(false);
 
   // Authentication guard - only redirect if we're sure user is not logged in
@@ -85,45 +95,53 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      
+
       // Get the session token from NextAuth
-      const session = await fetch('/api/auth/session').then(res => res.json());
-      
+      const session = await fetch("/api/auth/session").then((res) =>
+        res.json()
+      );
+
       if (!session?.user) {
-        throw new Error('No active session found');
+        throw new Error("No active session found");
       }
 
-      console.log('🔍 Fetching users with session:', session.user);
+      console.log("🔍 Fetching users with session:", session.user);
 
       // Build query parameters
       const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      if (roleFilter) params.append('role', roleFilter);
-      if (statusFilter) params.append('is_active', statusFilter === 'active' ? 'true' : 'false');
+      if (searchTerm) params.append("search", searchTerm);
+      if (roleFilter) params.append("role", roleFilter);
+      if (statusFilter)
+        params.append(
+          "is_active",
+          statusFilter === "active" ? "true" : "false"
+        );
 
       // Try admin API first
       try {
         const response = await fetch(
           `https://web-production-737b.up.railway.app/api/admin/users?${params.toString()}`,
           {
-            method: 'GET',
+            method: "GET",
             headers: {
-              'Authorization': `Bearer ${session.accessToken || session.user.id}`,
-              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.accessToken || session.user.id}`,
+              "Content-Type": "application/json",
             },
           }
         );
 
         if (response.ok) {
           const data = await response.json();
-          console.log('✅ Admin API response:', data);
-          
+          console.log("✅ Admin API response:", data);
+
           // Transform the data to match our interface
           const transformedUsers = data.users.map((user: any) => ({
             id: user.id,
             email: user.email,
             role: user.role,
             is_active: user.is_active,
+            subscription_tier: user.subscription_tier || "free",
+            monthly_call_limit: user.monthly_call_limit || 5,
             created_at: user.created_at,
             last_login: user.last_login || user.created_at,
             api_keys_count: user.api_keys?.length || 0,
@@ -133,19 +151,23 @@ export default function UsersPage() {
           setLoading(false);
           return;
         } else {
-          console.log('❌ Admin API failed:', response.status, response.statusText);
+          console.log(
+            "❌ Admin API failed:",
+            response.status,
+            response.statusText
+          );
         }
       } catch (adminError) {
-        console.log('❌ Admin API error:', adminError);
+        console.log("❌ Admin API error:", adminError);
       }
 
       // Fallback: Create user entry from current session
-      console.log('🔄 Using fallback: creating user from session data');
-      
+      console.log("🔄 Using fallback: creating user from session data");
+
       const currentUser = {
         id: session.user.id || 1,
-        email: session.user.email || 'unknown@example.com',
-        role: session.user.role || 'user',
+        email: session.user.email || "unknown@example.com",
+        role: session.user.role || "user",
         is_active: session.user.is_active !== false,
         created_at: new Date().toISOString(),
         last_login: new Date().toISOString(),
@@ -154,23 +176,24 @@ export default function UsersPage() {
 
       setUsers([currentUser]);
       setLoading(false);
-      
     } catch (error) {
       console.error("Error fetching users:", error);
-      
+
       // Ultimate fallback: show current user if available
       if (user) {
-        setUsers([{
-          id: user.id || 1,
-          email: user.email || 'unknown@example.com',
-          role: user.role || 'user',
-          is_active: user.is_active !== false,
-          created_at: new Date().toISOString(),
-          last_login: new Date().toISOString(),
-          api_keys_count: 0,
-        }]);
+        setUsers([
+          {
+            id: user.id || 1,
+            email: user.email || "unknown@example.com",
+            role: user.role || "user",
+            is_active: user.is_active !== false,
+            created_at: new Date().toISOString(),
+            last_login: new Date().toISOString(),
+            api_keys_count: 0,
+          },
+        ]);
       }
-      
+
       setLoading(false);
     }
   };
@@ -178,27 +201,29 @@ export default function UsersPage() {
   const fetchUserStats = async (userId: number) => {
     try {
       // Get the session token from NextAuth
-      const session = await fetch('/api/auth/session').then(res => res.json());
-      
+      const session = await fetch("/api/auth/session").then((res) =>
+        res.json()
+      );
+
       if (!session?.user) {
-        throw new Error('No active session found');
+        throw new Error("No active session found");
       }
 
       // Try to get user stats from admin API
       const response = await fetch(
         `https://web-production-737b.up.railway.app/api/admin/users/${userId}`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': `Bearer ${session.accessToken || session.user.id}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.accessToken || session.user.id}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
       if (response.ok) {
         const userData = await response.json();
-        
+
         // Transform the stats data to match our interface
         if (userData.stats) {
           setUserStats({
@@ -220,15 +245,20 @@ export default function UsersPage() {
             popular_endpoints: [],
           });
         }
+
+        // Set monthly usage
+        if (userData.monthly_usage) {
+          setMonthlyUsage(userData.monthly_usage);
+        }
       } else {
         // If admin API fails, try to get basic user info
         const profileResponse = await fetch(
-          'https://web-production-737b.up.railway.app/auth/profile',
+          "https://web-production-737b.up.railway.app/auth/profile",
           {
-            method: 'GET',
+            method: "GET",
             headers: {
-              'Authorization': `Bearer ${session.accessToken || session.user.id}`,
-              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.accessToken || session.user.id}`,
+              "Content-Type": "application/json",
             },
           }
         );
@@ -275,8 +305,10 @@ export default function UsersPage() {
     try {
       // TODO: Implement API call to update user status
       // For now, show an alert that this feature is not yet implemented
-      alert(`User status toggle feature is not yet implemented. User ID: ${userId}, Current status: ${currentStatus}`);
-      
+      alert(
+        `User status toggle feature is not yet implemented. User ID: ${userId}, Current status: ${currentStatus}`
+      );
+
       // In real implementation, make API call to update user status
       // setUsers(
       //   users.map((user) =>
@@ -468,7 +500,8 @@ export default function UsersPage() {
                           </p>
                           <span
                             className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              user.role === "admin" || user.role === "super_admin"
+                              user.role === "admin" ||
+                              user.role === "super_admin"
                                 ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                                 : "bg-gray-500/20 text-gray-300 border border-gray-500/30"
                             }`}
@@ -484,6 +517,11 @@ export default function UsersPage() {
                           >
                             {user.is_active ? "Active" : "Inactive"}
                           </span>
+                          {user.subscription_tier && (
+                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                              {user.subscription_tier}
+                            </span>
+                          )}
                         </div>
                         <div className="mt-1 flex items-center text-sm text-gray-400">
                           <Calendar className="flex-shrink-0 mr-1.5 h-4 w-4" />
@@ -493,6 +531,15 @@ export default function UsersPage() {
                           <Key className="flex-shrink-0 mr-1.5 h-4 w-4" />
                           {user.api_keys_count} API key
                           {user.api_keys_count !== 1 ? "s" : ""}
+                          {user.monthly_call_limit !== undefined && (
+                            <span className="ml-2">
+                              •{" "}
+                              {user.monthly_call_limit === -1
+                                ? "Unlimited"
+                                : `${user.monthly_call_limit}/month`}{" "}
+                              calls
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -530,8 +577,8 @@ export default function UsersPage() {
                   </div>
                 </li>
               ))}
-        </ul>
-      </div>
+            </ul>
+          </div>
 
           {/* User Details Modal */}
           {showUserDetails && selectedUser && (
@@ -585,7 +632,9 @@ export default function UsersPage() {
                                         : "bg-red-500/20 text-red-300 border border-red-500/30"
                                     }`}
                                   >
-                                    {selectedUser.is_active ? "Active" : "Inactive"}
+                                    {selectedUser.is_active
+                                      ? "Active"
+                                      : "Inactive"}
                                   </span>
                                 </dd>
                               </div>
@@ -615,6 +664,42 @@ export default function UsersPage() {
                             </h4>
                             {userStats ? (
                               <dl className="space-y-3">
+                                {monthlyUsage && (
+                                  <>
+                                    <div>
+                                      <dt className="text-sm font-medium text-gray-400">
+                                        Monthly API Calls
+                                      </dt>
+                                      <dd className="text-sm text-white">
+                                        {monthlyUsage.used} /{" "}
+                                        {monthlyUsage.limit === -1
+                                          ? "Unlimited"
+                                          : monthlyUsage.limit}
+                                      </dd>
+                                      <div className="mt-2 w-full bg-gray-700 rounded-full h-2">
+                                        <div
+                                          className={`h-2 rounded-full ${
+                                            monthlyUsage.percentage >= 100
+                                              ? "bg-red-500"
+                                              : monthlyUsage.percentage >= 80
+                                              ? "bg-yellow-500"
+                                              : "bg-green-500"
+                                          }`}
+                                          style={{
+                                            width: `${Math.min(
+                                              monthlyUsage.percentage,
+                                              100
+                                            )}%`,
+                                          }}
+                                        />
+                                      </div>
+                                      <dd className="text-xs text-gray-400 mt-1">
+                                        {monthlyUsage.remaining} remaining
+                                      </dd>
+                                    </div>
+                                    <div className="border-t border-gray-600 pt-3 mt-3" />
+                                  </>
+                                )}
                                 <div>
                                   <dt className="text-sm font-medium text-gray-400">
                                     Total API Calls
@@ -636,7 +721,7 @@ export default function UsersPage() {
                                     Success Rate
                                   </dt>
                                   <dd className="text-sm text-white">
-                                    {userStats.success_rate}%
+                                    {userStats.success_rate.toFixed(1)}%
                                   </dd>
                                 </div>
                                 <div>
@@ -663,9 +748,9 @@ export default function UsersPage() {
                             )}
                           </div>
                         </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
                   <div className="bg-gray-700/50 px-6 py-4 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-600">
                     <button
                       type="button"
@@ -675,10 +760,10 @@ export default function UsersPage() {
                       Close
                     </button>
                   </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
         </div>
       </div>
     </div>

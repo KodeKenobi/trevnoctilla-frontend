@@ -27,11 +27,13 @@ interface SystemStats {
   totalUsers: number;
   activeUsers: number;
   totalApiCalls: number;
+  monthlyCalls?: number;
   successRate: number;
   systemUptime: string;
   memoryUsage: number;
   cpuUsage: number;
   diskUsage: number;
+  usersByTier?: Record<string, number>;
 }
 
 interface UserActivity {
@@ -57,12 +59,15 @@ export default function AdminDashboard() {
     totalUsers: 0,
     activeUsers: 0,
     totalApiCalls: 0,
+    monthlyCalls: 0,
     successRate: 0,
     systemUptime: "0d 0h 0m",
     memoryUsage: 0,
     cpuUsage: 0,
     diskUsage: 0,
+    usersByTier: {},
   });
+  const [usersUsage, setUsersUsage] = useState<any[]>([]);
   const [userActivity, setUserActivity] = useState<UserActivity[]>([]);
   const [systemAlerts, setSystemAlerts] = useState<SystemAlert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,7 +114,7 @@ export default function AdminDashboard() {
       }
 
       // Fetch real data from admin API
-      const [statsResponse, activityResponse, alertsResponse] =
+      const [statsResponse, activityResponse, alertsResponse, usageResponse] =
         await Promise.all([
           fetch(getApiUrl("/api/admin/stats"), {
             headers: getAuthHeaders(token),
@@ -120,11 +125,28 @@ export default function AdminDashboard() {
           fetch(getApiUrl("/api/admin/alerts"), {
             headers: getAuthHeaders(token),
           }),
+          fetch(getApiUrl("/api/admin/usage/stats"), {
+            headers: getAuthHeaders(token),
+          }),
         ]);
 
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStats(statsData);
+      }
+
+      if (usageResponse.ok) {
+        const usageData = await usageResponse.json();
+        if (usageData.summary) {
+          setStats((prev) => ({
+            ...prev,
+            monthlyCalls: usageData.summary.monthly_calls || 0,
+            usersByTier: usageData.summary.users_by_tier || {},
+          }));
+        }
+        if (usageData.users_usage) {
+          setUsersUsage(usageData.users_usage);
+        }
       }
 
       if (activityResponse.ok) {
@@ -345,6 +367,14 @@ export default function AdminDashboard() {
               color="purple"
             />
             <StatCard
+              title="Monthly API Calls"
+              value={stats.monthlyCalls?.toLocaleString() || "0"}
+              icon={Activity}
+              change="Current month"
+              changeType="neutral"
+              color="blue"
+            />
+            <StatCard
               title="Success Rate"
               value={`${stats.successRate}%`}
               icon={TrendingUp}
@@ -475,6 +505,109 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
+
+          {/* Subscription Tiers Overview */}
+          {stats.usersByTier && Object.keys(stats.usersByTier).length > 0 && (
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
+              <div className="px-6 py-6">
+                <h3 className="text-xl font-semibold text-white mb-6">
+                  Users by Subscription Tier
+                </h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  {Object.entries(stats.usersByTier).map(([tier, count]) => (
+                    <div
+                      key={tier}
+                      className="p-4 bg-gray-700/30 rounded-lg border border-gray-600"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-300 capitalize">
+                          {tier}
+                        </span>
+                        <span className="text-2xl font-bold text-white">
+                          {count as number}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Users Monthly Usage */}
+          {usersUsage.length > 0 && (
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
+              <div className="px-6 py-6">
+                <h3 className="text-xl font-semibold text-white mb-6">
+                  Users Monthly API Usage
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          User
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Tier
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Used
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Limit
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Remaining
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                      {usersUsage.map((user) => (
+                        <tr key={user.id} className="hover:bg-gray-700/30">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
+                            {user.email}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                              {user.subscription_tier}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
+                            {user.monthly_used}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
+                            {user.monthly_limit === -1
+                              ? "Unlimited"
+                              : user.monthly_limit}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-white">
+                            {user.monthly_limit === -1
+                              ? "∞"
+                              : user.monthly_remaining}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {user.has_exceeded ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30">
+                                Exceeded
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300 border border-green-500/30">
+                                OK
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Quick Actions */}
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">

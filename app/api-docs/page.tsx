@@ -236,7 +236,7 @@ export default function ApiDocsPage() {
       usdAmount: 0,
       description: "Perfect for development and testing",
       features: [
-        "50 API calls/month",
+        "5 API calls/month",
         "PDF text extraction",
         "Basic image conversion",
         "QR code generation",
