@@ -25,6 +25,7 @@ import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
 import PayFastForm from "@/components/ui/PayFastForm";
 import { convertUSDToZAR } from "@/lib/currency";
+import PackageDetailsModal from "@/components/ui/PackageDetailsModal";
 
 export default function ApiDocsPage() {
   const { user, loading } = useUser();
@@ -956,6 +957,16 @@ export default function ApiDocsPage() {
           </div>
         </motion.div>
       </div>
+
+      {/* Package Details Modal */}
+      <PackageDetailsModal
+        isOpen={showPackageModal}
+        onClose={() => {
+          setShowPackageModal(false);
+          setModalPlan(null);
+        }}
+        plan={modalPlan}
+      />
     </div>
   );
 }
