@@ -363,7 +363,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                     formRef={payFastFormRef}
                   />
                   <button
-                    onClick={handlePayTest}
+                    onClick={handlePay}
                     disabled={isProcessingPayment}
                     className="w-full group relative p-4 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:shadow-lg hover:shadow-[#22c55e]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex-1"
                   >
