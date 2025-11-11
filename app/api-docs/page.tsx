@@ -25,6 +25,7 @@ import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
 import PayFastForm from "@/components/ui/PayFastForm";
 import { convertUSDToZAR } from "@/lib/currency";
+import PackageDetailsModal from "@/components/ui/PackageDetailsModal";
 
 export default function ApiDocsPage() {
   const { user, loading } = useUser();
@@ -36,6 +37,8 @@ export default function ApiDocsPage() {
   const [isProcessingSubscription, setIsProcessingSubscription] =
     useState(false);
   const subscriptionFormRef = useRef<HTMLFormElement>(null);
+  const [showPackageModal, setShowPackageModal] = useState(false);
+  const [modalPlan, setModalPlan] = useState<(typeof pricing)[0] | null>(null);
 
   const copyToClipboard = (code: string, id: string) => {
     navigator.clipboard.writeText(code);
@@ -284,36 +287,11 @@ export default function ApiDocsPage() {
     },
   ];
 
-  const handleSubscribe = async (plan: (typeof pricing)[0]) => {
-    if (!plan.isSubscription || plan.usdAmount === 0) {
-      if (plan.name === "Testing") {
-        handleGetStarted();
-      } else if (plan.name === "Enterprise") {
-        window.open("mailto:api@trevnoctilla.com", "_blank");
-      }
-      return;
-    }
-
-    // Allow subscriptions without authentication - users can subscribe anonymously
-    setIsProcessingSubscription(true);
-    setSelectedPlan(plan.name);
-
-    try {
-      // Convert USD to ZAR
-      const zar = await convertUSDToZAR(plan.usdAmount);
-      setZarAmount(zar.toFixed(2));
-
-      // Don't manually submit - let PayFastForm handle auto-submit
-      // The form will auto-submit once payment data is loaded
-    } catch (error) {
-      console.error("Failed to fetch exchange rate:", error);
-      setIsProcessingSubscription(false);
-      setSelectedPlan(null);
-      setZarAmount(null);
-    }
+  const handleSubscribe = (plan: (typeof pricing)[0]) => {
+    // Show package details modal for all plans
+    setModalPlan(plan);
+    setShowPackageModal(true);
   };
-
-  // Note: Subscriptions no longer require authentication - removed login redirect logic
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 page-content">
@@ -501,6 +479,94 @@ export default function ApiDocsPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Pricing */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="mb-16"
+        >
+          <h2 className="text-3xl font-bold text-white text-center mb-12">
+            Simple, Transparent Pricing
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {pricing.map((plan, index) => (
+              <motion.div
+                key={plan.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className={`relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border rounded-2xl p-8 flex flex-col ${
+                  plan.popular
+                    ? "border-cyan-500/50 ring-2 ring-cyan-500/20"
+                    : "border-gray-700/50"
+                }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-white mb-2">
+                    {plan.name}
+                  </h3>
+                  <div className="text-4xl font-bold text-white mb-2">
+                    {plan.price}
+                  </div>
+                  <p className="text-gray-400">{plan.description}</p>
+                </div>
+
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature, idx) => (
+                    <li
+                      key={`${plan.name}-feature-${idx}`}
+                      className="flex items-center text-gray-300"
+                    >
+                      <Check className="w-5 h-5 text-cyan-400 mr-3 flex-shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <motion.button
+                  onClick={() => handleSubscribe(plan)}
+                  disabled={
+                    isProcessingSubscription && selectedPlan === plan.name
+                  }
+                  className={`w-full py-3 px-6 rounded-xl font-bold transition-all duration-300 mt-auto ${
+                    plan.popular
+                      ? "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
+                      : "border-2 border-gray-600 hover:border-cyan-400 text-gray-300 hover:text-white"
+                  } ${
+                    isProcessingSubscription && selectedPlan === plan.name
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                  whileHover={
+                    isProcessingSubscription && selectedPlan === plan.name
+                      ? {}
+                      : { scale: 1.02 }
+                  }
+                  whileTap={
+                    isProcessingSubscription && selectedPlan === plan.name
+                      ? {}
+                      : { scale: 0.98 }
+                  }
+                >
+                  {isProcessingSubscription && selectedPlan === plan.name
+                    ? "Processing..."
+                    : plan.cta}
+                </motion.button>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
 
@@ -830,116 +896,15 @@ export default function ApiDocsPage() {
           </div>
         </motion.div>
 
-        {/* Pricing */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mb-16"
-        >
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
-            Simple, Transparent Pricing
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {pricing.map((plan, index) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className={`relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border rounded-2xl p-8 flex flex-col ${
-                  plan.popular
-                    ? "border-cyan-500/50 ring-2 ring-cyan-500/20"
-                    : "border-gray-700/50"
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-white mb-2">
-                    {plan.name}
-                  </h3>
-                  <div className="text-4xl font-bold text-white mb-2">
-                    {plan.price}
-                  </div>
-                  <p className="text-gray-400">{plan.description}</p>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, idx) => (
-                    <li
-                      key={`${plan.name}-feature-${idx}`}
-                      className="flex items-center text-gray-300"
-                    >
-                      <Check className="w-5 h-5 text-cyan-400 mr-3 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <motion.button
-                  onClick={() => handleSubscribe(plan)}
-                  disabled={
-                    isProcessingSubscription && selectedPlan === plan.name
-                  }
-                  className={`w-full py-3 px-6 rounded-xl font-bold transition-all duration-300 mt-auto ${
-                    plan.popular
-                      ? "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
-                      : "border-2 border-gray-600 hover:border-cyan-400 text-gray-300 hover:text-white"
-                  } ${
-                    isProcessingSubscription && selectedPlan === plan.name
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
-                  whileHover={
-                    isProcessingSubscription && selectedPlan === plan.name
-                      ? {}
-                      : { scale: 1.02 }
-                  }
-                  whileTap={
-                    isProcessingSubscription && selectedPlan === plan.name
-                      ? {}
-                      : { scale: 0.98 }
-                  }
-                >
-                  {isProcessingSubscription && selectedPlan === plan.name
-                    ? "Processing..."
-                    : plan.cta}
-                </motion.button>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Subscription Forms - Hidden, auto-submit when triggered */}
-        {selectedPlan &&
-          zarAmount &&
-          pricing
-            .filter((p) => p.name === selectedPlan && p.isSubscription)
-            .map((plan) => (
-              <PayFastForm
-                key={plan.name}
-                formRef={subscriptionFormRef}
-                amount={zarAmount}
-                item_name={`${plan.name} Subscription - ${plan.price}`}
-                item_description={plan.description}
-                subscription_type="1"
-                frequency="3"
-                cycles="0"
-                subscription_notify_email={true}
-                subscription_notify_webhook={true}
-                subscription_notify_buyer={true}
-                autoSubmit={true}
-                className="hidden"
-              />
-            ))}
+        {/* Package Details Modal */}
+        <PackageDetailsModal
+          isOpen={showPackageModal}
+          onClose={() => {
+            setShowPackageModal(false);
+            setModalPlan(null);
+          }}
+          plan={modalPlan}
+        />
 
         {/* CTA Section */}
         <motion.div

@@ -90,11 +90,38 @@ export default function LoginPage() {
         const session = await getSession();
 
         setTimeout(() => {
-          // Redirect based on user role
-          if ((session?.user as any)?.role === "super_admin") {
-            router.push("/admin");
+          // Check for pending subscription
+          const pendingSubscription = sessionStorage.getItem(
+            "pending_subscription"
+          );
+          if (pendingSubscription) {
+            try {
+              const subData = JSON.parse(pendingSubscription);
+              sessionStorage.removeItem("pending_subscription");
+
+              // Redirect based on user role and subscription
+              if ((session?.user as any)?.role === "super_admin") {
+                router.push("/admin");
+              } else if (subData.isSubscription) {
+                router.push("/dashboard?tab=settings");
+              } else {
+                router.push("/dashboard");
+              }
+            } catch (e) {
+              // If parsing fails, just redirect normally
+              if ((session?.user as any)?.role === "super_admin") {
+                router.push("/admin");
+              } else {
+                router.push("/dashboard");
+              }
+            }
           } else {
-            router.push("/dashboard");
+            // Redirect based on user role
+            if ((session?.user as any)?.role === "super_admin") {
+              router.push("/admin");
+            } else {
+              router.push("/dashboard");
+            }
           }
         }, 1500);
       }

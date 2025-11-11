@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { useAlert } from "@/contexts/AlertProvider";
@@ -138,7 +138,10 @@ export default function DashboardPage() {
   const { showSuccess, showError, showInfo, hideAlert } = useAlert();
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") || "overview"
+  );
   const [showCreateKeyModal, setShowCreateKeyModal] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
 
