@@ -27,6 +27,7 @@ function PaymentSuccessContent() {
         setDownloadUrl(storedDownloadUrl);
         setIsDownloadPayment(true);
         setPaymentStatus("success");
+        console.log("✅ Found download URL in localStorage:", storedDownloadUrl);
         // Don't clear it - keep it for later access
       }
 
@@ -51,6 +52,7 @@ function PaymentSuccessContent() {
             setDownloadUrl(mostRecent.url);
             setIsDownloadPayment(true);
             setPaymentStatus("success");
+            console.log("✅ Found download URL in recent downloads:", mostRecent.url);
           }
         }
       }
@@ -99,7 +101,12 @@ function PaymentSuccessContent() {
         urlFromParams?.startsWith("http") ||
         storedDownloadUrl?.startsWith("http");
 
-      const paymentIsDownload = !paymentIsSubscription && !!hasDownloadUrl;
+      // If there's a download URL, it's ALWAYS a download payment (unless it's a subscription)
+      // Also check if amount is around $1 (download payment)
+      const amountNum = amount ? parseFloat(amount) : null;
+      const isOneDollarPayment = amountNum && amountNum >= 0.99 && amountNum <= 1.01;
+      
+      const paymentIsDownload = !paymentIsSubscription && (hasDownloadUrl || isOneDollarPayment);
 
       setIsSubscription(paymentIsSubscription);
       setIsDownloadPayment(paymentIsDownload);
@@ -279,22 +286,39 @@ function PaymentSuccessContent() {
               Payment Successful!
             </h1>
             <p className="text-gray-400 mb-6">
-              {isDownloadPayment && downloadUrl
+              {(isDownloadPayment || downloadUrl) && !isSubscription
                 ? "Your payment has been processed successfully. Click the button below to download your file."
                 : isSubscription
                 ? "Your subscription has been activated successfully. You now have premium access."
                 : "Your payment has been processed successfully."}
             </p>
             <div className="space-y-3">
-              {/* ONLY show download/close buttons for $1 download payments */}
-              {isDownloadPayment && downloadUrl && (
+              {/* ALWAYS show download/close buttons if downloadUrl exists OR isDownloadPayment is true */}
+              {(isDownloadPayment || downloadUrl) && !isSubscription ? (
                 <>
-                  <button
-                    onClick={() => window.open(downloadUrl, "_blank")}
-                    className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all"
-                  >
-                    Download File
-                  </button>
+                  {downloadUrl ? (
+                    <button
+                      onClick={() => window.open(downloadUrl, "_blank")}
+                      className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all"
+                    >
+                      Download File
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        // Try to get download URL from localStorage one more time
+                        const storedUrl = localStorage.getItem("payment_download_url");
+                        if (storedUrl) {
+                          window.open(storedUrl, "_blank");
+                        } else {
+                          alert("Download URL not found. Please check your recent downloads or contact support.");
+                        }
+                      }}
+                      className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all"
+                    >
+                      Download File
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       if (returnPath) {
@@ -308,9 +332,8 @@ function PaymentSuccessContent() {
                     Close
                   </button>
                 </>
-              )}
-              {/* For subscriptions or other payments, show standard button */}
-              {!isDownloadPayment && (
+              ) : (
+                /* For subscriptions or other payments, show standard button */
                 <button
                   onClick={() => {
                     if (isSubscription) {
