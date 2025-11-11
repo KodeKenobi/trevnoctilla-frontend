@@ -110,14 +110,15 @@ function PaymentSuccessContent() {
       // If there's a download URL, it's ALWAYS a download payment (unless it's a subscription)
       // Also check if amount is around $1 (download payment)
       const amountNum = amount ? parseFloat(amount) : null;
-      const isOneDollarPayment =
-        amountNum && amountNum >= 0.99 && amountNum <= 1.01;
+      const isOneDollarPayment = amountNum
+        ? amountNum >= 0.99 && amountNum <= 1.01
+        : false;
 
       const paymentIsDownload =
-        !paymentIsSubscription && (hasDownloadUrl || isOneDollarPayment);
+        !paymentIsSubscription && (!!hasDownloadUrl || isOneDollarPayment);
 
-      setIsSubscription(paymentIsSubscription);
-      setIsDownloadPayment(paymentIsDownload);
+      setIsSubscription(!!paymentIsSubscription);
+      setIsDownloadPayment(!!paymentIsDownload);
 
       // Store in state for use in UI
       // Use download URL from params if available, otherwise use localStorage
