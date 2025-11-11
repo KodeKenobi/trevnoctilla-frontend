@@ -25,7 +25,6 @@ import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
 import PayFastForm from "@/components/ui/PayFastForm";
 import { convertUSDToZAR } from "@/lib/currency";
-import PackageDetailsModal from "@/components/ui/PackageDetailsModal";
 
 export default function ApiDocsPage() {
   const { user, loading } = useUser();
@@ -37,8 +36,6 @@ export default function ApiDocsPage() {
   const [isProcessingSubscription, setIsProcessingSubscription] =
     useState(false);
   const subscriptionFormRef = useRef<HTMLFormElement>(null);
-  const [showPackageModal, setShowPackageModal] = useState(false);
-  const [modalPlan, setModalPlan] = useState<(typeof pricing)[0] | null>(null);
 
   const copyToClipboard = (code: string, id: string) => {
     navigator.clipboard.writeText(code);
@@ -288,9 +285,28 @@ export default function ApiDocsPage() {
   ];
 
   const handleSubscribe = (plan: (typeof pricing)[0]) => {
-    // Show package details modal for all plans
-    setModalPlan(plan);
-    setShowPackageModal(true);
+    if (!user) {
+      sessionStorage.setItem(
+        "pending_subscription",
+        JSON.stringify({
+          planName: plan.name,
+          isSubscription: plan.isSubscription,
+          usdAmount: plan.usdAmount,
+        })
+      );
+      router.push("/auth/register");
+      return;
+    }
+
+    if (plan.isSubscription) {
+      router.push("/dashboard?tab=settings");
+      return;
+    }
+
+    if (plan.name === "Testing") {
+      router.push("/dashboard");
+      return;
+    }
   };
 
   // Note: Subscriptions no longer require authentication - removed login redirect logic
@@ -957,16 +973,6 @@ export default function ApiDocsPage() {
           </div>
         </motion.div>
       </div>
-
-      {/* Package Details Modal */}
-      <PackageDetailsModal
-        isOpen={showPackageModal}
-        onClose={() => {
-          setShowPackageModal(false);
-          setModalPlan(null);
-        }}
-        plan={modalPlan}
-      />
     </div>
   );
 }
