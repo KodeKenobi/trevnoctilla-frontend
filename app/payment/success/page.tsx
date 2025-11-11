@@ -27,7 +27,10 @@ function PaymentSuccessContent() {
         setDownloadUrl(storedDownloadUrl);
         setIsDownloadPayment(true);
         setPaymentStatus("success");
-        console.log("✅ Found download URL in localStorage:", storedDownloadUrl);
+        console.log(
+          "✅ Found download URL in localStorage:",
+          storedDownloadUrl
+        );
         // Don't clear it - keep it for later access
       }
 
@@ -52,7 +55,10 @@ function PaymentSuccessContent() {
             setDownloadUrl(mostRecent.url);
             setIsDownloadPayment(true);
             setPaymentStatus("success");
-            console.log("✅ Found download URL in recent downloads:", mostRecent.url);
+            console.log(
+              "✅ Found download URL in recent downloads:",
+              mostRecent.url
+            );
           }
         }
       }
@@ -104,9 +110,11 @@ function PaymentSuccessContent() {
       // If there's a download URL, it's ALWAYS a download payment (unless it's a subscription)
       // Also check if amount is around $1 (download payment)
       const amountNum = amount ? parseFloat(amount) : null;
-      const isOneDollarPayment = amountNum && amountNum >= 0.99 && amountNum <= 1.01;
-      
-      const paymentIsDownload = !paymentIsSubscription && (hasDownloadUrl || isOneDollarPayment);
+      const isOneDollarPayment =
+        amountNum && amountNum >= 0.99 && amountNum <= 1.01;
+
+      const paymentIsDownload =
+        !paymentIsSubscription && (hasDownloadUrl || isOneDollarPayment);
 
       setIsSubscription(paymentIsSubscription);
       setIsDownloadPayment(paymentIsDownload);
@@ -307,11 +315,15 @@ function PaymentSuccessContent() {
                     <button
                       onClick={() => {
                         // Try to get download URL from localStorage one more time
-                        const storedUrl = localStorage.getItem("payment_download_url");
+                        const storedUrl = localStorage.getItem(
+                          "payment_download_url"
+                        );
                         if (storedUrl) {
                           window.open(storedUrl, "_blank");
                         } else {
-                          alert("Download URL not found. Please check your recent downloads or contact support.");
+                          alert(
+                            "Download URL not found. Please check your recent downloads or contact support."
+                          );
                         }
                       }}
                       className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white rounded-lg font-medium transition-all"
