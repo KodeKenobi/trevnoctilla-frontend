@@ -307,17 +307,6 @@ function PaymentSuccessContent() {
                   >
                     Close
                   </button>
-                  <p className="text-center text-sm text-gray-500 mt-4">
-                    Or download your file here:{" "}
-                    <a
-                      href={downloadUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300 underline break-all"
-                    >
-                      {downloadUrl}
-                    </a>
-                  </p>
                 </>
               )}
               {/* For subscriptions or other payments, show standard button */}
