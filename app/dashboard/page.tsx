@@ -14,6 +14,7 @@ import { CircularStats } from "@/components/dashboard/CircularChart";
 import { ActivityTable } from "@/components/dashboard/ActivityTable";
 import { ApiKeysSection } from "@/components/dashboard/ApiKeysSection";
 import { ApiReferenceContent } from "@/components/dashboard/ApiReferenceContent";
+import { ResetHistoryTable } from "@/components/dashboard/ResetHistoryTable";
 
 function CommandPaletteContent({
   onCommand,
@@ -1365,6 +1366,37 @@ function DashboardContent() {
                     activities={activities}
                     onDownload={handleDownloadActivity}
                   />
+                </div>
+              </div>
+            )}
+
+            {/* History Tab */}
+            {activeTab === "history" && (
+              <div className="space-y-8">
+                {/* Header with Circle */}
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="relative">
+                    <div className="w-6 h-6 bg-gradient-to-r from-[#10b981] to-[#059669] rounded-full animate-pulse"></div>
+                    <div className="absolute inset-0 w-6 h-6 bg-gradient-to-r from-[#10b981] to-[#059669] rounded-full blur-sm opacity-50"></div>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-white via-[#10b981] to-[#059669] bg-clip-text text-transparent">
+                      Reset History
+                    </h2>
+                    <p className="text-gray-400 mt-2">
+                      View when your API calls were reset by administrators
+                    </p>
+                  </div>
+                </div>
+
+                {/* Reset History Table */}
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg">
+                  <div className="px-6 py-4 border-b border-[#2a2a2a]">
+                    <h3 className="text-lg font-semibold text-white">
+                      API Call Resets
+                    </h3>
+                  </div>
+                  <ResetHistoryTable userId={user?.id} />
                 </div>
               </div>
             )}

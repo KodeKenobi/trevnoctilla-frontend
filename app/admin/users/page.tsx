@@ -13,6 +13,7 @@ import {
   Calendar,
   Activity,
   Shield,
+  RotateCcw,
 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import Link from "next/link";
@@ -24,6 +25,8 @@ interface User {
   is_active: boolean;
   subscription_tier?: string;
   monthly_call_limit?: number;
+  monthly_used?: number;
+  monthly_remaining?: number;
   created_at: string;
   last_login: string;
   api_keys_count: number;
@@ -50,8 +53,18 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
+  const [tierFilter, setTierFilter] = useState<string[]>([]);
+
+  // Get tier from URL params if present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tier = params.get("tier");
+    if (tier) {
+      setTierFilter([tier]);
+    }
+  }, []);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [monthlyUsage, setMonthlyUsage] = useState<MonthlyUsage | null>(null);
@@ -90,7 +103,7 @@ export default function UsersPage() {
     if (user) {
       fetchUsers();
     }
-  }, [searchTerm, roleFilter, statusFilter]);
+  }, [searchTerm, roleFilter, statusFilter, tierFilter]);
 
   const fetchUsers = async () => {
     try {
@@ -107,24 +120,39 @@ export default function UsersPage() {
 
       console.log("🔍 Fetching users with session:", session.user);
 
-      // Build query parameters
+      // Build query parameters - increase per_page to get all users
       const params = new URLSearchParams();
+      params.append("per_page", "1000"); // Get up to 1000 users
       if (searchTerm) params.append("search", searchTerm);
-      if (roleFilter) params.append("role", roleFilter);
+      if (roleFilter.length > 0) {
+        roleFilter.forEach((role) => params.append("role", role));
+      }
       if (statusFilter)
         params.append(
           "is_active",
           statusFilter === "active" ? "true" : "false"
         );
+      if (tierFilter.length > 0) {
+        tierFilter.forEach((tier) => params.append("subscription_tier", tier));
+      }
+
+      console.log("🔍 Fetching users with params:", params.toString());
 
       // Try admin API first
       try {
+        // Use the JWT token from localStorage (auth_token)
+        const authToken = localStorage.getItem("auth_token");
+        if (!authToken) {
+          console.log("❌ No auth token found in localStorage");
+          throw new Error("No authentication token");
+        }
+
         const response = await fetch(
           `https://web-production-737b.up.railway.app/api/admin/users?${params.toString()}`,
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${session.accessToken || session.user.id}`,
+              Authorization: `Bearer ${authToken}`,
               "Content-Type": "application/json",
             },
           }
@@ -133,6 +161,8 @@ export default function UsersPage() {
         if (response.ok) {
           const data = await response.json();
           console.log("✅ Admin API response:", data);
+          console.log("✅ Total users returned:", data.users?.length || 0);
+          console.log("✅ Pagination info:", data.pagination);
 
           // Transform the data to match our interface
           const transformedUsers = data.users.map((user: any) => ({
@@ -142,6 +172,11 @@ export default function UsersPage() {
             is_active: user.is_active,
             subscription_tier: user.subscription_tier || "free",
             monthly_call_limit: user.monthly_call_limit || 5,
+            monthly_used: user.monthly_used || 0,
+            monthly_remaining:
+              user.monthly_remaining !== undefined
+                ? user.monthly_remaining
+                : (user.monthly_call_limit || 5) - (user.monthly_used || 0),
             created_at: user.created_at,
             last_login: user.last_login || user.created_at,
             api_keys_count: user.api_keys?.length || 0,
@@ -151,11 +186,19 @@ export default function UsersPage() {
           setLoading(false);
           return;
         } else {
+          const errorText = await response.text();
           console.log(
             "❌ Admin API failed:",
             response.status,
-            response.statusText
+            response.statusText,
+            errorText
           );
+          try {
+            const errorJson = JSON.parse(errorText);
+            console.log("❌ Error details:", errorJson);
+          } catch (e) {
+            console.log("❌ Error response is not JSON");
+          }
         }
       } catch (adminError) {
         console.log("❌ Admin API error:", adminError);
@@ -320,18 +363,84 @@ export default function UsersPage() {
     }
   };
 
+  const handleResetCalls = async (userId: number, userEmail: string) => {
+    if (
+      !confirm(
+        `Are you sure you want to reset API calls for ${userEmail}? This will set their usage back to 0.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        alert("No authentication token found");
+        return;
+      }
+
+      const response = await fetch(
+        `${
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          "https://web-production-737b.up.railway.app"
+        }/api/admin/users/${userId}/reset-calls`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            reason: "Reset by admin",
+          }),
+        }
+      );
+
+      if (response.ok) {
+        alert(`API calls reset successfully for ${userEmail}`);
+        // Refresh user data
+        fetchUsers();
+        if (selectedUser?.id === userId) {
+          fetchUserStats(userId);
+        }
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.error || "Failed to reset calls"}`);
+      }
+    } catch (error) {
+      console.error("Error resetting calls:", error);
+      alert("Failed to reset API calls");
+    }
+  };
+
   const filteredUsers = users.filter((user) => {
     const matchesSearch = user.email
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesRole = !roleFilter || user.role === roleFilter;
+    const matchesRole =
+      roleFilter.length === 0 || roleFilter.includes(user.role);
     const matchesStatus =
       !statusFilter ||
       (statusFilter === "active" && user.is_active) ||
       (statusFilter === "inactive" && !user.is_active);
+    const matchesTier =
+      tierFilter.length === 0 ||
+      tierFilter.includes(user.subscription_tier || "free");
 
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesRole && matchesStatus && matchesTier;
   });
+
+  const handleRoleToggle = (role: string) => {
+    setRoleFilter((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+    );
+  };
+
+  const handleTierToggle = (tier: string) => {
+    setTierFilter((prev) =>
+      prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier]
+    );
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -412,7 +521,8 @@ export default function UsersPage() {
 
           {/* Filters */}
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl p-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Search */}
               <div>
                 <label
                   htmlFor="search"
@@ -437,24 +547,67 @@ export default function UsersPage() {
               </div>
 
               <div>
-                <label
-                  htmlFor="role"
-                  className="block text-sm font-medium text-gray-300"
-                >
-                  Role
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Role (Multi-select)
                 </label>
-                <select
-                  id="role"
-                  name="role"
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base bg-gray-700 border-gray-600 text-white focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md"
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
-                >
-                  <option value="">All roles</option>
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                  <option value="super_admin">Super Admin</option>
-                </select>
+                <div className="mt-1 space-y-2 bg-gray-700/50 rounded-md p-2 border border-gray-600">
+                  {["user", "admin", "super_admin"].map((role) => (
+                    <label
+                      key={role}
+                      className="flex items-center space-x-2 cursor-pointer hover:bg-gray-600/50 rounded px-2 py-1"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={roleFilter.includes(role)}
+                        onChange={() => handleRoleToggle(role)}
+                        className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
+                      />
+                      <span className="text-sm text-gray-300 capitalize">
+                        {role === "super_admin" ? "Super Admin" : role}
+                      </span>
+                    </label>
+                  ))}
+                  {roleFilter.length > 0 && (
+                    <button
+                      onClick={() => setRoleFilter([])}
+                      className="text-xs text-purple-400 hover:text-purple-300 mt-1"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Subscription Tier (Multi-select)
+                </label>
+                <div className="mt-1 space-y-2 bg-gray-700/50 rounded-md p-2 border border-gray-600">
+                  {["free", "premium", "enterprise", "client"].map((tier) => (
+                    <label
+                      key={tier}
+                      className="flex items-center space-x-2 cursor-pointer hover:bg-gray-600/50 rounded px-2 py-1"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={tierFilter.includes(tier)}
+                        onChange={() => handleTierToggle(tier)}
+                        className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
+                      />
+                      <span className="text-sm text-gray-300 capitalize">
+                        {tier}
+                      </span>
+                    </label>
+                  ))}
+                  {tierFilter.length > 0 && (
+                    <button
+                      onClick={() => setTierFilter([])}
+                      className="text-xs text-purple-400 hover:text-purple-300 mt-1"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -536,14 +689,26 @@ export default function UsersPage() {
                               •{" "}
                               {user.monthly_call_limit === -1
                                 ? "Unlimited"
-                                : `${user.monthly_call_limit}/month`}{" "}
-                              calls
+                                : `${user.monthly_used || 0}/${
+                                    user.monthly_call_limit
+                                  }`}{" "}
+                              calls used
+                              {user.monthly_call_limit !== -1 && (
+                                <span className="ml-1">
+                                  (
+                                  {user.monthly_remaining !== undefined
+                                    ? user.monthly_remaining
+                                    : user.monthly_call_limit -
+                                      (user.monthly_used || 0)}{" "}
+                                  remaining)
+                                </span>
+                              )}
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 flex-wrap">
                       <button
                         onClick={() => handleViewUser(user)}
                         className="inline-flex items-center px-3 py-2 border border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
@@ -551,6 +716,16 @@ export default function UsersPage() {
                         <Eye className="h-4 w-4 mr-1" />
                         View
                       </button>
+                      {user.monthly_call_limit !== undefined && (
+                        <button
+                          onClick={() => handleResetCalls(user.id, user.email)}
+                          className="inline-flex items-center px-3 py-2 border border-yellow-500/50 shadow-sm text-sm leading-4 font-medium rounded-md text-yellow-300 bg-yellow-500/10 hover:bg-yellow-500/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                          title="Reset API calls to 0"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-1" />
+                          Reset Calls
+                        </button>
+                      )}
                       <button
                         onClick={() =>
                           handleToggleUserStatus(user.id, user.is_active)

@@ -518,24 +518,41 @@ export default function AdminDashboard() {
           {stats.usersByTier && Object.keys(stats.usersByTier).length > 0 && (
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
               <div className="px-6 py-6">
-                <h3 className="text-xl font-semibold text-white mb-6">
-                  Users by Subscription Tier
-                </h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-white">
+                    Users by Subscription Tier
+                  </h3>
+                  <Link
+                    href="/admin/users"
+                    className="text-purple-400 hover:text-purple-300 text-sm font-medium"
+                  >
+                    View All Users →
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {Object.entries(stats.usersByTier).map(([tier, count]) => (
-                    <div
+                    <Link
                       key={tier}
-                      className="p-4 bg-gray-700/30 rounded-lg border border-gray-600"
+                      href={`/admin/users?tier=${tier}`}
+                      className="p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-300 capitalize">
-                          {tier}
+                          {tier === "free"
+                            ? "Free Tier"
+                            : tier === "premium"
+                            ? "Premium"
+                            : tier === "enterprise"
+                            ? "Enterprise"
+                            : tier === "client"
+                            ? "Clients"
+                            : tier}
                         </span>
                         <span className="text-2xl font-bold text-white">
                           {count as number}
                         </span>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>

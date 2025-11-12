@@ -206,7 +206,7 @@ export function ApiTester({ toolId }: ApiTesterProps) {
       Object.entries(parameters).forEach(([name, value]) => {
         if (name.startsWith(`${endpoint.id}_`)) {
           const paramName = name.replace(`${endpoint.id}_`, "");
-          if (value !== undefined && value !== "") {
+        if (value !== undefined && value !== "") {
             formData.append(paramName, value.toString());
           }
         }
@@ -363,16 +363,16 @@ export function ApiTester({ toolId }: ApiTesterProps) {
               >
                 Copy
               </button>
-            </div>
+        </div>
           ) : (
-            <button
-              onClick={ensureApiKey}
-              disabled={isGeneratingKey}
+          <button
+            onClick={ensureApiKey}
+            disabled={isGeneratingKey}
               className="text-xs text-white bg-[#2a2a2a] hover:bg-[#3a3a3a] px-3 py-1 rounded border border-[#3a3a3a] transition-colors disabled:opacity-50"
             >
               {isGeneratingKey ? "Generating..." : "Authorize"}
-            </button>
-          )}
+          </button>
+        )}
         </div>
       </div>
 
@@ -425,33 +425,33 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                   }`}
                 >
                   {endpoint.name}
-                </span>
+            </span>
                 {isDisabled && (
                   <div className="flex items-center gap-1 text-xs text-gray-600">
                     <Lock className="w-3 h-3" />
                     <span>Upgrade</span>
-                  </div>
-                )}
+          </div>
+        )}
                 {!isDisabled && (
                   <button className="text-xs text-gray-500 hover:text-gray-300">
                     {isExpanded ? "−" : "+"}
                   </button>
-                )}
-              </div>
+        )}
+      </div>
 
               {/* Expanded Content */}
               {isExpanded && (
                 <div className="border-t border-[#2a2a2a] p-4 space-y-4">
                   <div className="text-xs text-gray-500 mb-4">
                     {endpoint.description}
-                  </div>
+          </div>
 
                   {/* Parameters Table */}
                   {endpoint.parameters.length > 0 && (
-                    <div>
+          <div>
                       <div className="text-xs font-semibold text-white mb-3">
                         Parameters
-                      </div>
+          </div>
                       <div className="space-y-3">
                         {endpoint.parameters.map((param) => (
                           <div
@@ -468,29 +468,29 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                                     required
                                   </span>
                                 )}
-                              </div>
+      </div>
                               <div className="text-xs text-gray-500 mt-0.5">
                                 {param.type}
-                              </div>
-                            </div>
+              </div>
+            </div>
                             <div className="col-span-9">
-                              {param.description && (
+                      {param.description && (
                                 <div className="text-xs text-gray-500 mb-2">
                                   {param.description}
-                                </div>
-                              )}
-                              {param.type === "file" ? (
-                                <div className="space-y-2">
-                                  <input
-                                    ref={(el) => {
+                        </div>
+                      )}
+                    {param.type === "file" ? (
+                      <div className="space-y-2">
+                        <input
+                          ref={(el) => {
                                       fileInputRefs.current[
                                         `${endpoint.id}_${param.name}`
                                       ] = el;
-                                    }}
-                                    type="file"
-                                    onChange={(e) =>
-                                      setFiles((prev) => ({
-                                        ...prev,
+                          }}
+                          type="file"
+                          onChange={(e) =>
+                            setFiles((prev) => ({
+                              ...prev,
                                         [`${endpoint.id}_${param.name}`]:
                                           e.target.files?.[0] || null,
                                       }))
@@ -506,58 +506,58 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                                           ?.name || "File selected"}
                                       </span>
                                     </div>
-                                  )}
-                                </div>
-                              ) : param.type === "select" ? (
-                                <select
+                        )}
+                      </div>
+                    ) : param.type === "select" ? (
+                      <select
                                   value={
                                     parameters[
                                       `${endpoint.id}_${param.name}`
                                     ] || ""
                                   }
-                                  onChange={(e) =>
-                                    setParameters((prev) => ({
-                                      ...prev,
+                        onChange={(e) =>
+                          setParameters((prev) => ({
+                            ...prev,
                                       [`${endpoint.id}_${param.name}`]:
                                         e.target.value,
-                                    }))
-                                  }
+                          }))
+                        }
                                   className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded px-3 py-1.5 text-xs text-white focus:border-[#3a3a3a] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                                   disabled={isDisabled}
-                                >
+                      >
                                   <option value="">-- Select --</option>
-                                  {param.options?.map((option) => (
-                                    <option key={option} value={option}>
-                                      {option}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : param.type === "boolean" ? (
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                  <input
-                                    type="checkbox"
+                        {param.options?.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    ) : param.type === "boolean" ? (
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
                                     checked={
                                       parameters[
                                         `${endpoint.id}_${param.name}`
                                       ] || false
                                     }
-                                    onChange={(e) =>
-                                      setParameters((prev) => ({
-                                        ...prev,
+                          onChange={(e) =>
+                            setParameters((prev) => ({
+                              ...prev,
                                         [`${endpoint.id}_${param.name}`]:
                                           e.target.checked,
-                                      }))
-                                    }
+                            }))
+                          }
                                     className="w-3.5 h-3.5 text-[#8b5cf6] bg-[#0a0a0a] border-[#2a2a2a] rounded disabled:opacity-50 disabled:cursor-not-allowed"
                                     disabled={isDisabled}
-                                  />
+                        />
                                   <span className="text-xs text-gray-400">
                                     {param.description || param.name}
-                                  </span>
-                                </label>
-                              ) : (
+                        </span>
+                      </label>
+                    ) : (
                                 <div className="relative">
-                                  <input
+                      <input
                                     type={
                                       param.type === "number"
                                         ? "number"
@@ -568,15 +568,15 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                                         `${endpoint.id}_${param.name}`
                                       ] || ""
                                     }
-                                    onChange={(e) =>
-                                      setParameters((prev) => ({
-                                        ...prev,
+                        onChange={(e) =>
+                          setParameters((prev) => ({
+                            ...prev,
                                         [`${endpoint.id}_${param.name}`]:
-                                          param.type === "number"
-                                            ? parseFloat(e.target.value) || 0
-                                            : e.target.value,
-                                      }))
-                                    }
+                              param.type === "number"
+                                ? parseFloat(e.target.value) || 0
+                                : e.target.value,
+                          }))
+                        }
                                     placeholder={
                                       param.description || param.name
                                     }
@@ -591,11 +591,11 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
                                         %
                                       </span>
-                                    )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                    )}
+                  </div>
+              )}
+            </div>
+          </div>
                         ))}
                       </div>
                     </div>
@@ -609,15 +609,15 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                         <span>Upgrade to access this endpoint</span>
                       </div>
                     ) : (
-                      <button
+            <button
                         onClick={() => executeRequest(endpoint)}
-                        disabled={isLoading || !apiKey}
+              disabled={isLoading || !apiKey}
                         className="px-4 py-1.5 text-xs font-medium text-white bg-[#1a1a1a] border border-[#2a2a2a] rounded hover:bg-[#2a2a2a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isLoading ? "Executing..." : "Execute"}
-                      </button>
+            </button>
                     )}
-                  </div>
+                    </div>
 
                   {/* Response */}
                   {endpointResult && (
@@ -625,7 +625,7 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                       <div className="flex items-center justify-between mb-3">
                         <div className="text-xs font-semibold text-white">
                           Responses
-                        </div>
+                  </div>
                         <div className="flex items-center gap-3">
                           <span
                             className={`text-xs font-mono font-semibold ${
@@ -642,9 +642,9 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                           <span className="text-xs text-gray-600">
                             {endpointResult.duration}ms
                           </span>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(
                                 JSON.stringify(
                                   endpointResult.data || endpointResult.error,
                                   null,
@@ -652,9 +652,9 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                                 )
                               );
                               showSuccess("Copied", "Response copied", {
-                                primary: { text: "OK", onClick: hideAlert },
-                              });
-                            }}
+                          primary: { text: "OK", onClick: hideAlert },
+                        });
+                      }}
                             className="text-xs text-gray-500 hover:text-gray-300"
                           >
                             Copy
@@ -664,9 +664,9 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                             className="text-xs text-gray-500 hover:text-red-400 transition-colors"
                           >
                             Clear
-                          </button>
-                        </div>
-                      </div>
+                    </button>
+                  </div>
+                </div>
 
                       {/* Handle file downloads - check all possible field names */}
                       {endpointResult.data?.downloadUrl ||
@@ -893,20 +893,20 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                               {endpointResult.data.text}
                             </pre>
                           </div>
-                        </div>
-                      ) : (
+                    </div>
+                  ) : (
                         <div className="bg-[#0a0a0a] border border-[#2a2a2a] rounded p-3">
                           <pre className="text-xs text-gray-300 font-mono whitespace-pre-wrap overflow-x-auto max-h-64">
                             {endpointResult.error ||
                               JSON.stringify(endpointResult.data, null, 2)}
-                          </pre>
+                    </pre>
                         </div>
-                      )}
-                    </div>
                   )}
                 </div>
-              )}
-            </div>
+                  )}
+              </div>
+            )}
+          </div>
           );
         })}
       </div>
