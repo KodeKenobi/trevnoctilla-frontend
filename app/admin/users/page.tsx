@@ -357,21 +357,62 @@ export default function UsersPage() {
     userId: number,
     currentStatus: boolean
   ) => {
+    const action = currentStatus ? "deactivate" : "activate";
+    const user = users.find((u) => u.id === userId);
+
+    if (
+      !confirm(
+        `Are you sure you want to ${action} ${user?.email || "this user"}?`
+      )
+    ) {
+      return;
+    }
+
     try {
-      // TODO: Implement API call to update user status
-      // For now, show an alert that this feature is not yet implemented
-      alert(
-        `User status toggle feature is not yet implemented. User ID: ${userId}, Current status: ${currentStatus}`
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        alert("Not authenticated");
+        return;
+      }
+
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+      const response = await fetch(
+        `${apiUrl}/api/admin/users/${userId}/toggle-status`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
-      // In real implementation, make API call to update user status
-      // setUsers(
-      //   users.map((user) =>
-      //     user.id === userId ? { ...user, is_active: !currentStatus } : user
-      //   )
-      // );
+      if (!response.ok) {
+        const error = await response.json();
+        alert(
+          `Failed to ${action} user: ${error.error || response.statusText}`
+        );
+        return;
+      }
+
+      const data = await response.json();
+
+      // Update user in list
+      setUsers(
+        users.map((user) =>
+          user.id === userId ? { ...user, is_active: !currentStatus } : user
+        )
+      );
+
+      alert(`User ${action}d successfully`);
     } catch (error) {
       console.error("Error updating user status:", error);
+      alert(
+        `Failed to ${action} user: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   };
 

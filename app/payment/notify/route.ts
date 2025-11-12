@@ -335,23 +335,86 @@ export async function POST(request: NextRequest) {
           `[${requestId}] ✅ Payment ${mPaymentId} completed successfully`
         );
 
-        // If this is a subscription payment, store the token
+        // If this is a subscription payment, upgrade user subscription
         if (token && subscriptionType) {
-          console.log(`[${requestId}] 📝 Storing subscription token: ${token}`);
-          // TODO: Store token in database associated with user account
-          // TODO: Update user subscription status
-          // Example database operation:
-          // await db.subscriptions.create({
-          //   token: token,
-          //   user_id: userId,
-          //   plan_name: item_name,
-          //   amount: amount,
-          //   recurring_amount: recurringAmount,
-          //   frequency: frequency,
-          //   cycles: cycles,
-          //   status: 'active',
-          //   created_at: new Date(),
-          // });
+          console.log(`[${requestId}] 📝 Processing subscription payment`);
+
+          // Extract plan info from custom fields
+          const planId = data.custom_str1 || "";
+          const userId = data.custom_str2 || "";
+          // PayFast sends email_address in webhook (buyer enters it on PayFast page)
+          // Fallback: use userId to look up user if email not available
+          const userEmail = data.email_address || "";
+          const itemName = data.item_name || "";
+
+          // Determine plan name from item_name or plan_id
+          let planName = itemName;
+          if (planId === "production") {
+            planName = "Production Plan";
+          } else if (planId === "enterprise") {
+            planName = "Enterprise Plan";
+          }
+
+          // Call backend to upgrade subscription
+          // Use email if available, otherwise use userId (backend can look up by ID)
+          if (planId && (userEmail || userId)) {
+            try {
+              const backendUrl =
+                process.env.NEXT_PUBLIC_API_BASE_URL ||
+                (process.env.NODE_ENV === "production"
+                  ? "https://web-production-737b.up.railway.app"
+                  : "http://localhost:5000");
+
+              console.log(
+                `[${requestId}] 🔄 Calling backend to upgrade subscription...`
+              );
+              console.log(`[${requestId}] Backend URL: ${backendUrl}`);
+              console.log(`[${requestId}] User Email: ${userEmail}`);
+              console.log(`[${requestId}] Plan ID: ${planId}`);
+
+              const upgradeResponse = await fetch(
+                `${backendUrl}/api/payment/upgrade-subscription`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    user_email: userEmail, // PayFast sends this in webhook
+                    user_id: userId || undefined, // Fallback if email not available
+                    plan_id: planId,
+                    plan_name: planName,
+                    amount: amount,
+                    payment_id: pfPaymentId || mPaymentId,
+                  }),
+                }
+              );
+
+              if (upgradeResponse.ok) {
+                const upgradeData = await upgradeResponse.json();
+                console.log(
+                  `[${requestId}] ✅ Subscription upgraded successfully:`,
+                  upgradeData
+                );
+              } else {
+                const errorText = await upgradeResponse.text();
+                console.error(
+                  `[${requestId}] ❌ Failed to upgrade subscription:`,
+                  errorText
+                );
+              }
+            } catch (error) {
+              console.error(
+                `[${requestId}] ❌ Error calling upgrade endpoint:`,
+                error
+              );
+              // Don't fail the webhook if upgrade fails - we can retry later
+            }
+          } else {
+            console.warn(
+              `[${requestId}] ⚠️ Missing user email or plan ID for subscription upgrade`
+            );
+          }
         }
 
         // TODO: Update payment status in database

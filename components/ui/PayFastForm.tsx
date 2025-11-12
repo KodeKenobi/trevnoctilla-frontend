@@ -86,10 +86,13 @@ export default function PayFastForm({
           requestData.item_description = item_description.trim();
         if (custom_str1) requestData.custom_str1 = custom_str1.trim();
         if (custom_str2) requestData.custom_str2 = custom_str2.trim();
-        if (name_first) requestData.name_first = name_first.trim();
-        if (name_last) requestData.name_last = name_last.trim();
-        if (email_address) requestData.email_address = email_address.trim();
-        if (cell_number) requestData.cell_number = cell_number.trim();
+        // CRITICAL WORKAROUND: Never send name_first, name_last, email_address, or cell_number
+        // These cause signature mismatch when logged in - PayFast calculates signature differently
+        // Even if props are passed, we exclude them to match $1 payment exactly
+        // if (name_first) requestData.name_first = name_first.trim();
+        // if (name_last) requestData.name_last = name_last.trim();
+        // if (email_address) requestData.email_address = email_address.trim();
+        // if (cell_number) requestData.cell_number = cell_number.trim();
 
         // Add subscription fields if provided
         if (subscription_type) {

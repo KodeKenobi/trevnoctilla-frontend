@@ -1161,6 +1161,51 @@ function DashboardContent() {
                   </p>
                 </div>
 
+                {/* No API Key Warning */}
+                {apiKeys.length === 0 && (
+                  <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-lg p-6 mb-8">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                          <svg
+                            className="w-5 h-5 text-yellow-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-white mb-2">
+                          API Key Required
+                        </h3>
+                        <p className="text-gray-300 mb-4">
+                          You need to generate an API key before you can test
+                          endpoints. API keys are required for authentication
+                          when making API requests.
+                        </p>
+                        <button
+                          onClick={() => {
+                            setActiveTab("settings");
+                            setSettingsSection("keys");
+                          }}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white text-sm font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-[#8b5cf6]/25"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Generate API Key
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Circular Stats - Same as Overview */}
                 <div className="mb-8">
                   <CircularStats
@@ -1272,8 +1317,8 @@ function DashboardContent() {
                     API Reference
                   </h2>
                   <p className="text-gray-400 mt-2">
-                    Complete documentation for the JustPDF API. Build powerful
-                    file conversion and processing features into your
+                    Complete documentation for the Trevnoctilla API. Build
+                    powerful file conversion and processing features into your
                     applications.
                   </p>
                 </div>

@@ -302,14 +302,14 @@ export function ApiReferenceContent({
                 Introduction
               </h2>
               <p className="text-gray-300 mb-4 leading-relaxed">
-                The JustPDF API is organized around REST. Our API has
+                The Trevnoctilla API is organized around REST. Our API has
                 predictable resource-oriented URLs, accepts form-encoded request
                 bodies, returns JSON-encoded responses, and uses standard HTTP
                 response codes, authentication, and verbs.
               </p>
               <p className="text-gray-300 mb-4 leading-relaxed">
-                You can use the JustPDF API in test mode, which doesn't affect
-                your production usage limits. The API key you use to
+                You can use the Trevnoctilla API in test mode, which doesn't
+                affect your production usage limits. The API key you use to
                 authenticate the request determines whether the request is in
                 test mode or production mode.
               </p>
@@ -343,8 +343,8 @@ export function ApiReferenceContent({
                 Authentication
               </h2>
               <p className="text-gray-300 mb-4 leading-relaxed">
-                The JustPDF API uses API keys to authenticate requests. You can
-                view and manage your API keys in the Dashboard.
+                The Trevnoctilla API uses API keys to authenticate requests. You
+                can view and manage your API keys in the Dashboard.
               </p>
               <p className="text-gray-300 mb-4 leading-relaxed">
                 Your API keys carry many privileges, so be sure to keep them
@@ -399,8 +399,8 @@ export function ApiReferenceContent({
             <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-8">
               <h2 className="text-2xl font-semibold mb-4 text-white">Errors</h2>
               <p className="text-gray-300 mb-6 leading-relaxed">
-                JustPDF uses conventional HTTP response codes to indicate the
-                success or failure of an API request. In general:
+                Trevnoctilla uses conventional HTTP response codes to indicate
+                the success or failure of an API request. In general:
               </p>
               <ul className="list-disc list-inside text-gray-300 mb-6 space-y-2">
                 <li>
@@ -786,8 +786,8 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
                     Node.js Integration
                   </h3>
                   <p className="text-gray-400 mb-4 text-sm">
-                    Use the JustPDF API in your Node.js applications with the
-                    native fetch API or axios.
+                    Use the Trevnoctilla API in your Node.js applications with
+                    the native fetch API or axios.
                   </p>
                   <div className="bg-[#000000] border border-[#2a2a2a] rounded p-4">
                     <pre className="text-xs text-gray-300 font-mono overflow-x-auto">
@@ -821,8 +821,8 @@ async function extractTextFromPDF(filePath) {
                     Python Integration
                   </h3>
                   <p className="text-gray-400 mb-4 text-sm">
-                    Integrate JustPDF API into your Python applications using
-                    the requests library.
+                    Integrate Trevnoctilla API into your Python applications
+                    using the requests library.
                   </p>
                   <div className="bg-[#000000] border border-[#2a2a2a] rounded p-4">
                     <pre className="text-xs text-gray-300 font-mono overflow-x-auto">
@@ -853,14 +853,14 @@ def extract_text_from_pdf(file_path):
                 Introduction
               </h2>
               <p className="text-gray-300 mb-4 leading-relaxed">
-                The JustPDF API is organized around REST. Our API has
+                The Trevnoctilla API is organized around REST. Our API has
                 predictable resource-oriented URLs, accepts form-encoded request
                 bodies, returns JSON-encoded responses, and uses standard HTTP
                 response codes, authentication, and verbs.
               </p>
               <p className="text-gray-300 mb-4 leading-relaxed">
-                You can use the JustPDF API in test mode, which doesn't affect
-                your production usage limits. The API key you use to
+                You can use the Trevnoctilla API in test mode, which doesn't
+                affect your production usage limits. The API key you use to
                 authenticate the request determines whether the request is in
                 test mode or production mode.
               </p>
@@ -872,5 +872,3 @@ def extract_text_from_pdf(file_path):
 
   return <div className="space-y-8">{renderSection()}</div>;
 }
-
-

@@ -55,12 +55,17 @@ const PAYFAST_CONFIG = {
  * 6. MD5 hash the entire string (lowercase hex)
  */
 function generatePayFastSignature(data: Record<string, string>): string {
+  // CRITICAL: Match PayFast PHP generateSignature() EXACTLY
+  // PHP: foreach( $data as $key => $val ) - uses INSERTION ORDER
+  // This matches the working $1 payment and the official PHP example
+
   // Create parameter string (matches PHP: $pfOutput = '')
   let pfOutput = "";
 
   // Iterate through data in insertion order (matches PHP: foreach( $data as $key => $val ))
+  // CRITICAL: The simple payment test shows merchant_key IS included in signature
+  // Only exclude signature field itself - match the working simple script exactly
   for (const key in data) {
-    // Exclude signature field (not in PHP example, but standard practice)
     if (key === "signature") {
       continue;
     }
@@ -100,6 +105,7 @@ function generatePayFastSignature(data: Record<string, string>): string {
   ) {
     const trimmedPassPhrase = String(PAYFAST_CONFIG.PASSPHRASE).trim();
     if (trimmedPassPhrase !== "") {
+      // CRITICAL: Passphrase is also URL-encoded (PHP urlencode() style)
       const encodedPassphrase = encodeURIComponent(trimmedPassPhrase)
         .replace(/%20/g, "+")
         .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
@@ -193,6 +199,21 @@ export async function POST(request: NextRequest) {
           !PAYFAST_CONFIG.PASSPHRASE ||
           PAYFAST_CONFIG.PASSPHRASE.trim() === ""
         ) {
+          console.error(
+            "❌ CRITICAL ERROR: Passphrase is missing for subscription!"
+          );
+          console.error(
+            "PAYFAST_CONFIG.PASSPHRASE:",
+            PAYFAST_CONFIG.PASSPHRASE
+          );
+          console.error(
+            "process.env.PAYFAST_PASSPHRASE:",
+            process.env.PAYFAST_PASSPHRASE
+          );
+          console.error(
+            "process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE:",
+            process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE
+          );
           return NextResponse.json(
             {
               error:
@@ -201,6 +222,11 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
+        console.log(
+          "✅ Passphrase configured for subscription (length:",
+          PAYFAST_CONFIG.PASSPHRASE.length,
+          "chars)"
+        );
       }
     }
 
@@ -246,57 +272,21 @@ export async function POST(request: NextRequest) {
       ? productionBaseUrl
       : baseUrl;
 
-    // Build payment data in EXACT order as per PayFast documentation
-    // Match the test script structure that successfully works with PayFast
+    // Build payment data EXACTLY like the working simple script
+    // CRITICAL: Match the working form EXACTLY - no extra fields!
+    // Working form has: merchant_id, merchant_key, amount, item_name, subscription fields only
     const paymentData: Record<string, string> = {
-      // 1. Merchant details (REQUIRED - must be first)
       merchant_id: PAYFAST_CONFIG.MERCHANT_ID,
       merchant_key: PAYFAST_CONFIG.MERCHANT_KEY,
-
-      // 2. Return URLs
-      return_url:
-        PAYFAST_CONFIG.RETURN_URL || `${finalBaseUrl}/payment/success`,
-      cancel_url: PAYFAST_CONFIG.CANCEL_URL || `${finalBaseUrl}/payment/cancel`,
-      notify_url: PAYFAST_CONFIG.NOTIFY_URL || `${finalBaseUrl}/payment/notify`,
-
-      // 3. Payment details
-      m_payment_id: paymentId,
       amount: parseFloat(amount).toFixed(2),
       item_name: String(item_name).trim(),
     };
 
-    // Only add optional fields if provided (empty values cause signature mismatch)
-    if (body.name_first && body.name_first.trim())
-      paymentData.name_first = body.name_first.trim();
-    if (body.name_last && body.name_last.trim())
-      paymentData.name_last = body.name_last.trim();
-    // CRITICAL: PayFast doesn't allow payments from merchant's own email
-    // Solution: Don't send email_address - let PayFast collect it on their page
-    // This prevents "Merchant is unable to receive payments from the same account" error
-    // Only add email if explicitly requested and it's not empty
-    // For testing, it's safer to not send email and let PayFast handle it
-    // if (body.email_address && body.email_address.trim()) {
-    //   paymentData.email_address = body.email_address.trim();
-    // }
-    if (body.cell_number && body.cell_number.trim())
-      paymentData.cell_number = body.cell_number.trim();
-    // Add optional fields if provided
-    if (item_description && item_description.trim())
-      paymentData.item_description = item_description.trim();
-    if (custom_str1 && custom_str1.trim())
-      paymentData.custom_str1 = custom_str1.trim();
-    if (custom_str2 && custom_str2.trim())
-      paymentData.custom_str2 = custom_str2.trim();
-
-    // Add subscription fields if provided
+    // Add subscription fields in EXACT order as working form
     if (subscription_type) {
       paymentData.subscription_type = String(subscription_type);
 
-      // Subscription-specific fields (type 1)
       if (subscription_type === "1") {
-        paymentData.frequency = String(frequency);
-        paymentData.cycles = String(cycles);
-
         if (billing_date && billing_date.trim()) {
           paymentData.billing_date = String(billing_date).trim();
         }
@@ -306,26 +296,45 @@ export async function POST(request: NextRequest) {
             paymentData.recurring_amount = recurringAmount.toFixed(2);
           }
         }
+        paymentData.frequency = String(frequency);
+        paymentData.cycles = String(cycles);
+
+        // PayFast accepts "true" for subscription notification fields (tested and confirmed)
         if (subscription_notify_email !== undefined) {
-          paymentData.subscription_notify_email = String(
+          const isEnabled =
             subscription_notify_email === true ||
-              subscription_notify_email === "true"
-          );
+            subscription_notify_email === "true" ||
+            subscription_notify_email === "1";
+          if (isEnabled) {
+            paymentData.subscription_notify_email = "true";
+          }
         }
         if (subscription_notify_webhook !== undefined) {
-          paymentData.subscription_notify_webhook = String(
+          const isEnabled =
             subscription_notify_webhook === true ||
-              subscription_notify_webhook === "true"
-          );
+            subscription_notify_webhook === "true" ||
+            subscription_notify_webhook === "1";
+          if (isEnabled) {
+            paymentData.subscription_notify_webhook = "true";
+          }
         }
         if (subscription_notify_buyer !== undefined) {
-          paymentData.subscription_notify_buyer = String(
+          const isEnabled =
             subscription_notify_buyer === true ||
-              subscription_notify_buyer === "true"
-          );
+            subscription_notify_buyer === "true" ||
+            subscription_notify_buyer === "1";
+          if (isEnabled) {
+            paymentData.subscription_notify_buyer = "true";
+          }
         }
       }
     }
+
+    // DO NOT ADD return_url, cancel_url, notify_url - they break the signature for subscriptions
+    // For subscriptions, PayFast requires these URLs to be configured in dashboard (Settings > Integration)
+    // Since you can't find that setting, PayFast will use subscription_notify_webhook=true to send webhooks
+    // The webhook endpoint might be configured at account level or PayFast may use a default
+    // You may need to contact PayFast support to configure the notify_url for subscriptions
 
     // Generate signature
     // CRITICAL: For subscriptions, passphrase MUST be included in signature
@@ -371,7 +380,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Return payment data and URL
-    return NextResponse.json({
+    // Include debug info in development to see signature string
+    const response: any = {
       success: true,
       payment_url: finalUrl,
       payment_data: paymentData,
@@ -381,7 +391,43 @@ export async function POST(request: NextRequest) {
         url_value: finalUrl,
         is_sandbox: finalUrl.includes("sandbox"),
       },
-    });
+    };
+
+    // In development, include the signature string for debugging
+    if (process.env.NODE_ENV === "development") {
+      // Reconstruct signature string using the SAME logic as generatePayFastSignature
+      // This must match exactly - use INSERTION ORDER, only exclude signature
+      let debugString = "";
+      const debugFieldOrder: string[] = [];
+      for (const key in paymentData) {
+        if (key !== "signature") {
+          const val = paymentData[key];
+          if (val !== undefined && val !== null && String(val) !== "") {
+            const trimmedVal = String(val).trim();
+            if (trimmedVal !== "") {
+              debugFieldOrder.push(key);
+              const encodedValue = encodeURIComponent(trimmedVal)
+                .replace(/%20/g, "+")
+                .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
+              debugString += `${key}=${encodedValue}&`;
+            }
+          }
+        }
+      }
+      debugString = debugString.slice(0, -1);
+      if (PAYFAST_CONFIG.PASSPHRASE && PAYFAST_CONFIG.PASSPHRASE.trim()) {
+        const encodedPassphrase = encodeURIComponent(
+          PAYFAST_CONFIG.PASSPHRASE.trim()
+        )
+          .replace(/%20/g, "+")
+          .replace(/%([0-9A-F]{2})/g, (match) => match.toUpperCase());
+        debugString += `&passphrase=${encodedPassphrase}`;
+      }
+      response.debug.signature_string = debugString;
+      response.debug.field_order = debugFieldOrder;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("PayFast initiate payment error:", error);
     return NextResponse.json(

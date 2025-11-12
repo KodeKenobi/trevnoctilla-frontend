@@ -1,11 +1,38 @@
 // API Configuration
+// Helper function to determine the base URL dynamically
+export function getBaseUrl(): string {
+  // If explicitly set, use it
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    console.log("🔧 API Config: Using NEXT_PUBLIC_API_BASE_URL:", process.env.NEXT_PUBLIC_API_BASE_URL);
+    return process.env.NEXT_PUBLIC_API_BASE_URL;
+  }
+  
+  // Client-side: check if we're running on localhost
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      console.log("🔧 API Config: Client-side on localhost, using http://localhost:5000");
+      return "http://localhost:5000";
+    }
+    console.log("🔧 API Config: Client-side on", hostname, ", using production URL");
+    return "https://web-production-737b.up.railway.app";
+  }
+  
+  // Server-side: check NODE_ENV
+  const isProduction = process.env.NODE_ENV === "production";
+  const baseUrl = isProduction
+    ? "https://web-production-737b.up.railway.app"
+    : "http://localhost:5000";
+  
+  console.log(`🔧 API Config: Server-side, NODE_ENV: ${process.env.NODE_ENV || "undefined"}, Using: ${baseUrl}`);
+  return baseUrl;
+}
+
 export const API_CONFIG = {
-  // Always point to hosted API by default; allow override via env
-  BASE_URL:
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    // TEMPORARY: Using localhost for testing zoom fix. Change back to Railway URL when done.
-    // "http://localhost:5000", // Change back to "https://web-production-737b.up.railway.app" after testing
-    "https://web-production-737b.up.railway.app",
+  // Use getter to resolve URL dynamically
+  get BASE_URL() {
+    return getBaseUrl();
+  },
 
   // PayFast Configuration
   PAYFAST: {

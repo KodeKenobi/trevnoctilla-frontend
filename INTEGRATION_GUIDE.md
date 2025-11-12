@@ -166,7 +166,7 @@ const fs = require("fs");
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
-const API_KEY = process.env.JUSTPDF_API_KEY; // Store in environment variables
+const API_KEY = process.env.TREVNOCTILLA_API_KEY; // Store in environment variables
 const API_BASE_URL = "https://web-production-737b.up.railway.app";
 
 app.post("/extract-pdf-text", upload.single("pdf"), async (req, res) => {
@@ -216,7 +216,7 @@ import requests
 import os
 
 app = Flask(__name__)
-API_KEY = os.environ.get('JUSTPDF_API_KEY')
+API_KEY = os.environ.get('TREVNOCTILLA_API_KEY')
 API_BASE_URL = 'https://web-production-737b.up.railway.app'
 
 @app.route('/extract-pdf-text', methods=['POST'])
@@ -226,7 +226,7 @@ def extract_pdf_text():
 
     file = request.files['pdf']
 
-    # Forward to JustPDF API
+    # Forward to Trevnoctilla API
     files = {'file': (file.filename, file.stream, 'application/pdf')}
     headers = {'X-API-Key': API_KEY}
 
@@ -295,13 +295,13 @@ All endpoints return consistent structure:
        return res.status(401).json({ error: "Unauthorized" });
      }
 
-     // Forward to JustPDF API with your API key
+     // Forward to Trevnoctilla API with your API key
      const response = await fetch(
        "https://web-production-737b.up.railway.app/api/v1/convert/pdf-extract-text",
        {
          method: "POST",
          headers: {
-           "X-API-Key": process.env.JUSTPDF_API_KEY, // Hidden from client
+           "X-API-Key": process.env.TREVNOCTILLA_API_KEY, // Hidden from client
          },
          body: req.body,
        }
