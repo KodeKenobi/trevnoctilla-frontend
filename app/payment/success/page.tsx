@@ -368,7 +368,9 @@ function PaymentSuccessContent() {
       <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-[#8b5cf6] animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Verifying payment...</p>
+          <p className="text-muted-foreground dark:text-gray-400">
+            Verifying payment...
+          </p>
         </div>
       </div>
     );
@@ -381,7 +383,7 @@ function PaymentSuccessContent() {
 
       {/* Modal Content - centered overlay */}
       <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
-        <div className="max-w-md w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-8 text-center shadow-2xl pointer-events-auto">
+        <div className="max-w-md w-full bg-card dark:bg-[#1a1a1a] border border-border dark:border-[#2a2a2a] rounded-lg p-8 text-center shadow-2xl pointer-events-auto">
           {paymentStatus === "success" ? (
             <>
               <div className="mb-6">
@@ -390,10 +392,10 @@ function PaymentSuccessContent() {
                   <CheckCircle className="w-16 h-16 text-green-500 relative" />
                 </div>
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">
+              <h1 className="text-2xl font-bold text-foreground dark:text-white mb-2">
                 Payment Successful!
               </h1>
-              <p className="text-gray-400 mb-6">
+              <p className="text-muted-foreground dark:text-gray-400 mb-6">
                 {(() => {
                   const url = getDownloadUrl();
                   if (url && !isSubscription) {
@@ -450,10 +452,10 @@ function PaymentSuccessContent() {
               <div className="mb-6">
                 <Loader2 className="w-16 h-16 text-yellow-500 animate-spin mx-auto" />
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">
+              <h1 className="text-2xl font-bold text-foreground dark:text-white mb-2">
                 Payment Pending
               </h1>
-              <p className="text-gray-400 mb-6">
+              <p className="text-muted-foreground dark:text-gray-400 mb-6">
                 Your payment is being processed. This may take a few minutes for
                 EFT payments.
               </p>
@@ -474,10 +476,10 @@ function PaymentSuccessContent() {
                   </div>
                 </div>
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">
+              <h1 className="text-2xl font-bold text-foreground dark:text-white mb-2">
                 Payment Failed
               </h1>
-              <p className="text-gray-400 mb-6">
+              <p className="text-muted-foreground dark:text-gray-400 mb-6">
                 Your payment could not be processed. Please try again.
               </p>
               <div className="space-y-3">
@@ -505,7 +507,9 @@ export default function PaymentSuccessPage() {
           <div className="fixed inset-0 z-[101] flex items-center justify-center">
             <div className="text-center">
               <Loader2 className="w-12 h-12 text-[#8b5cf6] animate-spin mx-auto mb-4" />
-              <p className="text-gray-400">Loading...</p>
+              <p className="text-muted-foreground dark:text-gray-400">
+                Loading...
+              </p>
             </div>
           </div>
         </>

@@ -144,10 +144,10 @@ export default function LoginPage() {
               height={64}
             />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground dark:text-white">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-400">
+          <p className="mt-2 text-center text-sm text-muted-foreground dark:text-gray-400">
             Or{" "}
             <Link
               href="/auth/register"
@@ -189,13 +189,13 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-300"
+                className="block text-sm font-medium text-foreground/90 dark:text-gray-300"
               >
                 Email address
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-muted-foreground dark:text-gray-400" />
                 </div>
                 <input
                   id="email"
@@ -203,7 +203,7 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="appearance-none rounded-md relative block w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-800/50 placeholder-gray-400 text-white focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-md relative block w-full pl-10 pr-3 py-2 border border-border dark:border-gray-600 bg-card/50 dark:bg-gray-800/50 placeholder-muted-foreground dark:placeholder-gray-400 text-foreground dark:text-white focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={handleChange}
@@ -214,13 +214,13 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-300"
+                className="block text-sm font-medium text-foreground/90 dark:text-gray-300"
               >
                 Password
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-muted-foreground dark:text-gray-400" />
                 </div>
                 <input
                   id="password"
@@ -228,7 +228,7 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
-                  className="appearance-none rounded-md relative block w-full pl-10 pr-10 py-2 border border-gray-600 bg-gray-800/50 placeholder-gray-400 text-white focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-md relative block w-full pl-10 pr-10 py-2 border border-border dark:border-gray-600 bg-card/50 dark:bg-gray-800/50 placeholder-muted-foreground dark:placeholder-gray-400 text-foreground dark:text-white focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
@@ -236,7 +236,7 @@ export default function LoginPage() {
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <button
                     type="button"
-                    className="text-gray-400 hover:text-gray-300 focus:outline-none focus:text-gray-300"
+                    className="text-muted-foreground dark:text-gray-400 hover:text-foreground/90 dark:hover:text-gray-300 focus:outline-none focus:text-foreground/90 dark:focus:text-gray-300"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -260,7 +260,7 @@ export default function LoginPage() {
               />
               <label
                 htmlFor="remember-me"
-                className="ml-2 block text-sm text-gray-300"
+                className="ml-2 block text-sm text-foreground/90 dark:text-gray-300"
               >
                 Remember me
               </label>
@@ -291,7 +291,7 @@ export default function LoginPage() {
           </div>
 
           <div className="text-center">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground dark:text-gray-400">
               Don't have an account?{" "}
               <Link
                 href="/auth/register"

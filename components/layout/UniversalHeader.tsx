@@ -106,7 +106,7 @@ export default function UniversalHeader() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-between px-2 sm:px-6 py-3 lg:px-12 bg-gray-900/95 backdrop-blur-md border-b border-gray-700/30 w-full max-w-full">
+      <header className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-between px-2 sm:px-6 py-3 lg:px-12 bg-background/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-border dark:border-gray-700/30 w-full max-w-full">
         {/* Logo */}
         <div className="flex items-center space-x-3">
           <button
@@ -136,7 +136,7 @@ export default function UniversalHeader() {
                 );
               }}
             />
-            <span>Trevnoctilla</span>
+            <span className="text-white">Trevnoctilla</span>
           </button>
         </div>
 
@@ -169,6 +169,7 @@ export default function UniversalHeader() {
 
         {/* Desktop Actions */}
         <div className="hidden lg:flex items-center space-x-4">
+          {/* Theme Toggle */}
           {/* Switch View Tab for Super Admin */}
           {isSuperAdmin && user && (
             <div className="flex items-center space-x-1 bg-gray-800/50 rounded-lg p-1">

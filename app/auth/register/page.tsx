@@ -166,10 +166,10 @@ export default function RegisterPage() {
               height={64}
             />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground dark:text-white">
             Create your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-400">
+          <p className="mt-2 text-center text-sm text-muted-foreground dark:text-gray-400">
             Or{" "}
             <Link
               href="/auth/login"
@@ -211,13 +211,13 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-300"
+                className="block text-sm font-medium text-foreground/90 dark:text-gray-300"
               >
                 Email address
               </label>
               <div className="mt-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-muted-foreground dark:text-gray-400" />
                 </div>
                 <input
                   id="email"
@@ -225,7 +225,7 @@ export default function RegisterPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="appearance-none rounded-md relative block w-full pl-10 pr-3 py-2 border border-gray-600 bg-gray-800/50 placeholder-gray-400 text-white focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-md relative block w-full pl-10 pr-3 py-2 border border-border dark:border-gray-600 bg-card/50 dark:bg-gray-800/50 placeholder-muted-foreground dark:placeholder-gray-400 text-foreground dark:text-white focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm"
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={handleChange}
@@ -236,7 +236,7 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-300"
+                className="block text-sm font-medium text-foreground/90 dark:text-gray-300"
               >
                 Password
               </label>
@@ -281,14 +281,14 @@ export default function RegisterPage() {
                       className={`flex items-center ${
                         formData.password.length >= 8
                           ? "text-green-400"
-                          : "text-gray-500"
+                          : "text-muted-foreground dark:text-gray-500"
                       }`}
                     >
                       <CheckCircle
                         className={`h-3 w-3 mr-1 ${
                           formData.password.length >= 8
                             ? "text-green-400"
-                            : "text-gray-500"
+                            : "text-muted-foreground dark:text-gray-500"
                         }`}
                       />
                       At least 8 characters
@@ -297,14 +297,14 @@ export default function RegisterPage() {
                       className={`flex items-center ${
                         /[A-Z]/.test(formData.password)
                           ? "text-green-400"
-                          : "text-gray-500"
+                          : "text-muted-foreground dark:text-gray-500"
                       }`}
                     >
                       <CheckCircle
                         className={`h-3 w-3 mr-1 ${
                           /[A-Z]/.test(formData.password)
                             ? "text-green-400"
-                            : "text-gray-500"
+                            : "text-muted-foreground dark:text-gray-500"
                         }`}
                       />
                       One uppercase letter
@@ -313,14 +313,14 @@ export default function RegisterPage() {
                       className={`flex items-center ${
                         /[a-z]/.test(formData.password)
                           ? "text-green-400"
-                          : "text-gray-500"
+                          : "text-muted-foreground dark:text-gray-500"
                       }`}
                     >
                       <CheckCircle
                         className={`h-3 w-3 mr-1 ${
                           /[a-z]/.test(formData.password)
                             ? "text-green-400"
-                            : "text-gray-500"
+                            : "text-muted-foreground dark:text-gray-500"
                         }`}
                       />
                       One lowercase letter
@@ -329,14 +329,14 @@ export default function RegisterPage() {
                       className={`flex items-center ${
                         /\d/.test(formData.password)
                           ? "text-green-400"
-                          : "text-gray-500"
+                          : "text-muted-foreground dark:text-gray-500"
                       }`}
                     >
                       <CheckCircle
                         className={`h-3 w-3 mr-1 ${
                           /\d/.test(formData.password)
                             ? "text-green-400"
-                            : "text-gray-500"
+                            : "text-muted-foreground dark:text-gray-500"
                         }`}
                       />
                       One number
@@ -349,7 +349,7 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-300"
+                className="block text-sm font-medium text-foreground/90 dark:text-gray-300"
               >
                 Confirm Password
               </label>

@@ -44,7 +44,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-t border-gray-700/50">
+    <footer className="relative bg-gradient-to-br from-background via-background/95 to-background dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-t border-border dark:border-gray-700/50">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent"></div>
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl"></div>
@@ -68,12 +68,12 @@ export default function Footer() {
                     alt="Trevnoctilla Logo"
                     className="w-10 h-10"
                   />
-                  <h3 className="text-2xl font-bold text-white">
+                  <h3 className="text-2xl font-bold text-foreground dark:text-white">
                     Trevnoctilla
                   </h3>
                 </div>
 
-                <p className="text-gray-400 leading-relaxed">
+                <p className="text-muted-foreground dark:text-gray-400 leading-relaxed">
                   The ultimate file conversion platform. Transform, convert, and
                   optimize your files with professional-grade tools.
                 </p>
@@ -88,7 +88,9 @@ export default function Footer() {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="space-y-6"
               >
-                <h4 className="text-lg font-semibold text-white">Tools</h4>
+                <h4 className="text-lg font-semibold text-foreground dark:text-white">
+                  Tools
+                </h4>
                 <ul className="space-y-3">
                   {tools.map((tool, index) => (
                     <motion.li
@@ -99,7 +101,7 @@ export default function Footer() {
                     >
                       <button
                         onClick={() => navigateTo(tool.page as any)}
-                        className="flex items-center justify-center md:justify-start space-x-3 text-gray-400 hover:text-cyan-400 transition-colors group w-full"
+                        className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400 hover:text-cyan-400 transition-colors group w-full"
                       >
                         <tool.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         <span>{tool.name}</span>
@@ -118,7 +120,9 @@ export default function Footer() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="space-y-6"
               >
-                <h4 className="text-lg font-semibold text-white">Features</h4>
+                <h4 className="text-lg font-semibold text-foreground dark:text-white">
+                  Features
+                </h4>
                 <ul className="space-y-3">
                   {features.map((feature, index) => (
                     <motion.li
@@ -126,7 +130,7 @@ export default function Footer() {
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.4, delay: index * 0.1 }}
-                      className="flex items-center justify-center md:justify-start space-x-2 text-gray-400"
+                      className="flex items-center justify-center md:justify-start space-x-2 text-muted-foreground dark:text-gray-400"
                     >
                       <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full"></div>
                       <span>{feature}</span>
@@ -144,9 +148,11 @@ export default function Footer() {
                 transition={{ duration: 0.6, delay: 0.3 }}
                 className="space-y-6"
               >
-                <h4 className="text-lg font-semibold text-white">Contact</h4>
+                <h4 className="text-lg font-semibold text-foreground dark:text-white">
+                  Contact
+                </h4>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-center md:justify-start space-x-3 text-gray-400">
+                  <div className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400">
                     <Mail className="w-5 h-5 text-cyan-400" />
                     <a
                       href="mailto:info@trevnoctilla.com"
@@ -162,7 +168,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-gray-700/50">
+        <div className="border-t border-border dark:border-gray-700/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex flex-col md:flex-row items-center justify-center md:justify-between text-center md:text-left space-y-4 md:space-y-0">
               {/* Copyright */}
@@ -170,7 +176,7 @@ export default function Footer() {
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 transition={{ duration: 0.6 }}
-                className="text-gray-400 text-sm"
+                className="text-muted-foreground dark:text-gray-400 text-sm"
               >
                 © {new Date().getFullYear()} Trevnoctilla. All rights reserved.
               </motion.div>
@@ -186,7 +192,7 @@ export default function Footer() {
                   <motion.a
                     key={item.name}
                     href={item.href}
-                    className="text-gray-400 hover:text-cyan-400 transition-colors"
+                    className="text-muted-foreground dark:text-gray-400 hover:text-cyan-400 transition-colors"
                     whileHover={{ scale: 1.05 }}
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -200,7 +206,7 @@ export default function Footer() {
               {/* Back to Top Button */}
               <motion.button
                 onClick={scrollToTop}
-                className="flex items-center space-x-2 text-gray-400 hover:text-cyan-400 transition-colors group"
+                className="flex items-center space-x-2 text-muted-foreground dark:text-gray-400 hover:text-cyan-400 transition-colors group"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ opacity: 0 }}

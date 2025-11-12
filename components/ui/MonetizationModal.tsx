@@ -277,19 +277,23 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
         style={{ zIndex: 100001, position: "relative" }}
       >
         <div
-          className="relative w-full max-w-2xl transform overflow-hidden rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] shadow-xl transition-all"
+          className="relative w-full max-w-2xl transform overflow-hidden rounded-lg bg-card dark:bg-[#1a1a1a] border border-border dark:border-[#2a2a2a] shadow-xl transition-all"
           onClick={(e) => e.stopPropagation()}
           style={{ zIndex: 100001 }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a2a]">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border dark:border-[#2a2a2a]">
             <div>
-              <h3 className="text-lg font-semibold text-white">{title}</h3>
-              <p className="text-sm text-gray-400 mt-0.5">{message}</p>
+              <h3 className="text-lg font-semibold text-foreground dark:text-white">
+                {title}
+              </h3>
+              <p className="text-sm text-muted-foreground dark:text-gray-400 mt-0.5">
+                {message}
+              </p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors p-1.5 hover:bg-[#2a2a2a] rounded-lg"
+              className="text-muted-foreground dark:text-gray-400 hover:text-foreground dark:hover:text-white transition-colors p-1.5 hover:bg-accent dark:hover:bg-[#2a2a2a] rounded-lg"
             >
               <X className="w-4 h-4" />
             </button>
@@ -337,7 +341,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                         type="email"
                         defaultValue={user?.email || ""}
                         placeholder="Enter a different email"
-                        className="w-full px-3 py-1.5 text-sm bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500 transition-colors"
+                        className="w-full px-3 py-1.5 text-sm bg-card dark:bg-[#1a1a1a] border border-border dark:border-[#2a2a2a] rounded-lg text-foreground dark:text-white placeholder-muted-foreground dark:placeholder-gray-500 focus:outline-none focus:border-yellow-500 transition-colors"
                         disabled={isProcessingPayment}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !isProcessingPayment) {

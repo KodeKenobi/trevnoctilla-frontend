@@ -42,7 +42,7 @@ export default function LandingPage() {
 
   return (
     <>
-      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 page-content">
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-background via-background/95 to-background dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 page-content">
         {/* Background Image Layer - Temporarily disabled */}
         {/* <div
           className="absolute inset-0 opacity-30"
@@ -93,7 +93,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.1, delay: 0.05 }}
-                className="text-4xl lg:text-6xl font-bold text-white mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14"
+                className="text-4xl lg:text-6xl font-bold text-foreground dark:text-white mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14"
               >
                 The only file conversion that{" "}
                 <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
@@ -106,7 +106,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.1, delay: 0.1 }}
-                className="text-xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed"
+                className="text-xl text-muted-foreground dark:text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed"
               >
                 Transform your media files with our intelligent conversion
                 system. From video to audio, PDF merging to QR generation,

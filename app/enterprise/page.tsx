@@ -218,12 +218,16 @@ export default function EnterpriseDashboard() {
     };
 
     const content = (
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 overflow-hidden shadow-lg rounded-xl hover:bg-gray-800/70 transition-all duration-300 group">
+      <div className="bg-card/50 dark:bg-gray-800/50 backdrop-blur-sm border border-border dark:border-gray-700 overflow-hidden shadow-lg rounded-xl hover:bg-card/70 dark:hover:bg-gray-800/70 transition-all duration-300 group">
         <div className="p-6">
           <div className="flex flex-col md:flex-row items-center text-center md:text-left md:justify-between">
             <div className="flex-1 mb-4 md:mb-0">
-              <p className="text-sm font-medium text-gray-300 mb-2">{title}</p>
-              <p className="text-3xl font-bold text-white">{value}</p>
+              <p className="text-sm font-medium text-muted-foreground dark:text-gray-300 mb-2">
+                {title}
+              </p>
+              <p className="text-3xl font-bold text-foreground dark:text-white">
+                {value}
+              </p>
               {change && (
                 <div className="mt-2">
                   <div
@@ -243,7 +247,7 @@ export default function EnterpriseDashboard() {
             <div
               className={`p-3 rounded-lg bg-gradient-to-r ${colorClasses[color]} opacity-80 group-hover:opacity-100 transition-opacity mx-auto md:mx-0`}
             >
-              <Icon className="h-6 w-6 text-white" />
+              <Icon className="h-6 w-6 text-foreground dark:text-white" />
             </div>
           </div>
         </div>
@@ -293,10 +297,12 @@ export default function EnterpriseDashboard() {
   // Show loading while checking authentication
   if (userLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-20 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-400 mx-auto mb-4"></div>
-          <p className="text-gray-300">Loading enterprise dashboard...</p>
+          <p className="text-foreground dark:text-gray-300">
+            Loading enterprise dashboard...
+          </p>
         </div>
       </div>
     );
@@ -305,10 +311,12 @@ export default function EnterpriseDashboard() {
   // Show access denied if not authenticated
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20 flex items-center justify-center">
-        <div className="text-center p-8 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
-          <p className="text-gray-400 mb-4">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-20 flex items-center justify-center">
+        <div className="text-center p-8 bg-card/50 dark:bg-gray-800/50 backdrop-blur-sm border border-border dark:border-gray-700 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold text-foreground dark:text-white mb-2">
+            Access Denied
+          </h2>
+          <p className="text-muted-foreground dark:text-gray-400 mb-4">
             You must be logged in to access this page.
           </p>
           <Link

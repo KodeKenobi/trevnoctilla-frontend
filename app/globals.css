@@ -100,13 +100,13 @@ body.scrolling {
 
 /* Video Converter Styles */
 .dropzone {
-  border: 2px dashed #6b7280;
+  border: 2px dashed hsl(var(--border));
   border-radius: 0.5rem;
   padding: 1rem;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  background-color: #374151;
+  background-color: hsl(var(--muted));
   min-height: 120px;
   display: flex;
   align-items: center;
@@ -114,13 +114,13 @@ body.scrolling {
 }
 
 .dropzone:hover {
-  border-color: #9ca3af;
-  background-color: #4b5563;
+  border-color: hsl(var(--border));
+  background-color: hsl(var(--accent));
 }
 
 .dropzone-active {
-  border-color: #3b82f6;
-  background-color: #1e40af;
+  border-color: hsl(var(--primary));
+  background-color: hsl(var(--primary) / 0.1);
 }
 
 @media (min-width: 640px) {

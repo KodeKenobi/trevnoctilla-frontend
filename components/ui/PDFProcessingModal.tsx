@@ -56,7 +56,7 @@ export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
               damping: 30,
               duration: 0.4,
             }}
-            className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-3xl shadow-2xl border border-gray-700/50 p-6 sm:p-8 max-w-md w-full mx-auto"
+            className="bg-gradient-to-br from-background via-background/95 to-background dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 rounded-3xl shadow-2xl border border-border dark:border-gray-700/50 p-6 sm:p-8 max-w-md w-full mx-auto"
           >
             {/* Header with file name */}
             {fileName && (
@@ -66,7 +66,7 @@ export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
                 transition={{ delay: 0.1 }}
                 className="mb-6 text-center"
               >
-                <div className="flex items-center justify-center gap-2 text-gray-400 text-sm mb-2">
+                <div className="flex items-center justify-center gap-2 text-muted-foreground dark:text-gray-400 text-sm mb-2">
                   <FileText className="w-4 h-4" />
                   <span className="truncate max-w-[280px]">{fileName}</span>
                 </div>
@@ -82,10 +82,10 @@ export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
               transition={{ duration: 0.3 }}
               className="text-center mb-6"
             >
-              <h3 className="text-xl sm:text-2xl font-light text-white mb-2">
+              <h3 className="text-xl sm:text-2xl font-light text-foreground dark:text-white mb-2">
                 {statusText}
               </h3>
-              <p className="text-sm sm:text-base font-light text-gray-400">
+              <p className="text-sm sm:text-base font-light text-muted-foreground dark:text-gray-400">
                 {progress >= 100
                   ? "Your document is ready!"
                   : "Please wait while we process your document"}
@@ -94,7 +94,7 @@ export const PDFProcessingModal: React.FC<PDFProcessingModalProps> = ({
 
             {/* Progress Bar */}
             <div className="w-full">
-              <div className="flex justify-between text-xs sm:text-sm text-gray-400 mb-2">
+              <div className="flex justify-between text-xs sm:text-sm text-muted-foreground dark:text-gray-400 mb-2">
                 <span>Progress</span>
                 <span>{Math.round(progress)}%</span>
               </div>

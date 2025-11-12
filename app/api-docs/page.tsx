@@ -321,11 +321,11 @@ export default function ApiDocsPage() {
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <h1 className="text-2xl lg:text-3xl font-bold text-white mb-6">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground dark:text-white mb-6">
             Powerful APIs for{" "}
             <span className="text-cyan-400">File Processing</span>
           </h1>
-          <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8">
+          <p className="text-xl text-foreground/90 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8">
             Integrate advanced file processing capabilities into your
             applications. Convert videos, process PDFs, optimize images, and
             more with our comprehensive API suite.
@@ -345,7 +345,7 @@ export default function ApiDocsPage() {
                   .getElementById("code-examples")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
-              className="border-2 border-gray-600 hover:border-cyan-400 text-gray-300 hover:text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
+              className="border-2 border-border dark:border-gray-600 hover:border-cyan-400 text-foreground/90 dark:text-gray-300 hover:text-foreground dark:hover:text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -372,10 +372,12 @@ export default function ApiDocsPage() {
               <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto md:mx-0 mb-4">
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
+              <h3 className="text-xl font-bold text-foreground dark:text-white mb-2">
                 {feature.title}
               </h3>
-              <p className="text-gray-400">{feature.description}</p>
+              <p className="text-muted-foreground dark:text-gray-400">
+                {feature.description}
+              </p>
             </motion.div>
           ))}
         </motion.div>
@@ -387,7 +389,7 @@ export default function ApiDocsPage() {
           transition={{ duration: 0.8 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground dark:text-white text-center mb-12">
             Complete API Reference
           </h2>
 
@@ -396,30 +398,40 @@ export default function ApiDocsPage() {
             <div className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 text-center md:text-left">
               <div className="flex items-center mb-4 justify-center md:justify-start">
                 <FileText className="w-8 h-8 text-red-500 mr-3" />
-                <h3 className="text-xl font-bold text-white">PDF Processing</h3>
+                <h3 className="text-xl font-bold text-foreground dark:text-white">
+                  PDF Processing
+                </h3>
               </div>
               <div className="space-y-3">
                 <div className="text-sm">
                   <code className="text-cyan-400">POST /extract_text</code>
-                  <p className="text-gray-400 mt-1">Extract text from PDFs</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    Extract text from PDFs
+                  </p>
                 </div>
                 <div className="text-sm">
                   <code className="text-cyan-400">POST /merge_pdfs</code>
-                  <p className="text-gray-400 mt-1">Merge multiple PDFs</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    Merge multiple PDFs
+                  </p>
                 </div>
                 <div className="text-sm">
                   <code className="text-cyan-400">POST /split_pdf</code>
-                  <p className="text-gray-400 mt-1">Split PDF into pages</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    Split PDF into pages
+                  </p>
                 </div>
                 <div className="text-sm">
                   <code className="text-cyan-400">POST /extract_images</code>
-                  <p className="text-gray-400 mt-1">Extract images from PDFs</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    Extract images from PDFs
+                  </p>
                 </div>
                 <div className="text-sm">
                   <code className="text-cyan-400">
                     POST /convert_pdf_to_html
                   </code>
-                  <p className="text-gray-400 mt-1">
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Convert PDF to HTML with layout preservation
                   </p>
                 </div>
@@ -427,7 +439,7 @@ export default function ApiDocsPage() {
                   <code className="text-cyan-400">
                     POST /convert_html_to_pdf
                   </code>
-                  <p className="text-gray-400 mt-1">
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Convert HTML to PDF with 100% accuracy
                   </p>
                 </div>
@@ -445,27 +457,35 @@ export default function ApiDocsPage() {
               <div className="space-y-3">
                 <div className="text-sm">
                   <code className="text-cyan-400">POST /convert-video</code>
-                  <p className="text-gray-400 mt-1">Convert video formats</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    Convert video formats
+                  </p>
                 </div>
                 <div className="text-sm">
                   <code className="text-cyan-400">POST /convert-audio</code>
-                  <p className="text-gray-400 mt-1">Convert audio formats</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    Convert audio formats
+                  </p>
                 </div>
                 <div className="text-sm">
                   <code className="text-cyan-400">POST /convert-image</code>
-                  <p className="text-gray-400 mt-1">Convert image formats</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    Convert image formats
+                  </p>
                 </div>
                 <div className="text-sm">
                   <code className="text-cyan-400">
                     GET /conversion_progress/{"{filename}"}
                   </code>
-                  <p className="text-gray-400 mt-1">Check conversion status</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    Check conversion status
+                  </p>
                 </div>
                 <div className="text-sm">
                   <code className="text-cyan-400">
                     POST /cancel_conversion/{"{filename}"}
                   </code>
-                  <p className="text-gray-400 mt-1">
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Cancel ongoing conversion
                   </p>
                 </div>
@@ -481,19 +501,27 @@ export default function ApiDocsPage() {
               <div className="space-y-3">
                 <div className="text-sm">
                   <code className="text-cyan-400">POST /generate-qr</code>
-                  <p className="text-gray-400 mt-1">Generate QR codes</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    Generate QR codes
+                  </p>
                 </div>
                 <div className="text-sm">
                   <code className="text-cyan-400">GET /health</code>
-                  <p className="text-gray-400 mt-1">API health check</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    API health check
+                  </p>
                 </div>
                 <div className="text-sm">
                   <code className="text-cyan-400">POST /cleanup-file</code>
-                  <p className="text-gray-400 mt-1">Clean up temporary files</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    Clean up temporary files
+                  </p>
                 </div>
                 <div className="text-sm">
                   <code className="text-cyan-400">POST /cleanup-session</code>
-                  <p className="text-gray-400 mt-1">Clean up session files</p>
+                  <p className="text-muted-foreground dark:text-gray-400 mt-1">
+                    Clean up session files
+                  </p>
                 </div>
               </div>
             </div>
@@ -507,7 +535,7 @@ export default function ApiDocsPage() {
           transition={{ duration: 0.8 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground dark:text-white text-center mb-12">
             Simple, Transparent Pricing
           </h2>
 
@@ -562,7 +590,7 @@ export default function ApiDocsPage() {
                   className={`w-full py-3 px-6 rounded-xl font-bold transition-all duration-300 mt-auto ${
                     plan.popular
                       ? "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
-                      : "border-2 border-gray-600 hover:border-cyan-400 text-gray-300 hover:text-white"
+                      : "border-2 border-border dark:border-gray-600 hover:border-cyan-400 text-foreground/90 dark:text-gray-300 hover:text-foreground dark:hover:text-white"
                   } ${
                     isProcessingSubscription && selectedPlan === plan.name
                       ? "opacity-50 cursor-not-allowed"
@@ -596,7 +624,7 @@ export default function ApiDocsPage() {
           transition={{ duration: 0.8 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground dark:text-white text-center mb-12">
             Quick Start Examples
           </h2>
 
@@ -716,7 +744,7 @@ export default function ApiDocsPage() {
           transition={{ duration: 0.8 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-white text-center mb-12">
+          <h2 className="text-3xl font-bold text-foreground dark:text-white text-center mb-12">
             All Available Endpoints
           </h2>
 
@@ -944,7 +972,7 @@ export default function ApiDocsPage() {
           transition={{ duration: 0.8 }}
           className="text-center bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-12"
         >
-          <h2 className="text-3xl font-bold text-white mb-4">
+          <h2 className="text-3xl font-bold text-foreground dark:text-white mb-4">
             Ready to Build Something Amazing?
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
@@ -964,7 +992,7 @@ export default function ApiDocsPage() {
               onClick={() =>
                 window.open("mailto:api@trevnoctilla.com", "_blank")
               }
-              className="border-2 border-gray-600 hover:border-cyan-400 text-gray-300 hover:text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
+              className="border-2 border-border dark:border-gray-600 hover:border-cyan-400 text-foreground/90 dark:text-gray-300 hover:text-foreground dark:hover:text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >

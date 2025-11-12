@@ -112,7 +112,7 @@ const tabs: Tab[] = [
 
 export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
   return (
-    <div className="relative bg-gradient-to-r from-[#0a0a0a] via-[#111111] to-[#0a0a0a] border-b border-[#1a1a1a]">
+    <div className="relative bg-gradient-to-r from-background via-background/95 to-background dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#0a0a0a] border-b border-border dark:border-[#1a1a1a]">
       {/* Animated background gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#8b5cf6]/5 to-transparent opacity-50"></div>
 
@@ -130,8 +130,8 @@ export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
                 rounded-xl backdrop-blur-sm border whitespace-nowrap flex-shrink-0
                 ${
                   activeTab === tab.id
-                    ? "text-white bg-gradient-to-r from-[#8b5cf6]/20 to-[#3b82f6]/20 border-[#8b5cf6]/30 shadow-lg shadow-[#8b5cf6]/20"
-                    : "text-gray-400 hover:text-white bg-[#1a1a1a]/50 hover:bg-[#2a2a2a]/80 border-[#2a2a2a] hover:border-[#3a3a3a] hover:shadow-md"
+                    ? "text-foreground dark:text-white bg-gradient-to-r from-[#8b5cf6]/20 to-[#3b82f6]/20 border-[#8b5cf6]/30 shadow-lg shadow-[#8b5cf6]/20"
+                    : "text-muted-foreground dark:text-gray-400 hover:text-foreground dark:hover:text-white bg-accent/50 dark:bg-[#1a1a1a]/50 hover:bg-accent/80 dark:hover:bg-[#2a2a2a]/80 border-border dark:border-[#2a2a2a] hover:border-[#3a3a3a] hover:shadow-md"
                 }
               `}
             >
@@ -145,8 +145,8 @@ export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
                   relative z-10 transition-all duration-300
                   ${
                     activeTab === tab.id
-                      ? "text-white drop-shadow-sm"
-                      : "text-gray-400 group-hover:text-white group-hover:scale-110"
+                      ? "text-foreground dark:text-white drop-shadow-sm"
+                      : "text-muted-foreground dark:text-gray-400 group-hover:text-foreground dark:group-hover:text-white group-hover:scale-110"
                   }
                 `}
               >
@@ -158,8 +158,8 @@ export function DashboardTabs({ activeTab, onTabChange }: DashboardTabsProps) {
                 relative z-10 transition-all duration-300 font-semibold
                 ${
                   activeTab === tab.id
-                    ? "text-white"
-                    : "text-gray-400 group-hover:text-white"
+                    ? "text-foreground dark:text-white"
+                    : "text-muted-foreground dark:text-gray-400 group-hover:text-foreground dark:group-hover:text-white"
                 }
               `}
               >
