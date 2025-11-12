@@ -110,7 +110,7 @@ export function BillingSection({ user }: BillingSectionProps) {
             planId: plan.id,
             planName: plan.name,
             usdAmount: plan.price,
-            zarAmount: parseFloat(zarAmount),
+            zarAmount: zarAmount,
             description: plan.description,
           })
         );
