@@ -164,6 +164,18 @@ export default function UsersPage() {
           console.log("✅ Total users returned:", data.users?.length || 0);
           console.log("✅ Pagination info:", data.pagination);
 
+          // Log each user returned
+          console.log("👥 Users returned from API:");
+          data.users?.forEach((user: any, index: number) => {
+            console.log(
+              `  ${index + 1}. ID: ${user.id}, Email: ${user.email}, Role: ${
+                user.role
+              }, Tier: ${user.subscription_tier || "free"}, Active: ${
+                user.is_active
+              }`
+            );
+          });
+
           // Transform the data to match our interface
           const transformedUsers = data.users.map((user: any) => ({
             id: user.id,
