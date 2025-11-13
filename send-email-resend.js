@@ -5,8 +5,7 @@ const { Resend } = require("resend");
 const fs = require("fs");
 const path = require("path");
 
-const RESEND_API_KEY =
-  process.env.RESEND_API_KEY || "re_5yGT4cPu_HkYqbboXDhEy9Kmo2T8Ec2uC";
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const TO_EMAIL = process.argv[2] || "kodekenobi@gmail.com";
 const TIER = process.argv[3] || "free";
 
