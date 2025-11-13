@@ -26,8 +26,12 @@ export async function POST(request: NextRequest) {
     console.log(`📧 [NEXTJS] Sending email to ${to}`);
     console.log(`📧 [NEXTJS] Subject: ${subject}`);
 
+    // Use verified domain email if available, otherwise fallback to Resend test domain
+    const fromEmail =
+      process.env.FROM_EMAIL || "Trevnoctilla <onboarding@resend.dev>";
+
     const { data, error } = await resend.emails.send({
-      from: process.env.FROM_EMAIL || "Trevnoctilla <onboarding@resend.dev>",
+      from: fromEmail,
       to,
       subject,
       html,
