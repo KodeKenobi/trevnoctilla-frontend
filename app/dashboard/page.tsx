@@ -210,6 +210,10 @@ function DashboardContent() {
               usageData.monthly?.limit === -1 || // Unlimited indicates enterprise
               (usageData.monthly?.limit && usageData.monthly.limit >= 100000); // High limit indicates enterprise
 
+            // Check for premium tier
+            const isPremium =
+              usageData.subscription_tier?.toLowerCase() === "premium";
+
             if (isEnterprise) {
               router.push("/enterprise");
               return;

@@ -352,9 +352,10 @@ export const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
 };
 
 // Endpoint access by subscription tier
+// Tiers match database: 'free', 'premium', 'enterprise', 'client'
 export const ENDPOINT_ACCESS: Record<string, string[]> = {
-  testing: ["extract-text", "convert-image", "generate-qr"],
-  production: [
+  free: ["extract-text", "convert-image", "generate-qr"],
+  premium: [
     "merge-pdfs",
     "split-pdf",
     "extract-text",
@@ -376,6 +377,18 @@ export const ENDPOINT_ACCESS: Record<string, string[]> = {
     "convert-image",
     "generate-qr",
   ],
+  client: [
+    "merge-pdfs",
+    "split-pdf",
+    "extract-text",
+    "extract-images",
+    "pdf-to-html",
+    "html-to-pdf",
+    "convert-video",
+    "convert-audio",
+    "convert-image",
+    "generate-qr",
+  ],
 };
 
 // Helper function to check if user has access to an endpoint
@@ -384,16 +397,10 @@ export function hasEndpointAccess(
   subscriptionTier: string | null
 ): boolean {
   if (!subscriptionTier) {
-    // Default to testing tier if no tier specified
-    return ENDPOINT_ACCESS.testing.includes(endpointId);
+    // Default to free tier if no tier specified
+    return ENDPOINT_ACCESS.free.includes(endpointId);
   }
 
   const tier = subscriptionTier.toLowerCase();
-  if (tier === "enterprise") {
-    return ENDPOINT_ACCESS.enterprise.includes(endpointId);
-  } else if (tier === "production") {
-    return ENDPOINT_ACCESS.production.includes(endpointId);
-  } else {
-    return ENDPOINT_ACCESS.testing.includes(endpointId);
-  }
+  return ENDPOINT_ACCESS[tier]?.includes(endpointId) || false;
 }
