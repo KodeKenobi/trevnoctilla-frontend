@@ -1,25 +1,6 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-// Extend the built-in session types
-declare module "next-auth" {
-  interface User {
-    id: string;
-    role: "user" | "admin" | "super_admin";
-    is_active: boolean;
-  }
-  interface Session {
-    user: {
-      id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-      role: "user" | "admin" | "super_admin";
-      is_active: boolean;
-    };
-  }
-}
-
 // Auth options configuration
 const authOptions: NextAuthOptions = {
   providers: [
@@ -31,14 +12,9 @@ const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          console.log("❌ Missing credentials");
+          console.error("[NextAuth] Missing credentials");
           return null;
         }
-
-        console.log(
-          "🔐 NextAuth: Attempting authentication for:",
-          credentials.email
-        );
 
         try {
           // Get API base URL (use localhost for development, production URL for production)
@@ -46,25 +22,16 @@ const authOptions: NextAuthOptions = {
           // Otherwise, use localhost for development, production URL for production
           const apiBaseUrl = (() => {
             if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-              console.log(
-                "🔧 NextAuth: Using NEXT_PUBLIC_API_BASE_URL:",
-                process.env.NEXT_PUBLIC_API_BASE_URL
-              );
               return process.env.NEXT_PUBLIC_API_BASE_URL;
             }
             const isProduction = process.env.NODE_ENV === "production";
-            const url = isProduction
+            return isProduction
               ? "https://web-production-737b.up.railway.app"
               : "http://localhost:5000";
-            console.log(
-              `🔧 NextAuth: NODE_ENV: ${
-                process.env.NODE_ENV || "undefined"
-              }, Using base URL: ${url}`
-            );
-            return url;
           })();
 
-          console.log("🔐 NextAuth: Using API base URL:", apiBaseUrl);
+          console.log(`[NextAuth] Attempting login for: ${credentials.email}`);
+          console.log(`[NextAuth] API Base URL: ${apiBaseUrl}`);
 
           // Call backend API to verify credentials
           const response = await fetch(`${apiBaseUrl}/auth/login`, {
@@ -78,15 +45,25 @@ const authOptions: NextAuthOptions = {
             }),
           });
 
+          const responseText = await response.text();
+          console.log(`[NextAuth] Response status: ${response.status}`);
+          console.log(`[NextAuth] Response body: ${responseText.substring(0, 200)}`);
+
           if (!response.ok) {
-            console.log("❌ NextAuth: Backend authentication failed");
+            console.error(`[NextAuth] Backend auth failed: ${response.status} - ${responseText}`);
             return null;
           }
 
-          const data = await response.json();
+          let data;
+          try {
+            data = JSON.parse(responseText);
+          } catch (parseError) {
+            console.error(`[NextAuth] Failed to parse response: ${parseError}`);
+            return null;
+          }
 
           if (data.user && data.access_token) {
-            console.log("✅ NextAuth: Authentication successful");
+            console.log(`[NextAuth] Authentication successful for: ${data.user.email}`);
             return {
               id: data.user.id?.toString() || data.user.email,
               email: data.user.email,
@@ -96,10 +73,14 @@ const authOptions: NextAuthOptions = {
             };
           }
 
-          console.log("❌ NextAuth: Invalid response from backend");
+          console.error(`[NextAuth] Invalid response structure:`, data);
           return null;
         } catch (error) {
-          console.error("❌ NextAuth: Error during authentication:", error);
+          console.error("[NextAuth] Error during authentication:", error);
+          if (error instanceof Error) {
+            console.error("[NextAuth] Error message:", error.message);
+            console.error("[NextAuth] Error stack:", error.stack);
+          }
           return null;
         }
       },
@@ -111,12 +92,11 @@ const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        console.log("🔐 NextAuth JWT: User data:", user);
+        console.log(`[NextAuth JWT] Setting user data for: ${user.email}`);
         token.id = user.id;
         token.role = user.role;
         token.is_active = user.is_active;
       }
-      console.log("🔐 NextAuth JWT: Token:", token);
       return token;
     },
     async session({ session, token }) {
@@ -124,8 +104,8 @@ const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as "user" | "admin" | "super_admin";
         session.user.is_active = token.is_active as boolean;
+        console.log(`[NextAuth Session] Session created for: ${session.user.email}`);
       }
-      console.log("🔐 NextAuth Session: Session:", session);
       return session;
     },
   },
