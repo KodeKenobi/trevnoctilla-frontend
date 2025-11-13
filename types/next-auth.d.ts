@@ -25,4 +25,3 @@ declare module "next-auth/jwt" {
     is_active?: boolean;
   }
 }
-

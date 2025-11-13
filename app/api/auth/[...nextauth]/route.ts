@@ -47,10 +47,14 @@ const authOptions: NextAuthOptions = {
 
           const responseText = await response.text();
           console.log(`[NextAuth] Response status: ${response.status}`);
-          console.log(`[NextAuth] Response body: ${responseText.substring(0, 200)}`);
+          console.log(
+            `[NextAuth] Response body: ${responseText.substring(0, 200)}`
+          );
 
           if (!response.ok) {
-            console.error(`[NextAuth] Backend auth failed: ${response.status} - ${responseText}`);
+            console.error(
+              `[NextAuth] Backend auth failed: ${response.status} - ${responseText}`
+            );
             return null;
           }
 
@@ -63,7 +67,9 @@ const authOptions: NextAuthOptions = {
           }
 
           if (data.user && data.access_token) {
-            console.log(`[NextAuth] Authentication successful for: ${data.user.email}`);
+            console.log(
+              `[NextAuth] Authentication successful for: ${data.user.email}`
+            );
             return {
               id: data.user.id?.toString() || data.user.email,
               email: data.user.email,
@@ -104,7 +110,9 @@ const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as "user" | "admin" | "super_admin";
         session.user.is_active = token.is_active as boolean;
-        console.log(`[NextAuth Session] Session created for: ${session.user.email}`);
+        console.log(
+          `[NextAuth Session] Session created for: ${session.user.email}`
+        );
       }
       return session;
     },
