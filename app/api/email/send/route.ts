@@ -6,7 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { to, subject, html, text } = body;
+    const { to, subject, html, text, attachments } = body;
 
     if (!to || !subject || !html) {
       return NextResponse.json(
@@ -25,18 +25,29 @@ export async function POST(request: NextRequest) {
 
     console.log(`📧 [NEXTJS] Sending email to ${to}`);
     console.log(`📧 [NEXTJS] Subject: ${subject}`);
+    if (attachments && attachments.length > 0) {
+      console.log(`📎 [NEXTJS] Attaching ${attachments.length} file(s)`);
+    }
 
-    // Use verified domain email if available, otherwise fallback to Resend test domain
-    const fromEmail =
-      process.env.FROM_EMAIL || "Trevnoctilla <onboarding@resend.dev>";
-
-    const { data, error } = await resend.emails.send({
-      from: fromEmail,
+    const emailPayload: any = {
+      from: process.env.FROM_EMAIL || "Trevnoctilla <onboarding@resend.dev>",
       to,
       subject,
       html,
       text,
-    });
+    };
+
+    // Add attachments if provided
+    // Format: [{ filename: "invoice.pdf", content: base64String, contentType: "application/pdf" }]
+    if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+      emailPayload.attachments = attachments.map((att: any) => ({
+        filename: att.filename,
+        content: att.content, // Base64 encoded content
+        content_type: att.contentType || "application/pdf",
+      }));
+    }
+
+    const { data, error } = await resend.emails.send(emailPayload);
 
     if (error) {
       console.error(`❌ [NEXTJS] Resend error:`, error);
