@@ -42,7 +42,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`✅ [NEXTJS] Email sent successfully to ${to} (ID: ${data?.id})`);
+    console.log(
+      `✅ [NEXTJS] Email sent successfully to ${to} (ID: ${data?.id})`
+    );
     return NextResponse.json({
       success: true,
       message: "Email sent successfully",
@@ -56,4 +58,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
