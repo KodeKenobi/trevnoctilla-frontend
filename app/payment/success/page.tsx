@@ -430,6 +430,13 @@ function PaymentSuccessContent() {
                     );
                   }
                   // For subscriptions or other payments, show standard button
+                  // Auto-redirect subscriptions to dashboard after 2 seconds
+                  if (isSubscription) {
+                    setTimeout(() => {
+                      router.push("/dashboard");
+                    }, 2000);
+                  }
+
                   return (
                     <button
                       onClick={() => {

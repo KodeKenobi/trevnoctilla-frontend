@@ -330,11 +330,38 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // DO NOT ADD return_url, cancel_url, notify_url - they break the signature for subscriptions
-    // For subscriptions, PayFast requires these URLs to be configured in dashboard (Settings > Integration)
-    // Since you can't find that setting, PayFast will use subscription_notify_webhook=true to send webhooks
-    // The webhook endpoint might be configured at account level or PayFast may use a default
-    // You may need to contact PayFast support to configure the notify_url for subscriptions
+    // Add return URLs for subscriptions (PayFast supports these in payment data)
+    // These are needed so PayFast redirects user back after payment
+    if (subscription_type) {
+      // Use production base URL for redirects
+      const returnUrl =
+        PAYFAST_CONFIG.RETURN_URL || `${finalBaseUrl}/payment/success`;
+      const cancelUrl =
+        PAYFAST_CONFIG.CANCEL_URL || `${finalBaseUrl}/payment/cancel`;
+      const notifyUrl =
+        PAYFAST_CONFIG.NOTIFY_URL || `${finalBaseUrl}/payment/notify`;
+
+      paymentData.return_url = returnUrl;
+      paymentData.cancel_url = cancelUrl;
+      paymentData.notify_url = notifyUrl;
+
+      console.log("📤 Added redirect URLs for subscription:");
+      console.log("  return_url:", returnUrl);
+      console.log("  cancel_url:", cancelUrl);
+      console.log("  notify_url:", notifyUrl);
+    } else {
+      // For one-time payments, also add return URLs
+      const returnUrl =
+        PAYFAST_CONFIG.RETURN_URL || `${finalBaseUrl}/payment/success`;
+      const cancelUrl =
+        PAYFAST_CONFIG.CANCEL_URL || `${finalBaseUrl}/payment/cancel`;
+      const notifyUrl =
+        PAYFAST_CONFIG.NOTIFY_URL || `${finalBaseUrl}/payment/notify`;
+
+      paymentData.return_url = returnUrl;
+      paymentData.cancel_url = cancelUrl;
+      paymentData.notify_url = notifyUrl;
+    }
 
     // Generate signature
     // CRITICAL: For subscriptions, passphrase MUST be included in signature
