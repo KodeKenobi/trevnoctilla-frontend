@@ -46,17 +46,24 @@ const authOptions: NextAuthOptions = {
           // Otherwise, use localhost for development, production URL for production
           const apiBaseUrl = (() => {
             if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-              console.log("🔧 NextAuth: Using NEXT_PUBLIC_API_BASE_URL:", process.env.NEXT_PUBLIC_API_BASE_URL);
+              console.log(
+                "🔧 NextAuth: Using NEXT_PUBLIC_API_BASE_URL:",
+                process.env.NEXT_PUBLIC_API_BASE_URL
+              );
               return process.env.NEXT_PUBLIC_API_BASE_URL;
             }
             const isProduction = process.env.NODE_ENV === "production";
             const url = isProduction
               ? "https://web-production-737b.up.railway.app"
               : "http://localhost:5000";
-            console.log(`🔧 NextAuth: NODE_ENV: ${process.env.NODE_ENV || "undefined"}, Using base URL: ${url}`);
+            console.log(
+              `🔧 NextAuth: NODE_ENV: ${
+                process.env.NODE_ENV || "undefined"
+              }, Using base URL: ${url}`
+            );
             return url;
           })();
-          
+
           console.log("🔐 NextAuth: Using API base URL:", apiBaseUrl);
 
           // Call backend API to verify credentials
