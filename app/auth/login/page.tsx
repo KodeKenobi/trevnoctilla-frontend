@@ -53,9 +53,9 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password. Please try again.");
       } else if (result?.ok) {
-        setSuccess("Login successful! Authenticating with backend...");
+        setSuccess("Login successful!");
 
-        // Also get a backend JWT token from NextAuth session
+        // Get backend JWT token silently
         try {
           const tokenResponse = await fetch(
             getApiUrl("/auth/get-token-from-session"),
@@ -77,13 +77,11 @@ export default function LoginPage() {
 
           if (tokenResponse.ok) {
             const backendData = await tokenResponse.json();
-            // Store backend JWT token for API calls
             localStorage.setItem("auth_token", backendData.access_token);
             localStorage.setItem("user_data", JSON.stringify(backendData.user));
           }
         } catch (backendError) {
-          console.error("Backend auth failed (non-critical):", backendError);
-          // Don't block login if backend auth fails - NextAuth session is enough for UI
+          // Silent failure - NextAuth session is enough for UI
         }
 
         // Get the session to check user role

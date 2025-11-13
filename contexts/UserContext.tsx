@@ -41,7 +41,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     try {
       // If we have a NextAuth session, use it AND get backend token
       if (session?.user) {
-        console.log("🔍 Using NextAuth session:", session.user);
         const userFromSession: User = {
           id: parseInt(session.user.id),
           email: session.user.email || "",
@@ -55,9 +54,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         // If no backend token exists, get one from NextAuth session
         const existingToken = localStorage.getItem("auth_token");
         if (!existingToken && session.user.email) {
-          console.log(
-            "🔍 No backend token found, getting one from NextAuth session..."
-          );
           try {
             // Use endpoint that auto-creates/updates user from NextAuth session
             const tokenResponse = await fetch(
@@ -85,13 +81,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 "user_data",
                 JSON.stringify(backendData.user)
               );
-              console.log("✅ Backend token obtained from NextAuth session");
-            } else {
-              console.log("⚠️ Could not get backend token (non-critical)");
             }
           } catch (backendError) {
-            console.error("Backend auth failed (non-critical):", backendError);
-            // Don't block - NextAuth session is enough for UI
+            // Silent failure - NextAuth session is enough for UI
           }
         }
 
@@ -101,10 +93,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       // Fallback to localStorage token check
       const token = localStorage.getItem("auth_token");
-      console.log("🔍 Checking auth status, token exists:", !!token);
 
       if (!token) {
-        console.log("🔍 No token found, setting loading to false");
         setLoading(false);
         return;
       }
@@ -114,22 +104,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (storedUser) {
         try {
           const userData = JSON.parse(storedUser);
-          console.log("🔍 Using stored user data:", userData);
-          console.log("🔍 User email from stored data:", userData.email);
           setUser(userData);
           setLoading(false);
           return;
         } catch (error) {
-          console.log(
-            "🔍 Failed to parse stored user data, trying JWT fallback"
-          );
+          // Failed to parse stored user data, trying JWT fallback
         }
       }
 
       // Fallback: Try to decode the JWT token to get user info
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
-        console.log("🔍 JWT payload:", payload);
 
         // Create a user object from the token
         const userFromToken: User = {
@@ -141,35 +126,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           last_login: new Date().toISOString(),
         };
 
-        console.log("🔍 Using user data from token:", userFromToken);
         setUser(userFromToken);
         setLoading(false);
         return;
       } catch (jwtError) {
-        console.log("🔍 JWT decode failed, trying profile endpoint");
+        // JWT decode failed, trying profile endpoint
       }
 
-      console.log("🔍 Making profile request with token");
       const response = await fetch(getApiUrl("/auth/profile"), {
         headers: getAuthHeaders(token),
       });
 
-      console.log("🔍 Profile response status:", response.status);
-
       if (response.ok) {
         const userData = await response.json();
-        console.log("🔍 Profile data received:", userData);
         setUser(userData);
       } else {
-        console.log("🔍 Auth check failed, removing token");
         localStorage.removeItem("auth_token");
       }
     } catch (error) {
-      console.error("🔍 Error checking auth status:", error);
-      // Don't remove token on network errors, just log
-      console.log("🔍 Network error during auth check, keeping token");
+      // Network error during auth check, keeping token
     } finally {
-      console.log("🔍 Setting loading to false");
       setLoading(false);
     }
   };
