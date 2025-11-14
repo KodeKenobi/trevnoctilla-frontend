@@ -31,6 +31,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -85,6 +86,8 @@ export default function RegisterPage() {
     }
 
     try {
+      setLoadingMessage("Creating your account...");
+
       // Call the authentication API
       const response = await fetch(getApiUrl("/auth/register"), {
         method: "POST",
@@ -97,13 +100,17 @@ export default function RegisterPage() {
         }),
       });
 
+      setLoadingMessage("Processing your registration...");
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess("Account created successfully! Auto-logging in...");
+        setLoadingMessage("Logging you in...");
+        setSuccess("Account created successfully! Logging you in...");
+
         // Auto-login after successful registration
         const loginSuccess = await login(formData.email, formData.password);
         if (loginSuccess) {
+          setLoadingMessage("Redirecting to dashboard...");
           setTimeout(() => {
             // Check for pending subscription
             const pendingSubscription = sessionStorage.getItem(
@@ -138,7 +145,7 @@ export default function RegisterPage() {
                 router.push("/dashboard");
               }
             }
-          }, 1500);
+          }, 500);
         } else {
           router.push("/auth/login");
         }
@@ -149,6 +156,7 @@ export default function RegisterPage() {
       setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
+      setLoadingMessage("");
     }
   };
 
@@ -439,10 +447,13 @@ export default function RegisterPage() {
                 !passwordValidation.isValid ||
                 formData.password !== formData.confirmPassword
               }
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <Loader className="h-4 w-4 animate-spin" />
+                <>
+                  <Loader className="h-4 w-4 animate-spin" />
+                  <span>{loadingMessage || "Processing..."}</span>
+                </>
               ) : (
                 "Create account"
               )}
