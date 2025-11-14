@@ -94,6 +94,14 @@ export default function PayFastForm({
         // if (email_address) requestData.email_address = email_address.trim();
         // if (cell_number) requestData.cell_number = cell_number.trim();
 
+        // Add return URLs for one-time payments (not subscriptions)
+        // These must be included for "$1" payments to match test script
+        if (!subscription_type) {
+          if (return_url) requestData.return_url = return_url.trim();
+          if (cancel_url) requestData.cancel_url = cancel_url.trim();
+          if (notify_url) requestData.notify_url = notify_url.trim();
+        }
+
         // Add subscription fields if provided
         if (subscription_type) {
           requestData.subscription_type = subscription_type;

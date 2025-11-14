@@ -136,6 +136,10 @@ export async function POST(request: NextRequest) {
       item_description,
       custom_str1,
       custom_str2,
+      // Return URLs (for one-time payments)
+      return_url,
+      cancel_url,
+      notify_url,
       // Subscription fields
       subscription_type,
       billing_date,
@@ -272,15 +276,39 @@ export async function POST(request: NextRequest) {
       ? productionBaseUrl
       : baseUrl;
 
-    // Build payment data EXACTLY like the working simple script
-    // CRITICAL: Match the working form EXACTLY - no extra fields!
-    // Working form has: merchant_id, merchant_key, amount, item_name, subscription fields only
+    // Build payment data matching test script order
+    // Test script order: merchant_id, merchant_key, return_url, cancel_url, notify_url, amount, item_name
     const paymentData: Record<string, string> = {
       merchant_id: PAYFAST_CONFIG.MERCHANT_ID,
       merchant_key: PAYFAST_CONFIG.MERCHANT_KEY,
-      amount: parseFloat(amount).toFixed(2),
-      item_name: String(item_name).trim(),
     };
+
+    // Add return URLs for one-time payments (matching test script order)
+    // For subscriptions: NO return_url, cancel_url, or notify_url in payload
+    // These are all configured in PayFast dashboard for subscriptions
+    if (!subscription_type) {
+      // Use provided URLs from request body, or construct from config
+      const returnUrl =
+        return_url ||
+        PAYFAST_CONFIG.RETURN_URL ||
+        `${finalBaseUrl}/payment/success`;
+      const cancelUrl =
+        cancel_url ||
+        PAYFAST_CONFIG.CANCEL_URL ||
+        `${finalBaseUrl}/payment/cancel`;
+      const notifyUrl =
+        notify_url ||
+        PAYFAST_CONFIG.NOTIFY_URL ||
+        `${finalBaseUrl}/payment/notify`;
+
+      paymentData.return_url = returnUrl;
+      paymentData.cancel_url = cancelUrl;
+      paymentData.notify_url = notifyUrl;
+    }
+
+    // Add amount and item_name (matching test script order)
+    paymentData.amount = parseFloat(amount).toFixed(2);
+    paymentData.item_name = String(item_name).trim();
 
     // Add subscription fields in EXACT order as working form
     if (subscription_type) {
@@ -328,23 +356,6 @@ export async function POST(request: NextRequest) {
           }
         }
       }
-    }
-
-    // For subscriptions: NO return_url, cancel_url, or notify_url in payload
-    // These are all configured in PayFast dashboard for subscriptions
-    // Only add URLs for one-time payments
-    if (!subscription_type) {
-      // For one-time payments, also add return URLs
-      const returnUrl =
-        PAYFAST_CONFIG.RETURN_URL || `${finalBaseUrl}/payment/success`;
-      const cancelUrl =
-        PAYFAST_CONFIG.CANCEL_URL || `${finalBaseUrl}/payment/cancel`;
-      const notifyUrl =
-        PAYFAST_CONFIG.NOTIFY_URL || `${finalBaseUrl}/payment/notify`;
-
-      paymentData.return_url = returnUrl;
-      paymentData.cancel_url = cancelUrl;
-      paymentData.notify_url = notifyUrl;
     }
 
     // Generate signature
