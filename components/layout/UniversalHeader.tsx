@@ -250,23 +250,28 @@ export default function UniversalHeader() {
                         </div>
                       </div>
                       <div className="p-2">
-                        {/* Switch to Client Dashboard */}
-                        <Link
-                          href="/dashboard"
-                          className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors mb-2"
-                        >
-                          <User className="h-4 w-4" />
-                          <span>Client Dashboard</span>
-                        </Link>
+                        {/* Only show dashboard links for super admin */}
+                        {isSuperAdmin && (
+                          <>
+                            {/* Switch to Client Dashboard */}
+                            <Link
+                              href="/dashboard"
+                              className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors mb-2"
+                            >
+                              <User className="h-4 w-4" />
+                              <span>Client Dashboard</span>
+                            </Link>
 
-                        {/* Switch to Admin Dashboard */}
-                        <Link
-                          href="/admin"
-                          className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors mb-2"
-                        >
-                          <Shield className="h-4 w-4" />
-                          <span>Admin Dashboard</span>
-                        </Link>
+                            {/* Switch to Admin Dashboard */}
+                            <Link
+                              href="/admin"
+                              className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors mb-2"
+                            >
+                              <Shield className="h-4 w-4" />
+                              <span>Admin Dashboard</span>
+                            </Link>
+                          </>
+                        )}
 
                         <button
                           onClick={logout}
@@ -367,23 +372,28 @@ export default function UniversalHeader() {
                       </div>
                     </div>
                     <div className="p-2">
-                      {/* Switch to Client Dashboard */}
-                      <Link
-                        href="/dashboard"
-                        className="w-full flex items-center space-x-2 px-2 py-1.5 text-xs text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors mb-1"
-                      >
-                        <User className="h-3 w-3" />
-                        <span>Client Dashboard</span>
-                      </Link>
+                      {/* Only show dashboard links for super admin */}
+                      {isSuperAdmin && (
+                        <>
+                          {/* Switch to Client Dashboard */}
+                          <Link
+                            href="/dashboard"
+                            className="w-full flex items-center space-x-2 px-2 py-1.5 text-xs text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors mb-1"
+                          >
+                            <User className="h-3 w-3" />
+                            <span>Client Dashboard</span>
+                          </Link>
 
-                      {/* Switch to Admin Dashboard */}
-                      <Link
-                        href="/admin"
-                        className="w-full flex items-center space-x-2 px-2 py-1.5 text-xs text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors mb-1"
-                      >
-                        <Shield className="h-3 w-3" />
-                        <span>Admin Dashboard</span>
-                      </Link>
+                          {/* Switch to Admin Dashboard */}
+                          <Link
+                            href="/admin"
+                            className="w-full flex items-center space-x-2 px-2 py-1.5 text-xs text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors mb-1"
+                          >
+                            <Shield className="h-3 w-3" />
+                            <span>Admin Dashboard</span>
+                          </Link>
+                        </>
+                      )}
 
                       <button
                         onClick={logout}
