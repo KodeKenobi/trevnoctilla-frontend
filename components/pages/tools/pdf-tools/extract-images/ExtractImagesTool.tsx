@@ -85,7 +85,13 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
     });
 
     if (completed) {
-      window.open(downloadUrl, "_blank");
+      // Use proper download method instead of window.open
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 

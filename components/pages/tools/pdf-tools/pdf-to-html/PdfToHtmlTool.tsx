@@ -36,6 +36,8 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
   const [convertedFilename, setConvertedFilename] = useState<string | null>(
     null
   );
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (uploadedFile && !result && !isProcessing) {
@@ -92,10 +94,11 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
   const previewHtml = () => {
     if (!convertedFilename) return;
     // Use the preview_url from response or construct it
-    const previewUrl = result?.data?.preview_url
+    const url = result?.data?.preview_url
       ? `${getApiUrl("")}${result.data.preview_url}`
-      : `/preview_html/${convertedFilename}`;
-    window.open(previewUrl, "_blank");
+      : `${getApiUrl("")}/preview_html/${convertedFilename}`;
+    setPreviewUrl(url);
+    setShowPreview(true);
   };
 
   const downloadHtml = async () => {
@@ -115,7 +118,13 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
     });
 
     if (completed) {
-      window.open(downloadUrl, "_blank");
+      // Use proper download method instead of window.open
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = convertedFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -210,6 +219,33 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
               <p className="text-white text-sm sm:text-base font-mono break-all">
                 {convertedFilename}
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Preview Modal */}
+        {showPreview && previewUrl && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-gray-900 rounded-xl border border-white/10 w-full max-w-6xl h-full max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between p-4 border-b border-white/10">
+                <h3 className="text-white font-medium text-lg">HTML Preview</h3>
+                <button
+                  onClick={() => {
+                    setShowPreview(false);
+                    setPreviewUrl(null);
+                  }}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <iframe
+                  src={previewUrl}
+                  className="w-full h-full border-0"
+                  title="HTML Preview"
+                />
+              </div>
             </div>
           </div>
         )}
