@@ -83,6 +83,15 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const handleViewAd = () => {
     const monetagUrl = "https://otieu.com/4/10115019";
     console.log("🎯 Opening monetag link:", monetagUrl);
+
+    // Store download info in localStorage for success page
+    if (typeof window !== "undefined" && downloadUrl) {
+      localStorage.setItem("ad_download_url", downloadUrl);
+      if (fileName) {
+        localStorage.setItem("ad_file_name", fileName);
+      }
+    }
+
     try {
       // Always open as a regular tab
       let popTab = window.open(monetagUrl, "_blank", "noopener,noreferrer");
@@ -94,9 +103,8 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
         setHideWhileWaiting(false);
         return;
       }
-      waitingReturnRef.current = true;
-      setAdOpened(true);
-      setHideWhileWaiting(true);
+      // Redirect to success page
+      window.location.href = "/ad-success";
     } catch (error) {
       console.error("❌ Error opening link:", error);
       // If we error, prompt manual open
