@@ -103,7 +103,13 @@ export const HtmlToPdfTool: React.FC<HtmlToPdfToolProps> = ({
     });
 
     if (completed) {
-      window.open(downloadUrl, "_blank");
+      // Use proper download method instead of window.open
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = convertedFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
