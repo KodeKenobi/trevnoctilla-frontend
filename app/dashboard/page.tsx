@@ -1100,7 +1100,7 @@ function DashboardContent() {
               </div>
               <div className="flex items-center gap-4">
                 <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-accent/50 rounded-xl border border-border backdrop-blur-sm">
-                  <div className="w-3 h-3 bg-[#22c55e] rounded-full animate-pulse"></div>
+                  <div className="w-3 h-3 bg-[#ffffff] rounded-full animate-pulse"></div>
                   <span className="text-sm font-medium text-foreground">
                     Online
                   </span>
