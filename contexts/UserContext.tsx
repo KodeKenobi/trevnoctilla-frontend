@@ -11,6 +11,9 @@ interface User {
   is_active: boolean;
   created_at: string;
   last_login?: string;
+  subscription_tier?: string;
+  monthly_call_limit?: number;
+  monthly_used?: number;
 }
 
 interface UserContextType {
