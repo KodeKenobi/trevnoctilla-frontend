@@ -370,8 +370,14 @@ export async function POST(request: NextRequest) {
                 `[${requestId}] 🔄 Calling backend to upgrade subscription...`
               );
               console.log(`[${requestId}] Backend URL: ${backendUrl}`);
-              console.log(`[${requestId}] User ID: ${userId || "not provided"}`);
-              console.log(`[${requestId}] User Email (from PayFast): ${userEmail || "not provided"}`);
+              console.log(
+                `[${requestId}] User ID: ${userId || "not provided"}`
+              );
+              console.log(
+                `[${requestId}] User Email (from PayFast): ${
+                  userEmail || "not provided"
+                }`
+              );
               console.log(`[${requestId}] Plan ID: ${planId}`);
 
               const upgradeResponse = await fetch(
