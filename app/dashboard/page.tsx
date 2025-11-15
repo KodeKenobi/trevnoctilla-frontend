@@ -248,6 +248,55 @@ function DashboardContent() {
     }
   }, [user]);
 
+  // Check for pending payment and upgrade user when landing on dashboard
+  // This handles the case where user returns from PayFast after successful payment
+  useEffect(() => {
+    const checkPendingPayment = async () => {
+      try {
+        console.log("🔍 [DASHBOARD] Checking for pending payment...");
+        const response = await fetch("/api/payments/check-pending", {
+          method: "POST",
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.hasPendingPayment && data.upgraded) {
+            console.log(
+              `✅ [DASHBOARD] User upgraded to ${data.plan} plan! Refreshing user data...`
+            );
+            // Clear cached user data to force fresh fetch
+            localStorage.removeItem("user_data");
+            // Refresh user data to show new tier
+            if (checkAuthStatus) {
+              checkAuthStatus();
+            }
+          } else if (data.hasPendingPayment && !data.upgraded) {
+            console.error(
+              `❌ [DASHBOARD] Pending payment found but upgrade failed:`,
+              data.error
+            );
+          } else {
+            console.log("🔍 [DASHBOARD] No pending payment found");
+          }
+        } else {
+          console.error(
+            `❌ [DASHBOARD] Failed to check pending payment: ${response.status}`
+          );
+        }
+      } catch (error) {
+        console.error("Error checking pending payment:", error);
+      }
+    };
+
+    // Run check on mount with a delay to ensure session is ready
+    const timeoutId = setTimeout(() => {
+      checkPendingPayment();
+    }, 1500);
+
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - run only on mount
+
   // Refresh user data when landing on dashboard (in case of payment redirect)
   // This ensures user tier is updated after subscription payment
   useEffect(() => {

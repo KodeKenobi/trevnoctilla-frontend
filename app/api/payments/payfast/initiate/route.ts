@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import crypto from "crypto";
+import { storePendingPayment } from "@/lib/pending-payments";
 
 // PayFast configuration
 const PAYFAST_CONFIG = {
@@ -129,6 +132,17 @@ function generatePayFastSignature(data: Record<string, string>): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Get user email from session
+    const session = await getServerSession(authOptions);
+    const userEmail = session?.user?.email;
+
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: "User must be authenticated to initiate payment" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const {
       amount,
@@ -459,6 +473,16 @@ export async function POST(request: NextRequest) {
       response.debug.signature_string = debugString;
       response.debug.field_order = debugFieldOrder;
     }
+
+    // Store pending payment for this user
+    // Extract plan from item_name (e.g., "Production Plan - Monthly Subscription" -> "production")
+    const planMatch = item_name.match(/(production|premium|enterprise)/i);
+    const plan = planMatch ? planMatch[1].toLowerCase() : "production"; // Default to production
+
+    storePendingPayment(userEmail, plan, paymentData.amount);
+    console.log(
+      `💾 [PAYMENT INITIATE] Stored pending payment for ${userEmail}: ${plan} plan (${paymentData.amount})`
+    );
 
     return NextResponse.json(response);
   } catch (error) {

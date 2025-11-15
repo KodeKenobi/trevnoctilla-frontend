@@ -42,11 +42,12 @@ function verifyPayFastSignature(data: Record<string, string>): boolean {
   const receivedSignature = data.signature || "";
 
   // Filter out empty values and signature field
+  // CRITICAL: PayFast ITN signature includes ALL fields except signature itself
+  // This includes merchant_key, merchant_id, and all other fields
   const filteredData: Record<string, string> = {};
   Object.keys(data).forEach((key) => {
     if (
-      key !== "signature" &&
-      key !== "merchant_key" && // Excluded from signature
+      key !== "signature" && // Only exclude signature field
       data[key] !== "" &&
       data[key] !== null &&
       data[key] !== undefined
