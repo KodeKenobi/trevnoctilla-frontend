@@ -57,7 +57,7 @@ export function cleanupOldPayments() {
   const oneHourAgo = Date.now() - 60 * 60 * 1000;
   let cleaned = 0;
 
-  for (const [email, payment] of pendingPayments.entries()) {
+  for (const [email, payment] of Array.from(pendingPayments.entries())) {
     if (payment.timestamp < oneHourAgo) {
       pendingPayments.delete(email);
       cleaned++;

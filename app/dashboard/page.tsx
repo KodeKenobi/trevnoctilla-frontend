@@ -380,7 +380,6 @@ function DashboardContent() {
       handleSubscriptionUpgrade();
     }
   }, [user, searchParams, checkAuthStatus, showSuccess]);
->>>>>>> 4cd326f8 (Update subscription flow, billing UI, email templates, and user deletion)
 
   // Refresh user data when landing on dashboard (in case of payment redirect)
   // This ensures user tier is updated after subscription payment
