@@ -264,23 +264,28 @@ function DashboardContent() {
     }
   }, [user]);
 
-  // Refresh user data when redirected from payment
+  // Refresh user data when landing on dashboard (in case of payment redirect)
+  // This ensures user tier is updated after subscription payment
   useEffect(() => {
-    // Check if we just came from a payment redirect (PayFast redirects to /dashboard)
-    // Wait a bit for webhook to process, then refresh user data
-    const paymentRedirect = sessionStorage.getItem("payment_redirect");
-    if (paymentRedirect === "true" && user && checkAuthStatus) {
-      console.log("🔄 Payment redirect detected, refreshing user data...");
-      // Clear the flag
-      sessionStorage.removeItem("payment_redirect");
-      // Wait 2 seconds for webhook to process, then refresh
-      const timer = setTimeout(() => {
-        // Clear cached user data
-        localStorage.removeItem("user_data");
-        // Refresh user data
-        checkAuthStatus();
-      }, 2000);
-      return () => clearTimeout(timer);
+    if (user && checkAuthStatus) {
+      // Check if we should refresh user data
+      // Refresh if user data is stale (older than 30 seconds) or on first load
+      const lastRefresh = sessionStorage.getItem("user_data_last_refresh");
+      const shouldRefresh = !lastRefresh || (Date.now() - parseInt(lastRefresh)) > 30000;
+      
+      if (shouldRefresh) {
+        console.log("🔄 Refreshing user data on dashboard load...");
+        // Wait 2 seconds for webhook to process if coming from payment
+        const timer = setTimeout(() => {
+          // Clear cached user data to force fresh fetch
+          localStorage.removeItem("user_data");
+          // Refresh user data
+          checkAuthStatus();
+          // Update last refresh time
+          sessionStorage.setItem("user_data_last_refresh", Date.now().toString());
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
     }
   }, [user, checkAuthStatus]);
 
