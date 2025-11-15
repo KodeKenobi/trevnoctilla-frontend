@@ -40,7 +40,34 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuthStatus = async () => {
     try {
-      // If we have a NextAuth session, use it AND get backend token
+      // Always try to get fresh user data from backend profile endpoint
+      // This ensures we get subscription_tier and other backend-specific fields
+      const token = localStorage.getItem("auth_token");
+      
+      if (token) {
+        console.log("🔍 Fetching fresh user data from profile endpoint...");
+        try {
+          const response = await fetch(getApiUrl("/auth/profile"), {
+            headers: getAuthHeaders(token),
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            console.log("🔍 Profile data received:", userData);
+            // Store fresh user data
+            localStorage.setItem("user_data", JSON.stringify(userData));
+            setUser(userData);
+            setLoading(false);
+            return;
+          } else {
+            console.log("🔍 Profile endpoint failed, falling back to session");
+          }
+        } catch (profileError) {
+          console.log("🔍 Profile fetch error, falling back to session:", profileError);
+        }
+      }
+
+      // Fallback: If we have a NextAuth session, use it
       if (session?.user) {
         console.log("🔍 Using NextAuth session:", session.user);
         const userFromSession: User = {
@@ -50,6 +77,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           is_active: (session.user as any).is_active,
           created_at: new Date().toISOString(),
           last_login: new Date().toISOString(),
+          subscription_tier: (session.user as any).subscription_tier || "free",
         };
         setUser(userFromSession);
 
@@ -87,6 +115,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 JSON.stringify(backendData.user)
               );
               console.log("✅ Backend token obtained from NextAuth session");
+              // Update user with backend data (includes subscription_tier)
+              setUser(backendData.user);
             } else {
               console.log("⚠️ Could not get backend token (non-critical)");
             }
