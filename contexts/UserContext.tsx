@@ -46,7 +46,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       // Always try to get fresh user data from backend profile endpoint
       // This ensures we get subscription_tier and other backend-specific fields
       const token = localStorage.getItem("auth_token");
-      
+
       if (token) {
         console.log("🔍 Fetching fresh user data from profile endpoint...");
         try {
@@ -66,7 +66,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             console.log("🔍 Profile endpoint failed, falling back to session");
           }
         } catch (profileError) {
-          console.log("🔍 Profile fetch error, falling back to session:", profileError);
+          console.log(
+            "🔍 Profile fetch error, falling back to session:",
+            profileError
+          );
         }
       }
 
@@ -133,8 +136,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Fallback to localStorage token check
-      const token = localStorage.getItem("auth_token");
+      // Fallback to localStorage token check (token already defined above)
       console.log("🔍 Checking auth status, token exists:", !!token);
 
       if (!token) {
