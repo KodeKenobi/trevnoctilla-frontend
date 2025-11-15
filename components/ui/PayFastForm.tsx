@@ -99,7 +99,7 @@ export default function PayFastForm({
         // Always include return_url and cancel_url for redirects
         if (return_url) requestData.return_url = return_url.trim();
         if (cancel_url) requestData.cancel_url = cancel_url.trim();
-        
+
         // Only include notify_url for one-time payments
         // For subscriptions, notify_url is configured in PayFast dashboard
         if (!subscription_type) {

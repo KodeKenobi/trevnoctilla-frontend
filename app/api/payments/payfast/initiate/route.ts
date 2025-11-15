@@ -286,14 +286,18 @@ export async function POST(request: NextRequest) {
     // Add return URLs for all payments
     // PayFast requires return_url in payload to redirect users back after payment
     // For subscriptions: redirect to dashboard, for one-time payments: redirect to success page
-    const isSubscription = subscription_type === "1" || subscription_type === "2" || subscription_type === 1 || subscription_type === 2;
-    
+    const isSubscription =
+      subscription_type === "1" ||
+      subscription_type === "2" ||
+      subscription_type === 1 ||
+      subscription_type === 2;
+
     // Use provided URLs from request body, or construct from config
     const returnUrl =
       return_url ||
-      (isSubscription 
-        ? `${finalBaseUrl}/dashboard`  // Subscriptions go to dashboard
-        : PAYFAST_CONFIG.RETURN_URL || `${finalBaseUrl}/payment/success`);  // One-time payments go to success page
+      (isSubscription
+        ? `${finalBaseUrl}/dashboard` // Subscriptions go to dashboard
+        : PAYFAST_CONFIG.RETURN_URL || `${finalBaseUrl}/payment/success`); // One-time payments go to success page
     const cancelUrl =
       cancel_url ||
       PAYFAST_CONFIG.CANCEL_URL ||
@@ -302,7 +306,7 @@ export async function POST(request: NextRequest) {
     // Always include return_url and cancel_url for redirects
     paymentData.return_url = returnUrl;
     paymentData.cancel_url = cancelUrl;
-    
+
     // Only include notify_url for one-time payments
     // For subscriptions, notify_url is configured in PayFast dashboard
     if (!subscription_type) {

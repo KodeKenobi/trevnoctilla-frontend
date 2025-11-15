@@ -343,8 +343,9 @@ export async function POST(request: NextRequest) {
           const planId = data.custom_str1 || "";
           const userId = data.custom_str2 || "";
           // PayFast sends email_address in webhook (buyer enters it on PayFast page)
-          // Fallback: use userId to look up user if email not available
-          const userEmail = data.email_address || "";
+          // CRITICAL: For subscriptions, user_id is more reliable than email
+          // PayFast may not send email_address in subscription webhooks
+          const userEmail = data.email_address?.trim() || "";
           const itemName = data.item_name || "";
 
           // Determine plan name from item_name or plan_id
@@ -356,8 +357,8 @@ export async function POST(request: NextRequest) {
           }
 
           // Call backend to upgrade subscription
-          // Use email if available, otherwise use userId (backend can look up by ID)
-          if (planId && (userEmail || userId)) {
+          // CRITICAL: Prioritize user_id over email for subscriptions
+          if (planId && (userId || userEmail)) {
             try {
               const backendUrl =
                 process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -369,7 +370,8 @@ export async function POST(request: NextRequest) {
                 `[${requestId}] 🔄 Calling backend to upgrade subscription...`
               );
               console.log(`[${requestId}] Backend URL: ${backendUrl}`);
-              console.log(`[${requestId}] User Email: ${userEmail}`);
+              console.log(`[${requestId}] User ID: ${userId || "not provided"}`);
+              console.log(`[${requestId}] User Email (from PayFast): ${userEmail || "not provided"}`);
               console.log(`[${requestId}] Plan ID: ${planId}`);
 
               const upgradeResponse = await fetch(
@@ -380,8 +382,8 @@ export async function POST(request: NextRequest) {
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                    user_email: userEmail, // PayFast sends this in webhook
-                    user_id: userId || undefined, // Fallback if email not available
+                    user_id: userId || undefined, // Prioritize user_id for subscriptions
+                    user_email: userEmail || undefined, // Fallback if user_id not available
                     plan_id: planId,
                     plan_name: planName,
                     amount: amount,
