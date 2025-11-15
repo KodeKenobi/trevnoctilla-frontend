@@ -314,6 +314,7 @@ function DashboardContent() {
             email: user.email,
             password: "Kopenikus0218!",
             role: user.role === "super_admin" ? "super_admin" : "user",
+            subscription_tier: user.subscription_tier || "free",
           }),
         }
       );

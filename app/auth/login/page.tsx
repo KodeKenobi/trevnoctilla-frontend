@@ -71,6 +71,7 @@ export default function LoginPage() {
                   formData.email === "kodekenobi@gmail.com"
                     ? "super_admin"
                     : "user",
+                subscription_tier: "free", // Will be updated by backend from database
               }),
             }
           );

@@ -117,6 +117,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                     (session.user as any)?.role === "super_admin"
                       ? "super_admin"
                       : "user",
+                  subscription_tier:
+                    (session.user as any)?.subscription_tier || "free",
                 }),
               }
             );

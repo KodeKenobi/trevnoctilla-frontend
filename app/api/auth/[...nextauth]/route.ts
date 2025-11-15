@@ -76,6 +76,7 @@ const authOptions: NextAuthOptions = {
               name: data.user.email,
               role: data.user.role || "user",
               is_active: data.user.is_active !== false,
+              subscription_tier: data.user.subscription_tier || "free",
             };
           }
 
@@ -102,6 +103,7 @@ const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.is_active = user.is_active;
+        token.subscription_tier = (user as any).subscription_tier || "free";
       }
       return token;
     },
@@ -110,8 +112,12 @@ const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as "user" | "admin" | "super_admin";
         session.user.is_active = token.is_active as boolean;
+        (session.user as any).subscription_tier =
+          (token.subscription_tier as string) || "free";
         console.log(
-          `[NextAuth Session] Session created for: ${session.user.email}`
+          `[NextAuth Session] Session created for: ${
+            session.user.email
+          } (tier: ${(session.user as any).subscription_tier})`
         );
       }
       return session;
