@@ -94,11 +94,15 @@ export default function PayFastForm({
         // if (email_address) requestData.email_address = email_address.trim();
         // if (cell_number) requestData.cell_number = cell_number.trim();
 
-        // Add return URLs for one-time payments (not subscriptions)
-        // These must be included for "$1" payments to match test script
+        // Add return URLs for all payments
+        // PayFast requires return_url in payload to redirect users back
+        // Always include return_url and cancel_url for redirects
+        if (return_url) requestData.return_url = return_url.trim();
+        if (cancel_url) requestData.cancel_url = cancel_url.trim();
+        
+        // Only include notify_url for one-time payments
+        // For subscriptions, notify_url is configured in PayFast dashboard
         if (!subscription_type) {
-          if (return_url) requestData.return_url = return_url.trim();
-          if (cancel_url) requestData.cancel_url = cancel_url.trim();
           if (notify_url) requestData.notify_url = notify_url.trim();
         }
 

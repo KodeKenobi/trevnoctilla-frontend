@@ -291,7 +291,7 @@ function PaymentContent() {
             } - Recurring monthly subscription`}
             return_url={`${
               typeof window !== "undefined" ? window.location.origin : ""
-            }/payment/success?plan=${planId}`}
+            }/dashboard`}
             cancel_url={`${
               typeof window !== "undefined" ? window.location.origin : ""
             }/payment/cancel?plan=${planId}`}
