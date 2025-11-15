@@ -248,54 +248,139 @@ function DashboardContent() {
     }
   }, [user]);
 
-  // Check for pending payment and upgrade user when landing on dashboard
-  // This handles the case where user returns from PayFast after successful payment
+  // Handle PayFast subscription upgrade after payment redirect
+  // This matches the test script logic - manually trigger upgrade immediately
   useEffect(() => {
-    const checkPendingPayment = async () => {
-      try {
-        console.log("🔍 [DASHBOARD] Checking for pending payment...");
-        const response = await fetch("/api/payments/check-pending", {
-          method: "POST",
-        });
+    const handleSubscriptionUpgrade = async () => {
+      // Check for PayFast return parameters
+      const paymentStatus = searchParams.get("payment_status");
+      const subscriptionType = searchParams.get("subscription_type");
+      const itemName = searchParams.get("item_name");
+      const customStr1 = searchParams.get("custom_str1"); // Plan ID
+      const customStr2 = searchParams.get("custom_str2"); // User ID
+      const mPaymentId = searchParams.get("m_payment_id");
+      const pfPaymentId = searchParams.get("pf_payment_id");
+      const amount = searchParams.get("amount");
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.hasPendingPayment && data.upgraded) {
-            console.log(
-              `✅ [DASHBOARD] User upgraded to ${data.plan} plan! Refreshing user data...`
-            );
-            // Clear cached user data to force fresh fetch
-            localStorage.removeItem("user_data");
-            // Refresh user data to show new tier
-            if (checkAuthStatus) {
-              checkAuthStatus();
-            }
-          } else if (data.hasPendingPayment && !data.upgraded) {
-            console.error(
-              `❌ [DASHBOARD] Pending payment found but upgrade failed:`,
-              data.error
-            );
-          } else {
-            console.log("🔍 [DASHBOARD] No pending payment found");
+      // Determine if this is a subscription payment
+      const paymentIsSubscription =
+        !!subscriptionType ||
+        (itemName?.toLowerCase().includes("subscription") ?? false);
+
+      // Only proceed if it's a subscription and payment is complete/pending
+      if (
+        !paymentIsSubscription ||
+        !paymentStatus ||
+        (paymentStatus !== "COMPLETE" && paymentStatus !== "PENDING")
+      ) {
+        return;
+      }
+
+      // Check if we've already processed this upgrade (prevent duplicate calls)
+      const upgradeKey = `upgrade_${mPaymentId || pfPaymentId || Date.now()}`;
+      if (sessionStorage.getItem(upgradeKey)) {
+        console.log(
+          "🔄 Subscription upgrade already processed for this payment"
+        );
+        return;
+      }
+
+      console.log(
+        "🔄 Detected PayFast subscription return - triggering upgrade..."
+      );
+      console.log("   Payment Status:", paymentStatus);
+      console.log("   Plan ID (custom_str1):", customStr1);
+      console.log("   User ID (custom_str2):", customStr2);
+      console.log("   Item Name:", itemName);
+
+      try {
+        // Get user info from session
+        const sessionResponse = await fetch("/api/auth/session");
+        const session = await sessionResponse.json();
+        const sessionUserId = session?.user?.id || null;
+        const sessionEmail = session?.user?.email || null;
+
+        if (!sessionUserId && !sessionEmail) {
+          console.warn("⚠️ Could not get user info from session");
+          return;
+        }
+
+        // Use user ID from URL params, session, or fallback
+        const upgradeUserId = customStr2 || sessionUserId || null;
+        const upgradeEmail = sessionEmail || user?.email || null;
+        const upgradePlanId = customStr1 || "production"; // Default to production
+        const upgradePlanName =
+          itemName || "Production Plan - Monthly Subscription";
+        const upgradeAmount = amount ? parseFloat(amount) : 29.0; // Default to R29
+
+        console.log("   User ID:", upgradeUserId);
+        console.log("   User Email:", upgradeEmail);
+        console.log("   Plan ID:", upgradePlanId);
+        console.log("   Plan Name:", upgradePlanName);
+        console.log("   Amount:", upgradeAmount);
+
+        // Call backend upgrade endpoint directly (matching test script logic)
+        const backendUrl =
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          (process.env.NODE_ENV === "production"
+            ? "https://web-production-737b.up.railway.app"
+            : "http://localhost:5000");
+
+        const upgradeResponse = await fetch(
+          `${backendUrl}/api/payment/upgrade-subscription`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user_id: upgradeUserId ? parseInt(upgradeUserId) : undefined,
+              user_email: upgradeEmail,
+              plan_id: upgradePlanId,
+              plan_name: upgradePlanName,
+              amount: upgradeAmount,
+              payment_id: mPaymentId || pfPaymentId || `payment-${Date.now()}`,
+            }),
           }
-        } else {
-          console.error(
-            `❌ [DASHBOARD] Failed to check pending payment: ${response.status}`
+        );
+
+        if (upgradeResponse.ok) {
+          const upgradeData = await upgradeResponse.json();
+          console.log("✅ Subscription upgrade successful!");
+          console.log("   Response:", upgradeData);
+
+          // Mark as processed
+          sessionStorage.setItem(upgradeKey, "true");
+
+          // Clear cached user data and refresh
+          localStorage.removeItem("user_data");
+          if (checkAuthStatus) {
+            checkAuthStatus();
+          }
+
+          // Show success message
+          showSuccess(
+            "Subscription Upgraded",
+            "Your subscription has been upgraded successfully!"
           );
+        } else {
+          const errorData = await upgradeResponse.json().catch(() => ({}));
+          console.error("❌ Subscription upgrade failed:", errorData);
+          console.error("   Status:", upgradeResponse.status);
+          // Don't show error to user - webhook may still process it
         }
       } catch (error) {
-        console.error("Error checking pending payment:", error);
+        console.error("❌ Error triggering subscription upgrade:", error);
+        // Don't show error to user - webhook may still process it
       }
     };
 
-    // Run check on mount with a delay to ensure session is ready
-    const timeoutId = setTimeout(() => {
-      checkPendingPayment();
-    }, 1500);
-
-    return () => clearTimeout(timeoutId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty deps - run only on mount
+    // Only run if we have search params and user is loaded
+    if (user && searchParams) {
+      handleSubscriptionUpgrade();
+    }
+  }, [user, searchParams, checkAuthStatus, showSuccess]);
+>>>>>>> 4cd326f8 (Update subscription flow, billing UI, email templates, and user deletion)
 
   // Refresh user data when landing on dashboard (in case of payment redirect)
   // This ensures user tier is updated after subscription payment
@@ -363,7 +448,6 @@ function DashboardContent() {
             email: user.email,
             password: "Kopenikus0218!",
             role: user.role === "super_admin" ? "super_admin" : "user",
-            subscription_tier: user.subscription_tier || "free",
           }),
         }
       );
@@ -1158,12 +1242,7 @@ function DashboardContent() {
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
                   <span className="w-2 h-2 bg-[#8b5cf6] rounded-full animate-pulse"></span>
-                  {user?.email || "User"} •{" "}
-                  {user?.subscription_tier
-                    ? user.subscription_tier.charAt(0).toUpperCase() +
-                      user.subscription_tier.slice(1) +
-                      " Plan"
-                    : "Free Plan"}
+                  {user?.email || "User"} • Testing & Production Plans
                 </p>
               </div>
               <div className="flex items-center gap-4">
@@ -1581,24 +1660,6 @@ function DashboardContent() {
                           <input
                             type="email"
                             value={user?.email || ""}
-                            disabled
-                            className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Subscription Tier
-                          </label>
-                          <input
-                            type="text"
-                            value={
-                              user?.subscription_tier
-                                ? user.subscription_tier
-                                    .charAt(0)
-                                    .toUpperCase() +
-                                  user.subscription_tier.slice(1)
-                                : "Free"
-                            }
                             disabled
                             className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-sm"
                           />

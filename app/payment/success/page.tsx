@@ -125,6 +125,106 @@ function PaymentSuccessContent() {
     }
   }, []);
 
+  // Handle PayFast subscription upgrade (matching test script logic)
+  const handleSubscriptionUpgrade = async (
+    paymentStatus: string | null,
+    planId: string | null,
+    userId: string | null,
+    planName: string | null,
+    mPaymentId: string | null,
+    pfPaymentId: string | null,
+    amount: string | null
+  ) => {
+    // Check if we've already processed this upgrade (prevent duplicate calls)
+    const upgradeKey = `upgrade_${mPaymentId || pfPaymentId || Date.now()}`;
+    if (sessionStorage.getItem(upgradeKey)) {
+      console.log("🔄 Subscription upgrade already processed for this payment");
+      return;
+    }
+
+    console.log(
+      "🔄 Detected PayFast subscription return on success page - triggering upgrade..."
+    );
+    console.log("   Payment Status:", paymentStatus);
+    console.log("   Plan ID:", planId);
+    console.log("   User ID:", userId);
+    console.log("   Plan Name:", planName);
+
+    try {
+      // Get user info from session
+      const sessionResponse = await fetch("/api/auth/session");
+      const session = await sessionResponse.json();
+      const sessionUserId = session?.user?.id || null;
+      const sessionEmail = session?.user?.email || null;
+
+      if (!sessionUserId && !sessionEmail) {
+        console.warn("⚠️ Could not get user info from session");
+        return;
+      }
+
+      // Use user ID from URL params, session, or fallback
+      const upgradeUserId = userId || sessionUserId || null;
+      const upgradeEmail = sessionEmail || null;
+      const upgradePlanId = planId || "production"; // Default to production
+      const upgradePlanName =
+        planName || "Production Plan - Monthly Subscription";
+      const upgradeAmount = amount ? parseFloat(amount) : 29.0; // Default to R29
+
+      console.log("   User ID:", upgradeUserId);
+      console.log("   User Email:", upgradeEmail);
+      console.log("   Plan ID:", upgradePlanId);
+      console.log("   Plan Name:", upgradePlanName);
+      console.log("   Amount:", upgradeAmount);
+
+      // Call backend upgrade endpoint directly (matching test script logic)
+      const backendUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL ||
+        (process.env.NODE_ENV === "production"
+          ? "https://web-production-737b.up.railway.app"
+          : "http://localhost:5000");
+
+      const upgradeResponse = await fetch(
+        `${backendUrl}/api/payment/upgrade-subscription`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: upgradeUserId ? parseInt(upgradeUserId) : undefined,
+            user_email: upgradeEmail,
+            plan_id: upgradePlanId,
+            plan_name: upgradePlanName,
+            amount: upgradeAmount,
+            payment_id: mPaymentId || pfPaymentId || `payment-${Date.now()}`,
+          }),
+        }
+      );
+
+      if (upgradeResponse.ok) {
+        const upgradeData = await upgradeResponse.json();
+        console.log("✅ Subscription upgrade successful!");
+        console.log("   Response:", upgradeData);
+
+        // Mark as processed
+        sessionStorage.setItem(upgradeKey, "true");
+
+        // Redirect to dashboard to show updated tier
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 2000);
+      } else {
+        const errorData = await upgradeResponse.json().catch(() => ({}));
+        console.error("❌ Subscription upgrade failed:", errorData);
+        console.error("   Status:", upgradeResponse.status);
+        // Don't show error to user - webhook may still process it
+      }
+    } catch (error) {
+      console.error("❌ Error triggering subscription upgrade:", error);
+      // Don't show error to user - webhook may still process it
+    }
+  };
+
   useEffect(() => {
     // Verify payment status from PayFast callback
     const verifyPayment = async () => {
@@ -324,10 +424,34 @@ function PaymentSuccessContent() {
       }
 
       setIsVerifying(false);
+
+      // Handle subscription upgrade for subscriptions that return to success page
+      // (Most subscriptions return to dashboard, but this is a fallback)
+      if (
+        paymentIsSubscription &&
+        (paymentStatus === "COMPLETE" || paymentStatus === "PENDING")
+      ) {
+        // Extract plan ID and user ID from URL params
+        // Note: For subscriptions, custom_str1 should be plan ID, custom_str2 should be user ID
+        // But for download payments, custom_str1 is download URL, custom_str2 is file path
+        // So we need to check if it's a subscription first (already done above)
+        const planIdFromParams = searchParams.get("custom_str1");
+        const userIdFromParams = searchParams.get("custom_str2");
+
+        handleSubscriptionUpgrade(
+          paymentStatus,
+          planIdFromParams, // Plan ID from custom_str1
+          userIdFromParams, // User ID from custom_str2
+          itemName,
+          mPaymentId,
+          pfPaymentId,
+          amount
+        );
+      }
     };
 
     verifyPayment();
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   // Handle download - triggers file save dialog with correct filename
   const handleDownload = () => {

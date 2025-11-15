@@ -25,6 +25,7 @@ interface BillingHistory {
 interface BillingSectionProps {
   user?: {
     email?: string;
+    subscription_tier?: string;
   };
 }
 
@@ -98,6 +99,38 @@ export function BillingSection({ user }: BillingSectionProps) {
     }, 500);
   }, []);
 
+  // Determine user's current tier and plan states
+  const getUserTier = (): string => {
+    const tier = user?.subscription_tier?.toLowerCase() || "free";
+    // Map various tier names to plan IDs
+    if (tier === "free" || tier === "testing") return "testing";
+    if (tier === "production" || tier === "premium") return "production";
+    if (tier === "enterprise") return "enterprise";
+    return "testing"; // Default to testing
+  };
+
+  const currentTier = getUserTier();
+
+  // Determine plan states based on current tier
+  const getPlanState = (planId: string) => {
+    const tierOrder = { testing: 1, production: 2, enterprise: 3 };
+    const currentTierOrder =
+      tierOrder[currentTier as keyof typeof tierOrder] || 1;
+    const planTierOrder = tierOrder[planId as keyof typeof tierOrder] || 1;
+
+    const isActive = planId === currentTier;
+    const isLowerTier = planTierOrder < currentTierOrder;
+    const isHigherTier = planTierOrder > currentTierOrder;
+
+    return {
+      isActive,
+      isLowerTier,
+      isHigherTier,
+      shouldGreyOut: isLowerTier,
+      shouldShowCheck: isLowerTier, // Show checkmark on lower tiers when on higher tier
+    };
+  };
+
   const handleSubscribe = async (plan: Plan) => {
     // Convert USD to ZAR for PayFast payment
     if (plan.isSubscription && plan.price > 0) {
@@ -142,67 +175,136 @@ export function BillingSection({ user }: BillingSectionProps) {
           Subscription Plans
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`
-                relative bg-card dark:bg-[#1a1a1a] border border-border dark:border-[#2a2a2a] rounded-lg p-6 flex flex-col
-                ${
-                  plan.isActive
-                    ? "border-[#8b5cf6] shadow-lg shadow-[#8b5cf6]/20"
-                    : "hover:border-[#3a3a3a]"
-                }
-              `}
-            >
-              {plan.isActive && (
-                <div className="absolute top-4 right-4 w-6 h-6 bg-[#8b5cf6] rounded-full flex items-center justify-center">
-                  <Check className="w-4 h-4 text-white" />
-                </div>
-              )}
-              <div className="mb-4">
-                <h4 className="text-lg font-semibold text-foreground dark:text-white mb-1">
-                  {plan.name}
-                </h4>
-                <div className="flex items-baseline gap-2">
-                  {plan.price === 0 ? (
-                    <span className="text-2xl font-bold text-foreground dark:text-white">
-                      Free
-                    </span>
-                  ) : (
-                    <>
-                      <span className="text-2xl font-bold text-foreground dark:text-white">
-                        ${plan.price}
+          {plans.map((plan) => {
+            const planState = getPlanState(plan.id);
+            const isGreyedOut = planState.shouldGreyOut;
+            const isActive = planState.isActive;
+            const showCheck = isActive || planState.shouldShowCheck;
+
+            return (
+              <div
+                key={plan.id}
+                className={`
+                  relative bg-card dark:bg-[#1a1a1a] border border-border dark:border-[#2a2a2a] rounded-lg p-6 flex flex-col transition-all
+                  ${
+                    isActive
+                      ? "border-[#8b5cf6] shadow-lg shadow-[#8b5cf6]/20"
+                      : isGreyedOut
+                      ? "opacity-60 grayscale cursor-not-allowed"
+                      : "hover:border-[#3a3a3a]"
+                  }
+                `}
+              >
+                {showCheck && (
+                  <div
+                    className={`absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center ${
+                      isActive
+                        ? "bg-[#8b5cf6]"
+                        : isGreyedOut
+                        ? "bg-gray-500"
+                        : "bg-[#8b5cf6]"
+                    }`}
+                  >
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                )}
+                <div className="mb-4">
+                  <h4
+                    className={`text-lg font-semibold mb-1 ${
+                      isGreyedOut
+                        ? "text-foreground/60 dark:text-gray-500"
+                        : "text-foreground dark:text-white"
+                    }`}
+                  >
+                    {plan.name}
+                  </h4>
+                  <div className="flex items-baseline gap-2">
+                    {plan.price === 0 ? (
+                      <span
+                        className={`text-2xl font-bold ${
+                          isGreyedOut
+                            ? "text-foreground/60 dark:text-gray-500"
+                            : "text-foreground dark:text-white"
+                        }`}
+                      >
+                        Free
                       </span>
-                      <span className="text-muted-foreground dark:text-gray-400 text-sm">
-                        /month
-                      </span>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <span
+                          className={`text-2xl font-bold ${
+                            isGreyedOut
+                              ? "text-foreground/60 dark:text-gray-500"
+                              : "text-foreground dark:text-white"
+                          }`}
+                        >
+                          ${plan.price}
+                        </span>
+                        <span
+                          className={`text-sm ${
+                            isGreyedOut
+                              ? "text-foreground/50 dark:text-gray-600"
+                              : "text-muted-foreground dark:text-gray-400"
+                          }`}
+                        >
+                          /month
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <p
+                    className={`text-sm mt-2 ${
+                      isGreyedOut
+                        ? "text-foreground/50 dark:text-gray-600"
+                        : "text-muted-foreground dark:text-gray-400"
+                    }`}
+                  >
+                    {plan.description}
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground dark:text-gray-400 mt-2">
-                  {plan.description}
-                </p>
+                <ul className="space-y-2 mb-6 flex-1">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <Check
+                        className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                          isGreyedOut ? "text-gray-500" : "text-[#8b5cf6]"
+                        }`}
+                      />
+                      <span
+                        className={`text-sm ${
+                          isGreyedOut
+                            ? "text-foreground/60 dark:text-gray-500"
+                            : "text-foreground/90 dark:text-gray-300"
+                        }`}
+                      >
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {!isActive && plan.price > 0 && !isGreyedOut && (
+                  <button
+                    onClick={() => handleSubscribe(plan)}
+                    className="w-full px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all mt-auto"
+                  >
+                    Subscribe
+                  </button>
+                )}
+                {isGreyedOut && (
+                  <div className="w-full px-4 py-2 bg-gray-500/20 text-gray-400 rounded-lg font-medium text-center mt-auto cursor-not-allowed">
+                    Included in{" "}
+                    {currentTier === "production" ? "Production" : "Enterprise"}{" "}
+                    Plan
+                  </div>
+                )}
+                {isActive && (
+                  <div className="w-full px-4 py-2 bg-[#8b5cf6]/20 text-[#8b5cf6] rounded-lg font-medium text-center mt-auto">
+                    Current Plan
+                  </div>
+                )}
               </div>
-              <ul className="space-y-2 mb-6 flex-1">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-[#8b5cf6] mt-0.5 flex-shrink-0" />
-                    <span className="text-sm text-foreground/90 dark:text-gray-300">
-                      {feature}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              {!plan.isActive && plan.price > 0 && (
-                <button
-                  onClick={() => handleSubscribe(plan)}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all mt-auto"
-                >
-                  Subscribe
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
