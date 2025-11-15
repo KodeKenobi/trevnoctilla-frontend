@@ -57,6 +57,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           if (response.ok) {
             const userData = await response.json();
             console.log("🔍 Profile data received:", userData);
+            console.log("🔍 Subscription tier:", userData.subscription_tier || "not found");
+            console.log("🔍 Full profile data:", JSON.stringify(userData, null, 2));
             // Store fresh user data
             localStorage.setItem("user_data", JSON.stringify(userData));
             setUser(userData);
