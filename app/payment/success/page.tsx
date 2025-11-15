@@ -17,6 +17,10 @@ function PaymentSuccessContent() {
   const [returnPath, setReturnPath] = useState<string | null>(null);
   const [isSubscription, setIsSubscription] = useState(false);
   const [isDownloadPayment, setIsDownloadPayment] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailAddress, setEmailAddress] = useState("");
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   // Helper function to get download URL from anywhere
   const getDownloadUrl = (): string | null => {
@@ -487,6 +491,61 @@ function PaymentSuccessContent() {
     }
   };
 
+  // Handle sending file and invoice via email
+  const handleSendEmail = async () => {
+    if (!emailAddress || !emailAddress.includes("@")) {
+      alert("Please enter a valid email address");
+      return;
+    }
+
+    setIsSendingEmail(true);
+    try {
+      const downloadUrl = getDownloadUrl();
+      const fileName = getFileName();
+      const amount = searchParams.get("amount") || "1.00";
+      const mPaymentId = searchParams.get("m_payment_id");
+      const itemName =
+        searchParams.get("item_name") || fileName || "File Download";
+
+      // Get payment date
+      const paymentDate = new Date();
+
+      const response = await fetch("/api/payment/send-file-invoice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: emailAddress,
+          downloadUrl: downloadUrl,
+          fileName: fileName,
+          amount: parseFloat(amount),
+          paymentId: mPaymentId,
+          itemName: itemName,
+          paymentDate: paymentDate.toISOString(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setEmailSent(true);
+        setTimeout(() => {
+          setShowEmailModal(false);
+          setEmailAddress("");
+          setEmailSent(false);
+        }, 1500);
+      } else {
+        alert(data.error || "Failed to send email. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      alert("An error occurred while sending the email. Please try again.");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   if (isVerifying) {
     return (
       <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center">
@@ -550,6 +609,15 @@ function PaymentSuccessContent() {
                         >
                           Close
                         </button>
+                        <p className="text-sm text-muted-foreground dark:text-gray-400 mt-4">
+                          <button
+                            onClick={() => setShowEmailModal(true)}
+                            className="text-[#8b5cf6] hover:text-[#7c3aed] underline transition-colors"
+                          >
+                            Click here to send your file and invoice to your
+                            email address
+                          </button>
+                        </p>
                       </>
                     );
                   }
@@ -625,6 +693,90 @@ function PaymentSuccessContent() {
           )}
         </div>
       </div>
+
+      {/* Email Modal */}
+      {showEmailModal && (
+        <>
+          {/* Backdrop */}
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[102]" />
+
+          {/* Modal */}
+          <div className="fixed inset-0 z-[103] flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-card dark:bg-[#1a1a1a] border border-border dark:border-[#2a2a2a] rounded-lg p-6 shadow-2xl">
+              {emailSent ? (
+                <div className="text-center">
+                  <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                  <h2 className="text-xl font-bold text-foreground dark:text-white mb-2">
+                    Email Sent!
+                  </h2>
+                  <p className="text-muted-foreground dark:text-gray-400">
+                    Your file and invoice have been sent to {emailAddress}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-xl font-bold text-foreground dark:text-white mb-4">
+                    Send File & Invoice to Email
+                  </h2>
+                  <p className="text-sm text-muted-foreground dark:text-gray-400 mb-6">
+                    Enter your email address to receive your file and invoice.
+                  </p>
+                  <div className="space-y-4">
+                    <div>
+                      <label
+                        htmlFor="email-input"
+                        className="block text-sm font-medium text-foreground dark:text-gray-300 mb-2"
+                      >
+                        Email Address
+                      </label>
+                      <input
+                        id="email-input"
+                        type="email"
+                        value={emailAddress}
+                        onChange={(e) => setEmailAddress(e.target.value)}
+                        placeholder="your@email.com"
+                        className="w-full px-4 py-2 bg-background dark:bg-[#0a0a0a] border border-border dark:border-[#2a2a2a] rounded-lg text-foreground dark:text-white focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                        disabled={isSendingEmail}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !isSendingEmail) {
+                            handleSendEmail();
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleSendEmail}
+                        disabled={isSendingEmail || !emailAddress}
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSendingEmail ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin inline-block mr-2" />
+                            Sending...
+                          </>
+                        ) : (
+                          "Send Email"
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowEmailModal(false);
+                          setEmailAddress("");
+                        }}
+                        disabled={isSendingEmail}
+                        className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
