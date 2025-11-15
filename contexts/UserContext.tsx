@@ -18,6 +18,7 @@ interface UserContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  checkAuthStatus: () => Promise<void>;
   isAdmin: boolean;
   isSuperAdmin: boolean;
 }
@@ -220,6 +221,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         loading: loading || status === "loading",
         login,
         logout,
+        checkAuthStatus,
         isAdmin,
         isSuperAdmin,
       }}

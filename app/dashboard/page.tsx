@@ -136,7 +136,7 @@ function CommandPaletteContent({
 // Real API data - production ready
 
 function DashboardContent() {
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, checkAuthStatus } = useUser();
   const router = useRouter();
   const { showSuccess, showError, showInfo, hideAlert } = useAlert();
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
@@ -263,6 +263,26 @@ function DashboardContent() {
       fetchApiKeys();
     }
   }, [user]);
+
+  // Refresh user data when redirected from payment
+  useEffect(() => {
+    // Check if we just came from a payment redirect (PayFast redirects to /dashboard)
+    // Wait a bit for webhook to process, then refresh user data
+    const paymentRedirect = sessionStorage.getItem("payment_redirect");
+    if (paymentRedirect === "true" && user && checkAuthStatus) {
+      console.log("🔄 Payment redirect detected, refreshing user data...");
+      // Clear the flag
+      sessionStorage.removeItem("payment_redirect");
+      // Wait 2 seconds for webhook to process, then refresh
+      const timer = setTimeout(() => {
+        // Clear cached user data
+        localStorage.removeItem("user_data");
+        // Refresh user data
+        checkAuthStatus();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, checkAuthStatus]);
 
   // Fetch stats after API keys are loaded (stats depends on apiKeys.length)
   useEffect(() => {
