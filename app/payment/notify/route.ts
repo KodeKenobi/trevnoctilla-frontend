@@ -336,25 +336,36 @@ export async function POST(request: NextRequest) {
           `[${requestId}] ✅ Payment ${mPaymentId} completed successfully`
         );
 
-        // If this is a subscription payment, upgrade user subscription
-        if (token && subscriptionType) {
-          console.log(`[${requestId}] 📝 Processing subscription payment`);
+        // Extract plan info from custom fields
+        const planId = data.custom_str1 || "";
+        const userId = data.custom_str2 || "";
+        // PayFast sends email_address in webhook (buyer enters it on PayFast page)
+        // CRITICAL: For subscriptions, user_id is more reliable than email
+        // PayFast may not send email_address in subscription webhooks
+        const userEmail = data.email_address?.trim() || "";
+        const itemName = data.item_name || "";
 
-          // Extract plan info from custom fields
-          const planId = data.custom_str1 || "";
-          const userId = data.custom_str2 || "";
-          // PayFast sends email_address in webhook (buyer enters it on PayFast page)
-          // CRITICAL: For subscriptions, user_id is more reliable than email
-          // PayFast may not send email_address in subscription webhooks
-          const userEmail = data.email_address?.trim() || "";
-          const itemName = data.item_name || "";
+        // Determine plan name from item_name or plan_id
+        let planName = itemName;
+        if (planId === "production") {
+          planName = "Production Plan";
+        } else if (planId === "enterprise") {
+          planName = "Enterprise Plan";
+        }
 
-          // Determine plan name from item_name or plan_id
-          let planName = itemName;
-          if (planId === "production") {
-            planName = "Production Plan";
-          } else if (planId === "enterprise") {
-            planName = "Enterprise Plan";
+        // Upgrade subscription if:
+        // 1. This is a subscription payment (has token and subscriptionType), OR
+        // 2. This is the first payment (no token yet) but has planId and userId
+        const isSubscriptionPayment = token && subscriptionType;
+        const isFirstPayment = !token && planId && (userId || userEmail);
+
+        if (isSubscriptionPayment || isFirstPayment) {
+          if (isSubscriptionPayment) {
+            console.log(`[${requestId}] 📝 Processing subscription payment`);
+          } else {
+            console.log(
+              `[${requestId}] 📝 Processing first subscription payment (no token yet)`
+            );
           }
 
           // Call backend to upgrade subscription
