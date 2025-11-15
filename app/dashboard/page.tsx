@@ -1108,7 +1108,12 @@ function DashboardContent() {
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
                   <span className="w-2 h-2 bg-[#8b5cf6] rounded-full animate-pulse"></span>
-                  {user?.email || "User"} • Testing & Production Plans
+                  {user?.email || "User"} •{" "}
+                  {user?.subscription_tier
+                    ? user.subscription_tier.charAt(0).toUpperCase() +
+                      user.subscription_tier.slice(1) +
+                      " Plan"
+                    : "Free Plan"}
                 </p>
               </div>
               <div className="flex items-center gap-4">
@@ -1526,6 +1531,24 @@ function DashboardContent() {
                           <input
                             type="email"
                             value={user?.email || ""}
+                            disabled
+                            className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Subscription Tier
+                          </label>
+                          <input
+                            type="text"
+                            value={
+                              user?.subscription_tier
+                                ? user.subscription_tier
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                  user.subscription_tier.slice(1)
+                                : "Free"
+                            }
                             disabled
                             className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2 text-white text-sm"
                           />

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useAlert } from "@/contexts/AlertProvider";
+import { useUser } from "@/contexts/UserContext";
 import { API_ENDPOINTS, hasEndpointAccess } from "../../lib/apiEndpoints";
 import { apiTestClient, ApiTestResult } from "../../lib/apiTestClient";
 import { getApiUrl } from "@/lib/config";
@@ -14,6 +15,7 @@ interface ApiTesterProps {
 
 export function ApiTester({ toolId }: ApiTesterProps) {
   const { showSuccess, showError, hideAlert } = useAlert();
+  const { user } = useUser();
   const { data: session } = useSession();
   const [selectedEndpoint, setSelectedEndpoint] = useState<string>("");
   const [parameters, setParameters] = useState<Record<string, any>>({});
@@ -23,51 +25,12 @@ export function ApiTester({ toolId }: ApiTesterProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ApiTestResult | null>(null);
   const [expandedEndpoint, setExpandedEndpoint] = useState<string | null>(null);
-  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const endpoints = API_ENDPOINTS[toolId] || [];
 
-  // Fetch subscription tier
-  useEffect(() => {
-    const fetchSubscriptionTier = async () => {
-      try {
-        const token = localStorage.getItem("auth_token");
-        if (!token) {
-          setSubscriptionTier("free");
-          return;
-        }
-
-        const response = await fetch(getApiUrl("/api/client/usage"), {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const tier =
-            data.subscription_tier?.toLowerCase() ||
-            (data.monthly?.limit === -1
-              ? "enterprise"
-              : data.monthly?.limit && data.monthly.limit >= 100000
-              ? "enterprise"
-              : data.monthly?.limit && data.monthly.limit >= 5000
-              ? "premium"
-              : "free");
-          setSubscriptionTier(tier);
-        } else {
-          setSubscriptionTier("free");
-        }
-      } catch (error) {
-        console.error("Error fetching subscription tier:", error);
-        setSubscriptionTier("free");
-      }
-    };
-
-    fetchSubscriptionTier();
-  }, []);
+  // Get subscription tier from user context (fetched from profile endpoint)
+  const subscriptionTier = user?.subscription_tier?.toLowerCase() || "free";
 
   useEffect(() => {
     const storedKey = localStorage.getItem("api_test_key");
