@@ -182,51 +182,35 @@ function DashboardContent() {
   // Check if user should be redirected to enterprise dashboard
   useEffect(() => {
     if (user && !userLoading) {
-      // Check if user has enterprise subscription
-      // This can be determined by checking subscription tier from usage stats
-      const checkEnterpriseStatus = async () => {
-        try {
-          const token = localStorage.getItem("auth_token");
-          if (!token) return;
+      // Use subscription_tier from user object (fetched from profile endpoint)
+      const subscriptionTier = user.subscription_tier?.toLowerCase() || "free";
 
-          const usageResponse = await fetch(
-            `${
-              process.env.NEXT_PUBLIC_API_BASE_URL ||
-              "https://web-production-737b.up.railway.app"
-            }/api/client/usage`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+      console.log("🔍 Checking subscription tier for dashboard routing...");
+      console.log(`   User subscription_tier: ${subscriptionTier}`);
+      console.log(`   User role: ${user.role}`);
 
-          if (usageResponse.ok) {
-            const usageData = await usageResponse.json();
-            // Check if user has enterprise tier (unlimited calls or specific tier)
-            const isEnterprise =
-              usageData.subscription_tier?.toLowerCase() === "enterprise" ||
-              usageData.monthly?.limit === -1 || // Unlimited indicates enterprise
-              (usageData.monthly?.limit && usageData.monthly.limit >= 100000); // High limit indicates enterprise
+      // Check if user has enterprise tier
+      const isEnterprise =
+        subscriptionTier === "enterprise" ||
+        user.monthly_call_limit === -1 || // Unlimited indicates enterprise
+        (user.monthly_call_limit && user.monthly_call_limit >= 100000); // High limit indicates enterprise
 
-            // Check for premium tier
-            const isPremium =
-              usageData.subscription_tier?.toLowerCase() === "premium";
+      // Check for premium tier
+      const isPremium = subscriptionTier === "premium";
 
-            if (isEnterprise) {
-              router.push("/enterprise");
-              return;
-            }
-          }
-        } catch (error) {
-          console.error("Error checking enterprise status:", error);
-        }
-      };
+      console.log(`   Is Enterprise: ${isEnterprise}`);
+      console.log(`   Is Premium: ${isPremium}`);
 
-      // Only check if not already on enterprise page
-      if (window.location.pathname !== "/enterprise") {
-        checkEnterpriseStatus();
+      // Only redirect to enterprise if not already on enterprise page
+      if (isEnterprise && window.location.pathname !== "/enterprise") {
+        console.log("   → Redirecting to enterprise dashboard");
+        router.push("/enterprise");
+        return;
+      }
+
+      // Premium users stay on regular dashboard (no redirect needed)
+      if (isPremium) {
+        console.log("   → Premium user, staying on regular dashboard");
       }
     }
   }, [user, userLoading, router]);
@@ -271,8 +255,9 @@ function DashboardContent() {
       // Check if we should refresh user data
       // Refresh if user data is stale (older than 30 seconds) or on first load
       const lastRefresh = sessionStorage.getItem("user_data_last_refresh");
-      const shouldRefresh = !lastRefresh || (Date.now() - parseInt(lastRefresh)) > 30000;
-      
+      const shouldRefresh =
+        !lastRefresh || Date.now() - parseInt(lastRefresh) > 30000;
+
       if (shouldRefresh) {
         console.log("🔄 Refreshing user data on dashboard load...");
         // Wait 2 seconds for webhook to process if coming from payment
@@ -282,7 +267,10 @@ function DashboardContent() {
           // Refresh user data
           checkAuthStatus();
           // Update last refresh time
-          sessionStorage.setItem("user_data_last_refresh", Date.now().toString());
+          sessionStorage.setItem(
+            "user_data_last_refresh",
+            Date.now().toString()
+          );
         }, 2000);
         return () => clearTimeout(timer);
       }
