@@ -321,15 +321,13 @@ export async function POST(request: NextRequest) {
     paymentData.return_url = returnUrl;
     paymentData.cancel_url = cancelUrl;
 
-    // Only include notify_url for one-time payments
-    // For subscriptions, notify_url is configured in PayFast dashboard
-    if (!subscription_type) {
-      const notifyUrl =
-        notify_url ||
-        PAYFAST_CONFIG.NOTIFY_URL ||
-        `${finalBaseUrl}/payment/notify`;
-      paymentData.notify_url = notifyUrl;
-    }
+    // Always include notify_url for both one-time payments and subscriptions
+    // PayFast requires notify_url to know where to send webhook notifications
+    const notifyUrl =
+      notify_url ||
+      PAYFAST_CONFIG.NOTIFY_URL ||
+      `${finalBaseUrl}/payment/notify`;
+    paymentData.notify_url = notifyUrl;
 
     // Add amount and item_name (matching test script order)
     paymentData.amount = parseFloat(amount).toFixed(2);
