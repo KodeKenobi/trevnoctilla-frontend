@@ -138,7 +138,8 @@ export async function POST(request: NextRequest) {
     // Check if this is a simple $1 payment (no subscription, no user_id)
     // For $1 payments, authentication is NOT required
     // custom_str2 can be present (e.g., page URL) but should not be a numeric user_id
-    const customStr2IsUserId = body.custom_str2 && /^\d+$/.test(String(body.custom_str2).trim());
+    const customStr2IsUserId =
+      body.custom_str2 && /^\d+$/.test(String(body.custom_str2).trim());
     const isSimplePayment =
       !body.subscription_type &&
       !customStr2IsUserId && // No numeric user_id (allows URLs, etc.)

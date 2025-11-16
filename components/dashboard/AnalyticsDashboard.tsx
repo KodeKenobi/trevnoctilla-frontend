@@ -54,75 +54,39 @@ export default function AnalyticsDashboard() {
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API call to your backend
       const response = await fetch(
         `/api/analytics/dashboard?range=${timeRange}`
       );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch analytics: ${response.statusText}`);
+      }
+
       const analyticsData = await response.json();
-      setData(analyticsData);
+
+      // Validate data structure
+      if (analyticsData && typeof analyticsData === "object") {
+        setData(analyticsData);
+      } else {
+        throw new Error("Invalid analytics data format");
+      }
     } catch (error) {
       console.error("Error fetching analytics data:", error);
-      // Mock data for demonstration
+      // Set empty data structure instead of mock data
       setData({
-        totalUsers: 1247,
-        totalSessions: 2156,
-        totalPageViews: 8943,
-        totalEvents: 15678,
-        averageSessionDuration: 245, // seconds
-        topPages: [
-          { page: "/", views: 2341 },
-          { page: "/tools", views: 1876 },
-          { page: "/pdf-tools", views: 1456 },
-          { page: "/video-converter", views: 1234 },
-          { page: "/api-docs", views: 987 },
-        ],
-        topEvents: [
-          { event: "click", count: 4567 },
-          { event: "file_upload", count: 1234 },
-          { event: "tool_usage", count: 987 },
-          { event: "form_submit", count: 654 },
-          { event: "conversion", count: 321 },
-        ],
-        deviceBreakdown: [
-          { device: "desktop", count: 1456 },
-          { device: "mobile", count: 567 },
-          { device: "tablet", count: 133 },
-        ],
-        browserBreakdown: [
-          { browser: "chrome", count: 1234 },
-          { browser: "firefox", count: 456 },
-          { browser: "safari", count: 234 },
-          { browser: "edge", count: 123 },
-        ],
-        osBreakdown: [
-          { os: "windows", count: 987 },
-          { os: "macos", count: 456 },
-          { os: "linux", count: 234 },
-          { os: "android", count: 345 },
-          { os: "ios", count: 123 },
-        ],
-        recentActivity: [
-          {
-            id: "1",
-            type: "conversion",
-            description: "User completed PDF to Word conversion",
-            timestamp: Date.now() - 300000,
-          },
-          {
-            id: "2",
-            type: "error",
-            description: "File upload failed - file too large",
-            timestamp: Date.now() - 600000,
-          },
-          {
-            id: "3",
-            type: "tool_usage",
-            description: "User started video conversion",
-            timestamp: Date.now() - 900000,
-          },
-        ],
-        errorRate: 2.3,
-        conversionRate: 15.7,
+        totalUsers: 0,
+        totalSessions: 0,
+        totalPageViews: 0,
+        totalEvents: 0,
+        averageSessionDuration: 0,
+        topPages: [],
+        topEvents: [],
+        deviceBreakdown: [],
+        browserBreakdown: [],
+        osBreakdown: [],
+        recentActivity: [],
+        errorRate: 0,
+        conversionRate: 0,
       });
     } finally {
       setLoading(false);

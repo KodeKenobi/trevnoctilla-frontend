@@ -1,45 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { headers } from "next/headers";
+import { getApiUrl, getAuthHeaders } from "@/lib/config";
 
 export async function POST(request: NextRequest) {
   try {
-    // For now, allow all requests - authentication can be added later
-    // const session = await getServerSession(authOptions);
-    // if (!session?.user?.id) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
-
     const sessionData = await request.json();
 
-    // Store session in your database
-    console.log("Session Data:", {
-      user_id: "anonymous", // TODO: Get from session when auth is implemented
-      ...sessionData,
-      received_at: new Date().toISOString(),
+    // Get session for user_id (optional - allows anonymous tracking)
+    const headersList = await headers();
+    const session = await getServerSession({
+      ...authOptions,
+      req: {
+        headers: headersList,
+      } as any,
     });
 
-    // TODO: Store in your database
-    // Example:
-    // await db.userSessions.create({
-    //   data: {
-    //     user_id: session.user.id,
-    //     session_id: sessionData.id,
-    //     start_time: new Date(sessionData.start_time),
-    //     last_activity: new Date(sessionData.last_activity),
-    //     page_views: sessionData.page_views,
-    //     events: sessionData.events,
-    //     device_type: sessionData.device_type,
-    //     browser: sessionData.browser,
-    //     os: sessionData.os,
-    //     country: sessionData.country,
-    //     city: sessionData.city,
-    //     ip_address: sessionData.ip_address,
-    //     user_agent: sessionData.user_agent,
-    //     referrer: sessionData.referrer,
-    //     is_active: sessionData.is_active,
-    //   }
-    // });
+    // Forward to backend API
+    const backendUrl = getApiUrl("/api/analytics/session");
+    const token = (session as any)?.accessToken || null;
 
-    return NextResponse.json({ success: true });
+    const response = await fetch(backendUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? getAuthHeaders(token) : {}),
+      },
+      body: JSON.stringify(sessionData),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      return NextResponse.json(result);
+    } else {
+      const error = await response.text();
+      console.error("Backend analytics error:", error);
+      return NextResponse.json(
+        { error: "Failed to store analytics data" },
+        { status: response.status }
+      );
+    }
   } catch (error) {
     console.error("Analytics session error:", error);
     return NextResponse.json(
