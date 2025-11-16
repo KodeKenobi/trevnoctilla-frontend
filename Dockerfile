@@ -1,11 +1,17 @@
 FROM python:3.11-slim
 
-# Install system dependencies including FFmpeg and git (for submodule initialization)
+# Install system dependencies including FFmpeg, git, and build tools for pycairo
 # Updated for Railway build context - using justpdf-backend/ prefix
 # Force rebuild - Railway cache issue
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     git \
+    gcc \
+    python3-dev \
+    pkg-config \
+    libcairo2-dev \
+    libnspr4 \
+    libnss3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -43,6 +49,9 @@ RUN if [ ! -f "/tmp/repo/trevnoctilla-backend/requirements.txt" ]; then \
     fi && \
     cp /tmp/repo/trevnoctilla-backend/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Playwright browsers (needed for HTML to PDF conversion)
+RUN playwright install chromium || true
 
 # Copy application code
 RUN cp -r /tmp/repo/trevnoctilla-backend/* . && \
