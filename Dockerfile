@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Install system dependencies including FFmpeg, git, and build tools for pycairo
+# Install system dependencies including FFmpeg, git, Node.js, and build tools for pycairo
 # Updated for Railway build context - using justpdf-backend/ prefix
 # Force rebuild - Railway cache issue
 RUN apt-get update && apt-get install -y \
@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y \
     libcairo2-dev \
     libnspr4 \
     libnss3 \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -63,8 +66,37 @@ RUN mkdir -p uploads edited saved_html converted_videos converted_audio
 # Make start script executable
 RUN chmod +x start.sh
 
-# Expose port
-EXPOSE 5000
+# Install Node.js dependencies and build Next.js frontend
+WORKDIR /tmp/repo
+RUN if [ -f "package.json" ]; then \
+        npm install && \
+        npm run build; \
+    else \
+        echo "WARNING: package.json not found, skipping frontend build"; \
+    fi
 
-# Run the application using start script
-CMD ["./start.sh"]
+# Copy built Next.js app and necessary files to /app
+WORKDIR /app
+RUN if [ -f "/tmp/repo/package.json" ]; then \
+        cp /tmp/repo/package.json /app/ && \
+        cp /tmp/repo/package-lock.json /app/ 2>/dev/null || cp /tmp/repo/pnpm-lock.yaml /app/ 2>/dev/null || true && \
+        cp /tmp/repo/next.config.js /app/ 2>/dev/null || true && \
+        cp /tmp/repo/next-env.d.ts /app/ 2>/dev/null || true && \
+        cp /tmp/repo/tsconfig.json /app/ 2>/dev/null || true && \
+        cp /tmp/repo/middleware.ts /app/ 2>/dev/null || true && \
+        cp -r /tmp/repo/.next /app/ 2>/dev/null || true && \
+        cp -r /tmp/repo/public /app/ 2>/dev/null || true && \
+        cp -r /tmp/repo/app /app/ 2>/dev/null || true && \
+        cp -r /tmp/repo/components /app/ 2>/dev/null || true && \
+        cp -r /tmp/repo/lib /app/ 2>/dev/null || true && \
+        cp -r /tmp/repo/contexts /app/ 2>/dev/null || true && \
+        cp -r /tmp/repo/hooks /app/ 2>/dev/null || true && \
+        cp -r /tmp/repo/types /app/ 2>/dev/null || true && \
+        cp -r /tmp/repo/node_modules /app/ 2>/dev/null || true; \
+    fi
+
+# Expose port (Next.js default is 3000, but Railway will set PORT env var)
+EXPOSE 3000
+
+# Run Next.js (Railway Procfile expects npm start)
+CMD ["npm", "start"]
