@@ -29,6 +29,7 @@ interface PayFastFormProps {
   autoSubmit?: boolean;
   className?: string;
   formRef?: React.RefObject<HTMLFormElement>;
+  onPaymentDataLoaded?: () => void;
 }
 
 export default function PayFastForm({
@@ -56,6 +57,7 @@ export default function PayFastForm({
   autoSubmit = false,
   className = "hidden",
   formRef: externalFormRef,
+  onPaymentDataLoaded,
 }: PayFastFormProps) {
   const internalFormRef = useRef<HTMLFormElement>(null);
   const formRef = externalFormRef || internalFormRef;
@@ -67,6 +69,7 @@ export default function PayFastForm({
     null
   );
   const [isLoadingSignature, setIsLoadingSignature] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch payment data and signature from server-side API (passphrase stays on server)
   // CRITICAL: Use the payment data returned from API, not client-side built data
@@ -148,11 +151,24 @@ export default function PayFastForm({
           setPaymentData(data.payment_data);
           console.log("✅ Payment data and signature fetched from server");
           console.log("Payment data:", data.payment_data);
+          console.log(
+            "✅ PayFastForm: paymentData state updated, form should render inputs now"
+          );
+          // Notify parent that payment data is loaded
+          if (onPaymentDataLoaded) {
+            onPaymentDataLoaded();
+          }
         } else {
+          console.error("❌ PayFastForm: No payment_data in response:", data);
           throw new Error("No payment_data in response");
         }
       } catch (error) {
         console.error("❌ Failed to fetch payment data:", error);
+        // Set error state so parent can handle it
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        setError(errorMessage);
+        console.error("   Error message:", errorMessage);
       } finally {
         setIsLoadingSignature(false);
       }
@@ -245,6 +261,7 @@ export default function PayFastForm({
   // This ensures the form matches what the signature was calculated on
   const renderInputs = () => {
     if (!paymentData) {
+      console.log("⚠️ PayFastForm: paymentData is null, not rendering inputs");
       return null; // Don't render form until payment data is loaded
     }
 
@@ -261,6 +278,7 @@ export default function PayFastForm({
       }
     }
 
+    console.log(`✅ PayFastForm: Rendered ${inputs.length} form inputs`);
     return inputs;
   };
 

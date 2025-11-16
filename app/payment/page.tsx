@@ -19,7 +19,9 @@ function PaymentContent() {
   const [error, setError] = useState<string | null>(null);
   const [isFormReady, setIsFormReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentDataLoaded, setPaymentDataLoaded] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const isFormReadyRef = useRef(false); // Use ref to avoid closure issues
 
   // Plan configurations
   const planConfig = {
@@ -120,12 +122,24 @@ function PaymentContent() {
     return `${year}-${month}-${day}`;
   };
 
-  // Monitor form readiness
+  // Monitor form readiness - check when payment data is loaded
   useEffect(() => {
     if (isFormReady || !zarAmount) return;
 
     const checkFormReady = () => {
-      if (!formRef.current) return;
+      if (!formRef.current) {
+        console.log("🔍 [Payment] Form ref not available yet");
+        return;
+      }
+
+      // First check if form has any inputs at all (means paymentData was loaded)
+      const allInputs = formRef.current.querySelectorAll("input");
+      if (allInputs.length === 0) {
+        console.log(
+          "🔍 [Payment] Form has no inputs yet - paymentData not loaded"
+        );
+        return;
+      }
 
       const requiredFields = [
         "merchant_id",
@@ -134,13 +148,41 @@ function PaymentContent() {
         "item_name",
         "signature",
       ];
+
+      const fieldStatus: Record<string, boolean> = {};
       const allFieldsPresent = requiredFields.every((field) => {
         const input = formRef.current?.querySelector(`input[name="${field}"]`);
-        return input && (input as HTMLInputElement).value;
+        const hasValue = input && (input as HTMLInputElement).value;
+        fieldStatus[field] = !!hasValue;
+        if (!hasValue) {
+          console.log(`❌ [Payment] Missing field: ${field}`);
+        }
+        return hasValue;
       });
 
       if (allFieldsPresent) {
+        console.log(
+          "✅ [Payment] Form is ready! All fields present:",
+          fieldStatus
+        );
+        isFormReadyRef.current = true;
         setIsFormReady(true);
+        setPaymentDataLoaded(true);
+      } else {
+        console.log(
+          "⚠️ [Payment] Form not ready yet. Field status:",
+          fieldStatus
+        );
+        console.log(
+          `📋 [Payment] Total form inputs found: ${allInputs.length}`
+        );
+        allInputs.forEach((input) => {
+          console.log(
+            `   - ${input.name}: ${
+              (input as HTMLInputElement).value ? "✅" : "❌"
+            }`
+          );
+        });
       }
     };
 
@@ -151,15 +193,23 @@ function PaymentContent() {
     const initialDelay = setTimeout(() => {
       checkFormReady();
 
-      // Check periodically until form is ready (max 10 seconds)
+      // Check periodically until form is ready (max 15 seconds to account for API delay)
       interval = setInterval(() => {
         checkFormReady();
       }, 500);
 
-      // Timeout after 10 seconds
+      // Timeout after 15 seconds
       timeout = setTimeout(() => {
         if (interval) clearInterval(interval);
-      }, 10000);
+        if (!isFormReady) {
+          console.error(
+            "❌ [Payment] Form readiness check timed out after 15 seconds"
+          );
+          console.error(
+            "   This usually means paymentData was not loaded or form fields are missing"
+          );
+        }
+      }, 15000);
     }, 1000);
 
     // Cleanup
@@ -313,14 +363,108 @@ function PaymentContent() {
             subscription_notify_webhook={true}
             subscription_notify_buyer={true}
             autoSubmit={false}
+            onPaymentDataLoaded={() => {
+              console.log("✅ [Payment] Payment data loaded callback received");
+              setPaymentDataLoaded(true);
+              // Trigger form readiness check immediately and repeatedly until ready
+              let attempts = 0;
+              const maxAttempts = 20; // Check for up to 10 seconds (20 * 500ms)
+
+              const checkInterval = setInterval(() => {
+                attempts++;
+                // Use ref to avoid closure issues
+                if (formRef.current && !isFormReadyRef.current) {
+                  const requiredFields = [
+                    "merchant_id",
+                    "merchant_key",
+                    "amount",
+                    "item_name",
+                    "signature",
+                  ];
+                  const allFieldsPresent = requiredFields.every((field) => {
+                    const input = formRef.current?.querySelector(
+                      `input[name="${field}"]`
+                    );
+                    return input && (input as HTMLInputElement).value;
+                  });
+
+                  if (allFieldsPresent) {
+                    console.log(
+                      "✅ [Payment] Form ready after payment data loaded!"
+                    );
+                    isFormReadyRef.current = true;
+                    setIsFormReady(true);
+                    clearInterval(checkInterval);
+                  } else if (attempts >= maxAttempts) {
+                    console.error(
+                      "❌ [Payment] Form readiness check timed out in callback"
+                    );
+                    console.error(
+                      "   This means form fields are not being rendered correctly"
+                    );
+                    clearInterval(checkInterval);
+                  } else if (attempts % 5 === 0) {
+                    // Log every 5 attempts to avoid spam
+                    console.log(
+                      `🔍 [Payment] Checking form readiness (attempt ${attempts}/${maxAttempts})...`
+                    );
+                    const allInputs = formRef.current.querySelectorAll("input");
+                    console.log(`   Found ${allInputs.length} form inputs`);
+                  }
+                } else if (isFormReadyRef.current) {
+                  clearInterval(checkInterval);
+                }
+              }, 500);
+            }}
           />
 
           {/* Submit Button */}
           <button
             onClick={() => {
+              console.log("🖱️ [Payment] Button clicked!");
+              console.log("   formRef.current:", !!formRef.current);
+              console.log("   isFormReady:", isFormReady);
+              console.log("   isSubmitting:", isSubmitting);
+
               if (formRef.current && isFormReady) {
+                console.log("✅ [Payment] Submitting form...");
                 setIsSubmitting(true);
+
+                // Verify form has all fields before submitting
+                const requiredFields = [
+                  "merchant_id",
+                  "merchant_key",
+                  "amount",
+                  "item_name",
+                  "signature",
+                ];
+                const missingFields: string[] = [];
+                requiredFields.forEach((field) => {
+                  const input = formRef.current?.querySelector(
+                    `input[name="${field}"]`
+                  );
+                  if (!input || !(input as HTMLInputElement).value) {
+                    missingFields.push(field);
+                  }
+                });
+
+                if (missingFields.length > 0) {
+                  console.error(
+                    "❌ [Payment] Cannot submit - missing fields:",
+                    missingFields
+                  );
+                  setIsSubmitting(false);
+                  return;
+                }
+
+                console.log("🚀 [Payment] Form submission starting...");
+                console.log("   Form action:", formRef.current.action);
                 formRef.current.submit();
+                console.log("✅ [Payment] Form submit() called");
+              } else {
+                console.error("❌ [Payment] Cannot submit form:");
+                console.error("   formRef.current:", !!formRef.current);
+                console.error("   isFormReady:", isFormReady);
               }
             }}
             disabled={!isFormReady || isSubmitting}
