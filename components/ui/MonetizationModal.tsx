@@ -4,7 +4,7 @@ import React from "react";
 import { X, Play, CreditCard } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { API_CONFIG } from "@/lib/config";
-import PayFastForm from "./PayFastForm";
+import PayFastDollarForm from "./PayFastDollarForm";
 import { convertUSDToZAR } from "@/lib/currency";
 
 interface MonetizationModalProps {
@@ -366,7 +366,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                       </p>
                     </div>
                   )}
-                  <PayFastForm
+                  <PayFastDollarForm
                     amount={zarAmount || "1.00"}
                     item_name="Premium Access"
                     item_description="Unlock premium features and remove ads"
