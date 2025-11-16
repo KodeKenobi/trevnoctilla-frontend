@@ -330,13 +330,24 @@ export async function POST(request: NextRequest) {
       subscription_type === 2;
 
     // Use provided URLs from request body, or construct from config
+    // CRITICAL: Always replace localhost URLs with production URLs
+    // PayFast requires publicly accessible URLs
+    const sanitizeUrl = (url: string | undefined): string => {
+      if (!url) return "";
+      // Replace any localhost URLs with production URL
+      if (url.includes("localhost") || url.includes("127.0.0.1")) {
+        return url.replace(/https?:\/\/[^/]+/, productionBaseUrl);
+      }
+      return url;
+    };
+
     const returnUrl =
-      return_url ||
+      sanitizeUrl(return_url) ||
       (isSubscription
         ? `${finalBaseUrl}/dashboard` // Subscriptions go to dashboard
         : PAYFAST_CONFIG.RETURN_URL || `${finalBaseUrl}/payment/success`); // One-time payments go to success page
     const cancelUrl =
-      cancel_url ||
+      sanitizeUrl(cancel_url) ||
       PAYFAST_CONFIG.CANCEL_URL ||
       `${finalBaseUrl}/payment/cancel`;
 
@@ -347,7 +358,7 @@ export async function POST(request: NextRequest) {
     // Always include notify_url for both one-time payments and subscriptions
     // PayFast requires notify_url to know where to send webhook notifications
     const notifyUrl =
-      notify_url ||
+      sanitizeUrl(notify_url) ||
       PAYFAST_CONFIG.NOTIFY_URL ||
       `${finalBaseUrl}/payment/notify`;
     paymentData.notify_url = notifyUrl;

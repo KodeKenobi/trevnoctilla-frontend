@@ -339,15 +339,9 @@ function PaymentContent() {
             item_description={`${
               planConfig[planId as keyof typeof planConfig].description
             } - Recurring monthly subscription`}
-            return_url={`${
-              typeof window !== "undefined" ? window.location.origin : ""
-            }/dashboard`}
-            cancel_url={`${
-              typeof window !== "undefined" ? window.location.origin : ""
-            }/payment/cancel?plan=${planId}`}
-            notify_url={`${
-              typeof window !== "undefined" ? window.location.origin : ""
-            }/payment/notify`}
+            return_url={`https://www.trevnoctilla.com/dashboard`}
+            cancel_url={`https://www.trevnoctilla.com/payment/cancel?plan=${planId}`}
+            notify_url={`https://www.trevnoctilla.com/payment/notify`}
             // CRITICAL: Do NOT send email_address or name_first when logged in
             // These cause signature mismatch - PayFast rejects payments from merchant email
             // email_address={user.email}
