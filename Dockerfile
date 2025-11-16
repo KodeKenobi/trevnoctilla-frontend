@@ -15,26 +15,22 @@ WORKDIR /app
 COPY . /tmp/repo
 WORKDIR /tmp/repo
 
-# Debug: Show what's in the repo
-RUN echo "=== Contents of /tmp/repo ===" && \
-    ls -la /tmp/repo && \
-    echo "=== Checking for trevnoctilla-backend ===" && \
-    if [ -d "trevnoctilla-backend" ]; then \
+# Check if trevnoctilla-backend exists and is populated, if not clone it
+RUN if [ -d "trevnoctilla-backend" ]; then \
         echo "trevnoctilla-backend directory exists"; \
-        ls -la trevnoctilla-backend/ | head -20; \
-    else \
-        echo "trevnoctilla-backend directory NOT found"; \
-        if [ -f .gitmodules ]; then \
-            echo "Found .gitmodules, attempting to initialize submodules..."; \
-            git submodule update --init --recursive || echo "Submodule init failed"; \
+        if [ -z "$(ls -A trevnoctilla-backend)" ]; then \
+            echo "trevnoctilla-backend is empty, cloning repository..."; \
+            rm -rf trevnoctilla-backend; \
+            git clone https://github.com/KodeKenobi/justpdf-backend.git trevnoctilla-backend; \
         else \
-            echo "No .gitmodules file found"; \
+            echo "trevnoctilla-backend is populated"; \
         fi; \
-        if [ ! -d "trevnoctilla-backend" ]; then \
-            echo "ERROR: trevnoctilla-backend directory still not found after submodule init!"; \
-            exit 1; \
-        fi; \
-    fi
+    else \
+        echo "trevnoctilla-backend directory NOT found, cloning repository..."; \
+        git clone https://github.com/KodeKenobi/justpdf-backend.git trevnoctilla-backend; \
+    fi && \
+    echo "=== Verifying trevnoctilla-backend contents ===" && \
+    ls -la trevnoctilla-backend/ | head -20
 
 # Copy requirements and install Python dependencies
 # Handle both root-level and trevnoctilla-backend/ build contexts
