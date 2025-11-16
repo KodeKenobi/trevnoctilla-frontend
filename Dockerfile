@@ -11,13 +11,23 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy the entire repo first to initialize submodules
+# Copy the entire repo first
 COPY . /tmp/repo
 WORKDIR /tmp/repo
 
-# Initialize git submodules if .gitmodules exists
-RUN if [ -f .gitmodules ]; then \
-        git submodule update --init --recursive || true; \
+# Check if trevnoctilla-backend exists, if not try to initialize submodules
+RUN if [ ! -d "trevnoctilla-backend" ]; then \
+        if [ -f .gitmodules ]; then \
+            git submodule update --init --recursive || true; \
+        fi; \
+    fi
+
+# Verify trevnoctilla-backend exists, if not fail with helpful error
+RUN if [ ! -d "trevnoctilla-backend" ]; then \
+        echo "ERROR: trevnoctilla-backend directory not found!"; \
+        echo "Contents of /tmp/repo:"; \
+        ls -la /tmp/repo; \
+        exit 1; \
     fi
 
 # Copy requirements and install Python dependencies
