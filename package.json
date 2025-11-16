@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "test:payfast": "node test-payfast.js",
-    "test:billing": "node test-billing-subscription-flow.js"
+    "test:billing": "node test-billing-subscription-flow.js",
+    "test:user-deletion": "node test-user-deletion-flow.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.0",

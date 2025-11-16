@@ -70,6 +70,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             setUser(userData);
             setLoading(false);
             return;
+          } else if (response.status === 404) {
+            // User was deleted - log them out
+            console.log(
+              "❌ User not found in backend (404) - user was deleted. Logging out..."
+            );
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("user_data");
+            const { signOut } = await import("next-auth/react");
+            await signOut({ redirect: true, callbackUrl: "/auth/login" });
+            setUser(null);
+            setLoading(false);
+            return;
           } else {
             console.log("🔍 Profile endpoint failed, falling back to session");
           }
@@ -102,7 +114,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             "🔍 No backend token found, getting one from NextAuth session..."
           );
           try {
-            // Use endpoint that auto-creates/updates user from NextAuth session
+            // Use endpoint to get backend token from NextAuth session
+            // NOTE: This will return 404 if user was deleted (prevents resurrection)
             const tokenResponse = await fetch(
               getApiUrl("/auth/get-token-from-session"),
               {
@@ -122,6 +135,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 }),
               }
             );
+
+            // If user not found (404), user was deleted - log them out
+            if (tokenResponse.status === 404) {
+              console.log(
+                "❌ User not found in backend - user was deleted. Logging out..."
+              );
+              // Clear all auth data
+              localStorage.removeItem("auth_token");
+              localStorage.removeItem("user_data");
+              // Sign out from NextAuth
+              const { signOut } = await import("next-auth/react");
+              await signOut({ redirect: true, callbackUrl: "/auth/login" });
+              setUser(null);
+              setLoading(false);
+              return;
+            }
 
             if (tokenResponse.ok) {
               const backendData = await tokenResponse.json();
