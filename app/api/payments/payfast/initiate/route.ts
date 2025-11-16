@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { headers } from "next/headers";
 import crypto from "crypto";
 import { storePendingPayment } from "@/lib/pending-payments";
 
@@ -132,11 +133,33 @@ function generatePayFastSignature(data: Record<string, string>): string {
 
 export async function POST(request: NextRequest) {
   try {
-    // Get user email from session
-    const session = await getServerSession(authOptions);
+    // Get user email from session - CRITICAL: Use headers() for App Router
+    const headersList = await headers();
+    const session = await getServerSession({
+      ...authOptions,
+      req: {
+        headers: headersList,
+      } as any,
+    });
+
     const userEmail = session?.user?.email;
 
+    console.log("🔐 [PAYMENT INITIATE] Session check:", {
+      hasSession: !!session,
+      userEmail: userEmail || "none",
+      sessionUser: session?.user ? Object.keys(session.user) : "none",
+      cookieHeader: headersList.get("cookie") ? "present" : "missing",
+    });
+
     if (!userEmail) {
+      console.error(
+        "❌ [PAYMENT INITIATE] No user email in session - returning 401"
+      );
+      console.error("   Session:", session);
+      console.error("   Request headers:", {
+        cookie: headersList.get("cookie") ? "present" : "missing",
+        authorization: headersList.get("authorization") ? "present" : "missing",
+      });
       return NextResponse.json(
         { error: "User must be authenticated to initiate payment" },
         { status: 401 }

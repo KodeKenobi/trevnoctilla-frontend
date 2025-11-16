@@ -132,28 +132,79 @@ export function BillingSection({ user }: BillingSectionProps) {
   };
 
   const handleSubscribe = async (plan: Plan) => {
+    console.log("🖱️ [Subscribe] Button clicked!");
+    console.log("   Plan:", {
+      id: plan.id,
+      name: plan.name,
+      price: plan.price,
+      isSubscription: plan.isSubscription,
+      description: plan.description,
+    });
+    console.log("   User:", {
+      id: user?.id,
+      email: user?.email,
+      subscription_tier: user?.subscription_tier,
+    });
+    console.log("   Current URL:", window.location.href);
+    console.log("   Timestamp:", new Date().toISOString());
+
     // Convert USD to ZAR for PayFast payment
     if (plan.isSubscription && plan.price > 0) {
+      console.log("✅ [Subscribe] Plan is subscription with price > 0");
       try {
+        console.log("💱 [Subscribe] Converting USD to ZAR...");
+        console.log("   USD Amount:", plan.price);
         const zarAmount = await convertUSDToZAR(plan.price);
+        console.log("✅ [Subscribe] Currency conversion successful");
+        console.log("   ZAR Amount:", zarAmount);
+
+        const subscriptionData = {
+          planId: plan.id,
+          planName: plan.name,
+          usdAmount: plan.price,
+          zarAmount: zarAmount,
+          description: plan.description,
+        };
+        console.log(
+          "💾 [Subscribe] Storing subscription data in sessionStorage:",
+          subscriptionData
+        );
+
         // Store plan info and ZAR amount for payment processing
         sessionStorage.setItem(
           "pending_subscription",
-          JSON.stringify({
-            planId: plan.id,
-            planName: plan.name,
-            usdAmount: plan.price,
-            zarAmount: zarAmount,
-            description: plan.description,
-          })
+          JSON.stringify(subscriptionData)
         );
+        console.log(
+          "✅ [Subscribe] Subscription data stored in sessionStorage"
+        );
+
         // Redirect to payment page with converted amount
-        window.location.href = `/payment?plan=${plan.id}&amount=${zarAmount}`;
+        const paymentUrl = `/payment?plan=${plan.id}&amount=${zarAmount}`;
+        console.log("🔀 [Subscribe] Redirecting to payment page:", paymentUrl);
+        console.log(
+          "   Full URL will be:",
+          `${window.location.origin}${paymentUrl}`
+        );
+        window.location.href = paymentUrl;
       } catch (error) {
-        console.error("Failed to convert currency:", error);
+        console.error("❌ [Subscribe] Failed to convert currency:", error);
+        console.error("   Error details:", {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        });
         // Fallback: redirect without conversion (payment page should handle it)
-        window.location.href = `/payment?plan=${plan.id}&usdAmount=${plan.price}`;
+        const fallbackUrl = `/payment?plan=${plan.id}&usdAmount=${plan.price}`;
+        console.log(
+          "⚠️ [Subscribe] Using fallback URL (no currency conversion):",
+          fallbackUrl
+        );
+        window.location.href = fallbackUrl;
       }
+    } else {
+      console.log("⚠️ [Subscribe] Plan is not a subscription or price is 0");
+      console.log("   isSubscription:", plan.isSubscription);
+      console.log("   price:", plan.price);
     }
   };
 
