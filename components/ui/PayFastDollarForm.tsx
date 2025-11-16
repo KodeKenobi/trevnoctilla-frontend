@@ -9,7 +9,12 @@ interface PayFastDollarFormProps {
   item_description?: string;
   return_url?: string;
   cancel_url?: string;
-  notify_url?: string; // Optional - API will exclude for $1 payments
+  notify_url?: string;
+  fica_idnumber?: string;
+  name_first?: string;
+  name_last?: string;
+  email_address?: string;
+  cell_number?: string;
   custom_str1?: string;
   custom_str2?: string;
   autoSubmit?: boolean;
@@ -18,19 +23,6 @@ interface PayFastDollarFormProps {
   onPaymentDataLoaded?: () => void;
 }
 
-/**
- * PayFastDollarForm - Simplified form for $1 payments
- * Only sends minimal required fields:
- * - merchant_id
- * - merchant_key
- * - return_url
- * - cancel_url
- * - amount
- * - item_name
- * - signature
- *
- * notify_url is excluded for $1 payments (handled by API)
- */
 export default function PayFastDollarForm({
   amount,
   item_name,
@@ -38,6 +30,11 @@ export default function PayFastDollarForm({
   return_url,
   cancel_url,
   notify_url,
+  fica_idnumber,
+  name_first,
+  name_last,
+  email_address,
+  cell_number,
   custom_str1,
   custom_str2,
   autoSubmit = false,
@@ -50,19 +47,22 @@ export default function PayFastDollarForm({
   const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
 
   // Payment data comes from API response (includes signature)
+  // This ensures the signature matches the exact data sent to PayFast
   const [paymentData, setPaymentData] = useState<Record<string, string> | null>(
     null
   );
   const [isLoadingSignature, setIsLoadingSignature] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch payment data and signature from server-side API
+  // Fetch payment data and signature from server-side API (passphrase stays on server)
+  // CRITICAL: Use the payment data returned from API, not client-side built data
+  // The signature must match the exact payment data sent to PayFast
   useEffect(() => {
     const fetchPaymentData = async () => {
       try {
         setIsLoadingSignature(true);
 
-        // Build request data - minimal fields only for $1 payments
+        // Build request data from props (what we want to send)
         const requestData: Record<string, any> = {
           amount: parseFloat(amount).toFixed(2),
           item_name: String(item_name).trim(),
@@ -72,16 +72,26 @@ export default function PayFastDollarForm({
           requestData.item_description = item_description.trim();
         if (custom_str1) requestData.custom_str1 = custom_str1.trim();
         if (custom_str2) requestData.custom_str2 = custom_str2.trim();
+        // CRITICAL WORKAROUND: Never send name_first, name_last, email_address, or cell_number
+        // These cause signature mismatch when logged in - PayFast calculates signature differently
+        // Even if props are passed, we exclude them to match $1 payment exactly
+        // if (name_first) requestData.name_first = name_first.trim();
+        // if (name_last) requestData.name_last = name_last.trim();
+        // if (email_address) requestData.email_address = email_address.trim();
+        // if (cell_number) requestData.cell_number = cell_number.trim();
 
-        // Add return URLs
+        // Add return URLs for all payments
+        // PayFast requires return_url in payload to redirect users back
+        // Always include return_url and cancel_url for redirects
         if (return_url) requestData.return_url = return_url.trim();
         if (cancel_url) requestData.cancel_url = cancel_url.trim();
 
-        // NOTE: notify_url is intentionally NOT sent for $1 payments
-        // The API will exclude it automatically for simple payments (amount <= 20 ZAR)
-        // Only include if explicitly provided and amount is larger
-        if (notify_url && parseFloat(amount) > 20) {
-          requestData.notify_url = notify_url.trim();
+        // Only include notify_url for one-time payments
+        // For $1 payments, notify_url is excluded (handled by API)
+        if (!notify_url || parseFloat(amount) <= 20) {
+          // Don't send notify_url for $1 payments
+        } else {
+          if (notify_url) requestData.notify_url = notify_url.trim();
         }
 
         // DO NOT send subscription fields - this is for simple $1 payments only
@@ -101,27 +111,30 @@ export default function PayFastDollarForm({
         }
 
         const data = await response.json();
+        // CRITICAL: Use the payment_data from API response, not client-side built data
+        // The signature is calculated on the server's payment_data, so we must use that
         if (data.payment_data) {
           setPaymentData(data.payment_data);
-          console.log(
-            "✅ PayFastDollarForm: Payment data and signature fetched from server"
-          );
+          console.log("✅ Payment data and signature fetched from server");
           console.log("Payment data:", data.payment_data);
+          console.log(
+            "✅ PayFastDollarForm: paymentData state updated, form should render inputs now"
+          );
+          // Notify parent that payment data is loaded
           if (onPaymentDataLoaded) {
             onPaymentDataLoaded();
           }
         } else {
-          console.error(
-            "❌ PayFastDollarForm: No payment_data in response:",
-            data
-          );
+          console.error("❌ PayFastDollarForm: No payment_data in response:", data);
           throw new Error("No payment_data in response");
         }
       } catch (error) {
         console.error("❌ Failed to fetch payment data:", error);
+        // Set error state so parent can handle it
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         setError(errorMessage);
+        console.error("   Error message:", errorMessage);
       } finally {
         setIsLoadingSignature(false);
       }
@@ -132,11 +145,15 @@ export default function PayFastDollarForm({
     amount,
     item_name,
     item_description,
+    custom_str1,
+    custom_str2,
+    name_first,
+    name_last,
+    email_address,
+    cell_number,
     return_url,
     cancel_url,
     notify_url,
-    custom_str1,
-    custom_str2,
     onPaymentDataLoaded,
   ]);
 
@@ -156,8 +173,10 @@ export default function PayFastDollarForm({
       paymentData &&
       !isLoadingSignature
     ) {
+      // Wait a bit to ensure form is fully rendered with all fields
       setTimeout(() => {
         if (formRef.current && paymentData && !hasAutoSubmitted) {
+          // Verify form has all required fields before submitting
           const requiredFields = [
             "merchant_id",
             "merchant_key",
@@ -174,7 +193,7 @@ export default function PayFastDollarForm({
 
           if (allFieldsPresent) {
             console.log(
-              "🚀 Auto-submitting PayFastDollarForm with payment data:",
+              "🚀 Auto-submitting PayFast form with payment data:",
               paymentData
             );
             setHasAutoSubmitted(true);
@@ -183,6 +202,15 @@ export default function PayFastDollarForm({
             console.error(
               "❌ Cannot auto-submit: Missing required fields in form"
             );
+            console.log(
+              "Form inputs:",
+              Array.from(formRef.current.querySelectorAll("input")).map(
+                (inp: HTMLInputElement) => ({
+                  name: inp.name,
+                  value: inp.value,
+                })
+              )
+            );
           }
         }
       }, 500);
@@ -190,17 +218,19 @@ export default function PayFastDollarForm({
   }, [autoSubmit, paymentData, isLoadingSignature, hasAutoSubmitted]);
 
   // Render inputs in EXACT order as per PayFast documentation
+  // CRITICAL: Use paymentData from API response (includes signature)
+  // Render fields in the EXACT order they appear in paymentData object
+  // This ensures the form matches what the signature was calculated on
   const renderInputs = () => {
     if (!paymentData) {
-      console.log(
-        "⚠️ PayFastDollarForm: paymentData is null, not rendering inputs"
-      );
-      return null;
+      console.log("⚠️ PayFastDollarForm: paymentData is null, not rendering inputs");
+      return null; // Don't render form until payment data is loaded
     }
 
     const inputs: JSX.Element[] = [];
 
-    // Iterate through paymentData in insertion order
+    // Iterate through paymentData in insertion order (as it appears in the object)
+    // This matches the order used for signature calculation
     for (const key in paymentData) {
       const value = paymentData[key];
       if (value !== undefined && value !== null && value !== "") {
@@ -214,10 +244,11 @@ export default function PayFastDollarForm({
     return inputs;
   };
 
-  // Log payment data when ready
+  // Ensure form is in DOM and log payment data when ready
   useEffect(() => {
     if (formRef.current && paymentData) {
       console.log("=== PayFastDollarForm Payment Data ===");
+      console.log("Form ref:", formRef.current);
       console.log("Full payment data from API:", paymentData);
       console.log("Form action:", formRef.current.action);
 
@@ -225,8 +256,6 @@ export default function PayFastDollarForm({
       const requiredFields = [
         "merchant_id",
         "merchant_key",
-        "return_url",
-        "cancel_url",
         "amount",
         "item_name",
         "signature",
@@ -239,20 +268,8 @@ export default function PayFastDollarForm({
           console.error(`❌ ${field} MISSING from form!`);
         }
       });
-
-      // Verify notify_url is NOT present for $1 payments
-      const notifyInput = formRef.current?.querySelector(
-        'input[name="notify_url"]'
-      );
-      if (notifyInput && parseFloat(amount) <= 20) {
-        console.warn(
-          "⚠️ notify_url is present but should be excluded for $1 payments"
-        );
-      } else if (!notifyInput && parseFloat(amount) <= 20) {
-        console.log("✅ notify_url correctly excluded for $1 payment");
-      }
     }
-  }, [paymentData, amount]);
+  }, [paymentData]);
 
   return (
     <form
