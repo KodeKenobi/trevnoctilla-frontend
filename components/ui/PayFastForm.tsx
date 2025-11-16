@@ -32,6 +32,11 @@ interface PayFastFormProps {
   onPaymentDataLoaded?: () => void;
 }
 
+/**
+ * PayFastForm - For SUBSCRIPTIONS ONLY
+ * This component is specifically designed for PayFast subscription payments.
+ * For simple $1 payments, use PayFastDollarForm instead.
+ */
 export default function PayFastForm({
   amount,
   item_name,
@@ -62,6 +67,27 @@ export default function PayFastForm({
   const internalFormRef = useRef<HTMLFormElement>(null);
   const formRef = externalFormRef || internalFormRef;
   const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
+
+  // CRITICAL: PayFastForm is for SUBSCRIPTIONS ONLY
+  // Require subscription_type to be provided
+  if (!subscription_type) {
+    console.error(
+      "❌ PayFastForm ERROR: subscription_type is required. " +
+        "PayFastForm is for subscriptions only. " +
+        "For simple $1 payments, use PayFastDollarForm instead."
+    );
+    return (
+      <div className="text-red-500 p-4">
+        <p className="font-bold">
+          Error: PayFastForm requires subscription_type
+        </p>
+        <p className="text-sm">
+          PayFastForm is for subscriptions only. Use PayFastDollarForm for
+          simple payments.
+        </p>
+      </div>
+    );
+  }
 
   // Payment data comes from API response (includes signature)
   // This ensures the signature matches the exact data sent to PayFast
@@ -103,13 +129,10 @@ export default function PayFastForm({
         if (return_url) requestData.return_url = return_url.trim();
         if (cancel_url) requestData.cancel_url = cancel_url.trim();
 
-        // Only include notify_url for one-time payments
-        // For subscriptions, notify_url is configured in PayFast dashboard
-        if (!subscription_type) {
-          if (notify_url) requestData.notify_url = notify_url.trim();
-        }
+        // For subscriptions, notify_url is included (API handles this)
+        if (notify_url) requestData.notify_url = notify_url.trim();
 
-        // Add subscription fields if provided
+        // Add subscription fields (required for PayFastForm)
         if (subscription_type) {
           requestData.subscription_type = subscription_type;
           if (subscription_type === "1") {
