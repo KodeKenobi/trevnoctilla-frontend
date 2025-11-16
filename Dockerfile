@@ -15,25 +15,37 @@ WORKDIR /app
 COPY . /tmp/repo
 WORKDIR /tmp/repo
 
-# Check if trevnoctilla-backend exists, if not try to initialize submodules
-RUN if [ ! -d "trevnoctilla-backend" ]; then \
+# Debug: Show what's in the repo
+RUN echo "=== Contents of /tmp/repo ===" && \
+    ls -la /tmp/repo && \
+    echo "=== Checking for trevnoctilla-backend ===" && \
+    if [ -d "trevnoctilla-backend" ]; then \
+        echo "trevnoctilla-backend directory exists"; \
+        ls -la trevnoctilla-backend/ | head -20; \
+    else \
+        echo "trevnoctilla-backend directory NOT found"; \
         if [ -f .gitmodules ]; then \
-            git submodule update --init --recursive || true; \
+            echo "Found .gitmodules, attempting to initialize submodules..."; \
+            git submodule update --init --recursive || echo "Submodule init failed"; \
+        else \
+            echo "No .gitmodules file found"; \
         fi; \
-    fi
-
-# Verify trevnoctilla-backend exists, if not fail with helpful error
-RUN if [ ! -d "trevnoctilla-backend" ]; then \
-        echo "ERROR: trevnoctilla-backend directory not found!"; \
-        echo "Contents of /tmp/repo:"; \
-        ls -la /tmp/repo; \
-        exit 1; \
+        if [ ! -d "trevnoctilla-backend" ]; then \
+            echo "ERROR: trevnoctilla-backend directory still not found after submodule init!"; \
+            exit 1; \
+        fi; \
     fi
 
 # Copy requirements and install Python dependencies
 # Handle both root-level and trevnoctilla-backend/ build contexts
 WORKDIR /app
-RUN cp /tmp/repo/trevnoctilla-backend/requirements.txt requirements.txt
+RUN if [ ! -f "/tmp/repo/trevnoctilla-backend/requirements.txt" ]; then \
+        echo "ERROR: requirements.txt not found in trevnoctilla-backend!"; \
+        echo "Contents of trevnoctilla-backend:"; \
+        ls -la /tmp/repo/trevnoctilla-backend/ || echo "Directory doesn't exist"; \
+        exit 1; \
+    fi && \
+    cp /tmp/repo/trevnoctilla-backend/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
