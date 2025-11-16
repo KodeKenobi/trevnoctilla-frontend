@@ -24,6 +24,7 @@ interface BillingHistory {
 
 interface BillingSectionProps {
   user?: {
+    id?: number;
     email?: string;
     subscription_tier?: string;
   };

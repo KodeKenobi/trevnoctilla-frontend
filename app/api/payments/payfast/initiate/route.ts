@@ -133,6 +133,15 @@ function generatePayFastSignature(data: Record<string, string>): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const body = await request.json();
+
+    // Check if this is a simple $1 payment (no subscription, no user_id)
+    // For $1 payments, authentication is NOT required
+    const isSimplePayment =
+      !body.subscription_type &&
+      !body.custom_str2 && // No user_id
+      parseFloat(body.amount || "0") <= 20; // Amount is $1 or less (in ZAR ~17-20)
+
     // Get user email from session - CRITICAL: Use headers() for App Router
     const headersList = await headers();
     const session = await getServerSession({
@@ -147,11 +156,13 @@ export async function POST(request: NextRequest) {
     console.log("🔐 [PAYMENT INITIATE] Session check:", {
       hasSession: !!session,
       userEmail: userEmail || "none",
+      isSimplePayment,
       sessionUser: session?.user ? Object.keys(session.user) : "none",
       cookieHeader: headersList.get("cookie") ? "present" : "missing",
     });
 
-    if (!userEmail) {
+    // Only require authentication for subscriptions or payments with user_id
+    if (!isSimplePayment && !userEmail) {
       console.error(
         "❌ [PAYMENT INITIATE] No user email in session - returning 401"
       );
@@ -166,7 +177,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    // For simple payments, userEmail can be undefined
+    const finalUserEmail = userEmail || undefined;
     const {
       amount,
       item_name,
@@ -330,13 +342,24 @@ export async function POST(request: NextRequest) {
       subscription_type === 2;
 
     // Use provided URLs from request body, or construct from config
+    // CRITICAL: Always replace localhost URLs with production URLs
+    // PayFast requires publicly accessible URLs
+    const sanitizeUrl = (url: string | undefined): string => {
+      if (!url) return "";
+      // Replace any localhost URLs with production URL
+      if (url.includes("localhost") || url.includes("127.0.0.1")) {
+        return url.replace(/https?:\/\/[^/]+/, productionBaseUrl);
+      }
+      return url;
+    };
+
     const returnUrl =
-      return_url ||
+      sanitizeUrl(return_url) ||
       (isSubscription
         ? `${finalBaseUrl}/dashboard` // Subscriptions go to dashboard
         : PAYFAST_CONFIG.RETURN_URL || `${finalBaseUrl}/payment/success`); // One-time payments go to success page
     const cancelUrl =
-      cancel_url ||
+      sanitizeUrl(cancel_url) ||
       PAYFAST_CONFIG.CANCEL_URL ||
       `${finalBaseUrl}/payment/cancel`;
 
@@ -344,13 +367,24 @@ export async function POST(request: NextRequest) {
     paymentData.return_url = returnUrl;
     paymentData.cancel_url = cancelUrl;
 
-    // Always include notify_url for both one-time payments and subscriptions
-    // PayFast requires notify_url to know where to send webhook notifications
-    const notifyUrl =
-      notify_url ||
-      PAYFAST_CONFIG.NOTIFY_URL ||
-      `${finalBaseUrl}/payment/notify`;
-    paymentData.notify_url = notifyUrl;
+    // Include notify_url only for subscriptions, NOT for simple $1 payments
+    // Simple $1 payments (no subscription_type, amount <= 20 ZAR) should NOT include notify_url
+    const isSimpleDollarPayment =
+      !subscription_type && parseFloat(amount) <= 20; // $1 USD ≈ 17-20 ZAR
+
+    if (!isSimpleDollarPayment) {
+      // Only include notify_url for subscriptions or larger payments
+      const notifyUrl =
+        sanitizeUrl(notify_url) ||
+        PAYFAST_CONFIG.NOTIFY_URL ||
+        `${finalBaseUrl}/payment/notify`;
+      paymentData.notify_url = notifyUrl;
+    } else {
+      // For $1 payments, explicitly exclude notify_url to prevent 400 errors
+      console.log(
+        "💰 [PAYMENT INITIATE] Simple $1 payment detected - excluding notify_url"
+      );
+    }
 
     // Add amount and item_name (matching test script order)
     paymentData.amount = parseFloat(amount).toFixed(2);
@@ -500,7 +534,9 @@ export async function POST(request: NextRequest) {
     const planMatch = item_name.match(/(production|premium|enterprise)/i);
     const plan = planMatch ? planMatch[1].toLowerCase() : "production"; // Default to production
 
-    storePendingPayment(userEmail, plan, paymentData.amount);
+    if (userEmail) {
+      storePendingPayment(userEmail, plan, paymentData.amount);
+    }
     console.log(
       `💾 [PAYMENT INITIATE] Stored pending payment for ${userEmail}: ${plan} plan (${paymentData.amount})`
     );
