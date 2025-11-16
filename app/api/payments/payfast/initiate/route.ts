@@ -137,9 +137,11 @@ export async function POST(request: NextRequest) {
 
     // Check if this is a simple $1 payment (no subscription, no user_id)
     // For $1 payments, authentication is NOT required
+    // custom_str2 can be present (e.g., page URL) but should not be a numeric user_id
+    const customStr2IsUserId = body.custom_str2 && /^\d+$/.test(String(body.custom_str2).trim());
     const isSimplePayment =
       !body.subscription_type &&
-      !body.custom_str2 && // No user_id
+      !customStr2IsUserId && // No numeric user_id (allows URLs, etc.)
       parseFloat(body.amount || "0") <= 20; // Amount is $1 or less (in ZAR ~17-20)
 
     // Get user email from session - CRITICAL: Use headers() for App Router
