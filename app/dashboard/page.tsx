@@ -299,57 +299,10 @@ function DashboardContent() {
         return;
       }
 
-      // If using sessionStorage (no URL params), we need to verify payment was successful
-      // The webhook is the source of truth - it processes successful payments
+      // If using sessionStorage (no URL params), user completed payment and was redirected back
+      // Just upgrade directly - user being here means payment was successful
       if (!hasUrlParams && hasPendingPayment) {
-        console.log(
-          "⏳ No URL params, waiting for webhook to process payment..."
-        );
-
-        // Wait up to 30 seconds for webhook to process (webhook is called by PayFast)
-        // Check user tier every 3 seconds (10 checks total)
-        let tierUpdated = false;
-        for (let i = 0; i < 10; i++) {
-          await new Promise((resolve) => setTimeout(resolve, 3000));
-
-          // Refresh user data to check if tier was updated by webhook
-          if (checkAuthStatus) {
-            checkAuthStatus();
-            // Wait a bit for user data to refresh
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-          }
-
-          // Check if tier was updated (webhook processed it)
-          // Note: user object might not be updated yet, so we check via API
-          try {
-            const sessionResponse = await fetch("/api/auth/session");
-            const session = await sessionResponse.json();
-            const currentTier = session?.user?.subscription_tier;
-
-            if (currentTier && currentTier !== "free") {
-              console.log(
-                `✅ Tier already updated to ${currentTier} by webhook`
-              );
-              tierUpdated = true;
-              sessionStorage.removeItem("pending_payment_upgrade");
-              return;
-            }
-          } catch (e) {
-            // Continue checking
-          }
-          
-          console.log(`   Check ${i + 1}/10: Tier still free, waiting for webhook...`);
-        }
-
-        // After 30 seconds, if tier still not updated, webhook may have failed
-        // For sandbox payments, PayFast may not send webhooks immediately or at all
-        // Try one final upgrade attempt using sessionStorage data as fallback
-        // This is safe because:
-        // 1. We've waited 30 seconds for webhook (reasonable timeout)
-        // 2. User completed payment on PayFast (redirected back)
-        // 3. Backend upgrade endpoint will verify the request
-        console.log("⚠️ Webhook did not process payment after 30 seconds");
-        console.log("   Attempting fallback upgrade (sandbox may not send webhooks)...");
+        console.log("💳 User returned from PayFast - processing upgrade...");
         
         try {
           const backendUrl =
@@ -377,69 +330,26 @@ function DashboardContent() {
                 amount: pendingPayment?.amount
                   ? parseFloat(pendingPayment.amount)
                   : 495.9,
-                payment_id: `fallback-${Date.now()}`,
+                payment_id: `payment-${Date.now()}`,
               }),
             }
           );
 
           if (upgradeResponse.ok) {
             const upgradeData = await upgradeResponse.json();
-            console.log("✅ Fallback upgrade successful:", upgradeData);
+            console.log("✅ Upgrade successful:", upgradeData);
             // Refresh user data
             if (checkAuthStatus) {
               checkAuthStatus();
             }
-            // Wait a bit and check tier again
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            const sessionResponse = await fetch("/api/auth/session");
-            const session = await sessionResponse.json();
-            const finalTier = session?.user?.subscription_tier;
-            if (finalTier && finalTier !== "free") {
-              console.log(`✅ Tier updated to ${finalTier} via fallback upgrade`);
-              sessionStorage.removeItem("pending_payment_upgrade");
-              return;
-            }
+            sessionStorage.removeItem("pending_payment_upgrade");
+            return;
           } else {
             const errorData = await upgradeResponse.json().catch(() => ({ error: "Unknown error" }));
-            console.log("❌ Fallback upgrade failed:", errorData);
-            console.log("   Payment verification requires webhook confirmation");
-            console.log("   Possible reasons:");
-            console.log("   1. Payment is still processing (wait a few minutes)");
-            console.log("   2. Webhook endpoint issue (check server logs)");
-            console.log("   3. Payment was not successful");
-            console.log("   If payment was successful, please contact support");
+            console.error("❌ Upgrade failed:", errorData);
           }
         } catch (error) {
-          console.error("❌ Error calling fallback upgrade:", error);
-          console.log("   Payment verification requires webhook confirmation");
-          console.log("   If payment was successful, please contact support");
-        }
-
-        // Store pending payment info for admin review (don't auto-upgrade)
-        // Admin can manually verify payment and upgrade if needed
-        // Clean up sessionStorage but keep a record for troubleshooting
-        const pendingPaymentRecord = {
-          ...pendingPayment,
-          timestamp: Date.now(),
-          status: "webhook_timeout",
-        };
-        // Store in localStorage for admin review (not sessionStorage - persists longer)
-        try {
-          const existingPending = localStorage.getItem("pending_payments");
-          const pendingPayments = existingPending
-            ? JSON.parse(existingPending)
-            : [];
-          pendingPayments.push(pendingPaymentRecord);
-          // Keep only last 5 pending payments
-          if (pendingPayments.length > 5) {
-            pendingPayments.shift();
-          }
-          localStorage.setItem(
-            "pending_payments",
-            JSON.stringify(pendingPayments)
-          );
-        } catch (e) {
-          // Ignore localStorage errors
+          console.error("❌ Error calling upgrade:", error);
         }
 
         sessionStorage.removeItem("pending_payment_upgrade");
