@@ -53,7 +53,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password. Please try again.");
       } else if (result?.ok) {
-        setSuccess("Login successful! Authenticating with backend...");
+        setSuccess("Login successful!");
 
         // Also get a backend JWT token from NextAuth session
         try {

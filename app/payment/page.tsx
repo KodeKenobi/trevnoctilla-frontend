@@ -358,6 +358,19 @@ function PaymentContent() {
             subscription_notify_buyer={true}
             autoSubmit={false}
             onPaymentDataLoaded={() => {
+              // Store payment info in sessionStorage before redirecting to PayFast
+              // This allows dashboard to trigger upgrade even if PayFast doesn't send URL params
+              sessionStorage.setItem(
+                "pending_payment_upgrade",
+                JSON.stringify({
+                  plan_id: planId,
+                  plan_name: planName,
+                  user_id: user.id,
+                  user_email: user.email,
+                  amount: zarAmount,
+                  timestamp: Date.now(),
+                })
+              );
               console.log("✅ [Payment] Payment data loaded callback received");
               setPaymentDataLoaded(true);
               // Trigger form readiness check immediately and repeatedly until ready

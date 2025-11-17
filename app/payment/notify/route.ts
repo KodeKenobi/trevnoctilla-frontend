@@ -345,6 +345,17 @@ export async function POST(request: NextRequest) {
         const userEmail = data.email_address?.trim() || "";
         const itemName = data.item_name || "";
 
+        // Log extracted fields for debugging
+        console.log(`[${requestId}] === Extracted Payment Fields ===`);
+        console.log(`[${requestId}] custom_str1 (planId): "${planId}"`);
+        console.log(`[${requestId}] custom_str2 (userId): "${userId}"`);
+        console.log(`[${requestId}] email_address: "${userEmail}"`);
+        console.log(`[${requestId}] item_name: "${itemName}"`);
+        console.log(`[${requestId}] token: "${token || "none"}"`);
+        console.log(
+          `[${requestId}] subscription_type: "${subscriptionType || "none"}"`
+        );
+
         // Determine plan name from item_name or plan_id
         let planName = itemName;
         if (planId === "production") {
@@ -359,6 +370,17 @@ export async function POST(request: NextRequest) {
         const isSubscriptionPayment = token && subscriptionType;
         const isFirstPayment = !token && planId && (userId || userEmail);
 
+        console.log(`[${requestId}] === Payment Type Detection ===`);
+        console.log(
+          `[${requestId}] isSubscriptionPayment: ${isSubscriptionPayment}`
+        );
+        console.log(`[${requestId}] isFirstPayment: ${isFirstPayment}`);
+        console.log(
+          `[${requestId}] Will process upgrade: ${
+            isSubscriptionPayment || isFirstPayment
+          }`
+        );
+
         if (isSubscriptionPayment || isFirstPayment) {
           if (isSubscriptionPayment) {
             console.log(`[${requestId}] 📝 Processing subscription payment`);
@@ -371,6 +393,9 @@ export async function POST(request: NextRequest) {
           // Call backend to upgrade subscription
           // CRITICAL: Prioritize user_id over email for subscriptions
           if (planId && (userId || userEmail)) {
+            console.log(
+              `[${requestId}] ✅ Conditions met for upgrade: planId="${planId}", userId="${userId}", userEmail="${userEmail}"`
+            );
             try {
               const backendUrl =
                 process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -420,6 +445,7 @@ export async function POST(request: NextRequest) {
                 const errorText = await upgradeResponse.text();
                 console.error(
                   `[${requestId}] ❌ Failed to upgrade subscription:`,
+                  upgradeResponse.status,
                   errorText
                 );
               }
@@ -428,11 +454,25 @@ export async function POST(request: NextRequest) {
                 `[${requestId}] ❌ Error calling upgrade endpoint:`,
                 error
               );
+              if (error instanceof Error) {
+                console.error(`[${requestId}] Error message:`, error.message);
+                console.error(`[${requestId}] Error stack:`, error.stack);
+              }
               // Don't fail the webhook if upgrade fails - we can retry later
             }
           } else {
-            console.warn(
-              `[${requestId}] ⚠️ Missing user email or plan ID for subscription upgrade`
+            console.log(
+              `[${requestId}] ⚠️ Skipping upgrade - missing required fields`
+            );
+            console.log(
+              `[${requestId}]   planId: "${planId}" (required: non-empty)`
+            );
+            console.log(`[${requestId}]   userId: "${userId}" (optional)`);
+            console.log(
+              `[${requestId}]   userEmail: "${userEmail}" (optional)`
+            );
+            console.log(
+              `[${requestId}]   Need: planId AND (userId OR userEmail)`
             );
           }
         }

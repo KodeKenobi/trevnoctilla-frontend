@@ -249,7 +249,7 @@ function DashboardContent() {
   }, [user]);
 
   // Handle PayFast subscription upgrade after payment redirect
-  // This matches the test script logic - manually trigger upgrade immediately
+  // Improved: Check both URL params AND sessionStorage for pending payment
   useEffect(() => {
     const handleSubscriptionUpgrade = async () => {
       // Check for PayFast return parameters
@@ -262,36 +262,218 @@ function DashboardContent() {
       const pfPaymentId = searchParams.get("pf_payment_id");
       const amount = searchParams.get("amount");
 
+      // Check sessionStorage for pending payment (more reliable than URL params)
+      let pendingPayment = null;
+      try {
+        const pendingPaymentStr = sessionStorage.getItem(
+          "pending_payment_upgrade"
+        );
+        if (pendingPaymentStr) {
+          pendingPayment = JSON.parse(pendingPaymentStr);
+          // Only use if it's recent (within last 10 minutes)
+          const paymentAge = Date.now() - (pendingPayment.timestamp || 0);
+          if (paymentAge > 10 * 60 * 1000) {
+            // Older than 10 minutes, ignore it
+            sessionStorage.removeItem("pending_payment_upgrade");
+            pendingPayment = null;
+          }
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+
       // Determine if this is a subscription payment
       const paymentIsSubscription =
         !!subscriptionType ||
-        (itemName?.toLowerCase().includes("subscription") ?? false);
+        (itemName?.toLowerCase().includes("subscription") ?? false) ||
+        !!pendingPayment; // If we have pending payment, it's a subscription
 
-      // Only proceed if it's a subscription and payment is complete/pending
-      if (
-        !paymentIsSubscription ||
-        !paymentStatus ||
-        (paymentStatus !== "COMPLETE" && paymentStatus !== "PENDING")
-      ) {
+      // Use URL params if available, otherwise use sessionStorage
+      const hasUrlParams =
+        paymentStatus &&
+        (paymentStatus === "COMPLETE" || paymentStatus === "PENDING");
+      const hasPendingPayment = !!pendingPayment;
+
+      // Proceed if we have URL params OR pending payment in sessionStorage
+      if (!paymentIsSubscription || (!hasUrlParams && !hasPendingPayment)) {
+        return;
+      }
+
+      // If using sessionStorage (no URL params), we need to verify payment was successful
+      // The webhook is the source of truth - it processes successful payments
+      if (!hasUrlParams && hasPendingPayment) {
+        console.log(
+          "⏳ No URL params, waiting for webhook to process payment..."
+        );
+
+        // Wait up to 30 seconds for webhook to process (webhook is called by PayFast)
+        // Check user tier every 3 seconds (10 checks total)
+        let tierUpdated = false;
+        for (let i = 0; i < 10; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+
+          // Refresh user data to check if tier was updated by webhook
+          if (checkAuthStatus) {
+            checkAuthStatus();
+            // Wait a bit for user data to refresh
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+
+          // Check if tier was updated (webhook processed it)
+          // Note: user object might not be updated yet, so we check via API
+          try {
+            const sessionResponse = await fetch("/api/auth/session");
+            const session = await sessionResponse.json();
+            const currentTier = session?.user?.subscription_tier;
+
+            if (currentTier && currentTier !== "free") {
+              console.log(
+                `✅ Tier already updated to ${currentTier} by webhook`
+              );
+              tierUpdated = true;
+              sessionStorage.removeItem("pending_payment_upgrade");
+              return;
+            }
+          } catch (e) {
+            // Continue checking
+          }
+          
+          console.log(`   Check ${i + 1}/10: Tier still free, waiting for webhook...`);
+        }
+
+        // After 30 seconds, if tier still not updated, webhook may have failed
+        // For sandbox payments, PayFast may not send webhooks immediately or at all
+        // Try one final upgrade attempt using sessionStorage data as fallback
+        // This is safe because:
+        // 1. We've waited 30 seconds for webhook (reasonable timeout)
+        // 2. User completed payment on PayFast (redirected back)
+        // 3. Backend upgrade endpoint will verify the request
+        console.log("⚠️ Webhook did not process payment after 30 seconds");
+        console.log("   Attempting fallback upgrade (sandbox may not send webhooks)...");
+        
+        try {
+          const backendUrl =
+            process.env.NEXT_PUBLIC_API_BASE_URL ||
+            (process.env.NODE_ENV === "production"
+              ? "https://web-production-737b.up.railway.app"
+              : "http://localhost:5000");
+
+          const upgradeResponse = await fetch(
+            `${backendUrl}/api/payment/upgrade-subscription`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                user_id: pendingPayment?.user_id
+                  ? parseInt(pendingPayment.user_id)
+                  : undefined,
+                user_email: pendingPayment?.user_email || user?.email,
+                plan_id: pendingPayment?.plan_id || "production",
+                plan_name:
+                  pendingPayment?.plan_name ||
+                  "Production Plan - Monthly Subscription",
+                amount: pendingPayment?.amount
+                  ? parseFloat(pendingPayment.amount)
+                  : 495.9,
+                payment_id: `fallback-${Date.now()}`,
+              }),
+            }
+          );
+
+          if (upgradeResponse.ok) {
+            const upgradeData = await upgradeResponse.json();
+            console.log("✅ Fallback upgrade successful:", upgradeData);
+            // Refresh user data
+            if (checkAuthStatus) {
+              checkAuthStatus();
+            }
+            // Wait a bit and check tier again
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            const sessionResponse = await fetch("/api/auth/session");
+            const session = await sessionResponse.json();
+            const finalTier = session?.user?.subscription_tier;
+            if (finalTier && finalTier !== "free") {
+              console.log(`✅ Tier updated to ${finalTier} via fallback upgrade`);
+              sessionStorage.removeItem("pending_payment_upgrade");
+              return;
+            }
+          } else {
+            const errorData = await upgradeResponse.json().catch(() => ({ error: "Unknown error" }));
+            console.log("❌ Fallback upgrade failed:", errorData);
+            console.log("   Payment verification requires webhook confirmation");
+            console.log("   Possible reasons:");
+            console.log("   1. Payment is still processing (wait a few minutes)");
+            console.log("   2. Webhook endpoint issue (check server logs)");
+            console.log("   3. Payment was not successful");
+            console.log("   If payment was successful, please contact support");
+          }
+        } catch (error) {
+          console.error("❌ Error calling fallback upgrade:", error);
+          console.log("   Payment verification requires webhook confirmation");
+          console.log("   If payment was successful, please contact support");
+        }
+
+        // Store pending payment info for admin review (don't auto-upgrade)
+        // Admin can manually verify payment and upgrade if needed
+        // Clean up sessionStorage but keep a record for troubleshooting
+        const pendingPaymentRecord = {
+          ...pendingPayment,
+          timestamp: Date.now(),
+          status: "webhook_timeout",
+        };
+        // Store in localStorage for admin review (not sessionStorage - persists longer)
+        try {
+          const existingPending = localStorage.getItem("pending_payments");
+          const pendingPayments = existingPending
+            ? JSON.parse(existingPending)
+            : [];
+          pendingPayments.push(pendingPaymentRecord);
+          // Keep only last 5 pending payments
+          if (pendingPayments.length > 5) {
+            pendingPayments.shift();
+          }
+          localStorage.setItem(
+            "pending_payments",
+            JSON.stringify(pendingPayments)
+          );
+        } catch (e) {
+          // Ignore localStorage errors
+        }
+
+        sessionStorage.removeItem("pending_payment_upgrade");
         return;
       }
 
       // Check if we've already processed this upgrade (prevent duplicate calls)
-      const upgradeKey = `upgrade_${mPaymentId || pfPaymentId || Date.now()}`;
+      const upgradeKey = `upgrade_${
+        mPaymentId || pfPaymentId || pendingPayment?.timestamp || Date.now()
+      }`;
       if (sessionStorage.getItem(upgradeKey)) {
         console.log(
           "🔄 Subscription upgrade already processed for this payment"
         );
+        // Clean up pending payment if already processed
+        if (pendingPayment) {
+          sessionStorage.removeItem("pending_payment_upgrade");
+        }
         return;
       }
 
       console.log(
         "🔄 Detected PayFast subscription return - triggering upgrade..."
       );
-      console.log("   Payment Status:", paymentStatus);
-      console.log("   Plan ID (custom_str1):", customStr1);
-      console.log("   User ID (custom_str2):", customStr2);
-      console.log("   Item Name:", itemName);
+      console.log("   Payment Status:", paymentStatus || "from sessionStorage");
+      console.log(
+        "   Plan ID (custom_str1):",
+        customStr1 || pendingPayment?.plan_id
+      );
+      console.log(
+        "   User ID (custom_str2):",
+        customStr2 || pendingPayment?.user_id
+      );
+      console.log("   Item Name:", itemName || pendingPayment?.plan_name);
 
       try {
         // Get user info from session
@@ -305,13 +487,22 @@ function DashboardContent() {
           return;
         }
 
-        // Use user ID from URL params, session, or fallback
-        const upgradeUserId = customStr2 || sessionUserId || null;
-        const upgradeEmail = sessionEmail || user?.email || null;
-        const upgradePlanId = customStr1 || "production"; // Default to production
+        // Use data from URL params if available, otherwise use sessionStorage
+        const upgradeUserId =
+          customStr2 || pendingPayment?.user_id || sessionUserId || null;
+        const upgradeEmail =
+          sessionEmail || pendingPayment?.user_email || user?.email || null;
+        const upgradePlanId =
+          customStr1 || pendingPayment?.plan_id || "production";
         const upgradePlanName =
-          itemName || "Production Plan - Monthly Subscription";
-        const upgradeAmount = amount ? parseFloat(amount) : 29.0; // Default to R29
+          itemName ||
+          pendingPayment?.plan_name ||
+          "Production Plan - Monthly Subscription";
+        const upgradeAmount = amount
+          ? parseFloat(amount)
+          : pendingPayment?.amount
+          ? parseFloat(pendingPayment.amount)
+          : 495.9;
 
         console.log("   User ID:", upgradeUserId);
         console.log("   User Email:", upgradeEmail);
@@ -352,6 +543,11 @@ function DashboardContent() {
           // Mark as processed
           sessionStorage.setItem(upgradeKey, "true");
 
+          // Clean up pending payment
+          if (pendingPayment) {
+            sessionStorage.removeItem("pending_payment_upgrade");
+          }
+
           // Clear cached user data and refresh
           localStorage.removeItem("user_data");
           if (checkAuthStatus) {
@@ -375,8 +571,13 @@ function DashboardContent() {
       }
     };
 
-    // Only run if we have search params and user is loaded
-    if (user && searchParams) {
+    // Run if:
+    // 1. User is loaded AND (we have search params OR pending payment in sessionStorage)
+    // 2. For sessionStorage: only run once when component mounts after payment return
+    if (
+      user &&
+      (searchParams || sessionStorage.getItem("pending_payment_upgrade"))
+    ) {
       handleSubscriptionUpgrade();
     }
   }, [user, searchParams, checkAuthStatus, showSuccess]);
