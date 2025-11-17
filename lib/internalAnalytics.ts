@@ -1,5 +1,6 @@
 // Internal Analytics System - No 3rd Parties
 // Stores all data in your own database through your existing API
+// Updated: Fixed initialization order and timestamp format
 
 interface AnalyticsEvent {
   id?: string;
@@ -100,13 +101,14 @@ class InternalAnalytics {
     // Start batch processing
     this.startBatchProcessing();
 
+    // Mark as initialized BEFORE tracking (so trackPageView works)
+    this.isInitialized = true;
+
     // Track initial page view
     this.trackPageView();
 
     // Track session start
     this.trackSessionStart();
-
-    this.isInitialized = true;
   }
 
   private getDeviceInfo() {
@@ -149,10 +151,13 @@ class InternalAnalytics {
       });
 
       if (!response.ok) {
-        console.error(`Analytics API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`Analytics API error (${endpoint}): ${response.status}`, errorText);
+      } else {
+        console.log(`✅ Analytics data sent to ${endpoint}`);
       }
     } catch (error) {
-      console.error("Error sending analytics data:", error);
+      console.error(`Error sending analytics data to ${endpoint}:`, error);
     }
   }
 
@@ -174,8 +179,14 @@ class InternalAnalytics {
     const eventsToSend = [...this.eventQueue];
     this.eventQueue = [];
 
+    // Convert timestamps to ISO strings for backend
+    const eventsForBackend = eventsToSend.map((event) => ({
+      ...event,
+      timestamp: new Date(event.timestamp).toISOString(),
+    }));
+
     try {
-      await this.sendToBackend("events", { events: eventsToSend });
+      await this.sendToBackend("events", { events: eventsForBackend });
     } catch (error) {
       console.error("Error flushing events:", error);
       // Re-add events to queue if sending failed
@@ -200,12 +211,24 @@ class InternalAnalytics {
       is_active: true,
     };
 
-    this.sendToBackend("session", sessionData);
+    // Convert timestamps to ISO strings for backend
+    const backendData = {
+      ...sessionData,
+      start_time: new Date(sessionData.start_time).toISOString(),
+      last_activity: new Date(sessionData.last_activity).toISOString(),
+    };
+
+    this.sendToBackend("session", backendData);
   }
 
   // Track page views
   trackPageView(url?: string, title?: string) {
-    if (!this.isInitialized) return;
+    if (typeof window === "undefined") return;
+    if (!this.isInitialized) {
+      // If not initialized yet, initialize now
+      this.initialize();
+      return;
+    }
 
     const pageUrl = url || window.location.href;
     const pageTitle = title || document.title;
@@ -227,12 +250,23 @@ class InternalAnalytics {
     this.pageViews++;
     this.lastActivity = Date.now();
 
-    this.sendToBackend("pageview", pageViewData);
+    // Convert timestamp to ISO string for backend
+    const backendData = {
+      ...pageViewData,
+      timestamp: new Date(pageViewData.timestamp).toISOString(),
+    };
+
+    this.sendToBackend("pageview", backendData);
   }
 
   // Track custom events
   track(eventName: string, properties: Record<string, any> = {}) {
-    if (!this.isInitialized) return;
+    if (typeof window === "undefined") return;
+    if (!this.isInitialized) {
+      // If not initialized yet, initialize now
+      this.initialize();
+      return;
+    }
 
     const deviceInfo = this.getDeviceInfo();
 
