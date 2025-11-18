@@ -101,9 +101,28 @@ export default function PayFastForm({
   // CRITICAL: Use the payment data returned from API, not client-side built data
   // The signature must match the exact payment data sent to PayFast
   useEffect(() => {
+    // CRITICAL: Ensure amount is valid before making API call
+    if (!amount || parseFloat(amount) <= 0) {
+      console.error(
+        "❌ PayFastForm: Invalid amount, cannot fetch payment data:",
+        amount
+      );
+      setError("Invalid payment amount");
+      setIsLoadingSignature(false);
+      return;
+    }
+
+    console.log("🚀 PayFastForm: useEffect running, fetching payment data...");
+    console.log("   Amount:", amount);
+    console.log("   Item name:", item_name);
+    console.log("   Subscription type:", subscription_type);
+
     const fetchPaymentData = async () => {
       try {
         setIsLoadingSignature(true);
+        console.log(
+          "📡 PayFastForm: Starting API call to /api/payments/payfast/initiate"
+        );
 
         // Build request data from props (what we want to send)
         const requestData: Record<string, any> = {

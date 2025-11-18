@@ -55,7 +55,10 @@ function PaymentContent() {
 
     // If user is not in context but exists in localStorage, trigger checkAuthStatus
     if (!user) {
-      const storedUser = typeof window !== "undefined" ? localStorage.getItem("user_data") : null;
+      const storedUser =
+        typeof window !== "undefined"
+          ? localStorage.getItem("user_data")
+          : null;
       if (storedUser && checkAuthStatus) {
         // User exists in storage but context hasn't loaded it - trigger refresh
         checkAuthStatus();
