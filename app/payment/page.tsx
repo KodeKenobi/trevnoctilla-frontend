@@ -62,7 +62,9 @@ function PaymentContent() {
           : null;
       if (storedUser && checkAuthStatus) {
         // User exists in storage but context hasn't loaded it - trigger refresh
-        console.log("🔄 [Payment] User in storage but not in context, refreshing...");
+        console.log(
+          "🔄 [Payment] User in storage but not in context, refreshing..."
+        );
         await checkAuthStatus();
         // Wait for context to update (checkAuthStatus is async)
         await new Promise((resolve) => setTimeout(resolve, 1000));
