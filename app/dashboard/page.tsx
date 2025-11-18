@@ -338,7 +338,7 @@ function DashboardContent() {
           if (upgradeResponse.ok) {
             const upgradeData = await upgradeResponse.json();
             console.log("✅ Upgrade successful:", upgradeData);
-            
+
             // Silently refresh session to get updated subscription tier
             // This ensures user is redirected to correct dashboard (enterprise vs regular)
             try {
@@ -346,21 +346,15 @@ function DashboardContent() {
               if (checkAuthStatus) {
                 await checkAuthStatus();
               }
-              
-              // Then refresh NextAuth session silently
-              const { update } = await import("next-auth/react");
-              await update(); // Refresh session with updated user data
-              
-              // Wait a moment for session to update
+
+              // Wait a moment for backend data to sync
               await new Promise((resolve) => setTimeout(resolve, 500));
-              
-              // Get updated session to check tier
-              const { getSession } = await import("next-auth/react");
-              const updatedSession = await getSession();
-              const newTier = (updatedSession?.user as any)?.subscription_tier?.toLowerCase() || "free";
-              
-              console.log(`🔄 Session refreshed, new tier: ${newTier}`);
-              
+
+              // Get updated user data from context (already refreshed by checkAuthStatus)
+              const newTier = user?.subscription_tier?.toLowerCase() || "free";
+
+              console.log(`🔄 User data refreshed, new tier: ${newTier}`);
+
               // Redirect to appropriate dashboard based on new tier
               if (newTier === "enterprise" || newTier === "client") {
                 router.push("/enterprise");
@@ -369,12 +363,14 @@ function DashboardContent() {
               }
             } catch (refreshError) {
               console.error("⚠️ Session refresh error:", refreshError);
-              // Fallback: just refresh user data
+              // Fallback: just refresh user data and redirect
               if (checkAuthStatus) {
                 checkAuthStatus();
               }
+              // Default redirect to dashboard
+              router.push("/dashboard");
             }
-            
+
             sessionStorage.removeItem("pending_payment_upgrade");
             return;
           } else {
