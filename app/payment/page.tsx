@@ -41,7 +41,38 @@ function PaymentContent() {
   };
 
   useEffect(() => {
-    // Check if user is authenticated
+    // CRITICAL: Check localStorage first - user might be there but context not loaded yet
+    // This handles the case where registration just happened
+    const storedUser =
+      typeof window !== "undefined"
+        ? localStorage.getItem("user_data")
+        : null;
+    
+    // If user is not in context but exists in localStorage, silently reload page once
+    // This handles the case where registration just happened and context hasn't loaded yet
+    // Silent reload forces everything to reinitialize properly without visible redirect
+    if (!user && storedUser) {
+      // Check if we've already tried reloading (prevent infinite loop)
+      const hasReloaded = sessionStorage.getItem("payment_page_reloaded");
+      if (!hasReloaded) {
+        console.log(
+          "🔄 [Payment] User in storage but not in context, silently reloading..."
+        );
+        sessionStorage.setItem("payment_page_reloaded", "true");
+        // Silent reload - no visible redirect, just refresh the page
+        window.location.reload();
+        return;
+      } else {
+        // Already reloaded once, clear flag and try checkAuthStatus
+        sessionStorage.removeItem("payment_page_reloaded");
+        if (checkAuthStatus) {
+          checkAuthStatus();
+        }
+      }
+      return;
+    }
+
+    // Check if user is authenticated (after reload check)
     if (!userLoading && !user) {
       router.push("/auth/login?redirect=/payment");
       return;
@@ -52,55 +83,6 @@ function PaymentContent() {
     if (userLoading) {
       // Still loading, wait
       return;
-    }
-
-    // If user is not in context but exists in localStorage, silently refresh session
-    // This handles the case where registration just happened and context hasn't loaded yet
-    // Use silent signout/signin to properly establish the session
-    if (!user) {
-      const storedUser =
-        typeof window !== "undefined"
-          ? localStorage.getItem("user_data")
-          : null;
-      if (storedUser) {
-        try {
-          const userData = JSON.parse(storedUser);
-          const authToken = localStorage.getItem("auth_token");
-
-          if (authToken && userData.email) {
-            console.log(
-              "🔄 [Payment] User in storage but not in context, silently refreshing session..."
-            );
-            // Silently sign out and sign back in to establish proper session
-            (async () => {
-              try {
-                // Sign out silently (no redirect)
-                await signOut({ redirect: false });
-                // Wait a moment for cleanup
-                await new Promise((resolve) => setTimeout(resolve, 300));
-                // Sign back in silently using stored credentials
-                // We need to get password from backend or use a token-based approach
-                // For now, use checkAuthStatus which will refresh from backend
-                if (checkAuthStatus) {
-                  await checkAuthStatus();
-                  // Wait for context to update
-                  await new Promise((resolve) => setTimeout(resolve, 1000));
-                }
-              } catch (e) {
-                console.error("Silent session refresh error:", e);
-                // Fallback: just call checkAuthStatus
-                if (checkAuthStatus) {
-                  checkAuthStatus();
-                }
-              }
-            })();
-            return;
-          }
-        } catch (e) {
-          console.error("Error parsing user data:", e);
-        }
-        return;
-      }
     }
 
     // Get plan and amount from query params
