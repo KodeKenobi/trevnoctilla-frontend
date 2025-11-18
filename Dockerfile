@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
+    && npm install -g pnpm \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -69,8 +70,8 @@ RUN chmod +x start.sh
 # Install Node.js dependencies and build Next.js frontend
 WORKDIR /tmp/repo
 RUN if [ -f "package.json" ]; then \
-        npm install && \
-        npm run build; \
+        pnpm install --frozen-lockfile && \
+        pnpm run build; \
     else \
         echo "WARNING: package.json not found, skipping frontend build"; \
     fi
