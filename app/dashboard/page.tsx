@@ -1352,7 +1352,17 @@ function DashboardContent() {
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
                   <span className="w-2 h-2 bg-[#8b5cf6] rounded-full animate-pulse"></span>
-                  {user?.email || "User"} • Testing & Production Plans
+                  {user?.email || "User"} • {(() => {
+                    const tier = user?.subscription_tier?.toLowerCase() || "free";
+                    const tierNames: Record<string, string> = {
+                      free: "Free Plan",
+                      premium: "Premium Plan",
+                      production: "Production Plan",
+                      enterprise: "Enterprise Plan",
+                      client: "Client Plan"
+                    };
+                    return tierNames[tier] || "Free Plan";
+                  })()}
                 </p>
               </div>
               <div className="flex items-center gap-4">
