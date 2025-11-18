@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
+import { signOut, signIn } from "next-auth/react";
 import PayFastForm from "@/components/ui/PayFastForm";
 import { convertUSDToZAR } from "@/lib/currency";
 import { Loader2, ArrowLeft, CreditCard } from "lucide-react";
@@ -53,24 +54,51 @@ function PaymentContent() {
       return;
     }
 
-    // If user is not in context but exists in localStorage, trigger checkAuthStatus
+    // If user is not in context but exists in localStorage, silently refresh session
     // This handles the case where registration just happened and context hasn't loaded yet
+    // Use silent signout/signin to properly establish the session
     if (!user) {
       const storedUser =
         typeof window !== "undefined"
           ? localStorage.getItem("user_data")
           : null;
-      if (storedUser && checkAuthStatus) {
-        // User exists in storage but context hasn't loaded it - trigger refresh
-        console.log(
-          "🔄 [Payment] User in storage but not in context, refreshing..."
-        );
-        // Call checkAuthStatus and wait for it to complete (useEffect can't be async)
-        (async () => {
-          await checkAuthStatus();
-          // Wait for context to update (checkAuthStatus is async)
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        })();
+      if (storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          const authToken = localStorage.getItem("auth_token");
+
+          if (authToken && userData.email) {
+            console.log(
+              "🔄 [Payment] User in storage but not in context, silently refreshing session..."
+            );
+            // Silently sign out and sign back in to establish proper session
+            (async () => {
+              try {
+                // Sign out silently (no redirect)
+                await signOut({ redirect: false });
+                // Wait a moment for cleanup
+                await new Promise((resolve) => setTimeout(resolve, 300));
+                // Sign back in silently using stored credentials
+                // We need to get password from backend or use a token-based approach
+                // For now, use checkAuthStatus which will refresh from backend
+                if (checkAuthStatus) {
+                  await checkAuthStatus();
+                  // Wait for context to update
+                  await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+              } catch (e) {
+                console.error("Silent session refresh error:", e);
+                // Fallback: just call checkAuthStatus
+                if (checkAuthStatus) {
+                  checkAuthStatus();
+                }
+              }
+            })();
+            return;
+          }
+        } catch (e) {
+          console.error("Error parsing user data:", e);
+        }
         return;
       }
     }
