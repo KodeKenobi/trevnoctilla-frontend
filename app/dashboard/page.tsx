@@ -303,7 +303,7 @@ function DashboardContent() {
       // Just upgrade directly - user being here means payment was successful
       if (!hasUrlParams && hasPendingPayment) {
         console.log("💳 User returned from PayFast - processing upgrade...");
-        
+
         try {
           const backendUrl =
             process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -338,14 +338,49 @@ function DashboardContent() {
           if (upgradeResponse.ok) {
             const upgradeData = await upgradeResponse.json();
             console.log("✅ Upgrade successful:", upgradeData);
-            // Refresh user data
-            if (checkAuthStatus) {
-              checkAuthStatus();
+            
+            // Silently refresh session to get updated subscription tier
+            // This ensures user is redirected to correct dashboard (enterprise vs regular)
+            try {
+              // First, refresh user data from backend
+              if (checkAuthStatus) {
+                await checkAuthStatus();
+              }
+              
+              // Then refresh NextAuth session silently
+              const { update } = await import("next-auth/react");
+              await update(); // Refresh session with updated user data
+              
+              // Wait a moment for session to update
+              await new Promise((resolve) => setTimeout(resolve, 500));
+              
+              // Get updated session to check tier
+              const { getSession } = await import("next-auth/react");
+              const updatedSession = await getSession();
+              const newTier = (updatedSession?.user as any)?.subscription_tier?.toLowerCase() || "free";
+              
+              console.log(`🔄 Session refreshed, new tier: ${newTier}`);
+              
+              // Redirect to appropriate dashboard based on new tier
+              if (newTier === "enterprise" || newTier === "client") {
+                router.push("/enterprise");
+              } else {
+                router.push("/dashboard");
+              }
+            } catch (refreshError) {
+              console.error("⚠️ Session refresh error:", refreshError);
+              // Fallback: just refresh user data
+              if (checkAuthStatus) {
+                checkAuthStatus();
+              }
             }
+            
             sessionStorage.removeItem("pending_payment_upgrade");
             return;
           } else {
-            const errorData = await upgradeResponse.json().catch(() => ({ error: "Unknown error" }));
+            const errorData = await upgradeResponse
+              .json()
+              .catch(() => ({ error: "Unknown error" }));
             console.error("❌ Upgrade failed:", errorData);
           }
         } catch (error) {
@@ -1352,14 +1387,16 @@ function DashboardContent() {
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
                   <span className="w-2 h-2 bg-[#8b5cf6] rounded-full animate-pulse"></span>
-                  {user?.email || "User"} • {(() => {
-                    const tier = user?.subscription_tier?.toLowerCase() || "free";
+                  {user?.email || "User"} •{" "}
+                  {(() => {
+                    const tier =
+                      user?.subscription_tier?.toLowerCase() || "free";
                     const tierNames: Record<string, string> = {
                       free: "Free Plan",
                       premium: "Premium Plan",
                       production: "Production Plan",
                       enterprise: "Enterprise Plan",
-                      client: "Client Plan"
+                      client: "Client Plan",
                     };
                     return tierNames[tier] || "Free Plan";
                   })()}
