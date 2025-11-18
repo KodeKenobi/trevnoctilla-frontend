@@ -10,7 +10,7 @@ import { Loader2, ArrowLeft, CreditCard } from "lucide-react";
 function PaymentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, checkAuthStatus } = useUser();
   const [zarAmount, setZarAmount] = useState<string>("");
   const [usdAmount, setUsdAmount] = useState<number>(0);
   const [planId, setPlanId] = useState<string>("");
@@ -44,6 +44,23 @@ function PaymentContent() {
     if (!userLoading && !user) {
       router.push("/auth/login?redirect=/payment");
       return;
+    }
+
+    // CRITICAL: Wait for user context to be fully loaded after registration
+    // After registration, user might be in localStorage but UserContext hasn't loaded it yet
+    if (userLoading) {
+      // Still loading, wait
+      return;
+    }
+
+    // If user is not in context but exists in localStorage, trigger checkAuthStatus
+    if (!user) {
+      const storedUser = typeof window !== "undefined" ? localStorage.getItem("user_data") : null;
+      if (storedUser && checkAuthStatus) {
+        // User exists in storage but context hasn't loaded it - trigger refresh
+        checkAuthStatus();
+        return;
+      }
     }
 
     // Get plan and amount from query params
