@@ -110,16 +110,28 @@ export default function RegisterPage() {
         // Auto-login after successful registration
         const loginSuccess = await login(formData.email, formData.password);
         if (loginSuccess) {
-          setLoadingMessage("Establishing session...");
-          // CRITICAL: Wait for UserContext to load user data before redirecting
-          // This ensures user is available when payment page loads
-          if (checkAuthStatus) {
-            await checkAuthStatus();
-            // Give extra time for context to update
+          // CRITICAL: Sign out and sign back in to properly establish session (silent)
+          // This is what makes the payment page work - same as test script
+          try {
+            const { signOut, signIn } = await import("next-auth/react");
+            // Sign out silently (no redirect, no UI change)
+            await signOut({ redirect: false });
+            // Wait a moment for cleanup
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            // Sign back in silently (no redirect, no UI change)
+            await signIn("credentials", {
+              email: formData.email,
+              password: formData.password,
+              redirect: false,
+            });
+            // Wait for session to establish
             await new Promise((resolve) => setTimeout(resolve, 1000));
-          } else {
-            // Fallback: wait a bit for context to load
-            await new Promise((resolve) => setTimeout(resolve, 1500));
+            // Refresh user context
+            if (checkAuthStatus) {
+              await checkAuthStatus();
+            }
+          } catch (e) {
+            console.error("Session refresh error:", e);
           }
           setLoadingMessage("Redirecting to dashboard...");
           setTimeout(() => {
