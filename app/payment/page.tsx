@@ -65,9 +65,12 @@ function PaymentContent() {
         console.log(
           "🔄 [Payment] User in storage but not in context, refreshing..."
         );
-        await checkAuthStatus();
-        // Wait for context to update (checkAuthStatus is async)
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // Call checkAuthStatus and wait for it to complete (useEffect can't be async)
+        (async () => {
+          await checkAuthStatus();
+          // Wait for context to update (checkAuthStatus is async)
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        })();
         return;
       }
     }
