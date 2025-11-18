@@ -70,7 +70,12 @@ RUN chmod +x start.sh
 # Install Node.js dependencies and build Next.js frontend
 WORKDIR /tmp/repo
 RUN if [ -f "package.json" ]; then \
-        pnpm install --frozen-lockfile && \
+        if [ -f "pnpm-lock.yaml" ]; then \
+            pnpm install --frozen-lockfile; \
+        else \
+            echo "WARNING: pnpm-lock.yaml not found, installing without frozen-lockfile"; \
+            pnpm install; \
+        fi && \
         pnpm run build; \
     else \
         echo "WARNING: package.json not found, skipping frontend build"; \
