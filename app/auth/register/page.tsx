@@ -22,7 +22,7 @@ import { getApiUrl } from "../../../lib/config";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { login } = useUser();
+  const { login, checkAuthStatus } = useUser();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -110,6 +110,17 @@ export default function RegisterPage() {
         // Auto-login after successful registration
         const loginSuccess = await login(formData.email, formData.password);
         if (loginSuccess) {
+          setLoadingMessage("Establishing session...");
+          // CRITICAL: Wait for UserContext to load user data before redirecting
+          // This ensures user is available when payment page loads
+          if (checkAuthStatus) {
+            await checkAuthStatus();
+            // Give extra time for context to update
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          } else {
+            // Fallback: wait a bit for context to load
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+          }
           setLoadingMessage("Redirecting to dashboard...");
           setTimeout(() => {
             // Check for pending subscription

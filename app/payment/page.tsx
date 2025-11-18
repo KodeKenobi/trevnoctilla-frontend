@@ -54,6 +54,7 @@ function PaymentContent() {
     }
 
     // If user is not in context but exists in localStorage, trigger checkAuthStatus
+    // This handles the case where registration just happened and context hasn't loaded yet
     if (!user) {
       const storedUser =
         typeof window !== "undefined"
@@ -61,7 +62,10 @@ function PaymentContent() {
           : null;
       if (storedUser && checkAuthStatus) {
         // User exists in storage but context hasn't loaded it - trigger refresh
-        checkAuthStatus();
+        console.log("🔄 [Payment] User in storage but not in context, refreshing...");
+        await checkAuthStatus();
+        // Wait for context to update (checkAuthStatus is async)
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         return;
       }
     }
