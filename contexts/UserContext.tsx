@@ -284,6 +284,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("user_data");
+    localStorage.removeItem("api_test_key");
     setUser(null);
     signOut({ callbackUrl: "/" });
   };

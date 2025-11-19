@@ -20,6 +20,10 @@ interface BillingHistory {
   amount: number;
   date: string;
   status: "Paid" | "Pending" | "Failed";
+  payment_id?: string;
+  tier?: string;
+  notification_id?: number;
+  metadata?: any;
 }
 
 interface BillingSectionProps {
@@ -83,22 +87,149 @@ const plans: Plan[] = [
 export function BillingSection({ user }: BillingSectionProps) {
   const [billingHistory, setBillingHistory] = useState<BillingHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
-    // Fetch billing history (mock for now)
-    setTimeout(() => {
-      setBillingHistory([
-        {
-          id: "1",
-          invoice: "Testing Plan - Dec 2024",
-          amount: 0,
-          date: "Dec 1, 2024",
-          status: "Paid",
-        },
-      ]);
+    fetchBillingHistory();
+  }, [user]);
+
+  const fetchBillingHistory = async () => {
+    if (!user?.id && !user?.email) {
       setLoading(false);
-    }, 500);
-  }, []);
+      return;
+    }
+
+    try {
+      const backendUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL ||
+        (process.env.NODE_ENV === "production"
+          ? "https://web-production-737b.up.railway.app"
+          : "http://localhost:5000");
+
+      const authToken = localStorage.getItem("auth_token");
+      if (!authToken) {
+        setLoading(false);
+        return;
+      }
+
+      const params = new URLSearchParams();
+      if (user.id) params.append("user_id", user.id.toString());
+      if (user.email) params.append("user_email", user.email);
+
+      const response = await fetch(
+        `${backendUrl}/api/payment/billing-history?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.billing_history) {
+          // Transform backend data to frontend format
+          const transformed = data.billing_history.map((item: any) => ({
+            id: item.id,
+            invoice: item.invoice,
+            amount: item.amount,
+            date: new Date(item.date).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            }),
+            status: item.status as "Paid" | "Pending" | "Failed",
+            payment_id: item.payment_id,
+            tier: item.tier,
+            notification_id: item.notification_id,
+            metadata: item.metadata,
+            rawDate: item.date, // Keep ISO date for invoice download
+          }));
+          setBillingHistory(transformed);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching billing history:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadInvoice = async (item: BillingHistory) => {
+    if (!user?.email || !item.payment_id) {
+      console.error("Missing user email or payment ID");
+      return;
+    }
+
+    setDownloadingInvoice(item.id);
+
+    try {
+      const backendUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL ||
+        (process.env.NODE_ENV === "production"
+          ? "https://web-production-737b.up.railway.app"
+          : "http://localhost:5000");
+
+      const authToken = localStorage.getItem("auth_token");
+      if (!authToken) {
+        console.error("No auth token");
+        return;
+      }
+
+      const response = await fetch(
+        `${backendUrl}/api/payment/download-invoice`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            payment_id: item.payment_id,
+            user_email: user.email,
+            amount: item.amount,
+            tier: item.tier || "free",
+            payment_date: (item as any).rawDate || new Date().toISOString(),
+            item_description: item.invoice,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.pdf_base64) {
+          // Convert base64 to blob and download
+          const byteCharacters = atob(data.pdf_base64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: "application/pdf" });
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = data.filename || `invoice_${item.id}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Failed to download invoice:", errorData);
+        alert("Failed to download invoice. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      alert("Error downloading invoice. Please try again.");
+    } finally {
+      setDownloadingInvoice(null);
+    }
+  };
 
   // Determine user's current tier and plan states
   const getUserTier = (): string => {
@@ -431,23 +562,36 @@ export function BillingSection({ user }: BillingSectionProps) {
                           {item.date}
                         </td>
                         <td className="px-6 py-4">
-                          <span
-                            className={`
-                              inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                              ${
-                                item.status === "Paid"
-                                  ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                                  : item.status === "Pending"
-                                  ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                                  : "bg-red-500/20 text-red-400 border border-red-500/30"
-                              }
-                            `}
-                          >
-                            {item.status === "Paid" && (
-                              <Check className="w-3 h-3 mr-1" />
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`
+                                inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                ${
+                                  item.status === "Paid"
+                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                    : item.status === "Pending"
+                                    ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                    : "bg-red-500/20 text-red-400 border border-red-500/30"
+                                }
+                              `}
+                            >
+                              {item.status === "Paid" && (
+                                <Check className="w-3 h-3 mr-1" />
+                              )}
+                              {item.status}
+                            </span>
+                            {item.payment_id && (
+                              <button
+                                onClick={() => downloadInvoice(item)}
+                                disabled={downloadingInvoice === item.id}
+                                className="text-xs text-[#8b5cf6] hover:text-[#7c3aed] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                                title="Download Invoice"
+                              >
+                                <Download className="w-3 h-3" />
+                                {downloadingInvoice === item.id ? "..." : ""}
+                              </button>
                             )}
-                            {item.status}
-                          </span>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -474,23 +618,36 @@ export function BillingSection({ user }: BillingSectionProps) {
                           </p>
                         </div>
                       </div>
-                      <span
-                        className={`
-                          inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                          ${
-                            item.status === "Paid"
-                              ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                              : item.status === "Pending"
-                              ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                              : "bg-red-500/20 text-red-400 border border-red-500/30"
-                          }
-                        `}
-                      >
-                        {item.status === "Paid" && (
-                          <Check className="w-3 h-3 mr-1" />
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`
+                              inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                              ${
+                                item.status === "Paid"
+                                  ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                  : item.status === "Pending"
+                                  ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                  : "bg-red-500/20 text-red-400 border border-red-500/30"
+                              }
+                            `}
+                        >
+                          {item.status === "Paid" && (
+                            <Check className="w-3 h-3 mr-1" />
+                          )}
+                          {item.status}
+                        </span>
+                        {item.payment_id && (
+                          <button
+                            onClick={() => downloadInvoice(item)}
+                            disabled={downloadingInvoice === item.id}
+                            className="text-xs text-[#8b5cf6] hover:text-[#7c3aed] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            title="Download Invoice"
+                          >
+                            <Download className="w-3 h-3" />
+                            {downloadingInvoice === item.id ? "..." : ""}
+                          </button>
                         )}
-                        {item.status}
-                      </span>
+                      </div>
                     </div>
                   </div>
                 ))}

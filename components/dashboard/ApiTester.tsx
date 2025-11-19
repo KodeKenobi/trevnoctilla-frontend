@@ -32,13 +32,6 @@ export function ApiTester({ toolId }: ApiTesterProps) {
   // Get subscription tier from user context (fetched from profile endpoint)
   const subscriptionTier = user?.subscription_tier?.toLowerCase() || "free";
 
-  useEffect(() => {
-    const storedKey = localStorage.getItem("api_test_key");
-    if (storedKey) {
-      setApiKey(storedKey);
-    }
-  }, []);
-
   const ensureApiKey = async () => {
     if (apiKey) {
       localStorage.setItem("api_test_key", apiKey);
