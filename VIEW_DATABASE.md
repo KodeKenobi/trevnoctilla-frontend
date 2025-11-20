@@ -13,14 +13,15 @@
    - **Metrics** tab - Database performance
 
 ### Option 2: API Endpoint (Easiest)
-Use the view database endpoint:
+Use the view database endpoint through your frontend domain (Next.js proxies to backend):
 ```powershell
-Invoke-RestMethod -Uri 'https://web-production-737b.up.railway.app/test/view-database' -Method Get | ConvertTo-Json -Depth 10
+# Use your frontend domain - Next.js rewrites proxy to backend
+Invoke-RestMethod -Uri 'https://trevnoctilla.com/test/view-database' -Method Get | ConvertTo-Json -Depth 10
 ```
 
 Or in browser:
 ```
-https://web-production-737b.up.railway.app/test/view-database
+https://trevnoctilla.com/test/view-database
 ```
 
 ### Option 3: Railway CLI
@@ -107,10 +108,10 @@ Your app uses:
 The easiest way is to use the `/test/view-database` endpoint which works for both local and production:
 
 ```powershell
-# Production
-Invoke-RestMethod -Uri 'https://web-production-737b.up.railway.app/test/view-database' | ConvertTo-Json -Depth 10
+# Production (use your frontend domain - Next.js proxies to backend)
+Invoke-RestMethod -Uri 'https://trevnoctilla.com/test/view-database' | ConvertTo-Json -Depth 10
 
-# Local (if running)
+# Local (direct backend access)
 Invoke-RestMethod -Uri 'http://localhost:5000/test/view-database' | ConvertTo-Json -Depth 10
 ```
 

@@ -126,6 +126,24 @@ NEXT_PUBLIC_BASE_URL=https://trevnoctilla.com
 3. **Must be publicly accessible** - PayFast needs to reach your URLs
 4. **Set in production environment** - Not just in `.env.local`
 
+## API URL Configuration
+
+### Backend API URL Masking
+
+The backend Railway URL is automatically masked from the frontend. All API calls use relative URLs that are proxied through Next.js rewrites.
+
+**For Frontend/Client-Side Code:**
+- Use relative URLs: `/api/v1/convert/pdf-extract-text`
+- Or use your frontend domain: `https://trevnoctilla.com/api/v1/convert/pdf-extract-text`
+- Next.js automatically proxies these requests to the backend (Railway URL is hidden)
+
+**For External Backends/Server-Side:**
+- Use your frontend domain: `https://trevnoctilla.com/api/v1/...`
+- Or set `TREVNOCTILLA_API_BASE_URL` environment variable to your frontend domain
+- The Railway backend URL is not exposed and should not be used directly
+
+**Note:** `NEXT_PUBLIC_API_BASE_URL` is no longer required for client-side code. The Railway URL is automatically hidden through Next.js rewrites.
+
 ## Quick Checklist
 
 - [ ] Found your production domain
@@ -133,3 +151,4 @@ NEXT_PUBLIC_BASE_URL=https://trevnoctilla.com
 - [ ] Verified the domain is accessible (can visit it in browser)
 - [ ] Redeployed after setting the variable
 - [ ] Tested PayFast payment flow
+- [ ] Verified API calls use relative URLs or frontend domain (Railway URL is hidden)

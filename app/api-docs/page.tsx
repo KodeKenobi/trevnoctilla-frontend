@@ -51,12 +51,19 @@ export default function ApiDocsPage() {
     }
   };
 
+  // Get base URL for API examples (use frontend domain, Next.js rewrites proxy to backend)
+  // Use environment variable or default to production domain
+  const apiBaseUrl =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_BASE_URL || "https://trevnoctilla.com";
+
   const codeExamples = {
     pdf: {
       title: "PDF Text Extraction",
       description: "Extract text from PDF documents with OCR support",
       endpoint: "POST /api/v1/convert/pdf-extract-text",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/pdf-extract-text" \\
+      code: `curl -X POST "${apiBaseUrl}/api/v1/convert/pdf-extract-text" \\
   -H "X-API-Key: your-api-key-here" \\
   -F "file=@document.pdf"`,
       response: `{
@@ -72,7 +79,7 @@ export default function ApiDocsPage() {
       title: "Video Conversion",
       description: "Convert videos between MP4, WebM, AVI, MOV formats",
       endpoint: "POST /api/v1/convert/video",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/video" \\
+      code: `curl -X POST "${apiBaseUrl}/api/v1/convert/video" \\
   -H "X-API-Key: your-api-key-here" \\
   -F "file=@video.mp4" \\
   -F "output_format=webm"`,
@@ -91,7 +98,7 @@ export default function ApiDocsPage() {
       title: "Image Conversion",
       description: "Convert images between JPG, PNG, WebP, BMP formats",
       endpoint: "POST /api/v1/convert/image",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/image" \\
+      code: `curl -X POST "${apiBaseUrl}/api/v1/convert/image" \\
   -H "X-API-Key: your-api-key-here" \\
   -F "file=@image.jpg" \\
   -F "output_format=png"`,
@@ -110,7 +117,7 @@ export default function ApiDocsPage() {
       title: "PDF Merge",
       description: "Merge multiple PDF files into a single document",
       endpoint: "POST /api/v1/convert/pdf-merge",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/pdf-merge" \\
+      code: `curl -X POST "${apiBaseUrl}/api/v1/convert/pdf-merge" \\
   -H "X-API-Key: your-api-key-here" \\
   -F "files=@file1.pdf" \\
   -F "files=@file2.pdf" \\
@@ -129,7 +136,7 @@ export default function ApiDocsPage() {
       title: "PDF Split",
       description: "Split PDF into individual pages or custom ranges",
       endpoint: "POST /api/v1/convert/pdf-split",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/pdf-split" \\
+      code: `curl -X POST "${apiBaseUrl}/api/v1/convert/pdf-split" \\
   -H "X-API-Key: your-api-key-here" \\
   -F "file=@document.pdf" \\
   -F "split_type=by_range" \\
@@ -148,7 +155,7 @@ export default function ApiDocsPage() {
       title: "QR Code Generation",
       description: "Generate QR codes with custom styling and data",
       endpoint: "POST /api/v1/convert/qr-generate",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/api/v1/convert/qr-generate" \\
+      code: `curl -X POST "${apiBaseUrl}/api/v1/convert/qr-generate" \\
   -H "X-API-Key: your-api-key-here" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -171,7 +178,7 @@ export default function ApiDocsPage() {
       description:
         "Convert PDF documents to HTML while preserving exact layout",
       endpoint: "POST /convert_pdf_to_html",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/convert_pdf_to_html" \\
+      code: `curl -X POST "${apiBaseUrl}/convert_pdf_to_html" \\
   -F "pdf=@document.pdf" \\
   -F "method=pymupdf"`,
       response: `{
@@ -191,7 +198,7 @@ export default function ApiDocsPage() {
       title: "HTML to PDF Conversion",
       description: "Convert HTML files to PDF with 100% layout accuracy",
       endpoint: "POST /convert_html_to_pdf",
-      code: `curl -X POST "https://web-production-737b.up.railway.app/convert_html_to_pdf" \\
+      code: `curl -X POST "${apiBaseUrl}/convert_html_to_pdf" \\
   -F "html=@document.html"`,
       response: `{
   "status": "success",

@@ -137,7 +137,7 @@ if (paymentStatus === "COMPLETE" && paymentIsSubscription) {
 
   // Call backend to update subscription
   await fetch(
-    "https://web-production-737b.up.railway.app/api/payment/upgrade-subscription",
+    "/api/payment/upgrade-subscription", // Relative URL - Next.js proxies to backend
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -50,8 +50,9 @@ NEXT_PUBLIC_PAYFAST_RETURN_URL=http://localhost:3000/payment/success
 NEXT_PUBLIC_PAYFAST_CANCEL_URL=http://localhost:3000/payment/cancel
 NEXT_PUBLIC_PAYFAST_NOTIFY_URL=http://localhost:3000/api/payments/payfast/notify
 
-# Backend API URL
-NEXT_PUBLIC_API_BASE_URL=https://web-production-737b.up.railway.app
+# Note: NEXT_PUBLIC_API_BASE_URL is no longer required
+# The backend Railway URL is automatically masked through Next.js rewrites
+# All API calls use relative URLs that proxy to the backend
 ```
 
 **Important:**
@@ -278,8 +279,9 @@ NEXT_PUBLIC_PAYFAST_RETURN_URL=http://localhost:3000/payment/success
 NEXT_PUBLIC_PAYFAST_CANCEL_URL=http://localhost:3000/payment/cancel
 NEXT_PUBLIC_PAYFAST_NOTIFY_URL=http://localhost:3000/api/payments/payfast/notify
 
-# Backend API URL
-NEXT_PUBLIC_API_BASE_URL=https://web-production-737b.up.railway.app
+# Note: NEXT_PUBLIC_API_BASE_URL is no longer required
+# The backend Railway URL is automatically masked through Next.js rewrites
+# All API calls use relative URLs that proxy to the backend
 ```
 
 **Important:**

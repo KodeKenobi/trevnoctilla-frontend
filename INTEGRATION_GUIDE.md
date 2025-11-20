@@ -31,20 +31,18 @@ After login, user generates API key from dashboard:
 
 ```javascript
 // Generate API key programmatically
-const response = await fetch(
-  "https://web-production-737b.up.railway.app/api/client/keys",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer YOUR_BACKEND_JWT_TOKEN", // From login
-    },
-    body: JSON.stringify({
-      name: "My App Key",
-      rate_limit: 1000,
-    }),
-  }
-);
+// Use relative URL - Next.js rewrites proxy to backend (Railway URL is hidden)
+const response = await fetch("/api/client/keys", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: "Bearer YOUR_BACKEND_JWT_TOKEN", // From login
+  },
+  body: JSON.stringify({
+    name: "My App Key",
+    rate_limit: 1000,
+  }),
+});
 
 const { key } = await response.json();
 // Store this key securely: key = 'jpk_abc123xyz456...'
@@ -83,16 +81,14 @@ export default function PDFTextExtractor() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(
-        "https://web-production-737b.up.railway.app/api/v1/convert/pdf-extract-text",
-        {
-          method: "POST",
-          headers: {
-            "X-API-Key": API_KEY, // Your API key here
-          },
-          body: formData,
-        }
-      );
+      // Use relative URL - Next.js rewrites proxy to backend (Railway URL is hidden)
+      const response = await fetch("/api/v1/convert/pdf-extract-text", {
+        method: "POST",
+        headers: {
+          "X-API-Key": API_KEY, // Your API key here
+        },
+        body: formData,
+      });
 
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
@@ -167,7 +163,8 @@ const fs = require("fs");
 const app = express();
 const upload = multer({ dest: "uploads/" });
 const API_KEY = process.env.TREVNOCTILLA_API_KEY; // Store in environment variables
-const API_BASE_URL = "https://web-production-737b.up.railway.app";
+// Use your frontend domain - Next.js rewrites proxy to backend (Railway URL is hidden)
+const API_BASE_URL = process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
 
 app.post("/extract-pdf-text", upload.single("pdf"), async (req, res) => {
   try {
@@ -217,7 +214,8 @@ import os
 
 app = Flask(__name__)
 API_KEY = os.environ.get('TREVNOCTILLA_API_KEY')
-API_BASE_URL = 'https://web-production-737b.up.railway.app'
+# Use your frontend domain - Next.js rewrites proxy to backend (Railway URL is hidden)
+API_BASE_URL = os.environ.get('TREVNOCTILLA_API_BASE_URL', 'https://trevnoctilla.com')
 
 @app.route('/extract-pdf-text', methods=['POST'])
 def extract_pdf_text():
@@ -296,8 +294,10 @@ All endpoints return consistent structure:
      }
 
      // Forward to Trevnoctilla API with your API key
+     // Use your frontend domain - Next.js rewrites proxy to backend
+     const apiBaseUrl = process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
      const response = await fetch(
-       "https://web-production-737b.up.railway.app/api/v1/convert/pdf-extract-text",
+       `${apiBaseUrl}/api/v1/convert/pdf-extract-text`,
        {
          method: "POST",
          headers: {
@@ -337,8 +337,10 @@ const formData = new FormData();
 formData.append("file", imageFile);
 formData.append("output_format", "png");
 
+// Use your frontend domain - Next.js rewrites proxy to backend
+const apiBaseUrl = process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
 const response = await fetch(
-  "https://web-production-737b.up.railway.app/api/v1/convert/image",
+  `${apiBaseUrl}/api/v1/convert/image`,
   {
     method: "POST",
     headers: { "X-API-Key": API_KEY },
@@ -354,8 +356,10 @@ const data = await response.json();
 **QR Code Generation:**
 
 ```javascript
+// Use your frontend domain - Next.js rewrites proxy to backend
+const apiBaseUrl = process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
 const response = await fetch(
-  "https://web-production-737b.up.railway.app/api/v1/convert/qr-generate",
+  `${apiBaseUrl}/api/v1/convert/qr-generate`,
   {
     method: "POST",
     headers: {

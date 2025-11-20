@@ -37,8 +37,9 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 # For production (replace with your domain):
 # NEXT_PUBLIC_BASE_URL=https://trevnoctilla.com
 
-# Backend API URL
-NEXT_PUBLIC_API_BASE_URL=https://web-production-737b.up.railway.app
+# Note: NEXT_PUBLIC_API_BASE_URL is no longer required
+# The backend Railway URL is automatically masked through Next.js rewrites
+# All API calls use relative URLs that proxy to the backend
 ```
 
 **Important:** Replace `your_passphrase_here` with the actual passphrase from step 1.
