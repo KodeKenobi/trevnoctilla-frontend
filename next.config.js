@@ -7,25 +7,18 @@ if (!process.env.NEXTAUTH_URL) {
 }
 
 // Set NEXTAUTH_SECRET for NextAuth if not already set
-// In production, this MUST be set as an environment variable in Railway
-// For local development only, use a fallback
+// In production runtime, this MUST be set as an environment variable in Railway
+// During build, Railway env vars may not be available, so we use a fallback
+// The runtime check happens in app/api/auth/[...nextauth]/route.ts
 if (!process.env.NEXTAUTH_SECRET) {
-  if (process.env.NODE_ENV === "production") {
-    console.error(
-      "❌ ERROR: NEXTAUTH_SECRET must be set as an environment variable in production!"
-    );
-    console.error(
-      "   Set it in Railway: railway variables --set 'NEXTAUTH_SECRET=your-secret'"
-    );
-    throw new Error(
-      "NEXTAUTH_SECRET is required in production. Set it as an environment variable."
+  // Use fallback during build (Railway env vars available at runtime)
+  process.env.NEXTAUTH_SECRET = "development-secret-key-change-in-production";
+  // Only warn in development, not during build (to reduce noise)
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(
+      "[NextAuth] Using development NEXTAUTH_SECRET. Set NEXTAUTH_SECRET in production!"
     );
   }
-  // Development fallback only
-  process.env.NEXTAUTH_SECRET = "development-secret-key-change-in-production";
-  console.warn(
-    "[NextAuth] Using development NEXTAUTH_SECRET. Set NEXTAUTH_SECRET in production!"
-  );
 }
 
 /** @type {import('next').NextConfig} */
