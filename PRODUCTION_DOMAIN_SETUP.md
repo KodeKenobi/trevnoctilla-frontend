@@ -133,11 +133,13 @@ NEXT_PUBLIC_BASE_URL=https://trevnoctilla.com
 The backend Railway URL is automatically masked from the frontend. All API calls use relative URLs that are proxied through Next.js rewrites.
 
 **For Frontend/Client-Side Code:**
+
 - Use relative URLs: `/api/v1/convert/pdf-extract-text`
 - Or use your frontend domain: `https://trevnoctilla.com/api/v1/convert/pdf-extract-text`
 - Next.js automatically proxies these requests to the backend (Railway URL is hidden)
 
 **For External Backends/Server-Side:**
+
 - Use your frontend domain: `https://trevnoctilla.com/api/v1/...`
 - Or set `TREVNOCTILLA_API_BASE_URL` environment variable to your frontend domain
 - The Railway backend URL is not exposed and should not be used directly

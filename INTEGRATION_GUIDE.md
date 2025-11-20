@@ -164,7 +164,8 @@ const app = express();
 const upload = multer({ dest: "uploads/" });
 const API_KEY = process.env.TREVNOCTILLA_API_KEY; // Store in environment variables
 // Use your frontend domain - Next.js rewrites proxy to backend (Railway URL is hidden)
-const API_BASE_URL = process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
+const API_BASE_URL =
+  process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
 
 app.post("/extract-pdf-text", upload.single("pdf"), async (req, res) => {
   try {
@@ -295,7 +296,8 @@ All endpoints return consistent structure:
 
      // Forward to Trevnoctilla API with your API key
      // Use your frontend domain - Next.js rewrites proxy to backend
-     const apiBaseUrl = process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
+     const apiBaseUrl =
+       process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
      const response = await fetch(
        `${apiBaseUrl}/api/v1/convert/pdf-extract-text`,
        {
@@ -338,15 +340,13 @@ formData.append("file", imageFile);
 formData.append("output_format", "png");
 
 // Use your frontend domain - Next.js rewrites proxy to backend
-const apiBaseUrl = process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
-const response = await fetch(
-  `${apiBaseUrl}/api/v1/convert/image`,
-  {
-    method: "POST",
-    headers: { "X-API-Key": API_KEY },
-    body: formData,
-  }
-);
+const apiBaseUrl =
+  process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
+const response = await fetch(`${apiBaseUrl}/api/v1/convert/image`, {
+  method: "POST",
+  headers: { "X-API-Key": API_KEY },
+  body: formData,
+});
 
 const data = await response.json();
 // data.image_base64 contains base64 encoded image
@@ -357,22 +357,20 @@ const data = await response.json();
 
 ```javascript
 // Use your frontend domain - Next.js rewrites proxy to backend
-const apiBaseUrl = process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
-const response = await fetch(
-  `${apiBaseUrl}/api/v1/convert/qr-generate`,
-  {
-    method: "POST",
-    headers: {
-      "X-API-Key": API_KEY,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      text: "https://yourwebsite.com",
-      size: "medium",
-      format: "png",
-    }),
-  }
-);
+const apiBaseUrl =
+  process.env.TREVNOCTILLA_API_BASE_URL || "https://trevnoctilla.com";
+const response = await fetch(`${apiBaseUrl}/api/v1/convert/qr-generate`, {
+  method: "POST",
+  headers: {
+    "X-API-Key": API_KEY,
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    text: "https://yourwebsite.com",
+    size: "medium",
+    format: "png",
+  }),
+});
 
 const data = await response.json();
 // data.image_base64 contains QR code

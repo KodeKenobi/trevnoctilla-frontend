@@ -18,12 +18,13 @@ const PLAN_ID = "production";
 const PLAN_NAME = "Production Plan";
 const AMOUNT = "29.00";
 
-// API URLs
+// API URLs - Use Next.js frontend which proxies to backend via rewrites
+// This tests that Railway URL is hidden (all requests go through Next.js)
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://web-production-737b.up.railway.app";
+  "http://localhost:3002"; // Use Next.js frontend - rewrites will proxy to backend
 const NEXTJS_BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL || "https://www.trevnoctilla.com";
+  process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3002"; // Local frontend
 
 // PayFast credentials (for webhook signature)
 const MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID || "10043520";
