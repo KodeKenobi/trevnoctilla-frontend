@@ -13,12 +13,16 @@ backend_dir = os.path.join(os.path.dirname(__file__), 'trevnoctilla-backend')
 template_dir = Path(backend_dir) / 'templates' / 'emails'
 env = Environment(loader=FileSystemLoader([str(template_dir), str(Path(backend_dir) / 'templates')]))
 
+# Use frontend domain - Next.js rewrites proxy to backend (Railway URL is hidden)
 NEXTJS_URL = os.getenv('NEXTJS_API_URL', 'https://www.trevnoctilla.com')
-BACKEND_URL = os.getenv('BACKEND_URL', 'https://web-production-737b.up.railway.app')
+# For PDF conversion, use frontend domain (Next.js rewrites proxy to backend)
+BACKEND_URL = os.getenv('BACKEND_URL', NEXTJS_URL)  # Use frontend domain by default
 if not BACKEND_URL.startswith('http'):
     BACKEND_URL = f'https://{BACKEND_URL}'
 
 def generate_subscription_pdf(tier, amount, user_email, subscription_id, payment_id, payment_date, billing_cycle="Monthly", payment_method="PayFast", old_tier=None):
+    print(f"📄 [PDF] Generating subscription PDF for {user_email}")
+    print(f"   Tier: {tier}, Amount: {amount}, Payment ID: {payment_id}")
     try:
         tier_names = {'free': 'Free Tier', 'premium': 'Production Plan', 'enterprise': 'Enterprise Plan'}
         subscription_date_obj = payment_date if payment_date else datetime.now()
@@ -53,6 +57,7 @@ def generate_subscription_pdf(tier, amount, user_email, subscription_id, payment
             html_path = f.name
         with open(html_path, 'rb') as html_file:
             files = {'html': ('subscription.html', html_file, 'text/html')}
+            print(f"📄 [PDF] Converting HTML to PDF via {BACKEND_URL}/convert_html_to_pdf")
             response = requests.post(f"{BACKEND_URL}/convert_html_to_pdf", files=files, timeout=30)
         try:
             os.unlink(html_path)
@@ -60,13 +65,22 @@ def generate_subscription_pdf(tier, amount, user_email, subscription_id, payment
             pass
         if response.status_code == 200:
             data = response.json()
+            print(f"📄 [PDF] Conversion response: {data.get('status')}")
             if data.get('status') == 'success' and data.get('download_url'):
                 pdf_url = data['download_url']
                 if not pdf_url.startswith('http'):
                     pdf_url = f"{BACKEND_URL}{pdf_url}"
+                print(f"📄 [PDF] Downloading PDF from {pdf_url}")
                 pdf_response = requests.get(pdf_url, timeout=30)
                 if pdf_response.status_code == 200:
+                    print(f"✅ [PDF] PDF generated successfully ({len(pdf_response.content)} bytes)")
                     return pdf_response.content
+                else:
+                    print(f"❌ [PDF] Failed to download PDF: {pdf_response.status_code}")
+            else:
+                print(f"❌ [PDF] Conversion failed: {data}")
+        else:
+            print(f"❌ [PDF] Conversion request failed: {response.status_code} - {response.text[:200]}")
         return None
     except Exception as e:
         print(f"Error generating subscription PDF: {e}")
@@ -140,14 +154,30 @@ def send_email(to_email, subject, html_content, text_content=None, attachments=N
             payload['text'] = text_content
         if attachments:
             payload['attachments'] = attachments
+            print(f"📧 [EMAIL] Sending email with {len(attachments)} attachment(s)")
+            for i, att in enumerate(attachments):
+                print(f"   Attachment {i+1}: {att.get('filename')} ({len(att.get('content', ''))} base64 chars)")
+        else:
+            print(f"📧 [EMAIL] Sending email without attachments")
+        print(f"📧 [EMAIL] API URL: {email_api_url}")
         response = requests.post(email_api_url, json=payload, timeout=30)
+        print(f"📧 [EMAIL] Response status: {response.status_code}")
         if response.status_code == 200:
             data = response.json()
+            print(f"📧 [EMAIL] Response: {data}")
             if data.get('success'):
+                print(f"✅ [EMAIL] Email sent successfully!")
                 return True
+            else:
+                print(f"❌ [EMAIL] Email send failed: {data.get('error')}")
+        else:
+            print(f"❌ [EMAIL] HTTP error: {response.status_code}")
+            print(f"   Response: {response.text[:500]}")
         return False
     except Exception as e:
-        print(f"Error sending email: {e}")
+        print(f"❌ [EMAIL] Exception sending email: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def get_upgrade_email_html(user_email, old_tier, new_tier):
@@ -166,13 +196,24 @@ def send_upgrade_email(user_email, old_tier, new_tier, amount=0.0, payment_id=""
     subject = f"Trevnoctilla - Successfully Upgraded to {tier_names.get(new_tier.lower(), new_tier)}! 🚀"
     attachments = []
     try:
+        print(f"📄 [UPGRADE] Generating subscription PDF...")
         subscription_pdf = generate_subscription_pdf(new_tier, amount, user_email, payment_id, payment_id, payment_date, "Monthly", "PayFast", old_tier)
         if subscription_pdf:
             pdf_base64 = base64.b64encode(subscription_pdf).decode('utf-8')
             date_str = payment_date.strftime("%Y%m%d") if payment_date else datetime.now().strftime("%Y%m%d")
-            attachments.append({'filename': f'subscription_{new_tier}_{date_str}.pdf', 'content': pdf_base64, 'contentType': 'application/pdf'})
+            filename = f'subscription_{new_tier}_{date_str}.pdf'
+            attachments.append({
+                'filename': filename,
+                'content': pdf_base64,
+                'contentType': 'application/pdf'
+            })
+            print(f"✅ [UPGRADE] PDF attachment prepared: {filename} ({len(pdf_base64)} base64 chars)")
+        else:
+            print(f"⚠️ [UPGRADE] No PDF generated, email will be sent without attachment")
     except Exception as e:
-        pass
+        print(f"❌ [UPGRADE] Error generating PDF attachment: {e}")
+        import traceback
+        traceback.print_exc()
     return send_email(user_email, subject, html_content, text_content, attachments if attachments else None)
 
 TEST_EMAIL = "tshepomtshali89@gmail.com"
