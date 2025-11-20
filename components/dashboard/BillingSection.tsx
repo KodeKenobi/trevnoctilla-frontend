@@ -102,14 +102,7 @@ export function BillingSection({ user }: BillingSectionProps) {
     }
 
     try {
-      // Use relative URL to hide Railway backend URL
-      const backendUrl =
-        typeof window !== "undefined" &&
-        (window.location.hostname === "localhost" ||
-          window.location.hostname === "127.0.0.1")
-          ? "http://localhost:5000"
-          : "";
-
+      // Use relative URL - Next.js rewrites proxy to backend (Railway URL hidden)
       const authToken = localStorage.getItem("auth_token");
       if (!authToken) {
         setLoading(false);
@@ -121,7 +114,7 @@ export function BillingSection({ user }: BillingSectionProps) {
       if (user.email) params.append("user_email", user.email);
 
       const response = await fetch(
-        `${backendUrl}/api/payment/billing-history?${params.toString()}`,
+        `/api/payment/billing-history?${params.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
@@ -168,14 +161,7 @@ export function BillingSection({ user }: BillingSectionProps) {
     setDownloadingInvoice(item.id);
 
     try {
-      // Use relative URL to hide Railway backend URL
-      const backendUrl =
-        typeof window !== "undefined" &&
-        (window.location.hostname === "localhost" ||
-          window.location.hostname === "127.0.0.1")
-          ? "http://localhost:5000"
-          : "";
-
+      // Use relative URL - Next.js rewrites proxy to backend (Railway URL hidden)
       const authToken = localStorage.getItem("auth_token");
       if (!authToken) {
         console.error("No auth token");
@@ -183,7 +169,7 @@ export function BillingSection({ user }: BillingSectionProps) {
       }
 
       const response = await fetch(
-        `${backendUrl}/api/payment/download-invoice`,
+        `/api/payment/download-invoice`,
         {
           method: "POST",
           headers: {
