@@ -1,30 +1,47 @@
 // API Configuration
 // Helper function to determine the base URL dynamically
+// Returns relative URLs to hide backend Railway URL from frontend
 export function getBaseUrl(): string {
-  // If explicitly set, use it
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    console.log("🔧 API Config: Using NEXT_PUBLIC_API_BASE_URL:", process.env.NEXT_PUBLIC_API_BASE_URL);
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-  
-  // Client-side: check if we're running on localhost
+  // Client-side: use relative URLs to hide backend URL (ignore NEXT_PUBLIC_API_BASE_URL)
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
     if (hostname === "localhost" || hostname === "127.0.0.1") {
-      console.log("🔧 API Config: Client-side on localhost, using http://localhost:5000");
+      // Localhost: use direct backend URL for development
+      console.log(
+        "🔧 API Config: Client-side on localhost, using http://localhost:5000"
+      );
       return "http://localhost:5000";
     }
-    console.log("🔧 API Config: Client-side on", hostname, ", using production URL");
-    return "https://web-production-737b.up.railway.app";
+    // Production: use relative URLs (Next.js rewrites will proxy to Railway)
+    // This hides the Railway URL from frontend
+    console.log(
+      "🔧 API Config: Client-side on",
+      hostname,
+      ", using relative URLs (Railway URL hidden)"
+    );
+    return "";
   }
-  
+
+  // Server-side: can use absolute URL since it's not exposed to browser
+  // Check if NEXT_PUBLIC_API_BASE_URL is set for server-side use
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    if (process.env.NEXT_PUBLIC_API_BASE_URL.startsWith("http")) {
+      return process.env.NEXT_PUBLIC_API_BASE_URL;
+    }
+  }
+
   // Server-side: check NODE_ENV
   const isProduction = process.env.NODE_ENV === "production";
+  // Server-side can use absolute URL since it's not exposed to browser
   const baseUrl = isProduction
     ? "https://web-production-737b.up.railway.app"
     : "http://localhost:5000";
-  
-  console.log(`🔧 API Config: Server-side, NODE_ENV: ${process.env.NODE_ENV || "undefined"}, Using: ${baseUrl}`);
+
+  console.log(
+    `🔧 API Config: Server-side, NODE_ENV: ${
+      process.env.NODE_ENV || "undefined"
+    }, Using: ${baseUrl}`
+  );
   return baseUrl;
 }
 
@@ -100,7 +117,14 @@ export const API_CONFIG = {
 
 // Helper function to get full API URL
 export const getApiUrl = (endpoint: string): string => {
-  return `${API_CONFIG.BASE_URL}${endpoint}`;
+  const baseUrl = API_CONFIG.BASE_URL;
+  // If baseUrl is empty (relative), just return the endpoint
+  if (!baseUrl) {
+    return endpoint;
+  }
+  // Ensure endpoint starts with / if baseUrl is provided
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  return `${baseUrl}${cleanEndpoint}`;
 };
 
 // Helper function to get auth headers

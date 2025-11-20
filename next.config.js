@@ -1,5 +1,33 @@
 const path = require("path");
 
+// Set NEXTAUTH_URL for NextAuth if not already set
+if (!process.env.NEXTAUTH_URL) {
+  process.env.NEXTAUTH_URL =
+    process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+}
+
+// Set NEXTAUTH_SECRET for NextAuth if not already set
+// In production, this MUST be set as an environment variable in Railway
+// For local development only, use a fallback
+if (!process.env.NEXTAUTH_SECRET) {
+  if (process.env.NODE_ENV === "production") {
+    console.error(
+      "❌ ERROR: NEXTAUTH_SECRET must be set as an environment variable in production!"
+    );
+    console.error(
+      "   Set it in Railway: railway variables --set 'NEXTAUTH_SECRET=your-secret'"
+    );
+    throw new Error(
+      "NEXTAUTH_SECRET is required in production. Set it as an environment variable."
+    );
+  }
+  // Development fallback only
+  process.env.NEXTAUTH_SECRET = "development-secret-key-change-in-production";
+  console.warn(
+    "[NextAuth] Using development NEXTAUTH_SECRET. Set NEXTAUTH_SECRET in production!"
+  );
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -23,9 +51,10 @@ const nextConfig = {
       process.env.BACKEND_URL || "https://web-production-737b.up.railway.app";
 
     return [
+      // File upload and processing
       {
         source: "/api/upload",
-        destination: `${backendUrl}/`,
+        destination: `${backendUrl}/api/upload`,
       },
       {
         source: "/convert/:path*",
@@ -62,6 +91,186 @@ const nextConfig = {
       {
         source: "/cleanup_session/:path*",
         destination: `${backendUrl}/cleanup_session/:path*`,
+      },
+      // PDF operations
+      {
+        source: "/get_page_count",
+        destination: `${backendUrl}/get_page_count`,
+      },
+      {
+        source: "/pdf_preview",
+        destination: `${backendUrl}/pdf_preview`,
+      },
+      {
+        source: "/split_pdf",
+        destination: `${backendUrl}/split_pdf`,
+      },
+      {
+        source: "/download_split/:path*",
+        destination: `${backendUrl}/download_split/:path*`,
+      },
+      {
+        source: "/view_split/:path*",
+        destination: `${backendUrl}/view_split/:path*`,
+      },
+      {
+        source: "/extract_text",
+        destination: `${backendUrl}/extract_text`,
+      },
+      {
+        source: "/extract_images",
+        destination: `${backendUrl}/extract_images`,
+      },
+      {
+        source: "/merge_pdfs",
+        destination: `${backendUrl}/merge_pdfs`,
+      },
+      {
+        source: "/download_merged/:path*",
+        destination: `${backendUrl}/download_merged/:path*`,
+      },
+      {
+        source: "/add_signature",
+        destination: `${backendUrl}/add_signature`,
+      },
+      {
+        source: "/add_watermark",
+        destination: `${backendUrl}/add_watermark`,
+      },
+      {
+        source: "/download_watermarked/:path*",
+        destination: `${backendUrl}/download_watermarked/:path*`,
+      },
+      {
+        source: "/download_signed/:path*",
+        destination: `${backendUrl}/download_signed/:path*`,
+      },
+      {
+        source: "/save_edits/:path*",
+        destination: `${backendUrl}/save_edits/:path*`,
+      },
+      {
+        source: "/download_pdf/:path*",
+        destination: `${backendUrl}/download_pdf/:path*`,
+      },
+      {
+        source: "/download_edited/:path*",
+        destination: `${backendUrl}/download_edited/:path*`,
+      },
+      {
+        source: "/download_images/:path*",
+        destination: `${backendUrl}/download_images/:path*`,
+      },
+      // Conversion endpoints
+      {
+        source: "/convert_pdf_to_word",
+        destination: `${backendUrl}/convert_pdf_to_word`,
+      },
+      {
+        source: "/convert_word_to_pdf",
+        destination: `${backendUrl}/convert_word_to_pdf`,
+      },
+      {
+        source: "/convert_html_to_pdf",
+        destination: `${backendUrl}/convert_html_to_pdf`,
+      },
+      {
+        source: "/convert_image_to_pdf",
+        destination: `${backendUrl}/convert_image_to_pdf`,
+      },
+      {
+        source: "/convert_pdf_to_images",
+        destination: `${backendUrl}/convert_pdf_to_images`,
+      },
+      {
+        source: "/convert_pdf_to_html",
+        destination: `${backendUrl}/convert_pdf_to_html`,
+      },
+      {
+        source: "/compress_pdf",
+        destination: `${backendUrl}/compress_pdf`,
+      },
+      {
+        source: "/download_compressed/:path*",
+        destination: `${backendUrl}/download_compressed/:path*`,
+      },
+      {
+        source: "/save_edit_fill_sign/:path*",
+        destination: `${backendUrl}/save_edit_fill_sign/:path*`,
+      },
+      // Video/Audio conversion
+      {
+        source: "/convert-video",
+        destination: `${backendUrl}/convert-video`,
+      },
+      {
+        source: "/video-progress/:path*",
+        destination: `${backendUrl}/video-progress/:path*`,
+      },
+      {
+        source: "/download-video/:path*",
+        destination: `${backendUrl}/download-video/:path*`,
+      },
+      {
+        source: "/convert-audio",
+        destination: `${backendUrl}/convert-audio`,
+      },
+      {
+        source: "/download_converted_audio/:path*",
+        destination: `${backendUrl}/download_converted_audio/:path*`,
+      },
+      // Cleanup
+      {
+        source: "/cleanup-file",
+        destination: `${backendUrl}/cleanup-file`,
+      },
+      {
+        source: "/cleanup-session",
+        destination: `${backendUrl}/cleanup-session`,
+      },
+      {
+        source: "/cleanup-all",
+        destination: `${backendUrl}/cleanup-all`,
+      },
+      // Auth endpoints
+      {
+        source: "/auth/:path*",
+        destination: `${backendUrl}/auth/:path*`,
+      },
+      // API v1 endpoints
+      {
+        source: "/api/v1/:path*",
+        destination: `${backendUrl}/api/v1/:path*`,
+      },
+      // Client API endpoints
+      {
+        source: "/api/client/:path*",
+        destination: `${backendUrl}/api/client/:path*`,
+      },
+      // Admin API endpoints
+      {
+        source: "/api/admin/:path*",
+        destination: `${backendUrl}/api/admin/:path*`,
+      },
+      // Payment API endpoints
+      {
+        source: "/api/payment/:path*",
+        destination: `${backendUrl}/api/payment/:path*`,
+      },
+      // Analytics API endpoints
+      {
+        source: "/api/analytics/:path*",
+        destination: `${backendUrl}/api/analytics/:path*`,
+      },
+      // Health check
+      {
+        source: "/health",
+        destination: `${backendUrl}/health`,
+      },
+      // Test endpoints (for development)
+      {
+        source: "/test/:path*",
+        destination: `${backendUrl}/test/:path*`,
       },
     ];
   },

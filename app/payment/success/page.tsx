@@ -181,11 +181,13 @@ function PaymentSuccessContent() {
       console.log("   Amount:", upgradeAmount);
 
       // Call backend upgrade endpoint directly (matching test script logic)
+      // Use relative URL to hide Railway backend URL
       const backendUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL ||
-        (process.env.NODE_ENV === "production"
-          ? "https://web-production-737b.up.railway.app"
-          : "http://localhost:5000");
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1")
+          ? "http://localhost:5000"
+          : "";
 
       const upgradeResponse = await fetch(
         `${backendUrl}/api/payment/upgrade-subscription`,

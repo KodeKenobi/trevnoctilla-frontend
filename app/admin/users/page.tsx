@@ -147,8 +147,16 @@ export default function UsersPage() {
           throw new Error("No authentication token");
         }
 
+        // Use relative URL to hide Railway backend URL
+        const backendUrl =
+          typeof window !== "undefined" &&
+          (window.location.hostname === "localhost" ||
+            window.location.hostname === "127.0.0.1")
+            ? "http://localhost:5000"
+            : "";
+
         const response = await fetch(
-          `https://web-production-737b.up.railway.app/api/admin/users?${params.toString()}`,
+          `${backendUrl}/api/admin/users?${params.toString()}`,
           {
             method: "GET",
             headers: {
@@ -265,16 +273,21 @@ export default function UsersPage() {
       }
 
       // Try to get user stats from admin API
-      const response = await fetch(
-        `https://web-production-737b.up.railway.app/api/admin/users/${userId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${session.accessToken || session.user.id}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // Use relative URL to hide Railway backend URL
+      const backendUrl =
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1")
+          ? "http://localhost:5000"
+          : "";
+
+      const response = await fetch(`${backendUrl}/api/admin/users/${userId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${session.accessToken || session.user.id}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.ok) {
         const userData = await response.json();
@@ -307,16 +320,21 @@ export default function UsersPage() {
         }
       } else {
         // If admin API fails, try to get basic user info
-        const profileResponse = await fetch(
-          "https://web-production-737b.up.railway.app/auth/profile",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${session.accessToken || session.user.id}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        // Use relative URL to hide Railway backend URL
+        const backendUrl =
+          typeof window !== "undefined" &&
+          (window.location.hostname === "localhost" ||
+            window.location.hostname === "127.0.0.1")
+            ? "http://localhost:5000"
+            : "";
+
+        const profileResponse = await fetch(`${backendUrl}/auth/profile`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${session.accessToken || session.user.id}`,
+            "Content-Type": "application/json",
+          },
+        });
 
         if (profileResponse.ok) {
           const profileData = await profileResponse.json();
@@ -432,11 +450,16 @@ export default function UsersPage() {
         return;
       }
 
+      // Use relative URL to hide Railway backend URL
+      const backendUrl =
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1")
+          ? "http://localhost:5000"
+          : "";
+
       const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_BASE_URL ||
-          "https://web-production-737b.up.railway.app"
-        }/api/admin/users/${userId}/reset-calls`,
+        `${backendUrl}/api/admin/users/${userId}/reset-calls`,
         {
           method: "POST",
           headers: {

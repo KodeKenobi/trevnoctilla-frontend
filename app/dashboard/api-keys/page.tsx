@@ -72,19 +72,21 @@ export default function ApiKeysPage() {
         return;
       }
 
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_BASE_URL ||
-          "https://web-production-737b.up.railway.app"
-        }/api/client/keys`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // Use relative URL to hide Railway backend URL
+      const backendUrl =
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1")
+          ? "http://localhost:5000"
+          : "";
+
+      const response = await fetch(`${backendUrl}/api/client/keys`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -117,23 +119,25 @@ export default function ApiKeysPage() {
         return;
       }
 
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_BASE_URL ||
-          "https://web-production-737b.up.railway.app"
-        }/api/client/keys`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: name || `API Key ${new Date().toLocaleString()}`,
-            rate_limit: rateLimit || 1000,
-          }),
-        }
-      );
+      // Use relative URL to hide Railway backend URL
+      const backendUrl =
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1")
+          ? "http://localhost:5000"
+          : "";
+
+      const response = await fetch(`${backendUrl}/api/client/keys`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: name || `API Key ${new Date().toLocaleString()}`,
+          rate_limit: rateLimit || 1000,
+        }),
+      });
 
       if (response.ok) {
         const newKeyData = await response.json();
@@ -198,19 +202,21 @@ export default function ApiKeysPage() {
         return;
       }
 
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_BASE_URL ||
-          "https://web-production-737b.up.railway.app"
-        }/api/client/keys/${keyId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // Use relative URL to hide Railway backend URL
+      const backendUrl =
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1")
+          ? "http://localhost:5000"
+          : "";
+
+      const response = await fetch(`${backendUrl}/api/client/keys/${keyId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.ok) {
         setApiKeys(apiKeys.filter((key) => key.id !== keyId));
