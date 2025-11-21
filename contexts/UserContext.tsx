@@ -50,7 +50,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (token) {
         console.log("🔍 Fetching fresh user data from profile endpoint...");
         try {
-          const response = await fetch(getApiUrl("/auth/profile"), {
+          const response = await fetch("/api/auth/profile", {
             headers: getAuthHeaders(token),
           });
 
@@ -252,7 +252,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       console.log("🔐 Attempting login for:", email);
-      const response = await fetch(getApiUrl("/auth/login"), {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

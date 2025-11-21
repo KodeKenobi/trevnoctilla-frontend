@@ -88,8 +88,8 @@ export default function RegisterPage() {
     try {
       setLoadingMessage("Creating your account...");
 
-      // Call the authentication API
-      const response = await fetch(getApiUrl("/auth/register"), {
+      // Call the authentication API (use API route to avoid page route conflict)
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
