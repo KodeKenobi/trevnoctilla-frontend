@@ -306,23 +306,86 @@ function DashboardContent() {
       }
 
       // If using sessionStorage (no URL params), user completed payment and was redirected back
-      // Logout then login to get fresh data with updated tier
+      // First trigger upgrade, wait for it, then logout to get fresh data with updated tier
       if (!hasUrlParams && hasPendingPayment) {
         console.log(
-          "💳 User returned from PayFast - logging out to refresh data..."
+          "💳 User returned from PayFast - triggering upgrade then logging out to refresh data..."
         );
 
         // Get user email before logout
         const userEmail = pendingPayment?.user_email || user?.email;
-        const userPassword = pendingPayment?.password || null;
+
+        if (!userEmail) {
+          console.error("❌ No user email found, cannot process upgrade");
+          return;
+        }
+
+        // First, trigger the upgrade manually (webhook might be delayed)
+        try {
+          const sessionResponse = await fetch("/api/auth/session");
+          const session = await sessionResponse.json();
+          const sessionUserId = session?.user?.id || null;
+          const sessionEmail = session?.user?.email || null;
+
+          const upgradeUserId =
+            pendingPayment?.user_id || sessionUserId || null;
+          const upgradeEmail = sessionEmail || userEmail;
+          const upgradePlanId = pendingPayment?.plan_id || "production";
+          const upgradePlanName =
+            pendingPayment?.plan_name || "Production Plan - Monthly Subscription";
+          const upgradeAmount = pendingPayment?.amount
+            ? parseFloat(pendingPayment.amount)
+            : 495.9;
+
+          console.log("   Triggering upgrade manually...");
+          console.log("   User ID:", upgradeUserId);
+          console.log("   User Email:", upgradeEmail);
+          console.log("   Plan ID:", upgradePlanId);
+
+          // Use relative URL in production (Next.js rewrite proxies to backend)
+          // Use absolute URL in localhost for development
+          const backendUrl =
+            typeof window !== "undefined" &&
+            (window.location.hostname === "localhost" ||
+              window.location.hostname === "127.0.0.1")
+              ? "http://localhost:5000"
+              : "";
+
+          const upgradeResponse = await fetch(
+            `${backendUrl}/api/payment/upgrade-subscription`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                user_id: upgradeUserId ? parseInt(upgradeUserId) : undefined,
+                user_email: upgradeEmail,
+                plan_id: upgradePlanId,
+                plan_name: upgradePlanName,
+                amount: upgradeAmount,
+                payment_id: `payment-${Date.now()}`,
+              }),
+            }
+          );
+
+          if (upgradeResponse.ok) {
+            const upgradeData = await upgradeResponse.json();
+            console.log("✅ Upgrade triggered successfully:", upgradeData);
+            // Wait a moment for database to update
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          } else {
+            const errorData = await upgradeResponse.json().catch(() => ({}));
+            console.warn("⚠️ Upgrade API call failed:", errorData);
+            // Continue anyway - webhook might still process it
+          }
+        } catch (error) {
+          console.error("❌ Error triggering upgrade:", error);
+          // Continue anyway - webhook might still process it
+        }
 
         // Clear pending payment
         sessionStorage.removeItem("pending_payment_upgrade");
-
-        if (!userEmail) {
-          console.error("❌ No user email found, cannot auto-login");
-          return;
-        }
 
         // Logout and redirect to auth
         console.log("🔓 Logging out user after payment...");
