@@ -197,12 +197,24 @@ const nextConfig = {
         destination: `${backendUrl}/convert-video`,
       },
       {
+        source: "/conversion_progress/:path*",
+        destination: `${backendUrl}/conversion_progress/:path*`,
+      },
+      {
         source: "/video-progress/:path*",
         destination: `${backendUrl}/video-progress/:path*`,
       },
       {
+        source: "/download_converted_video/:path*",
+        destination: `${backendUrl}/download_converted_video/:path*`,
+      },
+      {
         source: "/download-video/:path*",
         destination: `${backendUrl}/download-video/:path*`,
+      },
+      {
+        source: "/cancel_conversion/:path*",
+        destination: `${backendUrl}/cancel_conversion/:path*`,
       },
       {
         source: "/convert-audio",
@@ -211,6 +223,18 @@ const nextConfig = {
       {
         source: "/download_converted_audio/:path*",
         destination: `${backendUrl}/download_converted_audio/:path*`,
+      },
+      {
+        source: "/convert-image",
+        destination: `${backendUrl}/convert-image`,
+      },
+      {
+        source: "/generate-qr",
+        destination: `${backendUrl}/generate-qr`,
+      },
+      {
+        source: "/download/:path*",
+        destination: `${backendUrl}/download/:path*`,
       },
       // Cleanup
       {
