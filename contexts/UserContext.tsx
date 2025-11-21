@@ -43,33 +43,68 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [session]);
 
   const checkAuthStatus = async () => {
+    const startTime = Date.now();
+    console.log(
+      `[UserContext] checkAuthStatus START - ${new Date().toISOString()}`
+    );
+
+    // Use cached data immediately to avoid showing loading state
+    const cachedUserData = localStorage.getItem("user_data");
+    if (cachedUserData && !user) {
+      try {
+        const userData = JSON.parse(cachedUserData);
+        console.log(
+          `[UserContext] Using cached data immediately while fetching fresh data`
+        );
+        setUser(userData);
+        setLoading(false);
+      } catch (e) {
+        console.error(`[UserContext] Failed to parse cached user data:`, e);
+      }
+    }
+
     try {
       // Always try to get fresh user data from backend profile endpoint
       // This ensures we get subscription_tier and other backend-specific fields
       const token = localStorage.getItem("auth_token");
 
       if (token) {
-        console.log("🔍 Fetching fresh user data from profile endpoint...");
+        console.log(
+          `[UserContext] Token found, fetching profile... (${
+            Date.now() - startTime
+          }ms)`
+        );
         try {
+          const fetchStartTime = Date.now();
           const response = await fetch("/api/auth/profile", {
             headers: getAuthHeaders(token),
+            signal: AbortSignal.timeout(10000), // 10 second timeout (reduced for faster feedback)
           });
+          const fetchTime = Date.now() - fetchStartTime;
+          console.log(
+            `[UserContext] Profile fetch completed in ${fetchTime}ms, status: ${response.status}`
+          );
 
           if (response.ok) {
             const userData = await response.json();
-            console.log("🔍 Profile data received:", userData);
+            const totalTime = Date.now() - startTime;
             console.log(
-              "🔍 Subscription tier:",
-              userData.subscription_tier || "not found"
+              `[UserContext] ✅ Profile data received in ${totalTime}ms:`,
+              userData
             );
             console.log(
-              "🔍 Full profile data:",
-              JSON.stringify(userData, null, 2)
+              "[UserContext] Subscription tier:",
+              userData.subscription_tier || "not found"
             );
             // Store fresh user data
             localStorage.setItem("user_data", JSON.stringify(userData));
             setUser(userData);
             setLoading(false);
+            console.log(
+              `[UserContext] checkAuthStatus COMPLETE - ${
+                Date.now() - startTime
+              }ms total`
+            );
             return;
           } else if (response.status === 404) {
             // User was deleted - log them out
@@ -84,19 +119,83 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             setLoading(false);
             return;
           } else {
-            console.log("🔍 Profile endpoint failed, falling back to session");
+            const totalTime = Date.now() - startTime;
+            console.log(
+              `[UserContext] ⚠️ Profile endpoint failed (${response.status}) after ${totalTime}ms, falling back to cached data or session`
+            );
+            // Try to use cached user data as fallback
+            const cachedUserData = localStorage.getItem("user_data");
+            if (cachedUserData) {
+              try {
+                const userData = JSON.parse(cachedUserData);
+                console.log(
+                  `[UserContext] Using cached user data as fallback:`,
+                  userData
+                );
+                setUser(userData);
+                setLoading(false);
+                console.log(
+                  `[UserContext] checkAuthStatus COMPLETE (cached fallback) - ${
+                    Date.now() - startTime
+                  }ms total`
+                );
+                return;
+              } catch (e) {
+                console.error(
+                  `[UserContext] Failed to parse cached user data:`,
+                  e
+                );
+              }
+            }
           }
-        } catch (profileError) {
-          console.log(
-            "🔍 Profile fetch error, falling back to session:",
+        } catch (profileError: any) {
+          const totalTime = Date.now() - startTime;
+          console.error(
+            `[UserContext] ❌ Profile fetch error after ${totalTime}ms:`,
             profileError
           );
+          if (
+            profileError.name === "TimeoutError" ||
+            profileError.name === "AbortError"
+          ) {
+            console.error(
+              `[UserContext] ⏱️ Profile fetch TIMED OUT after ${totalTime}ms - using cached data`
+            );
+            // Use cached data if API times out
+            const cachedUserData = localStorage.getItem("user_data");
+            if (cachedUserData) {
+              try {
+                const userData = JSON.parse(cachedUserData);
+                console.log(
+                  `[UserContext] Using cached user data after timeout:`,
+                  userData
+                );
+                setUser(userData);
+                setLoading(false);
+                console.log(
+                  `[UserContext] checkAuthStatus COMPLETE (cached after timeout) - ${
+                    Date.now() - startTime
+                  }ms total`
+                );
+                return;
+              } catch (e) {
+                console.error(
+                  `[UserContext] Failed to parse cached user data:`,
+                  e
+                );
+              }
+            }
+          }
         }
       }
 
       // Fallback: If we have a NextAuth session, use it
       if (session?.user) {
-        console.log("🔍 Using NextAuth session:", session.user);
+        const totalTime = Date.now() - startTime;
+        console.log(
+          `[UserContext] Using NextAuth session after ${totalTime}ms:`,
+          session.user
+        );
         const userFromSession: User = {
           id: parseInt(session.user.id),
           email: session.user.email || "",
@@ -173,10 +272,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
 
         setLoading(false);
+        console.log(
+          `[UserContext] checkAuthStatus COMPLETE (NextAuth) - ${
+            Date.now() - startTime
+          }ms total`
+        );
         return;
       }
 
       // Fallback to localStorage token check (token already defined above)
+      const totalTime = Date.now() - startTime;
+      console.log(
+        `[UserContext] ⚠️ No token and no session after ${totalTime}ms, checking localStorage...`
+      );
       console.log("🔍 Checking auth status, token exists:", !!token);
 
       if (!token) {
@@ -241,10 +349,29 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem("auth_token");
       }
     } catch (error) {
-      console.error("🔍 Error checking auth status:", error);
+      const totalTime = Date.now() - startTime;
+      console.error(
+        `[UserContext] ❌ Error checking auth status after ${totalTime}ms:`,
+        error
+      );
       // Don't remove token on network errors, just log
-      console.log("🔍 Network error during auth check, keeping token");
+      console.log(
+        "[UserContext] Network error during auth check, keeping token"
+      );
+      // Ensure loading is set to false even on error
+      setLoading(false);
     } finally {
+      const totalTime = Date.now() - startTime;
+      console.log(
+        `[UserContext] checkAuthStatus FINALLY - ${totalTime}ms total`
+      );
+      // Double-check loading is false
+      if (loading) {
+        console.warn(
+          `[UserContext] ⚠️ Loading still true after ${totalTime}ms, forcing to false`
+        );
+        setLoading(false);
+      }
       console.log("🔍 Setting loading to false");
       setLoading(false);
     }

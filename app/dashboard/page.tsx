@@ -493,10 +493,19 @@ function DashboardContent() {
             sessionStorage.removeItem("pending_payment_upgrade");
           }
 
-          // Clear cached user data and refresh
-          localStorage.removeItem("user_data");
+          // Don't clear cached data - keep it as fallback while fetching fresh data
+          // Clear refresh timestamp to force immediate refresh
+          sessionStorage.removeItem("user_data_last_refresh");
           if (checkAuthStatus) {
+            // Call checkAuthStatus immediately to get fresh data
             checkAuthStatus();
+            // Retry after 3 seconds in case webhook is still processing
+            setTimeout(() => {
+              console.log(
+                "[Dashboard] Retrying checkAuthStatus to ensure tier is updated"
+              );
+              checkAuthStatus();
+            }, 3000);
           }
 
           // Show success message
@@ -530,31 +539,91 @@ function DashboardContent() {
   // Refresh user data when landing on dashboard (in case of payment redirect)
   // This ensures user tier is updated after subscription payment
   useEffect(() => {
+    const effectStartTime = Date.now();
+    console.log(
+      `[Dashboard] Refresh effect triggered - user: ${!!user}, userLoading: ${userLoading}, checkAuthStatus: ${!!checkAuthStatus}`
+    );
+
     if (user && checkAuthStatus) {
+      // Check if we just came from payment (pending payment in sessionStorage or URL params)
+      const hasPendingPayment = !!sessionStorage.getItem(
+        "pending_payment_upgrade"
+      );
+      const hasPaymentParams = !!(
+        searchParams?.get("payment_status") ||
+        searchParams?.get("subscription_type")
+      );
+      const justFromPayment = hasPendingPayment || hasPaymentParams;
+
       // Check if we should refresh user data
-      // Refresh if user data is stale (older than 30 seconds) or on first load
+      // Force refresh if coming from payment, otherwise refresh if stale (older than 30 seconds)
       const lastRefresh = sessionStorage.getItem("user_data_last_refresh");
-      const shouldRefresh =
+      const isStale =
         !lastRefresh || Date.now() - parseInt(lastRefresh) > 30000;
+      const shouldRefresh = justFromPayment || isStale;
+
+      console.log(
+        `[Dashboard] Should refresh: ${shouldRefresh}, justFromPayment: ${justFromPayment}, isStale: ${isStale}, lastRefresh: ${
+          lastRefresh ? new Date(parseInt(lastRefresh)).toISOString() : "never"
+        }`
+      );
 
       if (shouldRefresh) {
-        console.log("🔄 Refreshing user data on dashboard load...");
-        // Wait 2 seconds for webhook to process if coming from payment
+        console.log(
+          `[Dashboard] 🔄 Refreshing user data on dashboard load... (${
+            Date.now() - effectStartTime
+          }ms)`
+        );
+
+        // If coming from payment, wait a bit for webhook to process (5 seconds)
+        // Otherwise, wait 2 seconds for normal refresh
+        const waitTime = justFromPayment ? 5000 : 2000;
+
         const timer = setTimeout(() => {
-          // Clear cached user data to force fresh fetch
-          localStorage.removeItem("user_data");
-          // Refresh user data
+          const refreshStartTime = Date.now();
+          console.log(
+            `[Dashboard] Starting refresh after ${waitTime}ms delay (${
+              refreshStartTime - effectStartTime
+            }ms total)`
+          );
+
+          // If coming from payment, DON'T clear cached data immediately
+          // Keep it as fallback, but mark it as stale so we fetch fresh data
+          // The API call will update it with fresh data
+          if (justFromPayment) {
+            console.log(
+              `[Dashboard] Payment detected - will fetch fresh data but keeping cached as fallback`
+            );
+            // Mark cached data as stale by removing refresh timestamp
+            // This ensures we fetch fresh but don't lose data if API fails
+          } else {
+            console.log(`[Dashboard] Keeping cached user_data as fallback`);
+          }
+
+          // Refresh user data (will fetch fresh but use cached as fallback if it fails)
           checkAuthStatus();
+
           // Update last refresh time
           sessionStorage.setItem(
             "user_data_last_refresh",
             Date.now().toString()
           );
-        }, 2000);
-        return () => clearTimeout(timer);
+          console.log(`[Dashboard] Refresh initiated, checkAuthStatus called`);
+        }, waitTime);
+
+        return () => {
+          clearTimeout(timer);
+          console.log(`[Dashboard] Refresh effect cleanup`);
+        };
+      } else {
+        console.log(`[Dashboard] Skipping refresh - data is fresh`);
       }
+    } else {
+      console.log(
+        `[Dashboard] Not refreshing - user: ${!!user}, checkAuthStatus: ${!!checkAuthStatus}`
+      );
     }
-  }, [user, checkAuthStatus]);
+  }, [user, checkAuthStatus, userLoading, searchParams]);
 
   // Fetch stats after API keys are loaded (stats depends on apiKeys.length)
   useEffect(() => {
@@ -1332,7 +1401,17 @@ function DashboardContent() {
   };
 
   // Show loading state while checking authentication
+  // Log loading state changes
+  useEffect(() => {
+    console.log(
+      `[Dashboard] userLoading changed: ${userLoading}, user: ${!!user}, timestamp: ${new Date().toISOString()}`
+    );
+  }, [userLoading, user]);
+
   if (userLoading) {
+    console.log(
+      `[Dashboard] Rendering loading state - userLoading: ${userLoading}`
+    );
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] text-white flex items-center justify-center">
         <div className="text-center">
@@ -1419,7 +1498,12 @@ function DashboardContent() {
                       enterprise: "Enterprise Plan",
                       client: "Client Plan",
                     };
-                    return tierNames[tier] || "Free Plan";
+                    const displayTier = tierNames[tier] || "Free Plan";
+                    // Log tier display for debugging
+                    console.log(
+                      `[Dashboard] Displaying tier: "${displayTier}" (from user.subscription_tier: "${user?.subscription_tier}")`
+                    );
+                    return displayTier;
                   })()}
                 </p>
               </div>
