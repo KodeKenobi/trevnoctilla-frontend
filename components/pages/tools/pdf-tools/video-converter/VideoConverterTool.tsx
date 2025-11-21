@@ -214,7 +214,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
     [setUploadedFile]
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: {
       "video/*": [
@@ -718,24 +718,16 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
               </svg>
             </div>
             <div className="mb-4">
-              <label
-                htmlFor="video-file-upload"
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  open();
+                }}
                 className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-block"
               >
-                Choose Video File
-              </label>
-              <input
-                id="video-file-upload"
-                type="file"
-                accept="video/*"
-                onChange={(e) => {
-                  const videoFile = e.target.files?.[0];
-                  if (videoFile) {
-                    onDrop([videoFile]);
-                  }
-                }}
-                className="hidden"
-              />
+                Choose File
+              </button>
             </div>
             <p className="text-gray-400 text-sm">
               {isDragActive

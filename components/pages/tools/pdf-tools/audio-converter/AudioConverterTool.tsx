@@ -90,7 +90,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
     [setUploadedFile]
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: {
       "audio/*": [
@@ -290,24 +290,16 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
               </svg>
             </div>
             <div className="mb-4">
-              <label
-                htmlFor="audio-file-upload"
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  open();
+                }}
                 className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-block"
               >
-                Choose Audio File
-              </label>
-              <input
-                id="audio-file-upload"
-                type="file"
-                accept="audio/*"
-                onChange={(e) => {
-                  const audioFile = e.target.files?.[0];
-                  if (audioFile) {
-                    onDrop([audioFile]);
-                  }
-                }}
-                className="hidden"
-              />
+                Choose File
+              </button>
             </div>
             <p className="text-gray-400 text-sm">
               {isDragActive

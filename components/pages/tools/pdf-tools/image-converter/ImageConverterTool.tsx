@@ -64,7 +64,7 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
     [setUploadedFile, handleFileUpload]
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: {
       "image/*": [".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff", ".gif"],
@@ -222,24 +222,16 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
               </svg>
             </div>
             <div className="mb-4">
-              <label
-                htmlFor="image-file-upload"
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  open();
+                }}
                 className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-block"
               >
-                Choose Image File
-              </label>
-              <input
-                id="image-file-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const imageFile = e.target.files?.[0];
-                  if (imageFile) {
-                    onDrop([imageFile]);
-                  }
-                }}
-                className="hidden"
-              />
+                Choose File
+              </button>
             </div>
             <p className="text-gray-400 text-sm">
               {isDragActive
