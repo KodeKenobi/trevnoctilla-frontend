@@ -80,17 +80,46 @@ async function testRegisterAndUpgrade() {
     // Track console logs for email confirmation
     page.on("console", (msg) => {
       const text = msg.text();
-      if (text.includes("[EMAIL]") || text.includes("Email sent")) {
+      // Check for email-related logs (backend logs may appear in console)
+      if (
+        text.includes("[EMAIL]") ||
+        text.includes("Email sent") ||
+        text.includes("[WELCOME EMAIL]") ||
+        text.includes("[UPGRADE EMAIL]") ||
+        text.includes("Invoice PDF") ||
+        text.includes("attachment") ||
+        (text.includes("Prepared") && text.includes("attachment"))
+      ) {
         console.log(`   📧 ${text}`);
-        if (text.includes("Welcome") || text.includes("welcome")) {
+        if (
+          text.includes("Welcome") ||
+          text.includes("welcome") ||
+          text.includes("[WELCOME EMAIL]")
+        ) {
           emailLogs.welcomeEmail.sent = true;
-          if (text.includes("attachment") || text.includes("PDF")) {
+          if (
+            text.includes("attachment") ||
+            text.includes("PDF") ||
+            text.includes("Invoice PDF generated") ||
+            text.includes("Invoice PDF attached") ||
+            (text.includes("Prepared") && text.includes("attachment"))
+          ) {
             emailLogs.welcomeEmail.hasAttachment = true;
           }
         }
-        if (text.includes("Upgrade") || text.includes("upgrade")) {
+        if (
+          text.includes("Upgrade") ||
+          text.includes("upgrade") ||
+          text.includes("[UPGRADE EMAIL]")
+        ) {
           emailLogs.upgradeEmail.sent = true;
-          if (text.includes("attachment") || text.includes("PDF")) {
+          if (
+            text.includes("attachment") ||
+            text.includes("PDF") ||
+            text.includes("Invoice PDF") ||
+            text.includes("Subscription PDF") ||
+            (text.includes("Prepared") && text.includes("attachment"))
+          ) {
             emailLogs.upgradeEmail.hasAttachment = true;
           }
         }
@@ -121,12 +150,16 @@ async function testRegisterAndUpgrade() {
     console.log("   🔍 Looking for cookie consent modal...");
     let cookieHandled = false;
 
+    // Wait a bit for cookie modal to appear
+    await page.waitForTimeout(1000);
+
     // Method 1: XPath for "Reject All" or "Reject"
     try {
-      const [rejectButton] = await page.$x(
+      const rejectButtons = await page.$x(
         "//button[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'reject')]"
       );
-      if (rejectButton) {
+      if (rejectButtons && rejectButtons.length > 0) {
+        const rejectButton = rejectButtons[0];
         await rejectButton.click();
         await page.waitForTimeout(2000);
         cookieHandled = true;
@@ -136,7 +169,7 @@ async function testRegisterAndUpgrade() {
       // Try other methods
     }
 
-    // Method 2: Find by text content (CSS :has-text is not supported)
+    // Method 2: Find by text content
     if (!cookieHandled) {
       try {
         const rejectBtn = await page.evaluateHandle(() => {
@@ -151,10 +184,43 @@ async function testRegisterAndUpgrade() {
         });
         const rejectElement = await rejectBtn.asElement();
         if (rejectElement) {
+          await rejectElement.scrollIntoView({
+            behavior: "instant",
+            block: "center",
+          });
+          await page.waitForTimeout(500);
           await rejectElement.click();
           await page.waitForTimeout(2000);
           cookieHandled = true;
           console.log("   ✅ Cookie consent rejected (text matching)");
+        }
+      } catch (e) {
+        // Continue
+      }
+    }
+
+    // Method 3: Force click using evaluate if still not handled
+    if (!cookieHandled) {
+      try {
+        const clicked = await page.evaluate(() => {
+          const buttons = Array.from(document.querySelectorAll("button"));
+          for (const button of buttons) {
+            const text = (button.textContent || "").toLowerCase().trim();
+            if (text.includes("reject") || text.includes("decline")) {
+              const style = window.getComputedStyle(button);
+              if (style.display !== "none" && style.visibility !== "hidden") {
+                button.scrollIntoView({ behavior: "instant", block: "center" });
+                button.click();
+                return true;
+              }
+            }
+          }
+          return false;
+        });
+        if (clicked) {
+          await page.waitForTimeout(2000);
+          cookieHandled = true;
+          console.log("   ✅ Cookie consent rejected (evaluate click)");
         }
       } catch (e) {
         // Continue
@@ -361,37 +427,61 @@ async function testRegisterAndUpgrade() {
         "   ⚠️  Navigation timeout, checking current URL and errors..."
       );
 
-      // Check for registration errors
-      const registrationError = await page.evaluate(() => {
-        const text = document.body.textContent || "";
-        const errorElements = document.querySelectorAll(
-          '[class*="error"], [role="alert"], [class*="red"]'
-        );
-        const errorTexts = Array.from(errorElements)
-          .map((el) => el.textContent?.trim())
-          .filter((text) => text && text.length > 0);
+      // Wait a bit more for form submission to process
+      await page.waitForTimeout(3000);
 
-        // Check for common error messages
-        if (
-          text.includes("already exists") ||
-          text.includes("already registered")
-        ) {
-          return "Email already exists";
-        }
-        if (
-          text.includes("password") &&
-          (text.includes("weak") || text.includes("invalid"))
-        ) {
-          return "Password validation failed";
-        }
-        if (errorTexts.length > 0) {
-          return errorTexts.join(" | ");
-        }
-        return null;
-      });
+      // Check current URL again
+      const urlAfterWait = page.url();
+      if (urlAfterWait.includes("/dashboard")) {
+        console.log("   ✅ Redirected to dashboard after wait");
+      } else {
+        // Check for registration errors
+        const registrationError = await page.evaluate(() => {
+          const text = document.body.textContent || "";
+          const errorElements = document.querySelectorAll(
+            '[class*="error"], [role="alert"], [class*="red"]'
+          );
+          const errorTexts = Array.from(errorElements)
+            .map((el) => el.textContent?.trim())
+            .filter((text) => {
+              // Filter out cookie consent buttons and non-error text
+              if (!text || text.length === 0) return false;
+              const lowerText = text.toLowerCase();
+              if (
+                lowerText.includes("reject all") ||
+                lowerText.includes("accept all") ||
+                lowerText.includes("cookie") ||
+                lowerText.includes("privacy") ||
+                lowerText.includes("webpack") ||
+                lowerText.includes("__next")
+              ) {
+                return false; // Not an actual error
+              }
+              return true;
+            });
 
-      if (registrationError) {
-        throw new Error(`Registration failed: ${registrationError}`);
+          // Check for common error messages
+          if (
+            text.includes("already exists") ||
+            text.includes("already registered")
+          ) {
+            return "Email already exists";
+          }
+          if (
+            text.includes("password") &&
+            (text.includes("weak") || text.includes("invalid"))
+          ) {
+            return "Password validation failed";
+          }
+          if (errorTexts.length > 0) {
+            return errorTexts.join(" | ");
+          }
+          return null;
+        });
+
+        if (registrationError) {
+          throw new Error(`Registration failed: ${registrationError}`);
+        }
       }
     }
 
@@ -442,7 +532,7 @@ async function testRegisterAndUpgrade() {
         "   ⚠️  Welcome email attachment status not confirmed from console logs"
       );
       console.log(
-        "   📝 Note: Check backend logs to confirm attachment was included"
+        "   📝 Note: Backend generates invoice PDF attachment - check backend logs for '[WELCOME EMAIL] Invoice PDF generated'"
       );
     }
 
@@ -572,79 +662,159 @@ async function testRegisterAndUpgrade() {
     // Find Subscribe button in Production card - try multiple methods
     let subscribeClicked = false;
 
-    // Method 0: Direct approach - find all buttons and check
+    // Method 0: Find Production card first, then find Subscribe button within it
     try {
-      const buttons = await page.$$("button");
-      console.log(
-        `   🔍 Found ${buttons.length} buttons, checking for Subscribe in Production card...`
-      );
+      const productionCard = await page.evaluateHandle(() => {
+        // Find all divs that look like plan cards (have rounded-lg class and contain plan info)
+        const allDivs = Array.from(document.querySelectorAll("div"));
+        for (const div of allDivs) {
+          const text = div.textContent || "";
+          const hasProduction = text.includes("Production");
+          const hasPrice = text.includes("$29") || text.includes("29");
+          const hasFeatures =
+            text.includes("5,000 API calls") || text.includes("5,000");
+          const hasRounded = div.className.includes("rounded-lg");
 
-      for (const button of buttons) {
-        try {
-          const text = await page.evaluate(
-            (el) => (el.textContent || "").trim(),
-            button
-          );
-          if (text === "Subscribe") {
-            // Verify it's in Production card
-            const isInProduction = await page.evaluate((el) => {
-              let parent = el.parentElement;
-              let depth = 0;
-              while (parent && depth < 15) {
-                const parentText = (parent.textContent || "").toLowerCase();
-                if (parentText.includes("production")) {
-                  return true;
-                }
-                parent = parent.parentElement;
-                depth++;
-              }
-              return false;
-            }, button);
+          // This is likely the Production plan card
+          if (hasProduction && hasPrice && hasFeatures && hasRounded) {
+            return div;
+          }
+        }
+        return null;
+      });
 
-            if (isInProduction) {
-              await button.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-              });
-              await page.waitForTimeout(1000);
-
-              const isVisible = await page.evaluate((el) => {
-                const style = window.getComputedStyle(el);
-                return (
-                  style.display !== "none" &&
-                  style.visibility !== "hidden" &&
-                  !el.disabled
-                );
-              }, button);
-
-              if (isVisible) {
-                try {
-                  await button.click();
-                  console.log(
-                    "   ✅ Clicked Subscribe on Production plan (direct method)"
-                  );
-                  subscribeClicked = true;
-                  break;
-                } catch (e) {
-                  await page.evaluate((el) => {
-                    el.scrollIntoView({ behavior: "instant", block: "center" });
-                    el.click();
-                  }, button);
-                  console.log(
-                    "   ✅ Clicked Subscribe on Production plan (direct method - JS click)"
-                  );
-                  subscribeClicked = true;
-                  break;
-                }
-              }
+      if (productionCard && productionCard.asElement()) {
+        // Find Subscribe button within this card
+        const subscribeButton = await page.evaluateHandle((card) => {
+          const buttons = card.querySelectorAll("button");
+          for (const btn of buttons) {
+            const btnText = btn.textContent?.trim();
+            if (btnText === "Subscribe") {
+              return btn;
             }
           }
-        } catch (e) {
-          continue;
+          return null;
+        }, productionCard);
+
+        if (subscribeButton && subscribeButton.asElement()) {
+          const btn = subscribeButton.asElement();
+          await btn.scrollIntoView({ behavior: "smooth", block: "center" });
+          await page.waitForTimeout(1000);
+
+          const isVisible = await page.evaluate((el) => {
+            const style = window.getComputedStyle(el);
+            return (
+              style.display !== "none" &&
+              style.visibility !== "hidden" &&
+              !el.disabled &&
+              el.offsetWidth > 0 &&
+              el.offsetHeight > 0
+            );
+          }, btn);
+
+          if (isVisible) {
+            // Wait to ensure handler is attached
+            await page.waitForTimeout(500);
+            await btn.scrollIntoView({ behavior: "instant", block: "center" });
+            await page.waitForTimeout(500);
+            // Click using evaluate to ensure it triggers
+            await page.evaluate((button) => {
+              button.click();
+            }, btn);
+            await page.waitForTimeout(1000);
+            console.log(
+              "   ✅ Clicked Subscribe on Production plan (found in card)"
+            );
+            subscribeClicked = true;
+          }
         }
       }
     } catch (e) {
-      console.log(`   ⚠️  Direct method failed: ${e.message}`);
+      console.log(`   ⚠️  Card method failed: ${e.message}`);
+    }
+
+    // Method 1: Fallback - Direct approach - find all buttons and check
+    if (!subscribeClicked) {
+      try {
+        const buttons = await page.$$("button");
+        console.log(
+          `   🔍 Fallback: Found ${buttons.length} buttons, checking for Subscribe in Production card...`
+        );
+
+        for (const button of buttons) {
+          try {
+            const text = await page.evaluate(
+              (el) => (el.textContent || "").trim(),
+              button
+            );
+            if (text === "Subscribe") {
+              // Verify it's in Production card - check for Production name AND price
+              const isInProduction = await page.evaluate((el) => {
+                let parent = el.parentElement;
+                let depth = 0;
+                while (parent && depth < 15) {
+                  const parentText = (parent.textContent || "").toLowerCase();
+                  // Must have both "production" and price indicator
+                  if (
+                    parentText.includes("production") &&
+                    (parentText.includes("$29") || parentText.includes("29"))
+                  ) {
+                    return true;
+                  }
+                  parent = parent.parentElement;
+                  depth++;
+                }
+                return false;
+              }, button);
+
+              if (isInProduction) {
+                await button.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+                await page.waitForTimeout(1000);
+
+                const isVisible = await page.evaluate((el) => {
+                  const style = window.getComputedStyle(el);
+                  return (
+                    style.display !== "none" &&
+                    style.visibility !== "hidden" &&
+                    !el.disabled
+                  );
+                }, button);
+
+                if (isVisible) {
+                  try {
+                    await button.click();
+                    console.log(
+                      "   ✅ Clicked Subscribe on Production plan (direct method)"
+                    );
+                    subscribeClicked = true;
+                    break;
+                  } catch (e) {
+                    await page.evaluate((el) => {
+                      el.scrollIntoView({
+                        behavior: "instant",
+                        block: "center",
+                      });
+                      el.click();
+                    }, button);
+                    console.log(
+                      "   ✅ Clicked Subscribe on Production plan (direct method - JS click)"
+                    );
+                    subscribeClicked = true;
+                    break;
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+      } catch (e) {
+        console.log(`   ⚠️  Direct method failed: ${e.message}`);
+      }
     }
 
     // Method 1: Find by text and parent context (only if direct method didn't work)
@@ -938,28 +1108,32 @@ async function testRegisterAndUpgrade() {
             (text.includes("Error") || text.includes("Failed"))
         );
 
-      // Check if there's an error div/section
-      const errorSection =
-        text.match(/Error[^.]*\./)?.[0] || text.match(/Failed[^.]*\./)?.[0];
+      // Filter out webpack/Next.js internal code from error texts
+      const filteredErrorTexts = errorTexts.filter((text) => {
+        if (!text) return false;
+        // Ignore webpack/Next.js code
+        if (
+          text.includes("__webpack_require__") ||
+          text.includes("__next_app__") ||
+          text.includes("webpack") ||
+          text.includes("$E")
+        ) {
+          return false;
+        }
+        return true;
+      });
 
       return {
         hasErrorText,
-        errorTexts,
-        errorSection,
+        errorTexts: filteredErrorTexts,
         fullText: text.substring(0, 1000),
       };
     });
 
-    // Only throw if we found actual error UI, not just the word "Error" in normal text
-    if (pageState.errorTexts.length > 0 || pageState.errorSection) {
-      const errorMsg =
-        pageState.errorTexts.join(" | ") ||
-        pageState.errorSection ||
-        "Unknown error";
+    // Only throw if we found actual error UI, not webpack code
+    if (pageState.errorTexts.length > 0) {
+      const errorMsg = pageState.errorTexts.join(" | ") || "Unknown error";
       console.log(`   ❌ Payment page shows error: ${errorMsg}`);
-      console.log(
-        `   Debug - Page text sample: ${pageState.fullText.substring(0, 300)}`
-      );
       throw new Error(`Payment page error: ${errorMsg}`);
     }
 
@@ -1671,12 +1845,95 @@ async function testRegisterAndUpgrade() {
     // Instead of full logout/login, just wait for webhook and reload the page
     console.log("\n📋 Step 13.5: Refreshing session to get updated tier...");
 
+    // DEBUG: Check sessionStorage for pending payment
+    const pendingPaymentBefore = await page.evaluate(() => {
+      return {
+        hasPendingPayment: !!sessionStorage.getItem("pending_payment_upgrade"),
+        pendingPaymentData: sessionStorage.getItem("pending_payment_upgrade"),
+        url: window.location.href,
+        searchParams: new URLSearchParams(window.location.search).toString(),
+      };
+    });
+    console.log(
+      `   🔍 DEBUG - Pending payment in sessionStorage: ${pendingPaymentBefore.hasPendingPayment}`
+    );
+    if (pendingPaymentBefore.pendingPaymentData) {
+      console.log(
+        `   🔍 DEBUG - Pending payment data: ${pendingPaymentBefore.pendingPaymentData}`
+      );
+    }
+    console.log(`   🔍 DEBUG - Current URL: ${pendingPaymentBefore.url}`);
+    console.log(
+      `   🔍 DEBUG - Search params: ${pendingPaymentBefore.searchParams}`
+    );
+
+    // DEBUG: Check localStorage for user data before waiting
+    const userDataBefore = await page.evaluate(() => {
+      const userDataStr = localStorage.getItem("user_data");
+      let userData = null;
+      try {
+        userData = userDataStr ? JSON.parse(userDataStr) : null;
+      } catch (e) {
+        return { error: e.message };
+      }
+      return {
+        hasUserData: !!userDataStr,
+        userData: userData,
+        subscriptionTier: userData?.subscription_tier || "not found",
+      };
+    });
+    console.log(
+      `   🔍 DEBUG - User data before wait: ${userDataBefore.hasUserData}`
+    );
+    console.log(
+      `   🔍 DEBUG - Subscription tier before wait: ${userDataBefore.subscriptionTier}`
+    );
+    if (userDataBefore.userData) {
+      console.log(
+        `   🔍 DEBUG - Full user data: ${JSON.stringify(
+          userDataBefore.userData,
+          null,
+          2
+        )}`
+      );
+    }
+
     // Wait for the payment webhook to process the upgrade
     // PayFast webhooks can take 10-30 seconds to process
+    // Also, the dashboard upgrade handler may need time to process
     console.log(
-      "   ⏳ Waiting for payment webhook to process upgrade (15 seconds)..."
+      "   ⏳ Waiting for payment webhook to process upgrade (20 seconds)..."
     );
-    await page.waitForTimeout(15000);
+
+    // Monitor console logs during wait for upgrade activity
+    const upgradeLogs = [];
+    const upgradeConsoleHandler = (msg) => {
+      const text = msg.text();
+      if (
+        text.includes("upgrade") ||
+        text.includes("Upgrade") ||
+        text.includes("subscription") ||
+        text.includes("tier") ||
+        text.includes("webhook") ||
+        text.includes("payment") ||
+        text.includes("[UPGRADE]") ||
+        text.includes("checkAuthStatus") ||
+        text.includes("Profile data") ||
+        text.includes("Dashboard") ||
+        text.includes("refresh")
+      ) {
+        upgradeLogs.push(text);
+        console.log(`   📝 Upgrade log: ${text}`);
+      }
+    };
+    page.on("console", upgradeConsoleHandler);
+
+    await page.waitForTimeout(20000);
+    page.off("console", upgradeConsoleHandler);
+
+    console.log(
+      `   🔍 DEBUG - Collected ${upgradeLogs.length} upgrade-related console logs during wait`
+    );
 
     // Navigate to dashboard (don't reload, as it might redirect)
     console.log("   🔄 Navigating to dashboard to refresh user data...");
@@ -1696,15 +1953,52 @@ async function testRegisterAndUpgrade() {
       );
     }
 
+    // DEBUG: Check sessionStorage after navigation
+    const pendingPaymentAfter = await page.evaluate(() => {
+      return {
+        hasPendingPayment: !!sessionStorage.getItem("pending_payment_upgrade"),
+        pendingPaymentData: sessionStorage.getItem("pending_payment_upgrade"),
+      };
+    });
+    console.log(
+      `   🔍 DEBUG - Pending payment after nav: ${pendingPaymentAfter.hasPendingPayment}`
+    );
+    if (pendingPaymentAfter.pendingPaymentData) {
+      console.log(
+        `   🔍 DEBUG - Pending payment still exists: ${pendingPaymentAfter.pendingPaymentData}`
+      );
+    }
+
     // Check if user is authenticated
     const authCheck = await page.evaluate(() => {
       return {
         hasAuthToken: !!localStorage.getItem("auth_token"),
         hasUserData: !!localStorage.getItem("user_data"),
+        authToken: localStorage.getItem("auth_token")?.substring(0, 20) + "...",
       };
     });
     console.log(
       `   Auth check - Has token: ${authCheck.hasAuthToken}, Has user data: ${authCheck.hasUserData}`
+    );
+    console.log(`   🔍 DEBUG - Auth token preview: ${authCheck.authToken}`);
+
+    // DEBUG: Get full user data from localStorage
+    const userDataAfterNav = await page.evaluate(() => {
+      const userDataStr = localStorage.getItem("user_data");
+      let userData = null;
+      try {
+        userData = userDataStr ? JSON.parse(userDataStr) : null;
+      } catch (e) {
+        return { error: e.message };
+      }
+      return userData;
+    });
+    console.log(
+      `   🔍 DEBUG - User data after navigation: ${JSON.stringify(
+        userDataAfterNav,
+        null,
+        2
+      )}`
     );
 
     // If no user data, wait longer for it to load
@@ -1736,6 +2030,62 @@ async function testRegisterAndUpgrade() {
         { timeout: 30000 }
       );
       console.log("   ✅ Dashboard loaded");
+
+      // DEBUG: Check user data one more time after dashboard loads
+      const userDataAfterLoad = await page.evaluate(() => {
+        const userDataStr = localStorage.getItem("user_data");
+        let userData = null;
+        try {
+          userData = userDataStr ? JSON.parse(userDataStr) : null;
+        } catch (e) {
+          return { error: e.message };
+        }
+        return userData;
+      });
+      console.log(
+        `   🔍 DEBUG - User data after dashboard load: ${JSON.stringify(
+          userDataAfterLoad,
+          null,
+          2
+        )}`
+      );
+
+      // DEBUG: Try to call the profile API directly to see what the backend returns
+      console.log(
+        "   🔍 DEBUG - Calling profile API directly to check backend tier..."
+      );
+      try {
+        const token = await page.evaluate(() =>
+          localStorage.getItem("auth_token")
+        );
+        if (token) {
+          const profileResponse = await page.evaluate(async (token) => {
+            const response = await fetch("/api/auth/profile", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            });
+            const data = await response.json();
+            return {
+              status: response.status,
+              ok: response.ok,
+              data: data,
+            };
+          }, token);
+          console.log(
+            `   🔍 DEBUG - Profile API response: ${JSON.stringify(
+              profileResponse,
+              null,
+              2
+            )}`
+          );
+        } else {
+          console.log(`   🔍 DEBUG - No auth token available for API call`);
+        }
+      } catch (e) {
+        console.log(`   🔍 DEBUG - Profile API call failed: ${e.message}`);
+      }
     } catch (e) {
       console.log(`   ⚠️  Dashboard loading timeout: ${e.message}`);
       // Check current URL and page state
@@ -1933,6 +2283,24 @@ async function testRegisterAndUpgrade() {
 
       console.log(`   Email: ${updatedUserInfo.email || "Not found"}`);
       console.log(`   Tier: ${updatedUserInfo.tier || "Not found"}`);
+
+      // DEBUG: Check localStorage user data on each attempt
+      const userDataOnAttempt = await page.evaluate(() => {
+        const userDataStr = localStorage.getItem("user_data");
+        let userData = null;
+        try {
+          userData = userDataStr ? JSON.parse(userDataStr) : null;
+        } catch (e) {
+          return { error: e.message };
+        }
+        return userData;
+      });
+      console.log(
+        `   🔍 DEBUG - Attempt ${attempts}: localStorage user_data tier: ${
+          userDataOnAttempt?.subscription_tier || "not found"
+        }`
+      );
+
       if (!updatedUserInfo.email || !updatedUserInfo.tier) {
         // Debug: show what we found
         console.log(
@@ -2060,7 +2428,7 @@ async function testRegisterAndUpgrade() {
         "   ⚠️  Upgrade email attachment status not confirmed from console logs"
       );
       console.log(
-        "   📝 Note: Check backend logs to confirm attachment was included"
+        "   📝 Note: Backend generates invoice/subscription PDF - check backend logs for '[UPGRADE EMAIL] Invoice PDF attached' or 'Subscription PDF attached'"
       );
     }
 

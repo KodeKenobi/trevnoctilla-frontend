@@ -155,9 +155,21 @@ export default function PayFastForm({
         if (subscription_type) {
           requestData.subscription_type = subscription_type;
           if (subscription_type === "1") {
-            // Subscription fields
-            if (frequency) requestData.frequency = frequency;
-            if (cycles) requestData.cycles = cycles;
+            // Subscription fields - frequency and cycles are REQUIRED
+            if (frequency) {
+              requestData.frequency = frequency;
+            } else {
+              console.error(
+                "❌ PayFastForm: frequency is required for subscriptions"
+              );
+            }
+            if (cycles !== undefined && cycles !== null) {
+              requestData.cycles = cycles;
+            } else {
+              console.error(
+                "❌ PayFastForm: cycles is required for subscriptions"
+              );
+            }
             if (billing_date) requestData.billing_date = billing_date.trim();
             if (recurring_amount)
               requestData.recurring_amount =

@@ -136,7 +136,13 @@ function CommandPaletteContent({
 // Real API data - production ready
 
 function DashboardContent() {
-  const { user, loading: userLoading, checkAuthStatus } = useUser();
+  const {
+    user,
+    loading: userLoading,
+    checkAuthStatus,
+    logout,
+    login,
+  } = useUser();
   const router = useRouter();
   const { showSuccess, showError, showInfo, hideAlert } = useAlert();
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
@@ -300,92 +306,34 @@ function DashboardContent() {
       }
 
       // If using sessionStorage (no URL params), user completed payment and was redirected back
-      // Just upgrade directly - user being here means payment was successful
+      // Logout then login to get fresh data with updated tier
       if (!hasUrlParams && hasPendingPayment) {
-        console.log("💳 User returned from PayFast - processing upgrade...");
+        console.log(
+          "💳 User returned from PayFast - logging out to refresh data..."
+        );
 
-        try {
-          // Use relative URL to hide Railway backend URL
-          const backendUrl =
-            typeof window !== "undefined" &&
-            (window.location.hostname === "localhost" ||
-              window.location.hostname === "127.0.0.1")
-              ? "http://localhost:5000"
-              : "";
+        // Get user email before logout
+        const userEmail = pendingPayment?.user_email || user?.email;
+        const userPassword = pendingPayment?.password || null;
 
-          const upgradeResponse = await fetch(
-            `${backendUrl}/api/payment/upgrade-subscription`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                user_id: pendingPayment?.user_id
-                  ? parseInt(pendingPayment.user_id)
-                  : undefined,
-                user_email: pendingPayment?.user_email || user?.email,
-                plan_id: pendingPayment?.plan_id || "production",
-                plan_name:
-                  pendingPayment?.plan_name ||
-                  "Production Plan - Monthly Subscription",
-                amount: pendingPayment?.amount
-                  ? parseFloat(pendingPayment.amount)
-                  : 495.9,
-                payment_id: `payment-${Date.now()}`,
-              }),
-            }
-          );
+        // Clear pending payment
+        sessionStorage.removeItem("pending_payment_upgrade");
 
-          if (upgradeResponse.ok) {
-            const upgradeData = await upgradeResponse.json();
-            console.log("✅ Upgrade successful:", upgradeData);
-
-            // Silently refresh session to get updated subscription tier
-            // This ensures user is redirected to correct dashboard (enterprise vs regular)
-            try {
-              // First, refresh user data from backend
-              if (checkAuthStatus) {
-                await checkAuthStatus();
-              }
-
-              // Wait a moment for backend data to sync
-              await new Promise((resolve) => setTimeout(resolve, 500));
-
-              // Get updated user data from context (already refreshed by checkAuthStatus)
-              const newTier = user?.subscription_tier?.toLowerCase() || "free";
-
-              console.log(`🔄 User data refreshed, new tier: ${newTier}`);
-
-              // Redirect to appropriate dashboard based on new tier
-              if (newTier === "enterprise" || newTier === "client") {
-                router.push("/enterprise");
-              } else {
-                router.push("/dashboard");
-              }
-            } catch (refreshError) {
-              console.error("⚠️ Session refresh error:", refreshError);
-              // Fallback: just refresh user data and redirect
-              if (checkAuthStatus) {
-                checkAuthStatus();
-              }
-              // Default redirect to dashboard
-              router.push("/dashboard");
-            }
-
-            sessionStorage.removeItem("pending_payment_upgrade");
-            return;
-          } else {
-            const errorData = await upgradeResponse
-              .json()
-              .catch(() => ({ error: "Unknown error" }));
-            console.error("❌ Upgrade failed:", errorData);
-          }
-        } catch (error) {
-          console.error("❌ Error calling upgrade:", error);
+        if (!userEmail) {
+          console.error("❌ No user email found, cannot auto-login");
+          return;
         }
 
-        sessionStorage.removeItem("pending_payment_upgrade");
+        // Logout and redirect to auth
+        console.log("🔓 Logging out user after payment...");
+        // Clear all auth data
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("user_data");
+        localStorage.removeItem("api_test_key");
+        // Sign out from NextAuth and redirect to login
+        const { signOut } = await import("next-auth/react");
+        await signOut({ redirect: true, callbackUrl: "/auth/login" });
+
         return;
       }
 
@@ -493,26 +441,26 @@ function DashboardContent() {
             sessionStorage.removeItem("pending_payment_upgrade");
           }
 
-          // Don't clear cached data - keep it as fallback while fetching fresh data
-          // Clear refresh timestamp to force immediate refresh
-          sessionStorage.removeItem("user_data_last_refresh");
-          if (checkAuthStatus) {
-            // Call checkAuthStatus immediately to get fresh data
-            checkAuthStatus();
-            // Retry after 3 seconds in case webhook is still processing
-            setTimeout(() => {
-              console.log(
-                "[Dashboard] Retrying checkAuthStatus to ensure tier is updated"
-              );
-              checkAuthStatus();
-            }, 3000);
+          // Get user email before logout
+          const userEmail = upgradeEmail || user?.email;
+          const sessionResponse = await fetch("/api/auth/session");
+          const session = await sessionResponse.json();
+          const sessionEmail = session?.user?.email || userEmail;
+
+          if (!sessionEmail) {
+            console.error("❌ No user email found, cannot auto-login");
+            return;
           }
 
-          // Show success message
-          showSuccess(
-            "Subscription Upgraded",
-            "Your subscription has been upgraded successfully!"
-          );
+          // Logout and redirect to auth
+          console.log("🔓 Logging out user after payment...");
+          // Clear all auth data
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("user_data");
+          localStorage.removeItem("api_test_key");
+          // Sign out from NextAuth and redirect to login
+          const { signOut } = await import("next-auth/react");
+          await signOut({ redirect: true, callbackUrl: "/auth/login" });
         } else {
           const errorData = await upgradeResponse.json().catch(() => ({}));
           console.error("❌ Subscription upgrade failed:", errorData);
@@ -587,15 +535,15 @@ function DashboardContent() {
             }ms total)`
           );
 
-          // If coming from payment, DON'T clear cached data immediately
-          // Keep it as fallback, but mark it as stale so we fetch fresh data
-          // The API call will update it with fresh data
+          // If coming from payment, clear cached data to force fresh fetch
+          // The backend has the updated tier, but cached data might be stale
           if (justFromPayment) {
             console.log(
-              `[Dashboard] Payment detected - will fetch fresh data but keeping cached as fallback`
+              `[Dashboard] Payment detected - clearing cached user_data to force fresh fetch`
             );
-            // Mark cached data as stale by removing refresh timestamp
-            // This ensures we fetch fresh but don't lose data if API fails
+            localStorage.removeItem("user_data");
+            // Also clear refresh timestamp to ensure we fetch
+            sessionStorage.removeItem("user_data_last_refresh");
           } else {
             console.log(`[Dashboard] Keeping cached user_data as fallback`);
           }

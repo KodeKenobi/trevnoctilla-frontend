@@ -399,6 +399,8 @@ function PaymentContent() {
             onPaymentDataLoaded={() => {
               // Store payment info in sessionStorage before redirecting to PayFast
               // This allows dashboard to trigger upgrade even if PayFast doesn't send URL params
+              // Store user email for auto-login after payment
+              // Note: We can't store password for security, so user will need to login manually
               sessionStorage.setItem(
                 "pending_payment_upgrade",
                 JSON.stringify({

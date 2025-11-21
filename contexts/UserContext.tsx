@@ -78,7 +78,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           const fetchStartTime = Date.now();
           const response = await fetch("/api/auth/profile", {
             headers: getAuthHeaders(token),
-            signal: AbortSignal.timeout(10000), // 10 second timeout (reduced for faster feedback)
+            signal: AbortSignal.timeout(30000), // 30 second timeout (increased to handle slow backend responses)
           });
           const fetchTime = Date.now() - fetchStartTime;
           console.log(
