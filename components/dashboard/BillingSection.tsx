@@ -168,24 +168,21 @@ export function BillingSection({ user }: BillingSectionProps) {
         return;
       }
 
-      const response = await fetch(
-        `/api/payment/download-invoice`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: JSON.stringify({
-            payment_id: item.payment_id,
-            user_email: user.email,
-            amount: item.amount,
-            tier: item.tier || "free",
-            payment_date: (item as any).rawDate || new Date().toISOString(),
-            item_description: item.invoice,
-          }),
-        }
-      );
+      const response = await fetch(`/api/payment/download-invoice`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          payment_id: item.payment_id,
+          user_email: user.email,
+          amount: item.amount,
+          tier: item.tier || "free",
+          payment_date: (item as any).rawDate || new Date().toISOString(),
+          item_description: item.invoice,
+        }),
+      });
 
       if (response.ok) {
         const data = await response.json();

@@ -254,291 +254,336 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
     }
   };
 
-  return (
-    <div className="p-4 sm:p-6 rounded-xl bg-gray-800 shadow-soft max-w-4xl mx-auto">
-      <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-white">
-        Universal Audio Converter
-      </h3>
-      <p className="text-xs sm:text-sm text-gray-300 mb-4">
-        Convert audio between all formats with quality control and advanced
-        processing. Optimize file size and audio quality.
-      </p>
+  // If no file is selected, show the PDF-style upload UI
+  if (!file && !isProcessing) {
+    return (
+      <div className="w-full max-w-4xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
+        <div className="p-6">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-white mb-2">
+              Universal Audio Converter
+            </h2>
+            <p className="text-gray-400">
+              Convert audio between all formats with quality control and
+              advanced processing
+            </p>
+          </div>
 
-      <div
-        {...getRootProps()}
-        className={`dropzone ${isDragActive ? "dropzone-active" : ""} ${
-          file ? "dropzone-has-file" : ""
-        }`}
-      >
-        <input {...getInputProps()} />
-        <div className="text-center">
-          {file ? (
-            <div className="space-y-3">
-              <div className="text-green-400 text-4xl">🎵</div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-white mb-1 break-words">
-                  {file.name}
-                </p>
-                <p className="text-xs text-gray-400">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeFile();
-                }}
-                className="text-red-400 hover:text-red-300 text-xs"
+          <div
+            {...getRootProps()}
+            className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-gray-500 transition-colors"
+          >
+            <input {...getInputProps()} />
+            <div className="mb-4">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 48 48"
               >
-                Remove file
-              </button>
+                <path
+                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="text-gray-400 text-4xl">🎵</div>
-              <div>
-                <p className="text-sm font-medium text-white mb-1">
-                  {isDragActive
-                    ? "Drop the audio file here"
-                    : "Drag & drop an audio file here"}
-                </p>
-                <p className="text-xs text-gray-400">
-                  or click to select a file
-                </p>
-              </div>
-              <p className="text-xs text-gray-500">
-                MP3, WAV, FLAC, AAC, OGG, M4A, WMA, AIFF, AU
+            <div className="mb-4">
+              <label
+                htmlFor="audio-file-upload"
+                className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-block"
+              >
+                Choose Audio File
+              </label>
+              <input
+                id="audio-file-upload"
+                type="file"
+                accept="audio/*"
+                onChange={(e) => {
+                  const audioFile = e.target.files?.[0];
+                  if (audioFile) {
+                    onDrop([audioFile]);
+                  }
+                }}
+                className="hidden"
+              />
+            </div>
+            <p className="text-gray-400 text-sm">
+              {isDragActive
+                ? "Drop the audio file here"
+                : "Drag and drop your audio here, or click to browse"}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-4xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
+      <div className="p-6">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-white mb-2">
+            Universal Audio Converter
+          </h2>
+          <p className="text-gray-400">
+            Convert audio between all formats with quality control and advanced
+            processing
+          </p>
+        </div>
+
+        {file && (
+          <div className="mb-4 p-3 bg-gray-700 rounded-lg border border-gray-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm text-gray-200 break-words">
+                Selected file:{" "}
+                <span className="font-medium text-white break-words">
+                  {file.name}
+                </span>
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {(file.size / 1024 / 1024).toFixed(2)} MB
               </p>
             </div>
-          )}
-        </div>
-      </div>
-
-      {warning && (
-        <div className="mt-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg">
-          <p className="text-red-300 text-xs sm:text-sm">{warning}</p>
-        </div>
-      )}
-
-      <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4">
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-            Output Format
-          </label>
-          <select
-            value={outputFormat}
-            onChange={(e) => setOutputFormat(e.target.value)}
-            className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
-          >
-            <option value="mp3">MP3 (Most Compatible)</option>
-            <option value="wav">WAV (Uncompressed)</option>
-            <option value="flac">FLAC (Lossless)</option>
-            <option value="aac">AAC (High Quality)</option>
-            <option value="ogg">OGG Vorbis</option>
-            <option value="m4a">M4A (iTunes)</option>
-            <option value="wma">WMA (Windows)</option>
-            <option value="aiff">AIFF (Mac)</option>
-            <option value="opus">Opus (Modern)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-            Bitrate (kbps)
-          </label>
-          <select
-            value={bitrate}
-            onChange={(e) => setBitrate(Number(e.target.value))}
-            className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
-          >
-            <option value={64}>64 kbps (Low)</option>
-            <option value={128}>128 kbps (Standard)</option>
-            <option value={192}>192 kbps (High)</option>
-            <option value={256}>256 kbps (Very High)</option>
-            <option value={320}>320 kbps (Maximum)</option>
-            <option value={0}>Variable (Auto)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-            Sample Rate (Hz)
-          </label>
-          <select
-            value={sampleRate}
-            onChange={(e) => setSampleRate(Number(e.target.value))}
-            className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
-          >
-            <option value={22050}>22050 Hz (Low)</option>
-            <option value={44100}>44100 Hz (CD Quality)</option>
-            <option value={48000}>48000 Hz (Professional)</option>
-            <option value={88200}>88200 Hz (High-Res)</option>
-            <option value={96000}>96000 Hz (Studio)</option>
-            <option value={192000}>192000 Hz (Ultra High-Res)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-            Channels
-          </label>
-          <select
-            value={channels}
-            onChange={(e) => setChannels(e.target.value)}
-            className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
-          >
-            <option value="mono">Mono (1 channel)</option>
-            <option value="stereo">Stereo (2 channels)</option>
-            <option value="surround">Surround (5.1)</option>
-            <option value="original">Original (Keep as-is)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-            Quality Level
-          </label>
-          <select
-            value={quality}
-            onChange={(e) => setQuality(Number(e.target.value))}
-            className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
-          >
-            <option value={50}>50% (Low Quality)</option>
-            <option value={70}>70% (Medium Quality)</option>
-            <option value={80}>80% (High Quality)</option>
-            <option value={90}>90% (Very High Quality)</option>
-            <option value={100}>100% (Maximum Quality)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-            Processing
-          </label>
-          <select
-            className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
-            disabled
-          >
-            <option value="normal">Normal Processing</option>
-            <option value="fast">Fast Processing</option>
-            <option value="high">High Quality</option>
-          </select>
-        </div>
-      </div>
-
-      <button
-        onClick={convert}
-        disabled={!file || loading}
-        className="btn btn-primary w-full mb-4 text-sm sm:text-base py-3 sm:py-4"
-      >
-        {loading
-          ? `Converting to ${outputFormat.toUpperCase()}... ${progress}%`
-          : `Convert to ${outputFormat.toUpperCase()}`}
-      </button>
-
-      {loading && (
-        <div className="mb-4">
-          <div className="w-full bg-gray-700 rounded-full h-2.5 mb-2">
-            <div
-              className={`bg-purple-500 h-2.5 rounded-full transition-all duration-300 ease-in-out ${
-                progress >= 85 && !conversionResult ? "animate-pulse" : ""
-              }`}
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-gray-300 mb-1">
-              {progress >= 85 && !conversionResult
-                ? "Finalizing conversion..."
-                : "Processing audio..."}
-            </p>
-            <p className="text-xs text-gray-400">{progress}% complete</p>
-          </div>
-        </div>
-      )}
-
-      {conversionResult && (
-        <div className="mb-4 p-3 sm:p-4 bg-green-900/20 border border-green-500/50 rounded-lg">
-          <p className="text-green-300 text-xs sm:text-sm mb-2">
-            ✅ Audio conversion completed successfully!
-          </p>
-
-          {/* File Size Comparison */}
-          {originalFileSize && convertedFileSize && (
-            <div className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-600">
-              <h4 className="text-white text-xs sm:text-sm font-medium mb-2">
-                File Size Comparison
-              </h4>
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="text-center">
-                  <p className="text-gray-400">Original</p>
-                  <p className="text-blue-300 font-medium">
-                    {(originalFileSize / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-gray-400">Converted</p>
-                  <p className="text-green-300 font-medium">
-                    {(convertedFileSize / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-gray-400">Savings</p>
-                  <p className="text-purple-300 font-medium">
-                    {(
-                      (originalFileSize - convertedFileSize) /
-                      1024 /
-                      1024
-                    ).toFixed(2)}{" "}
-                    MB
-                    <br />
-                    <span className="text-xs">
-                      (
-                      {(
-                        ((originalFileSize - convertedFileSize) /
-                          originalFileSize) *
-                        100
-                      ).toFixed(1)}
-                      % reduction)
-                    </span>
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-gray-400">Quality</p>
-                  <p className="text-yellow-300 font-medium">
-                    {outputFormat.toUpperCase()}
-                    <br />
-                    <span className="text-xs">
-                      {bitrate}kbps • {sampleRate}Hz • {channels}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-center">
             <button
-              onClick={downloadResult}
-              className="btn btn-primary text-sm sm:text-base px-8 py-3"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeFile();
+              }}
+              className="text-red-400 hover:text-red-300 text-xs sm:text-sm px-2 py-1 rounded"
             >
-              Download Converted Audio
+              Remove
             </button>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="text-xs text-gray-400 text-center mt-4 space-y-1">
-        <p>
-          Professional audio conversion with advanced quality control and format
-          optimization
-        </p>
-        <p>
-          Max file size: 500MB | All major audio formats supported |
-          High-quality processing
-        </p>
-        <p className="hidden sm:block">
-          Convert between MP3, WAV, FLAC, AAC, OGG, M4A, WMA, AIFF, and more
-          with customizable bitrate, sample rate, and channel options
-        </p>
-        <p className="sm:hidden">
-          Convert between all major audio formats with quality control
-        </p>
+        {warning && (
+          <div className="mt-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg">
+            <p className="text-red-300 text-xs sm:text-sm">{warning}</p>
+          </div>
+        )}
+
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4">
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+              Output Format
+            </label>
+            <select
+              value={outputFormat}
+              onChange={(e) => setOutputFormat(e.target.value)}
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+            >
+              <option value="mp3">MP3 (Most Compatible)</option>
+              <option value="wav">WAV (Uncompressed)</option>
+              <option value="flac">FLAC (Lossless)</option>
+              <option value="aac">AAC (High Quality)</option>
+              <option value="ogg">OGG Vorbis</option>
+              <option value="m4a">M4A (iTunes)</option>
+              <option value="wma">WMA (Windows)</option>
+              <option value="aiff">AIFF (Mac)</option>
+              <option value="opus">Opus (Modern)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+              Bitrate (kbps)
+            </label>
+            <select
+              value={bitrate}
+              onChange={(e) => setBitrate(Number(e.target.value))}
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+            >
+              <option value={64}>64 kbps (Low)</option>
+              <option value={128}>128 kbps (Standard)</option>
+              <option value={192}>192 kbps (High)</option>
+              <option value={256}>256 kbps (Very High)</option>
+              <option value={320}>320 kbps (Maximum)</option>
+              <option value={0}>Variable (Auto)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+              Sample Rate (Hz)
+            </label>
+            <select
+              value={sampleRate}
+              onChange={(e) => setSampleRate(Number(e.target.value))}
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+            >
+              <option value={22050}>22050 Hz (Low)</option>
+              <option value={44100}>44100 Hz (CD Quality)</option>
+              <option value={48000}>48000 Hz (Professional)</option>
+              <option value={88200}>88200 Hz (High-Res)</option>
+              <option value={96000}>96000 Hz (Studio)</option>
+              <option value={192000}>192000 Hz (Ultra High-Res)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+              Channels
+            </label>
+            <select
+              value={channels}
+              onChange={(e) => setChannels(e.target.value)}
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+            >
+              <option value="mono">Mono (1 channel)</option>
+              <option value="stereo">Stereo (2 channels)</option>
+              <option value="surround">Surround (5.1)</option>
+              <option value="original">Original (Keep as-is)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+              Quality Level
+            </label>
+            <select
+              value={quality}
+              onChange={(e) => setQuality(Number(e.target.value))}
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+            >
+              <option value={50}>50% (Low Quality)</option>
+              <option value={70}>70% (Medium Quality)</option>
+              <option value={80}>80% (High Quality)</option>
+              <option value={90}>90% (Very High Quality)</option>
+              <option value={100}>100% (Maximum Quality)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+              Processing
+            </label>
+            <select
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+              disabled
+            >
+              <option value="normal">Normal Processing</option>
+              <option value="fast">Fast Processing</option>
+              <option value="high">High Quality</option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          onClick={convert}
+          disabled={!file || loading}
+          className="btn btn-primary w-full mb-4 text-sm sm:text-base py-3 sm:py-4"
+        >
+          {loading
+            ? `Converting to ${outputFormat.toUpperCase()}... ${progress}%`
+            : `Convert to ${outputFormat.toUpperCase()}`}
+        </button>
+
+        {loading && (
+          <div className="mb-4">
+            <div className="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+              <div
+                className={`bg-purple-500 h-2.5 rounded-full transition-all duration-300 ease-in-out ${
+                  progress >= 85 && !conversionResult ? "animate-pulse" : ""
+                }`}
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-300 mb-1">
+                {progress >= 85 && !conversionResult
+                  ? "Finalizing conversion..."
+                  : "Processing audio..."}
+              </p>
+              <p className="text-xs text-gray-400">{progress}% complete</p>
+            </div>
+          </div>
+        )}
+
+        {conversionResult && (
+          <div className="mb-4 p-3 sm:p-4 bg-green-900/20 border border-green-500/50 rounded-lg">
+            <p className="text-green-300 text-xs sm:text-sm mb-2">
+              ✅ Audio conversion completed successfully!
+            </p>
+
+            {/* File Size Comparison */}
+            {originalFileSize && convertedFileSize && (
+              <div className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-600">
+                <h4 className="text-white text-xs sm:text-sm font-medium mb-2">
+                  File Size Comparison
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div className="text-center">
+                    <p className="text-gray-400">Original</p>
+                    <p className="text-blue-300 font-medium">
+                      {(originalFileSize / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-gray-400">Converted</p>
+                    <p className="text-green-300 font-medium">
+                      {(convertedFileSize / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-gray-400">Savings</p>
+                    <p className="text-purple-300 font-medium">
+                      {(
+                        (originalFileSize - convertedFileSize) /
+                        1024 /
+                        1024
+                      ).toFixed(2)}{" "}
+                      MB
+                      <br />
+                      <span className="text-xs">
+                        (
+                        {(
+                          ((originalFileSize - convertedFileSize) /
+                            originalFileSize) *
+                          100
+                        ).toFixed(1)}
+                        % reduction)
+                      </span>
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-gray-400">Quality</p>
+                    <p className="text-yellow-300 font-medium">
+                      {outputFormat.toUpperCase()}
+                      <br />
+                      <span className="text-xs">
+                        {bitrate}kbps • {sampleRate}Hz • {channels}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-center">
+              <button
+                onClick={downloadResult}
+                className="btn btn-primary text-sm sm:text-base px-8 py-3"
+              >
+                Download Converted Audio
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="text-xs text-gray-400 text-center mt-4 space-y-1">
+          <p>
+            Professional audio conversion with advanced quality control and
+            format optimization
+          </p>
+          <p>
+            Max file size: 500MB | All major audio formats supported |
+            High-quality processing
+          </p>
+          <p className="hidden sm:block">
+            Convert between MP3, WAV, FLAC, AAC, OGG, M4A, WMA, AIFF, and more
+            with customizable bitrate, sample rate, and channel options
+          </p>
+          <p className="sm:hidden">
+            Convert between all major audio formats with quality control
+          </p>
+        </div>
       </div>
     </div>
   );

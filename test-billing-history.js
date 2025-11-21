@@ -5,13 +5,18 @@
 
 const puppeteer = require("puppeteer");
 
-const LOGIN_URL = "http://localhost:3000/auth/login";
+// Test both local and production
+const TEST_LOCAL = process.env.TEST_LOCAL === "true";
+const LOGIN_URL = TEST_LOCAL
+  ? "http://localhost:3000/auth/login"
+  : process.env.TEST_URL || "https://www.trevnoctilla.com/auth/login";
 const USER_EMAIL = "tshepomtshali89@gmail.com";
 const USER_PASSWORD = "Kopenikus0218!";
 
 console.log("=".repeat(60));
 console.log("💳 BILLING HISTORY TEST");
 console.log("=".repeat(60));
+console.log(`Environment: ${TEST_LOCAL ? "LOCAL" : "PRODUCTION"}`);
 console.log(`Login URL: ${LOGIN_URL}`);
 console.log(`User: ${USER_EMAIL}`);
 console.log("=".repeat(60));
@@ -35,7 +40,11 @@ console.log();
 
     page.on("request", (request) => {
       const url = request.url();
-      if (url.includes("/api/") || url.includes("/auth/") || url.includes("/payment/")) {
+      if (
+        url.includes("/api/") ||
+        url.includes("/auth/") ||
+        url.includes("/payment/")
+      ) {
         requests.push({
           url: url,
           method: request.method(),
@@ -45,12 +54,28 @@ console.log();
 
     page.on("response", async (response) => {
       const url = response.url();
-      if (url.includes("/api/") || url.includes("/auth/") || url.includes("/payment/")) {
+      if (
+        url.includes("/api/") ||
+        url.includes("/auth/") ||
+        url.includes("/payment/")
+      ) {
         const status = response.status();
-        responses.push({
+        const responseData = {
           url,
           status,
-        });
+        };
+
+        // Try to capture billing history response body
+        if (url.includes("billing-history") && status === 200) {
+          try {
+            const body = await response.json();
+            responseData.body = body;
+          } catch (e) {
+            // Ignore if can't parse
+          }
+        }
+
+        responses.push(responseData);
       }
     });
 
@@ -102,7 +127,9 @@ console.log();
           console.log(`✅ Clicked cookie consent button: ${selector}`);
           cookieHandled = true;
           // Wait for the dialog to disappear
-          await page.waitForSelector(selector, { hidden: true, timeout: 5000 }).catch(() => {});
+          await page
+            .waitForSelector(selector, { hidden: true, timeout: 5000 })
+            .catch(() => {});
           break;
         }
       } catch (e) {
@@ -115,7 +142,10 @@ console.log();
       try {
         const buttons = await page.$$("button");
         for (const button of buttons) {
-          const text = await page.evaluate((el) => el.textContent?.toLowerCase(), button);
+          const text = await page.evaluate(
+            (el) => el.textContent?.toLowerCase(),
+            button
+          );
           if (text && (text.includes("reject") || text.includes("decline"))) {
             await button.click();
             console.log(`✅ Clicked cookie button with text: ${text}`);
@@ -149,7 +179,9 @@ console.log();
         if (button) {
           await button.click();
           console.log(`✅ Closed pop-up/modal with selector: ${selector}`);
-          await page.waitForSelector(selector, { hidden: true, timeout: 2000 }).catch(() => {});
+          await page
+            .waitForSelector(selector, { hidden: true, timeout: 2000 })
+            .catch(() => {});
         }
       } catch (e) {
         // Selector not found or not visible
@@ -199,25 +231,43 @@ console.log();
     // Wait for navigation or response
     console.log(`\n📋 Step 7: Waiting for login to complete...`);
     try {
-      await Promise.race([
-        page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 10000 }),
-        page.waitForResponse(
-          (response) =>
-            response.url().includes("/api/auth/callback/credentials") &&
-            response.status() === 200,
-          { timeout: 10000 }
-        ),
-      ]);
+      // Wait for NextAuth callback
+      await page.waitForResponse(
+        (response) =>
+          response.url().includes("/api/auth/callback/credentials") &&
+          response.status() === 200,
+        { timeout: 15000 }
+      );
+      console.log("✅ NextAuth callback successful");
+
+      // Wait for navigation
+      await page
+        .waitForNavigation({
+          waitUntil: "networkidle0",
+          timeout: 10000,
+        })
+        .catch(() => {
+          console.log("⚠️  Navigation timeout, but continuing...");
+        });
+
       console.log("✅ Login successful, navigation detected");
     } catch (error) {
-      console.log(`⚠️  No immediate navigation, checking current page...`);
+      console.log(`⚠️  Login response timeout, checking current page...`);
     }
 
-    await page.waitForTimeout(2000); // Give time for redirects/state updates
+    await page.waitForTimeout(3000); // Give time for redirects/state updates
 
     // Check current URL
     const currentUrl = page.url();
     console.log(`   Current URL: ${currentUrl}`);
+
+    // Check if we have auth token in localStorage
+    const hasAuthToken = await page.evaluate(() => {
+      return !!localStorage.getItem("auth_token");
+    });
+    console.log(
+      `   Auth token in localStorage: ${hasAuthToken ? "Yes" : "No"}`
+    );
 
     if (currentUrl.includes("/auth/login")) {
       console.log("⚠️  Still on login page - login may have failed");
@@ -233,106 +283,179 @@ console.log();
       if (pageErrors.length > 0) {
         console.log(`   Error messages: ${pageErrors.join(", ")}`);
       }
+
+      // Try to manually navigate to dashboard
+      console.log("   Attempting to navigate to dashboard anyway...");
+      const baseUrl = LOGIN_URL.replace("/auth/login", "");
+      await page.goto(`${baseUrl}/dashboard`, {
+        waitUntil: "domcontentloaded",
+        timeout: 30000,
+      });
+      await page.waitForTimeout(2000);
     } else {
       console.log("✅ Successfully logged in and redirected");
     }
 
     // Navigate to dashboard if not already there
     console.log(`\n📋 Step 8: Navigating to dashboard...`);
-    if (!currentUrl.includes("/dashboard")) {
-      await page.goto("http://localhost:3000/dashboard", {
+    const dashboardUrl = page.url();
+    const baseUrl = LOGIN_URL.replace("/auth/login", "");
+
+    if (!dashboardUrl.includes("/dashboard")) {
+      await page.goto(`${baseUrl}/dashboard`, {
         waitUntil: "domcontentloaded",
         timeout: 30000,
       });
       console.log("✅ Navigated to dashboard");
-      await page.waitForTimeout(2000);
     } else {
       console.log("✅ Already on dashboard");
     }
-
-    // Handle cookie consent again if it appears
-    console.log(`\n📋 Step 9: Checking for cookie consent on dashboard...`);
-    for (const selector of cookieConsentSelectors) {
-      try {
-        const button = await page.waitForSelector(selector, {
-          timeout: 3000,
-          visible: true,
-        });
-        if (button) {
-          await button.click();
-          console.log(`✅ Clicked cookie consent button: ${selector}`);
-          await page.waitForSelector(selector, { hidden: true, timeout: 3000 }).catch(() => {});
-          break;
-        }
-      } catch (e) {
-        // Selector not found
-      }
-    }
-
-    // Look for billing section or billing tab
-    console.log(`\n📋 Step 10: Looking for billing section...`);
     await page.waitForTimeout(2000);
 
-    // Try to find billing tab/button/link
-    const billingSelectors = [
-      'a[href*="billing"]',
-      'button:has-text("Billing")',
-      '[data-testid*="billing"]',
-      'button:has-text("Payment")',
-      'a:has-text("Billing")',
-      'a:has-text("Payment")',
-    ];
-
-    let billingFound = false;
-    for (const selector of billingSelectors) {
+    // Handle cookie consent quickly
+    for (const selector of cookieConsentSelectors) {
       try {
-        const element = await page.$(selector);
-        if (element) {
-          const text = await page.evaluate((el) => el.textContent?.toLowerCase(), element);
-          if (text && (text.includes("billing") || text.includes("payment"))) {
-            await element.click();
-            console.log(`✅ Clicked billing element: ${selector}`);
-            billingFound = true;
-            await page.waitForTimeout(2000);
-            break;
-          }
+        const button = await page.$(selector);
+        if (button) {
+          await button.click();
+          break;
         }
-      } catch (e) {
-        // Continue
-      }
+      } catch (e) {}
     }
 
-    // If billing section is on the same page, try scrolling or looking for it
-    if (!billingFound) {
-      console.log("⚠️  Billing link not found, checking if billing section is on dashboard...");
-      
-      // Try to scroll to find billing section
-      await page.evaluate(() => {
-        window.scrollTo(0, document.body.scrollHeight);
-      });
+    // Find and click billing tab/button immediately
+    console.log(`\n📋 Step 9: Clicking billing section...`);
+    const billingClicked = await page.evaluate(() => {
+      // Try to find and click billing tab/button
+      const selectors = [
+        'button:has-text("Billing")',
+        'a:has-text("Billing")',
+        '[data-testid*="billing"]',
+        'button[aria-label*="Billing"]',
+        'a[href*="billing"]',
+      ];
+
+      for (const selector of selectors) {
+        try {
+          const element = document.querySelector(selector);
+          if (element) {
+            element.click();
+            return true;
+          }
+        } catch (e) {}
+      }
+
+      // Try all buttons and links
+      const allButtons = Array.from(document.querySelectorAll("button, a"));
+      for (const btn of allButtons) {
+        const text = btn.textContent?.toLowerCase();
+        if (text && (text.includes("billing") || text.includes("payment"))) {
+          btn.click();
+          return true;
+        }
+      }
+      return false;
+    });
+
+    if (billingClicked) {
+      console.log("✅ Clicked billing tab/button");
       await page.waitForTimeout(1000);
-      
-      // Look for billing history table or section
-      const billingSection = await page.evaluate(() => {
-        const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
-        for (const heading of headings) {
-          const text = heading.textContent?.toLowerCase();
-          if (text && (text.includes("billing") || text.includes("payment") || text.includes("invoice"))) {
-            return heading.textContent;
+    } else {
+      console.log(
+        "⚠️  No billing button found, scrolling to billing section..."
+      );
+      // Scroll to billing section
+      await page.evaluate(() => {
+        const headings = Array.from(document.querySelectorAll("h1, h2, h3"));
+        for (const h of headings) {
+          if (h.textContent?.toLowerCase().includes("billing")) {
+            h.scrollIntoView({ block: "center" });
+            return;
           }
         }
-        return null;
+        window.scrollTo(0, document.body.scrollHeight * 0.7);
       });
-      
-      if (billingSection) {
-        console.log(`✅ Found billing section: ${billingSection}`);
-        billingFound = true;
-      }
+      await page.waitForTimeout(500);
     }
 
-    // Wait for billing history to load
-    console.log(`\n📋 Step 11: Waiting for billing history to load...`);
-    await page.waitForTimeout(3000);
+    // Wait for billing history API call and capture response
+    console.log(`\n📋 Step 10: Waiting for billing history API...`);
+    let billingHistoryData = null;
+
+    // Set up response listener
+    const responsePromise = page.waitForResponse(
+      async (response) => {
+        if (response.url().includes("billing-history")) {
+          try {
+            const data = await response.json();
+            billingHistoryData = data;
+            console.log(`   ✅ Response received: ${response.status()}`);
+            return true;
+          } catch (e) {
+            console.log(`   ⚠️  Failed to parse response: ${e.message}`);
+            return false;
+          }
+        }
+        return false;
+      },
+      { timeout: 10000 }
+    );
+
+    try {
+      await responsePromise;
+      console.log("✅ Billing history API response received");
+
+      // Log the actual API response
+      if (billingHistoryData) {
+        console.log("\n📊 API Response Data:");
+        console.log(JSON.stringify(billingHistoryData, null, 2));
+
+        if (billingHistoryData.billing_history) {
+          console.log(
+            `\n   Found ${billingHistoryData.billing_history.length} item(s) in API response`
+          );
+          if (billingHistoryData.billing_history.length === 0) {
+            console.log("\n   ⚠️  Empty billing history - possible reasons:");
+            console.log(
+              "   - No payment/subscription notifications exist for this user"
+            );
+            console.log(
+              "   - Notifications exist but metadata doesn't match user_id/user_email"
+            );
+            console.log(
+              "   - Notifications weren't created during payment/upgrade"
+            );
+          }
+        } else {
+          console.log("\n   ⚠️  No 'billing_history' field in API response");
+        }
+      }
+
+      // Also log the request URL to see what params were sent
+      const billingHistoryResponse = responses.find((r) =>
+        r.url.includes("billing-history")
+      );
+      if (billingHistoryResponse) {
+        console.log(`\n   Request URL: ${billingHistoryResponse.url}`);
+      }
+
+      await page.waitForTimeout(2000); // Give time for React to render
+    } catch (e) {
+      console.log(`⚠️  API call timeout: ${e.message}`);
+      console.log("   Checking if response was already captured...");
+      await page.waitForTimeout(2000);
+    }
+
+    // If we still don't have data, try to get it from the responses array
+    if (!billingHistoryData) {
+      const billingResponse = responses.find(
+        (r) => r.url.includes("billing-history") && r.body
+      );
+      if (billingResponse && billingResponse.body) {
+        console.log("   Found response body in captured responses");
+        billingHistoryData = billingResponse.body;
+      }
+    }
 
     // Check for API call to billing history
     const billingHistoryResponse = responses.find((r) =>
@@ -343,22 +466,31 @@ console.log();
         `✅ Billing history API called: ${billingHistoryResponse.url} (Status: ${billingHistoryResponse.status})`
       );
     } else {
-      console.log("⚠️  Billing history API call not detected");
+      console.log("⚠️  Billing history API call not detected in responses");
+      // List all API calls for debugging
+      console.log("   API calls made:");
+      responses.forEach((r, i) => {
+        if (i < 10) {
+          console.log(`   ${i + 1}. ${r.url} (${r.status})`);
+        }
+      });
     }
 
     // Extract billing history from the page
-    console.log(`\n📋 Step 12: Extracting billing history from page...`);
+    console.log(`\n📋 Step 11: Extracting billing history...`);
     const billingHistory = await page.evaluate(() => {
       const history = [];
-      
-      // Look for tables
+
+      // Look for all tables on the page
       const tables = document.querySelectorAll("table");
+
       for (const table of tables) {
         const rows = table.querySelectorAll("tr");
         if (rows.length > 1) {
-          // Check if this looks like a billing history table
           const headerRow = rows[0];
           const headerText = headerRow.textContent?.toLowerCase();
+
+          // Check if this is billing history table
           if (
             headerText &&
             (headerText.includes("invoice") ||
@@ -367,37 +499,42 @@ console.log();
               headerText.includes("status") ||
               headerText.includes("payment"))
           ) {
-            // Extract data rows
+            // Extract all data rows
             for (let i = 1; i < rows.length; i++) {
-              const cells = rows[i].querySelectorAll("td");
-              if (cells.length > 0) {
-                const rowData = {
-                  invoice: cells[0]?.textContent?.trim() || "",
-                  amount: cells[1]?.textContent?.trim() || "",
-                  date: cells[2]?.textContent?.trim() || "",
-                  status: cells[3]?.textContent?.trim() || "",
-                };
-                history.push(rowData);
+              const cells = rows[i].querySelectorAll("td, th");
+              if (cells.length >= 2) {
+                const rowData = {};
+                cells.forEach((cell, idx) => {
+                  const text = cell.textContent?.trim();
+                  if (text) {
+                    if (idx === 0) rowData.invoice = text;
+                    else if (idx === 1) rowData.amount = text;
+                    else if (idx === 2) rowData.date = text;
+                    else if (idx === 3) rowData.status = text;
+                    else rowData[`col${idx}`] = text;
+                  }
+                });
+                if (Object.keys(rowData).length > 0) {
+                  history.push(rowData);
+                }
               }
             }
             break;
           }
         }
       }
-      
-      // If no table found, look for list items or cards
+
+      // If no table, check for empty state or list items
       if (history.length === 0) {
-        const items = document.querySelectorAll(
-          '[class*="billing"], [class*="invoice"], [class*="payment"]'
-        );
-        items.forEach((item) => {
-          const text = item.textContent?.trim();
-          if (text && text.length > 0) {
-            history.push({ text });
-          }
-        });
+        const emptyMsg = document.body.textContent?.toLowerCase();
+        if (
+          emptyMsg &&
+          (emptyMsg.includes("no billing") || emptyMsg.includes("no history"))
+        ) {
+          return [{ empty: true, message: "No billing history found" }];
+        }
       }
-      
+
       return history;
     });
 
@@ -405,18 +542,47 @@ console.log();
     console.log("\n" + "=".repeat(60));
     console.log("📊 BILLING HISTORY");
     console.log("=".repeat(60));
-    
-    if (billingHistory.length > 0) {
-      console.log(`Found ${billingHistory.length} billing history item(s):\n`);
+
+    // Show API response data first
+    if (billingHistoryData) {
+      console.log("\n📡 From API Response:");
+      if (
+        billingHistoryData.billing_history &&
+        billingHistoryData.billing_history.length > 0
+      ) {
+        console.log(
+          `   Found ${billingHistoryData.billing_history.length} item(s):\n`
+        );
+        billingHistoryData.billing_history.forEach((item, index) => {
+          console.log(`   ${index + 1}. Invoice: ${item.invoice || "N/A"}`);
+          console.log(`      Amount: ${item.amount || "N/A"}`);
+          console.log(`      Date: ${item.date || "N/A"}`);
+          console.log(`      Status: ${item.status || "N/A"}`);
+          console.log(`      Payment ID: ${item.payment_id || "N/A"}`);
+          console.log();
+        });
+      } else {
+        console.log("   ⚠️  API returned empty billing_history array");
+      }
+    }
+
+    // Show page extraction results
+    console.log("\n📄 From Page Extraction:");
+    if (billingHistory.length > 0 && !billingHistory[0].empty) {
+      console.log(`   Found ${billingHistory.length} item(s) on page:\n`);
       billingHistory.forEach((item, index) => {
-        console.log(`${index + 1}. ${JSON.stringify(item, null, 2)}`);
+        console.log(`   ${index + 1}. ${JSON.stringify(item, null, 2)}`);
       });
+    } else if (billingHistory.length > 0 && billingHistory[0].empty) {
+      console.log(
+        "   ⚠️  Page shows empty state: " + billingHistory[0].message
+      );
     } else {
-      console.log("⚠️  No billing history found on page");
+      console.log("   ⚠️  No billing history found on page");
       console.log("\n   This could mean:");
-      console.log("   - No billing history exists for this user");
-      console.log("   - Billing history is loading");
+      console.log("   - React hasn't rendered the data yet");
       console.log("   - Billing history is in a different format");
+      console.log("   - Component is showing empty state");
     }
 
     // Check console for any errors
@@ -439,10 +605,12 @@ console.log();
     console.log("=".repeat(60));
     console.log("✅ Login: Completed");
     console.log("✅ Dashboard: Accessed");
-    console.log(`✅ Billing Section: ${billingFound ? "Found" : "Not Found"}`);
+    console.log(
+      `✅ Billing Section: ${billingClicked ? "Clicked" : "Scrolled to"}`
+    );
     console.log(`✅ Billing History Items: ${billingHistory.length}`);
     console.log(`✅ API Calls: ${responses.length}`);
-    
+
     if (consoleErrors.length > 0) {
       console.log(`\n⚠️  Console Errors (${consoleErrors.length}):`);
       consoleErrors.forEach((error) => console.log(`   - ${error}`));
@@ -465,4 +633,3 @@ console.log();
     }
   }
 })();
-

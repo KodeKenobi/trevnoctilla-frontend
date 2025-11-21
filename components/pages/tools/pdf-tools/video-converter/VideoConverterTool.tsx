@@ -682,321 +682,376 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
     }
   };
 
-  return (
-    <div className="p-4 sm:p-6 rounded-xl bg-gray-800 shadow-soft max-w-4xl mx-auto">
-      <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-white">
-        Universal Video Converter
-      </h3>
-      <p className="text-xs sm:text-sm text-gray-300 mb-4">
-        Convert videos between all formats with compression and quality control.
-        Extract audio to MP3.
-      </p>
-
-      <div
-        {...getRootProps()}
-        className={`dropzone ${
-          isDragActive ? "dropzone-active" : ""
-        } mb-4 p-4 sm:p-8`}
-      >
-        <input {...getInputProps()} />
-        {isDragActive ? (
-          <p className="text-gray-300 text-sm sm:text-base">
-            Drop the video file here ...
-          </p>
-        ) : (
-          <p className="text-gray-300 text-sm sm:text-base">
-            Drag 'n' drop any video file here, or click to select file
-          </p>
-        )}
-      </div>
-
-      {file && (
-        <div className="mb-4 p-3 bg-gray-700 rounded-lg border border-gray-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm text-gray-200 break-words">
-              Selected file:{" "}
-              <span className="font-medium text-white break-words">
-                {file.name}
-              </span>
+  // If no file is selected, show the PDF-style upload UI
+  if (!file && !isProcessing) {
+    return (
+      <div className="w-full max-w-4xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
+        <div className="p-6">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-white mb-2">
+              Universal Video Converter
+            </h2>
+            <p className="text-gray-400">
+              Convert videos between all formats with compression and quality
+              control
             </p>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-1">
-              <p className="text-xs text-gray-400">
-                Original size:{" "}
-                <span className="text-blue-300 font-medium">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
+          </div>
+
+          <div
+            {...getRootProps()}
+            className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-gray-500 transition-colors"
+          >
+            <input {...getInputProps()} />
+            <div className="mb-4">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 48 48"
+              >
+                <path
+                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <div className="mb-4">
+              <label
+                htmlFor="video-file-upload"
+                className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-block"
+              >
+                Choose Video File
+              </label>
+              <input
+                id="video-file-upload"
+                type="file"
+                accept="video/*"
+                onChange={(e) => {
+                  const videoFile = e.target.files?.[0];
+                  if (videoFile) {
+                    onDrop([videoFile]);
+                  }
+                }}
+                className="hidden"
+              />
+            </div>
+            <p className="text-gray-400 text-sm">
+              {isDragActive
+                ? "Drop the video file here"
+                : "Drag and drop your video here, or click to browse"}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-4xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
+      <div className="p-6">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-white mb-2">
+            Universal Video Converter
+          </h2>
+          <p className="text-gray-400">
+            Convert videos between all formats with compression and quality
+            control
+          </p>
+        </div>
+
+        {file && (
+          <div className="mb-4 p-3 bg-gray-700 rounded-lg border border-gray-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm text-gray-200 break-words">
+                Selected file:{" "}
+                <span className="font-medium text-white break-words">
+                  {file.name}
                 </span>
               </p>
-              {convertedFileSize && (
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-1">
                 <p className="text-xs text-gray-400">
-                  Converted size:{" "}
-                  <span className="text-green-300 font-medium">
-                    {(convertedFileSize / 1024 / 1024).toFixed(2)} MB
+                  Original size:{" "}
+                  <span className="text-blue-300 font-medium">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
                   </span>
                 </p>
-              )}
-              {originalFileSize && convertedFileSize && (
-                <p className="text-xs text-gray-400">
-                  Compression:{" "}
-                  <span className="text-purple-300 font-medium">
-                    {(
-                      ((originalFileSize - convertedFileSize) /
-                        originalFileSize) *
-                      100
-                    ).toFixed(1)}
-                    % reduction
-                  </span>
-                </p>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              setFile(null);
-              setUploadedFile(null);
-              setOriginalFileSize(null);
-              setConvertedFileSize(null);
-              setConversionResult(null);
-              setProgress(0);
-              setIsInitializing(false);
-              setIsBackendProcessing(false);
-              setInitializationStep(0);
-            }}
-            className="text-red-400 hover:text-red-300 text-xs sm:text-sm px-2 py-1 rounded"
-          >
-            Remove
-          </button>
-        </div>
-      )}
-
-      {warning && (
-        <div className="mb-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg text-red-300 text-sm">
-          {warning}
-        </div>
-      )}
-
-      {/* Format and Quality Controls */}
-      <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-            Output Format
-          </label>
-          <select
-            value={outputFormat}
-            onChange={(e) => setOutputFormat(e.target.value)}
-            className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
-          >
-            <option value="mp4">MP4 (H.264)</option>
-            <option value="webm">WebM (VP9)</option>
-            <option value="avi">AVI</option>
-            <option value="mov">MOV (QuickTime)</option>
-            <option value="mkv">MKV (Matroska)</option>
-            <option value="flv">FLV (Flash)</option>
-            <option value="wmv">WMV (Windows Media)</option>
-            <option value="m4v">M4V (iTunes)</option>
-            <option value="3gp">3GP (Mobile)</option>
-            <option value="ogv">OGV (Ogg)</option>
-            <option value="mp3">MP3 (Audio Only)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-            Quality Level
-          </label>
-          <select
-            value={quality}
-            onChange={(e) => setQuality(Number(e.target.value))}
-            className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
-          >
-            <option value={95}>Ultra High (95%)</option>
-            <option value={85}>High (85%)</option>
-            <option value={75}>Medium (75%)</option>
-            <option value={60}>Low (60%)</option>
-            <option value={40}>Very Low (40%)</option>
-          </select>
-        </div>
-        <div className="sm:col-span-2 lg:col-span-1">
-          <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
-            Compression
-          </label>
-          <select
-            value={compression}
-            onChange={(e) => setCompression(e.target.value)}
-            className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
-          >
-            <option value="none">No Compression</option>
-            <option value="light">Light Compression</option>
-            <option value="medium">Medium Compression</option>
-            <option value="heavy">Heavy Compression</option>
-            <option value="web">Web Optimized</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={convert}
-          disabled={!file || loading}
-          className="btn btn-primary flex-1 text-sm sm:text-base py-3 sm:py-4"
-        >
-          {loading
-            ? `${
-                outputFormat === "mp3" ? "Extracting audio to" : "Converting to"
-              } ${outputFormat.toUpperCase()}... ${progress}%`
-            : `${
-                outputFormat === "mp3" ? "Extract Audio to" : "Convert to"
-              } ${outputFormat.toUpperCase()}`}
-        </button>
-
-        {loading && currentConversionId && (
-          <button
-            onClick={cancelConversion}
-            className="btn btn-secondary text-sm sm:text-base py-3 sm:py-4 px-4"
-          >
-            Cancel
-          </button>
-        )}
-      </div>
-
-      {loading && isUploading && (
-        <div className="mb-4">
-          <div className="text-center">
-            <p className="text-xs text-gray-300 mb-1">
-              <span className="text-green-300 animate-pulse">
-                Uploading video... {uploadProgress}%
-              </span>
-            </p>
-            <p className="text-xs text-gray-400">
-              Transferring {file ? (file.size / 1024 / 1024).toFixed(1) : "0"}MB
-              over secure connection
-            </p>
-          </div>
-        </div>
-      )}
-
-      {loading && !isUploading && (
-        <div className="mb-4">
-          <div className="w-full bg-gray-700 rounded-full h-2.5 mb-2">
-            <div
-              className="bg-purple-500 h-2.5 rounded-full transition-all duration-300 ease-in-out"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-gray-300 mb-1">
-              {isInitializing ? (
-                <span className="text-yellow-300 animate-pulse">
-                  {currentInitializationMessages[initializationStep]?.text ||
-                    "Securing your file..."}
-                </span>
-              ) : isBackendProcessing ? (
-                <span className="text-blue-300 animate-pulse">
-                  {currentBackendMessages[initializationStep]?.text ||
-                    "Processing your request..."}
-                </span>
-              ) : outputFormat === "mp3" ? (
-                "Extracting audio..."
-              ) : (
-                "Processing video..."
-              )}
-            </p>
-            <p className="text-xs text-gray-400">
-              {isInitializing
-                ? currentInitializationMessages[initializationStep]?.subtext ||
-                  "Initializing secure processing..."
-                : isBackendProcessing
-                ? currentBackendMessages[initializationStep]?.subtext ||
-                  "Backend is analyzing your file"
-                : `${progress}% complete`}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {conversionResult && (
-        <div className="mb-4 p-3 sm:p-4 bg-green-900/20 border border-green-500/50 rounded-lg">
-          <p className="text-green-300 text-xs sm:text-sm mb-2">
-            ✅{" "}
-            {outputFormat === "mp3"
-              ? "Audio extraction completed successfully!"
-              : "Conversion completed successfully!"}
-          </p>
-
-          {/* File Size Comparison */}
-          {originalFileSize && convertedFileSize && (
-            <div className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-600">
-              <h4 className="text-white text-xs sm:text-sm font-medium mb-2">
-                File Size Comparison
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                <div className="text-center">
-                  <p className="text-gray-400">Original</p>
-                  <p className="text-blue-300 font-medium">
-                    {(originalFileSize / 1024 / 1024).toFixed(2)} MB
+                {convertedFileSize && (
+                  <p className="text-xs text-gray-400">
+                    Converted size:{" "}
+                    <span className="text-green-300 font-medium">
+                      {(convertedFileSize / 1024 / 1024).toFixed(2)} MB
+                    </span>
                   </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-gray-400">Converted</p>
-                  <p className="text-green-300 font-medium">
-                    {(convertedFileSize / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-gray-400">Savings</p>
-                  <p className="text-purple-300 font-medium">
-                    {(
-                      (originalFileSize - convertedFileSize) /
-                      1024 /
-                      1024
-                    ).toFixed(2)}{" "}
-                    MB
-                    <br />
-                    <span className="text-xs">
-                      (
+                )}
+                {originalFileSize && convertedFileSize && (
+                  <p className="text-xs text-gray-400">
+                    Compression:{" "}
+                    <span className="text-purple-300 font-medium">
                       {(
                         ((originalFileSize - convertedFileSize) /
                           originalFileSize) *
                         100
                       ).toFixed(1)}
-                      % reduction)
+                      % reduction
                     </span>
                   </p>
-                </div>
+                )}
               </div>
             </div>
-          )}
-
-          <div className="flex justify-center">
             <button
-              onClick={downloadResult}
-              className="btn btn-primary text-sm sm:text-base px-8 py-3"
+              onClick={() => {
+                setFile(null);
+                setUploadedFile(null);
+                setOriginalFileSize(null);
+                setConvertedFileSize(null);
+                setConversionResult(null);
+                setProgress(0);
+                setIsInitializing(false);
+                setIsBackendProcessing(false);
+                setInitializationStep(0);
+              }}
+              className="text-red-400 hover:text-red-300 text-xs sm:text-sm px-2 py-1 rounded"
             >
-              {outputFormat === "mp3"
-                ? "Download Audio File"
-                : "Download Converted Video"}
+              Remove
             </button>
           </div>
+        )}
+
+        {warning && (
+          <div className="mb-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg text-red-300 text-sm">
+            {warning}
+          </div>
+        )}
+
+        {/* Format and Quality Controls */}
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+              Output Format
+            </label>
+            <select
+              value={outputFormat}
+              onChange={(e) => setOutputFormat(e.target.value)}
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+            >
+              <option value="mp4">MP4 (H.264)</option>
+              <option value="webm">WebM (VP9)</option>
+              <option value="avi">AVI</option>
+              <option value="mov">MOV (QuickTime)</option>
+              <option value="mkv">MKV (Matroska)</option>
+              <option value="flv">FLV (Flash)</option>
+              <option value="wmv">WMV (Windows Media)</option>
+              <option value="m4v">M4V (iTunes)</option>
+              <option value="3gp">3GP (Mobile)</option>
+              <option value="ogv">OGV (Ogg)</option>
+              <option value="mp3">MP3 (Audio Only)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+              Quality Level
+            </label>
+            <select
+              value={quality}
+              onChange={(e) => setQuality(Number(e.target.value))}
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+            >
+              <option value={95}>Ultra High (95%)</option>
+              <option value={85}>High (85%)</option>
+              <option value={75}>Medium (75%)</option>
+              <option value={60}>Low (60%)</option>
+              <option value={40}>Very Low (40%)</option>
+            </select>
+          </div>
+          <div className="sm:col-span-2 lg:col-span-1">
+            <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+              Compression
+            </label>
+            <select
+              value={compression}
+              onChange={(e) => setCompression(e.target.value)}
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+            >
+              <option value="none">No Compression</option>
+              <option value="light">Light Compression</option>
+              <option value="medium">Medium Compression</option>
+              <option value="heavy">Heavy Compression</option>
+              <option value="web">Web Optimized</option>
+            </select>
+          </div>
         </div>
-      )}
 
-      <div className="text-xs text-gray-400 text-center mt-4 space-y-1">
-        <p>
-          Safe encrypted video conversion and audio extraction with our advanced
-          algorithmic security
-        </p>
-        <p>
-          Max file size: 500MB | All major formats supported | MP3 audio
-          extraction
-        </p>
-        <p className="hidden sm:block">
-          High-performance conversion with quality control, compression options,
-          and audio extraction
-        </p>
-        <p className="sm:hidden">
-          High-performance conversion with quality control and audio extraction
-        </p>
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={convert}
+            disabled={!file || loading}
+            className="btn btn-primary flex-1 text-sm sm:text-base py-3 sm:py-4"
+          >
+            {loading
+              ? `${
+                  outputFormat === "mp3"
+                    ? "Extracting audio to"
+                    : "Converting to"
+                } ${outputFormat.toUpperCase()}... ${progress}%`
+              : `${
+                  outputFormat === "mp3" ? "Extract Audio to" : "Convert to"
+                } ${outputFormat.toUpperCase()}`}
+          </button>
+
+          {loading && currentConversionId && (
+            <button
+              onClick={cancelConversion}
+              className="btn btn-secondary text-sm sm:text-base py-3 sm:py-4 px-4"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+
+        {loading && isUploading && (
+          <div className="mb-4">
+            <div className="text-center">
+              <p className="text-xs text-gray-300 mb-1">
+                <span className="text-green-300 animate-pulse">
+                  Uploading video... {uploadProgress}%
+                </span>
+              </p>
+              <p className="text-xs text-gray-400">
+                Transferring {file ? (file.size / 1024 / 1024).toFixed(1) : "0"}
+                MB over secure connection
+              </p>
+            </div>
+          </div>
+        )}
+
+        {loading && !isUploading && (
+          <div className="mb-4">
+            <div className="w-full bg-gray-700 rounded-full h-2.5 mb-2">
+              <div
+                className="bg-purple-500 h-2.5 rounded-full transition-all duration-300 ease-in-out"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-300 mb-1">
+                {isInitializing ? (
+                  <span className="text-yellow-300 animate-pulse">
+                    {currentInitializationMessages[initializationStep]?.text ||
+                      "Securing your file..."}
+                  </span>
+                ) : isBackendProcessing ? (
+                  <span className="text-blue-300 animate-pulse">
+                    {currentBackendMessages[initializationStep]?.text ||
+                      "Processing your request..."}
+                  </span>
+                ) : outputFormat === "mp3" ? (
+                  "Extracting audio..."
+                ) : (
+                  "Processing video..."
+                )}
+              </p>
+              <p className="text-xs text-gray-400">
+                {isInitializing
+                  ? currentInitializationMessages[initializationStep]
+                      ?.subtext || "Initializing secure processing..."
+                  : isBackendProcessing
+                  ? currentBackendMessages[initializationStep]?.subtext ||
+                    "Backend is analyzing your file"
+                  : `${progress}% complete`}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {conversionResult && (
+          <div className="mb-4 p-3 sm:p-4 bg-green-900/20 border border-green-500/50 rounded-lg">
+            <p className="text-green-300 text-xs sm:text-sm mb-2">
+              ✅{" "}
+              {outputFormat === "mp3"
+                ? "Audio extraction completed successfully!"
+                : "Conversion completed successfully!"}
+            </p>
+
+            {/* File Size Comparison */}
+            {originalFileSize && convertedFileSize && (
+              <div className="mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-600">
+                <h4 className="text-white text-xs sm:text-sm font-medium mb-2">
+                  File Size Comparison
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="text-center">
+                    <p className="text-gray-400">Original</p>
+                    <p className="text-blue-300 font-medium">
+                      {(originalFileSize / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-gray-400">Converted</p>
+                    <p className="text-green-300 font-medium">
+                      {(convertedFileSize / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-gray-400">Savings</p>
+                    <p className="text-purple-300 font-medium">
+                      {(
+                        (originalFileSize - convertedFileSize) /
+                        1024 /
+                        1024
+                      ).toFixed(2)}{" "}
+                      MB
+                      <br />
+                      <span className="text-xs">
+                        (
+                        {(
+                          ((originalFileSize - convertedFileSize) /
+                            originalFileSize) *
+                          100
+                        ).toFixed(1)}
+                        % reduction)
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-center">
+              <button
+                onClick={downloadResult}
+                className="btn btn-primary text-sm sm:text-base px-8 py-3"
+              >
+                {outputFormat === "mp3"
+                  ? "Download Audio File"
+                  : "Download Converted Video"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="text-xs text-gray-400 text-center mt-4 space-y-1">
+          <p>
+            Safe encrypted video conversion and audio extraction with our
+            advanced algorithmic security
+          </p>
+          <p>
+            Max file size: 500MB | All major formats supported | MP3 audio
+            extraction
+          </p>
+          <p className="hidden sm:block">
+            High-performance conversion with quality control, compression
+            options, and audio extraction
+          </p>
+          <p className="sm:hidden">
+            High-performance conversion with quality control and audio
+            extraction
+          </p>
+        </div>
+
+        {/* Monetization removed - using Google AdSense only */}
       </div>
-
-      {/* Monetization removed - using Google AdSense only */}
     </div>
   );
 };
