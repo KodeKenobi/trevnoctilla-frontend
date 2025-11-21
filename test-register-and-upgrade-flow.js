@@ -263,7 +263,9 @@ async function testRegisterAndUpgrade() {
       });
     } catch (error) {
       if (error.message.includes("timeout")) {
-        console.log("   ⚠️  Navigation timeout, checking if page loaded anyway...");
+        console.log(
+          "   ⚠️  Navigation timeout, checking if page loaded anyway..."
+        );
         const currentUrl = page.url();
         if (currentUrl.includes("/auth/register")) {
           console.log("   ✅ Page loaded despite timeout");
@@ -514,9 +516,16 @@ async function testRegisterAndUpgrade() {
         console.log("   ✅ Redirected to dashboard");
       } catch (e) {
         // If redirect doesn't happen, check if registration succeeded and navigate manually
-        const pageText = await page.evaluate(() => document.body.textContent || "");
-        if (pageText.includes("Account created") || pageText.includes("successfully")) {
-          console.log("   ⚠️  Registration succeeded but redirect didn't happen, navigating manually...");
+        const pageText = await page.evaluate(
+          () => document.body.textContent || ""
+        );
+        if (
+          pageText.includes("Account created") ||
+          pageText.includes("successfully")
+        ) {
+          console.log(
+            "   ⚠️  Registration succeeded but redirect didn't happen, navigating manually..."
+          );
           await page.goto(`${BASE_URL}/dashboard`, {
             waitUntil: "domcontentloaded",
             timeout: 30000,
@@ -1867,7 +1876,10 @@ async function testRegisterAndUpgrade() {
     // Navigate to dashboard if not already there
     // Note: User may be redirected to /auth/login due to logout flow
     const currentUrlAfterWait = page.url();
-    if (!currentUrlAfterWait.includes("/dashboard") && !currentUrlAfterWait.includes("/auth/login")) {
+    if (
+      !currentUrlAfterWait.includes("/dashboard") &&
+      !currentUrlAfterWait.includes("/auth/login")
+    ) {
       try {
         await page.goto(`${BASE_URL}/dashboard`, {
           waitUntil: "domcontentloaded",
@@ -1878,7 +1890,9 @@ async function testRegisterAndUpgrade() {
           console.log("   ⚠️  Navigation timeout, checking current URL...");
           const url = page.url();
           if (url.includes("/auth/login")) {
-            console.log("   ✅ User was redirected to login (expected after logout)");
+            console.log(
+              "   ✅ User was redirected to login (expected after logout)"
+            );
           } else {
             throw error;
           }
@@ -1895,49 +1909,73 @@ async function testRegisterAndUpgrade() {
     // Check if user is on login page (expected after logout flow)
     const currentUrlAtStart = page.url();
     if (currentUrlAtStart.includes("/auth/login")) {
-      console.log("   ✅ User is on login page (expected after logout) - logging back in...");
-      
+      console.log(
+        "   ✅ User is on login page (expected after logout) - logging back in..."
+      );
+
       // Wait for login page to load
       await page.waitForFunction(
         () => {
           const text = document.body.textContent || "";
-          return text.includes("Sign in") || text.includes("Login") || text.includes("Email");
+          return (
+            text.includes("Sign in") ||
+            text.includes("Login") ||
+            text.includes("Email")
+          );
         },
         { timeout: 10000 }
       );
-      
+
       // Fill in login form
-      await page.waitForSelector('input[type="email"], input[name="email"]', { timeout: 10000 });
-      const emailInput = await page.$('input[type="email"], input[name="email"]');
+      await page.waitForSelector('input[type="email"], input[name="email"]', {
+        timeout: 10000,
+      });
+      const emailInput = await page.$(
+        'input[type="email"], input[name="email"]'
+      );
       if (emailInput) {
         await emailInput.click({ clickCount: 3 });
         await emailInput.type(testEmail);
       }
-      
-      await page.waitForSelector('input[type="password"], input[name="password"]', { timeout: 10000 });
-      const passwordInput = await page.$('input[type="password"], input[name="password"]');
+
+      await page.waitForSelector(
+        'input[type="password"], input[name="password"]',
+        { timeout: 10000 }
+      );
+      const passwordInput = await page.$(
+        'input[type="password"], input[name="password"]'
+      );
       if (passwordInput) {
         await passwordInput.click({ clickCount: 3 });
         await passwordInput.type(testPassword);
       }
-      
+
       // Submit login form
       // Submit login form - find button by text content using evaluate
       const submitButtonHandle = await page.evaluateHandle(() => {
-        const buttons = Array.from(document.querySelectorAll('button[type="submit"], button'));
-        return buttons.find(btn => {
-          const text = btn.textContent?.toLowerCase() || '';
-          return text.includes('sign in') || text.includes('login') || text.includes('submit');
+        const buttons = Array.from(
+          document.querySelectorAll('button[type="submit"], button')
+        );
+        return buttons.find((btn) => {
+          const text = btn.textContent?.toLowerCase() || "";
+          return (
+            text.includes("sign in") ||
+            text.includes("login") ||
+            text.includes("submit")
+          );
         });
       });
-      const submitButton = submitButtonHandle && (await submitButtonHandle.asElement()) ? await submitButtonHandle.asElement() : null;
+      const submitButton =
+        submitButtonHandle && (await submitButtonHandle.asElement())
+          ? await submitButtonHandle.asElement()
+          : null;
       if (submitButton) {
         await submitButton.click();
       } else {
         // Try pressing Enter
         await page.keyboard.press("Enter");
       }
-      
+
       // Wait for redirect to dashboard
       await page.waitForFunction(
         (url) => {
@@ -1945,7 +1983,7 @@ async function testRegisterAndUpgrade() {
         },
         { timeout: 30000 }
       );
-      
+
       console.log("   ✅ User logged back in and redirected to dashboard");
     }
 
@@ -2052,48 +2090,70 @@ async function testRegisterAndUpgrade() {
       console.log(
         "   ✅ User was redirected to login (expected after logout) - logging back in..."
       );
-      
+
       // Wait for login page to load
       await page.waitForFunction(
         () => {
           const text = document.body.textContent || "";
-          return text.includes("Sign in") || text.includes("Login") || text.includes("Email");
+          return (
+            text.includes("Sign in") ||
+            text.includes("Login") ||
+            text.includes("Email")
+          );
         },
         { timeout: 10000 }
       );
-      
+
       // Fill in login form
-      await page.waitForSelector('input[type="email"], input[name="email"]', { timeout: 10000 });
-      const emailInput = await page.$('input[type="email"], input[name="email"]');
+      await page.waitForSelector('input[type="email"], input[name="email"]', {
+        timeout: 10000,
+      });
+      const emailInput = await page.$(
+        'input[type="email"], input[name="email"]'
+      );
       if (emailInput) {
         await emailInput.click({ clickCount: 3 });
         await emailInput.type(testEmail);
       }
-      
-      await page.waitForSelector('input[type="password"], input[name="password"]', { timeout: 10000 });
-      const passwordInput = await page.$('input[type="password"], input[name="password"]');
+
+      await page.waitForSelector(
+        'input[type="password"], input[name="password"]',
+        { timeout: 10000 }
+      );
+      const passwordInput = await page.$(
+        'input[type="password"], input[name="password"]'
+      );
       if (passwordInput) {
         await passwordInput.click({ clickCount: 3 });
         await passwordInput.type(testPassword);
       }
-      
+
       // Submit login form
       // Submit login form - find button by text content using evaluate
       const submitButtonHandle = await page.evaluateHandle(() => {
-        const buttons = Array.from(document.querySelectorAll('button[type="submit"], button'));
-        return buttons.find(btn => {
-          const text = btn.textContent?.toLowerCase() || '';
-          return text.includes('sign in') || text.includes('login') || text.includes('submit');
+        const buttons = Array.from(
+          document.querySelectorAll('button[type="submit"], button')
+        );
+        return buttons.find((btn) => {
+          const text = btn.textContent?.toLowerCase() || "";
+          return (
+            text.includes("sign in") ||
+            text.includes("login") ||
+            text.includes("submit")
+          );
         });
       });
-      const submitButton = submitButtonHandle && (await submitButtonHandle.asElement()) ? await submitButtonHandle.asElement() : null;
+      const submitButton =
+        submitButtonHandle && (await submitButtonHandle.asElement())
+          ? await submitButtonHandle.asElement()
+          : null;
       if (submitButton) {
         await submitButton.click();
       } else {
         // Try pressing Enter
         await page.keyboard.press("Enter");
       }
-      
+
       // Wait for redirect to dashboard
       await page.waitForFunction(
         (url) => {
@@ -2101,7 +2161,7 @@ async function testRegisterAndUpgrade() {
         },
         { timeout: 30000 }
       );
-      
+
       console.log("   ✅ User logged back in and redirected to dashboard");
     }
 

@@ -332,7 +332,8 @@ function DashboardContent() {
           const upgradeEmail = sessionEmail || userEmail;
           const upgradePlanId = pendingPayment?.plan_id || "production";
           const upgradePlanName =
-            pendingPayment?.plan_name || "Production Plan - Monthly Subscription";
+            pendingPayment?.plan_name ||
+            "Production Plan - Monthly Subscription";
           const upgradeAmount = pendingPayment?.amount
             ? parseFloat(pendingPayment.amount)
             : 495.9;
