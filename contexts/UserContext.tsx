@@ -22,6 +22,7 @@ interface UserContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   checkAuthStatus: () => Promise<void>;
+  refreshSessionSilently: () => Promise<boolean>;
   isAdmin: boolean;
   isSuperAdmin: boolean;
 }
@@ -289,6 +290,86 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     signOut({ callbackUrl: "/" });
   };
 
+  /**
+   * Silently refresh the user session by clearing tokens and fetching fresh user data
+   * This is used after payment success to ensure the session reflects the new subscription tier
+   * Returns true if successful, false otherwise
+   */
+  const refreshSessionSilently = async (): Promise<boolean> => {
+    try {
+      console.log("🔄 Starting silent session refresh...");
+
+      // Get current user email before clearing tokens
+      const currentUser = user;
+      const currentEmail = currentUser?.email;
+      const currentToken = localStorage.getItem("auth_token");
+
+      if (!currentEmail && !currentToken) {
+        console.warn("⚠️ Cannot refresh session: no email or token found");
+        return false;
+      }
+
+      // Get email from session if not available from user state
+      let emailToUse = currentEmail;
+      if (!emailToUse) {
+        try {
+          const sessionResponse = await fetch("/api/auth/session");
+          const session = await sessionResponse.json();
+          emailToUse = session?.user?.email;
+        } catch (error) {
+          console.error("❌ Failed to get email from session:", error);
+          return false;
+        }
+      }
+
+      if (!emailToUse) {
+        console.warn("⚠️ Cannot refresh session: no email found");
+        return false;
+      }
+
+      console.log("🔄 Clearing current session data...");
+
+      // Clear current tokens and user data (silently, no redirect)
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("user_data");
+      setUser(null);
+
+      // Sign out from NextAuth silently (without redirect)
+      try {
+        await signOut({ redirect: false });
+      } catch (signOutError) {
+        console.warn("⚠️ NextAuth signOut error (non-critical):", signOutError);
+      }
+
+      // Wait a moment for cleanup
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      console.log("🔄 Fetching fresh user data...");
+
+      // Now fetch fresh user data using checkAuthStatus
+      // This will use NextAuth session if available, or try to get a new token
+      await checkAuthStatus();
+
+      // Verify we got fresh user data
+      const freshUser = user;
+      if (freshUser && freshUser.email === emailToUse) {
+        console.log(
+          "✅ Silent session refresh completed - user data refreshed"
+        );
+        console.log("   New subscription tier:", freshUser.subscription_tier);
+        return true;
+      } else {
+        console.warn(
+          "⚠️ Silent session refresh completed but user data not updated"
+        );
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ Error during silent session refresh:", error);
+      return false;
+    }
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -297,6 +378,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         checkAuthStatus,
+        refreshSessionSilently,
         isAdmin,
         isSuperAdmin,
       }}

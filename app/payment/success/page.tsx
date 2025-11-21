@@ -3,10 +3,12 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CheckCircle, Loader2 } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { refreshSessionSilently } = useUser();
   const [isVerifying, setIsVerifying] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState<
     "success" | "pending" | "failed"
@@ -214,6 +216,19 @@ function PaymentSuccessContent() {
 
         // Mark as processed
         sessionStorage.setItem(upgradeKey, "true");
+
+        // Silently refresh session to get updated subscription tier
+        console.log(
+          "🔄 Refreshing session silently to reflect new subscription tier..."
+        );
+        const refreshSuccess = await refreshSessionSilently();
+        if (refreshSuccess) {
+          console.log(
+            "✅ Session refreshed - user now has updated subscription tier"
+          );
+        } else {
+          console.warn("⚠️ Session refresh failed, but upgrade was successful");
+        }
 
         // Redirect to dashboard to show updated tier
         setTimeout(() => {
