@@ -15,23 +15,43 @@ const puppeteer = require("puppeteer");
 const path = require("path");
 const fs = require("fs");
 
-const BASE_URL = process.env.TEST_URL || "http://localhost:3000";
+// Use production URL by default, can be overridden with TEST_URL env variable
+const BASE_URL = process.env.TEST_URL || "https://www.trevnoctilla.com";
 const VIDEO_CONVERTER_URL = `${BASE_URL}/tools/video-converter`;
 
-// Test video file (create a small test video if needed)
-// Try multiple possible locations
+// Test video file - prioritize test-files folder
+// Try multiple possible locations, but test-files is the primary location
 const TEST_VIDEO_PATHS = [
-  path.join(__dirname, "test-files", "test-video.mp4"),
   path.join(__dirname, "trevnoctilla-backend", "test_output.mp4"),
   path.join(__dirname, "test-video.mp4"),
 ];
 
 // Find the first existing video file
 let TEST_VIDEO_PATH = null;
-for (const videoPath of TEST_VIDEO_PATHS) {
-  if (fs.existsSync(videoPath)) {
-    TEST_VIDEO_PATH = videoPath;
-    break;
+
+// First, try to find any MP4 file in test-files folder
+const testFilesDir = path.join(__dirname, "test-files");
+if (fs.existsSync(testFilesDir)) {
+  const files = fs.readdirSync(testFilesDir);
+  const videoFile = files.find(
+    (file) =>
+      file.toLowerCase().endsWith(".mp4") ||
+      file.toLowerCase().endsWith(".mov") ||
+      file.toLowerCase().endsWith(".avi")
+  );
+  if (videoFile) {
+    TEST_VIDEO_PATH = path.join(testFilesDir, videoFile);
+    console.log(`✅ Found video file in test-files: ${videoFile}`);
+  }
+}
+
+// If not found in test-files, try other locations
+if (!TEST_VIDEO_PATH) {
+  for (const videoPath of TEST_VIDEO_PATHS) {
+    if (fs.existsSync(videoPath)) {
+      TEST_VIDEO_PATH = videoPath;
+      break;
+    }
   }
 }
 
@@ -81,12 +101,20 @@ console.log();
 
     const page = await browser.newPage();
 
-    // Set up download behavior using CDP
+    // Set up download behavior using CDP - save to test-output-files folder
+    const outputDir = path.join(__dirname, "test-output-files");
+    // Create output directory if it doesn't exist
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+      console.log(`📁 Created output directory: ${outputDir}`);
+    }
+
     const client = await page.target().createCDPSession();
     await client.send("Page.setDownloadBehavior", {
       behavior: "allow",
-      downloadPath: path.join(__dirname, "downloads"),
+      downloadPath: outputDir,
     });
+    console.log(`📁 Downloads will be saved to: ${outputDir}`);
 
     // Track console errors
     const consoleErrors = [];
