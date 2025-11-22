@@ -58,9 +58,52 @@ export const API_CONFIG = {
     PASSPHRASE: process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE || "",
     // Use sandbox for testing: https://sandbox.payfast.co.za/eng/process
     // Use production for live: https://www.payfast.co.za/eng/process
-    PAYFAST_URL:
-      process.env.NEXT_PUBLIC_PAYFAST_URL ||
-      "https://sandbox.payfast.co.za/eng/process",
+    // Automatically use sandbox for local, production for deployed
+    // Priority: 1. Check if we're on production domain (client-side: window.location, server-side: env var)
+    //           2. Explicit NEXT_PUBLIC_PAYFAST_URL env var
+    //           3. Auto-detect: production if NODE_ENV=production, else sandbox
+    get PAYFAST_URL() {
+      // Client-side: check window.location.hostname
+      if (typeof window !== "undefined") {
+        const hostname = window.location.hostname;
+        const isProductionDomain =
+          hostname.includes("trevnoctilla.com") ||
+          (hostname.includes("www.") && !hostname.includes("localhost") && !hostname.includes("127.0.0.1"));
+
+        // If on production domain, force production PayFast URL
+        if (isProductionDomain) {
+          return "https://www.payfast.co.za/eng/process";
+        }
+
+        // If on localhost, use sandbox
+        if (hostname === "localhost" || hostname === "127.0.0.1") {
+          return "https://sandbox.payfast.co.za/eng/process";
+        }
+      }
+
+      // Server-side: check env var
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+      const isProductionDomain =
+        baseUrl.includes("trevnoctilla.com") ||
+        baseUrl.includes("www.") ||
+        (!baseUrl.includes("localhost") && !baseUrl.includes("127.0.0.1"));
+
+      // If on production domain, force production PayFast URL (even if env var says sandbox)
+      if (isProductionDomain && baseUrl.startsWith("https://")) {
+        return "https://www.payfast.co.za/eng/process";
+      }
+
+      // If explicitly set and not on production domain, use it
+      if (process.env.NEXT_PUBLIC_PAYFAST_URL) {
+        return process.env.NEXT_PUBLIC_PAYFAST_URL;
+      }
+
+      // Auto-detect: production if NODE_ENV is production, else sandbox
+      const isProduction = process.env.NODE_ENV === "production";
+      return isProduction
+        ? "https://www.payfast.co.za/eng/process"
+        : "https://sandbox.payfast.co.za/eng/process";
+    },
     RETURN_URL:
       process.env.NEXT_PUBLIC_PAYFAST_RETURN_URL ||
       `${
