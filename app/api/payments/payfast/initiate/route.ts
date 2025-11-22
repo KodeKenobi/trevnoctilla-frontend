@@ -20,11 +20,34 @@ const PAYFAST_CONFIG = {
     process.env.PAYFAST_PASSPHRASE ||
     process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE ||
     "",
-  // Use sandbox URL for testing: https://sandbox.payfast.co.za/eng/process
-  // Use production URL for live: https://www.payfast.co.za/eng/process
-  PAYFAST_URL:
-    process.env.NEXT_PUBLIC_PAYFAST_URL ||
-    "https://sandbox.payfast.co.za/eng/process",
+  // Automatically use sandbox for local, production for deployed
+  // Priority: 1. Check if BASE_URL is production domain (override sandbox if needed)
+  //           2. Explicit NEXT_PUBLIC_PAYFAST_URL env var
+  //           3. Auto-detect: production if NODE_ENV=production, else sandbox
+  PAYFAST_URL: (() => {
+    // Check if we're on a production domain
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+    const isProductionDomain =
+      baseUrl.includes("trevnoctilla.com") ||
+      baseUrl.includes("www.") ||
+      (!baseUrl.includes("localhost") && !baseUrl.includes("127.0.0.1"));
+
+    // If on production domain, force production PayFast URL (even if env var says sandbox)
+    if (isProductionDomain && baseUrl.startsWith("https://")) {
+      return "https://www.payfast.co.za/eng/process";
+    }
+
+    // If explicitly set and not on production domain, use it
+    if (process.env.NEXT_PUBLIC_PAYFAST_URL) {
+      return process.env.NEXT_PUBLIC_PAYFAST_URL;
+    }
+
+    // Auto-detect: production if NODE_ENV is production, else sandbox
+    const isProduction = process.env.NODE_ENV === "production";
+    return isProduction
+      ? "https://www.payfast.co.za/eng/process"
+      : "https://sandbox.payfast.co.za/eng/process";
+  })(),
   RETURN_URL: process.env.NEXT_PUBLIC_PAYFAST_RETURN_URL || "",
   CANCEL_URL: process.env.NEXT_PUBLIC_PAYFAST_CANCEL_URL || "",
   NOTIFY_URL: process.env.NEXT_PUBLIC_PAYFAST_NOTIFY_URL || "",
