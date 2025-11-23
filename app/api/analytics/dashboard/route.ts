@@ -55,6 +55,11 @@ export async function GET(request: NextRequest) {
 
     // Get auth token from session
     const token = (session as any).accessToken || null;
+    
+    if (!token) {
+      console.warn("[ANALYTICS] No backend token in session - trying to get from localStorage fallback");
+      // This won't work server-side, but log it for debugging
+    }
 
     // Fetch analytics data from backend API
     try {
@@ -63,14 +68,31 @@ export async function GET(request: NextRequest) {
 
       console.log(`[ANALYTICS] Fetching from backend: ${backendUrl}`);
       console.log(`[ANALYTICS] Has token: ${!!token}`);
+      console.log(`[ANALYTICS] Range: ${range}, Start time: ${startTime.toISOString()}`);
       console.log(`[ANALYTICS] Auth headers:`, Object.keys(authHeaders));
 
-      const response = await fetch(
-        `${backendUrl}?range=${range}&start_time=${startTime.toISOString()}`,
-        {
-          headers: authHeaders,
+      // Use fetch with proper error handling and timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      let response;
+      try {
+        response = await fetch(
+          `${backendUrl}?range=${range}&start_time=${startTime.toISOString()}`,
+          {
+            headers: authHeaders,
+            signal: controller.signal,
+          }
+        );
+        clearTimeout(timeoutId);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === "AbortError") {
+          console.error("[ANALYTICS] Request timeout");
+          throw new Error("Request timeout");
         }
-      );
+        throw fetchError;
+      }
 
       console.log(`[ANALYTICS] Backend response status: ${response.status}`);
 
