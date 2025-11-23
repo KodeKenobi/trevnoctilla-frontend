@@ -17,6 +17,22 @@ export async function POST(request: NextRequest) {
       } as any,
     });
 
+    // Extract IP address from request headers
+    const forwarded = request.headers.get("x-forwarded-for");
+    const realIp = request.headers.get("x-real-ip");
+    const ipAddress =
+      forwarded?.split(",")[0]?.trim() ||
+      realIp ||
+      request.headers.get("cf-connecting-ip") ||
+      request.ip ||
+      "unknown";
+
+    // Add IP address to session data if not already present
+    const enrichedSessionData = {
+      ...sessionData,
+      ip_address: sessionData.ip_address || ipAddress,
+    };
+
     // Forward to backend API
     const backendUrl = getApiUrl("/api/analytics/session");
     const token = (session as any)?.accessToken || null;
@@ -26,8 +42,10 @@ export async function POST(request: NextRequest) {
       headers: {
         "Content-Type": "application/json",
         ...(token ? getAuthHeaders(token) : {}),
+        // Forward IP address in headers for backend geolocation
+        "X-Forwarded-For": ipAddress,
       },
-      body: JSON.stringify(sessionData),
+      body: JSON.stringify(enrichedSessionData),
     });
 
     if (response.ok) {
