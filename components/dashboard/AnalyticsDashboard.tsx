@@ -53,11 +53,19 @@ const formatDuration = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.round(seconds % 60);
   if (minutes < 60) {
-    return `${minutes} minute${minutes !== 1 ? "s" : ""} ${remainingSeconds > 0 ? `${remainingSeconds} second${remainingSeconds !== 1 ? "s" : ""}` : ""}`;
+    return `${minutes} minute${minutes !== 1 ? "s" : ""} ${
+      remainingSeconds > 0
+        ? `${remainingSeconds} second${remainingSeconds !== 1 ? "s" : ""}`
+        : ""
+    }`;
   }
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
-  return `${hours} hour${hours !== 1 ? "s" : ""} ${remainingMinutes > 0 ? `${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}` : ""}`;
+  return `${hours} hour${hours !== 1 ? "s" : ""} ${
+    remainingMinutes > 0
+      ? `${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`
+      : ""
+  }`;
 };
 
 // Helper function to format numbers with proper labels
@@ -198,9 +206,7 @@ export default function AnalyticsDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">
-            Analytics Dashboard
-          </h1>
+          <h1 className="text-2xl font-bold text-white">Analytics Dashboard</h1>
           <p className="text-gray-400 mt-1">
             Monitor your website performance and user behavior
           </p>
@@ -262,7 +268,8 @@ export default function AnalyticsDashboard() {
                     {data.totalUsers.toLocaleString()}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Unique visitors in {timeRangeLabels[timeRange].toLowerCase()}
+                    Unique visitors in{" "}
+                    {timeRangeLabels[timeRange].toLowerCase()}
                   </p>
                 </div>
                 <div className="p-3 bg-blue-500/20 rounded-lg">
@@ -368,7 +375,9 @@ export default function AnalyticsDashboard() {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-2">
                     <TrendingUp className="w-4 h-4 text-green-400" />
-                    <span className="text-sm text-gray-300">Conversion Rate</span>
+                    <span className="text-sm text-gray-300">
+                      Conversion Rate
+                    </span>
                   </div>
                   <span className="font-semibold text-green-400">
                     {data.conversionRate.toFixed(2)}%
@@ -389,9 +398,7 @@ export default function AnalyticsDashboard() {
             <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
               <div className="flex items-center space-x-2 mb-4">
                 <FileText className="w-5 h-5 text-blue-400" />
-                <h3 className="text-lg font-semibold text-white">
-                  Top Pages
-                </h3>
+                <h3 className="text-lg font-semibold text-white">Top Pages</h3>
               </div>
               <div className="space-y-3">
                 {data.topPages.length > 0 ? (
@@ -404,7 +411,10 @@ export default function AnalyticsDashboard() {
                         <span className="text-xs text-gray-500 w-6">
                           #{index + 1}
                         </span>
-                        <span className="text-sm text-gray-300 truncate" title={page.page}>
+                        <span
+                          className="text-sm text-gray-300 truncate"
+                          title={page.page}
+                        >
                           {formatPageUrl(page.page)}
                         </span>
                       </div>
@@ -424,9 +434,7 @@ export default function AnalyticsDashboard() {
             <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
               <div className="flex items-center space-x-2 mb-4">
                 <Activity className="w-5 h-5 text-purple-400" />
-                <h3 className="text-lg font-semibold text-white">
-                  Top Events
-                </h3>
+                <h3 className="text-lg font-semibold text-white">Top Events</h3>
               </div>
               <div className="space-y-3">
                 {data.topEvents.length > 0 ? (
@@ -439,7 +447,10 @@ export default function AnalyticsDashboard() {
                         <span className="text-xs text-gray-500 w-6">
                           #{index + 1}
                         </span>
-                        <span className="text-sm text-gray-300 truncate" title={event.event}>
+                        <span
+                          className="text-sm text-gray-300 truncate"
+                          title={event.event}
+                        >
                           {event.event}
                         </span>
                       </div>
@@ -476,7 +487,8 @@ export default function AnalyticsDashboard() {
                   {data.totalUsers.toLocaleString()}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Users who visited in {timeRangeLabels[timeRange].toLowerCase()}
+                  Users who visited in{" "}
+                  {timeRangeLabels[timeRange].toLowerCase()}
                 </p>
               </div>
               <div className="bg-gray-700/30 p-4 rounded-lg">
@@ -485,11 +497,17 @@ export default function AnalyticsDashboard() {
                   {data.totalSessions.toLocaleString()}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Average {data.totalUsers > 0 ? (data.totalSessions / data.totalUsers).toFixed(1) : 0} sessions per user
+                  Average{" "}
+                  {data.totalUsers > 0
+                    ? (data.totalSessions / data.totalUsers).toFixed(1)
+                    : 0}{" "}
+                  sessions per user
                 </p>
               </div>
               <div className="bg-gray-700/30 p-4 rounded-lg">
-                <p className="text-sm text-gray-400 mb-2">Average Session Duration</p>
+                <p className="text-sm text-gray-400 mb-2">
+                  Average Session Duration
+                </p>
                 <p className="text-2xl font-bold text-white">
                   {formatDuration(data.averageSessionDuration)}
                 </p>
@@ -500,7 +518,9 @@ export default function AnalyticsDashboard() {
               <div className="bg-gray-700/30 p-4 rounded-lg">
                 <p className="text-sm text-gray-400 mb-2">Pages per Session</p>
                 <p className="text-2xl font-bold text-white">
-                  {data.totalSessions > 0 ? (data.totalPageViews / data.totalSessions).toFixed(1) : 0}
+                  {data.totalSessions > 0
+                    ? (data.totalPageViews / data.totalSessions).toFixed(1)
+                    : 0}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Average pages viewed per session
@@ -524,9 +544,10 @@ export default function AnalyticsDashboard() {
             {data.topPages.length > 0 ? (
               <div className="space-y-3">
                 {data.topPages.map((page, index) => {
-                  const percentage = data.totalPageViews > 0 
-                    ? ((page.views / data.totalPageViews) * 100).toFixed(1)
-                    : 0;
+                  const percentage =
+                    data.totalPageViews > 0
+                      ? ((page.views / data.totalPageViews) * 100).toFixed(1)
+                      : 0;
                   return (
                     <div
                       key={page.page}
@@ -537,7 +558,10 @@ export default function AnalyticsDashboard() {
                           <span className="text-sm font-semibold text-gray-400 w-8">
                             #{index + 1}
                           </span>
-                          <span className="text-sm text-gray-300 truncate" title={page.page}>
+                          <span
+                            className="text-sm text-gray-300 truncate"
+                            title={page.page}
+                          >
                             {formatPageUrl(page.page)}
                           </span>
                         </div>
@@ -583,9 +607,10 @@ export default function AnalyticsDashboard() {
             {data.topEvents.length > 0 ? (
               <div className="space-y-3">
                 {data.topEvents.map((event, index) => {
-                  const percentage = data.totalEvents > 0 
-                    ? ((event.count / data.totalEvents) * 100).toFixed(1)
-                    : 0;
+                  const percentage =
+                    data.totalEvents > 0
+                      ? ((event.count / data.totalEvents) * 100).toFixed(1)
+                      : 0;
                   return (
                     <div
                       key={event.event}
@@ -596,7 +621,10 @@ export default function AnalyticsDashboard() {
                           <span className="text-sm font-semibold text-gray-400 w-8">
                             #{index + 1}
                           </span>
-                          <span className="text-sm text-gray-300 truncate" title={event.event}>
+                          <span
+                            className="text-sm text-gray-300 truncate"
+                            title={event.event}
+                          >
                             {event.event}
                           </span>
                         </div>
@@ -635,15 +663,17 @@ export default function AnalyticsDashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
             <div className="flex items-center space-x-2 mb-4">
               <Monitor className="w-5 h-5 text-blue-400" />
-              <h3 className="text-lg font-semibold text-white">
-                Device Types
-              </h3>
+              <h3 className="text-lg font-semibold text-white">Device Types</h3>
             </div>
             <div className="space-y-3">
               {data.deviceBreakdown.length > 0 ? (
                 data.deviceBreakdown.map((device) => {
-                  const total = data.deviceBreakdown.reduce((sum, d) => sum + d.count, 0);
-                  const percentage = total > 0 ? ((device.count / total) * 100).toFixed(1) : 0;
+                  const total = data.deviceBreakdown.reduce(
+                    (sum, d) => sum + d.count,
+                    0
+                  );
+                  const percentage =
+                    total > 0 ? ((device.count / total) * 100).toFixed(1) : 0;
                   return (
                     <div
                       key={device.device}
@@ -680,7 +710,9 @@ export default function AnalyticsDashboard() {
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">{percentage}% of traffic</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {percentage}% of traffic
+                      </p>
                     </div>
                   );
                 })
@@ -695,15 +727,17 @@ export default function AnalyticsDashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
             <div className="flex items-center space-x-2 mb-4">
               <Globe className="w-5 h-5 text-green-400" />
-              <h3 className="text-lg font-semibold text-white">
-                Browsers
-              </h3>
+              <h3 className="text-lg font-semibold text-white">Browsers</h3>
             </div>
             <div className="space-y-3">
               {data.browserBreakdown.length > 0 ? (
                 data.browserBreakdown.map((browser) => {
-                  const total = data.browserBreakdown.reduce((sum, b) => sum + b.count, 0);
-                  const percentage = total > 0 ? ((browser.browser / total) * 100).toFixed(1) : 0;
+                  const total = data.browserBreakdown.reduce(
+                    (sum, b) => sum + b.count,
+                    0
+                  );
+                  const percentage =
+                    total > 0 ? ((browser.count / total) * 100).toFixed(1) : 0;
                   return (
                     <div
                       key={browser.browser}
@@ -723,7 +757,9 @@ export default function AnalyticsDashboard() {
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">{percentage}% of traffic</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {percentage}% of traffic
+                      </p>
                     </div>
                   );
                 })
@@ -745,13 +781,14 @@ export default function AnalyticsDashboard() {
             <div className="space-y-3">
               {data.osBreakdown.length > 0 ? (
                 data.osBreakdown.map((os) => {
-                  const total = data.osBreakdown.reduce((sum, o) => sum + o.count, 0);
-                  const percentage = total > 0 ? ((os.count / total) * 100).toFixed(1) : 0;
+                  const total = data.osBreakdown.reduce(
+                    (sum, o) => sum + o.count,
+                    0
+                  );
+                  const percentage =
+                    total > 0 ? ((os.count / total) * 100).toFixed(1) : 0;
                   return (
-                    <div
-                      key={os.os}
-                      className="p-3 rounded-lg bg-gray-700/30"
-                    >
+                    <div key={os.os} className="p-3 rounded-lg bg-gray-700/30">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-300 capitalize">
                           {os.os || "Unknown"}
@@ -766,7 +803,9 @@ export default function AnalyticsDashboard() {
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">{percentage}% of traffic</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {percentage}% of traffic
+                      </p>
                     </div>
                   );
                 })
@@ -793,13 +832,19 @@ export default function AnalyticsDashboard() {
             {data.recentActivity.length > 0 ? (
               data.recentActivity.map((activity) => {
                 const date = new Date(activity.timestamp);
-                const timeAgo = Math.floor((Date.now() - date.getTime()) / 1000);
+                const timeAgo = Math.floor(
+                  (Date.now() - date.getTime()) / 1000
+                );
                 let timeLabel = "";
                 if (timeAgo < 60) {
-                  timeLabel = `${timeAgo} second${timeAgo !== 1 ? "s" : ""} ago`;
+                  timeLabel = `${timeAgo} second${
+                    timeAgo !== 1 ? "s" : ""
+                  } ago`;
                 } else if (timeAgo < 3600) {
                   const minutes = Math.floor(timeAgo / 60);
-                  timeLabel = `${minutes} minute${minutes !== 1 ? "s" : ""} ago`;
+                  timeLabel = `${minutes} minute${
+                    minutes !== 1 ? "s" : ""
+                  } ago`;
                 } else if (timeAgo < 86400) {
                   const hours = Math.floor(timeAgo / 3600);
                   timeLabel = `${hours} hour${hours !== 1 ? "s" : ""} ago`;
