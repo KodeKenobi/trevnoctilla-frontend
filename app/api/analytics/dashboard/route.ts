@@ -70,29 +70,35 @@ export async function GET(request: NextRequest) {
       );
       // Try to get token from backend using email (no password required)
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 
-          (process.env.NODE_ENV === "production" 
+        const apiBaseUrl =
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          (process.env.NODE_ENV === "production"
             ? "https://web-production-737b.up.railway.app"
             : "http://localhost:5000");
-        
-        const tokenResponse = await fetch(`${apiBaseUrl}/auth/get-token-from-session`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: session.user.email,
-            role: userRole,
-          }),
-        });
-        
+
+        const tokenResponse = await fetch(
+          `${apiBaseUrl}/auth/get-token-from-session`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: session.user.email,
+              role: userRole,
+            }),
+          }
+        );
+
         if (tokenResponse.ok) {
           const tokenData = await tokenResponse.json();
           token = tokenData.access_token;
           console.log("[ANALYTICS] Successfully fetched token from backend");
         } else {
           const errorText = await tokenResponse.text();
-          console.error(`[ANALYTICS] Failed to fetch token from backend: ${tokenResponse.status} - ${errorText}`);
+          console.error(
+            `[ANALYTICS] Failed to fetch token from backend: ${tokenResponse.status} - ${errorText}`
+          );
         }
       } catch (error) {
         console.error("[ANALYTICS] Error fetching token:", error);
@@ -178,6 +184,8 @@ export async function GET(request: NextRequest) {
           deviceBreakdown: [],
           browserBreakdown: [],
           osBreakdown: [],
+          countryBreakdown: [],
+          cityBreakdown: [],
           recentActivity: [],
           conversionRate: 0,
           errorRate: 0,

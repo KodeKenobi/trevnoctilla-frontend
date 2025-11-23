@@ -22,6 +22,7 @@ import {
   Timer,
   Percent,
   AlertCircle,
+  MapPin,
 } from "lucide-react";
 
 interface AnalyticsData {
@@ -35,6 +36,8 @@ interface AnalyticsData {
   deviceBreakdown: Array<{ device: string; count: number }>;
   browserBreakdown: Array<{ browser: string; count: number }>;
   osBreakdown: Array<{ os: string; count: number }>;
+  countryBreakdown: Array<{ country: string; count: number }>;
+  cityBreakdown: Array<{ city: string; country: string; count: number }>;
   recentActivity: Array<{
     id: string;
     type: string;
@@ -152,6 +155,8 @@ export default function AnalyticsDashboard() {
         deviceBreakdown: [],
         browserBreakdown: [],
         osBreakdown: [],
+        countryBreakdown: [],
+        cityBreakdown: [],
         recentActivity: [],
         errorRate: 0,
         conversionRate: 0,
@@ -167,6 +172,7 @@ export default function AnalyticsDashboard() {
     { id: "pages", label: "Pages", icon: FileText },
     { id: "events", label: "Events", icon: Activity },
     { id: "devices", label: "Devices", icon: Monitor },
+    { id: "regions", label: "Regions", icon: MapPin },
     { id: "realtime", label: "Real-time", icon: Eye },
   ];
 
@@ -814,6 +820,179 @@ export default function AnalyticsDashboard() {
                   No OS data available
                 </p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Regions Tab */}
+      {activeTab === "regions" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
+              <div className="flex items-center space-x-2 mb-6">
+                <Globe className="w-5 h-5 text-blue-400" />
+                <h3 className="text-lg font-semibold text-white">
+                  Top Countries
+                </h3>
+              </div>
+              <div className="space-y-3">
+                {data.countryBreakdown && data.countryBreakdown.length > 0 ? (
+                  data.countryBreakdown.map((country, index) => {
+                    const total = data.countryBreakdown.reduce(
+                      (sum, c) => sum + c.count,
+                      0
+                    );
+                    const percentage =
+                      total > 0
+                        ? ((country.count / total) * 100).toFixed(1)
+                        : 0;
+                    return (
+                      <div
+                        key={country.country}
+                        className="p-3 rounded-lg bg-gray-700/30"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-gray-500 w-6">
+                              #{index + 1}
+                            </span>
+                            <span className="text-sm text-gray-300 capitalize">
+                              {country.country || "Unknown"}
+                            </span>
+                          </div>
+                          <span className="font-semibold text-white">
+                            {country.count.toLocaleString()} sessions
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-1.5">
+                          <div
+                            className="bg-blue-500 h-1.5 rounded-full"
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {percentage}% of total sessions
+                        </p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-12">
+                    <Globe className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400">
+                      No country data available yet
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Location data will appear once users start visiting your
+                      site
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
+              <div className="flex items-center space-x-2 mb-6">
+                <MapPin className="w-5 h-5 text-purple-400" />
+                <h3 className="text-lg font-semibold text-white">
+                  Top Cities
+                </h3>
+              </div>
+              <div className="space-y-3">
+                {data.cityBreakdown && data.cityBreakdown.length > 0 ? (
+                  data.cityBreakdown.map((city, index) => {
+                    const total = data.cityBreakdown.reduce(
+                      (sum, c) => sum + c.count,
+                      0
+                    );
+                    const percentage =
+                      total > 0 ? ((city.count / total) * 100).toFixed(1) : 0;
+                    return (
+                      <div
+                        key={`${city.city}-${city.country}`}
+                        className="p-3 rounded-lg bg-gray-700/30"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2 flex-1 min-w-0">
+                            <span className="text-xs text-gray-500 w-6">
+                              #{index + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm text-gray-300 capitalize block truncate">
+                                {city.city || "Unknown"}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {city.country || "Unknown"}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="font-semibold text-white ml-2">
+                            {city.count.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-1.5">
+                          <div
+                            className="bg-purple-500 h-1.5 rounded-full"
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {percentage}% of total sessions
+                        </p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-12">
+                    <MapPin className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400">No city data available yet</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Location data will appear once users start visiting your
+                      site
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Summary Stats */}
+          <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
+            <div className="flex items-center space-x-2 mb-4">
+              <Globe className="w-5 h-5 text-green-400" />
+              <h3 className="text-lg font-semibold text-white">
+                Geographic Summary
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-700/30 p-4 rounded-lg">
+                <p className="text-sm text-gray-400 mb-1">Countries Tracked</p>
+                <p className="text-2xl font-bold text-white">
+                  {data.countryBreakdown?.length || 0}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Unique countries with visitors
+                </p>
+              </div>
+              <div className="bg-gray-700/30 p-4 rounded-lg">
+                <p className="text-sm text-gray-400 mb-1">Cities Tracked</p>
+                <p className="text-2xl font-bold text-white">
+                  {data.cityBreakdown?.length || 0}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Unique cities with visitors
+                </p>
+              </div>
+              <div className="bg-gray-700/30 p-4 rounded-lg">
+                <p className="text-sm text-gray-400 mb-1">Total Sessions</p>
+                <p className="text-2xl font-bold text-white">
+                  {data.totalSessions.toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Sessions with location data
+                </p>
+              </div>
             </div>
           </div>
         </div>
