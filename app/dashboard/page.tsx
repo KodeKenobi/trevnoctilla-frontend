@@ -676,7 +676,7 @@ function DashboardContent() {
           },
           body: JSON.stringify({
             email: user.email,
-            password: "Kopenikus0218!",
+            // Password no longer required - NextAuth session is trusted
             role: user.role === "super_admin" ? "super_admin" : "user",
           }),
         }

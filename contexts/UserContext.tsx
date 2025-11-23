@@ -225,7 +225,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 },
                 body: JSON.stringify({
                   email: session.user.email,
-                  password: "Kopenikus0218!", // Known password from auth.ts
+                  // Password no longer required - NextAuth session is trusted
                   role:
                     (session.user as any)?.role === "super_admin"
                       ? "super_admin"

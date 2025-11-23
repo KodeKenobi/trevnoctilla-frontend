@@ -51,7 +51,7 @@ export function ApiTester({ toolId }: ApiTesterProps) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               email: session.user.email,
-              password: "Kopenikus0218!",
+              // Password no longer required - NextAuth session is trusted
               role:
                 (session.user as any)?.role === "super_admin"
                   ? "super_admin"

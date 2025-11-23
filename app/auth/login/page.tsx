@@ -66,6 +66,8 @@ export default function LoginPage() {
               },
               body: JSON.stringify({
                 email: formData.email,
+                // Password optional - NextAuth session is trusted
+                // Sending it for backward compatibility but not required
                 password: formData.password,
                 role:
                   formData.email === "kodekenobi@gmail.com"
