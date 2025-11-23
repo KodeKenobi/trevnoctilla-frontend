@@ -42,6 +42,10 @@ interface AnalyticsData {
     id: string;
     type: string;
     description: string;
+    event_name?: string;
+    properties?: Record<string, any>;
+    page_url?: string;
+    page_title?: string;
     timestamp: number;
   }>;
   errorRate: number;
@@ -895,9 +899,7 @@ export default function AnalyticsDashboard() {
             <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
               <div className="flex items-center space-x-2 mb-6">
                 <MapPin className="w-5 h-5 text-purple-400" />
-                <h3 className="text-lg font-semibold text-white">
-                  Top Cities
-                </h3>
+                <h3 className="text-lg font-semibold text-white">Top Cities</h3>
               </div>
               <div className="space-y-3">
                 {data.cityBreakdown && data.cityBreakdown.length > 0 ? (
@@ -1031,27 +1033,54 @@ export default function AnalyticsDashboard() {
                   timeLabel = date.toLocaleDateString();
                 }
 
+                // Determine icon and color based on event type
+                const getEventIcon = () => {
+                  const eventName = activity.event_name || "";
+                  if (eventName.includes("api_call")) return "🌐";
+                  if (eventName.includes("api_error")) return "❌";
+                  if (eventName.includes("page_load") || eventName.includes("pageview")) return "📄";
+                  if (eventName.includes("navigation") || eventName.includes("click")) return "🔗";
+                  if (eventName.includes("user_interaction")) return "👆";
+                  return "📊";
+                };
+
+                const getEventColor = () => {
+                  const eventName = activity.event_name || "";
+                  if (eventName.includes("error")) return "bg-red-500";
+                  if (eventName.includes("api_call")) return "bg-blue-500";
+                  if (eventName.includes("page_load") || eventName.includes("pageview")) return "bg-green-500";
+                  if (eventName.includes("navigation")) return "bg-purple-500";
+                  if (activity.type === "conversion") return "bg-green-500";
+                  return "bg-blue-500";
+                };
+
                 return (
                   <div
                     key={activity.id}
-                    className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors"
+                    className="flex items-start space-x-3 p-4 bg-gray-700/30 rounded-lg hover:bg-gray-700/50 transition-colors"
                   >
-                    <div
-                      className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                        activity.type === "conversion"
-                          ? "bg-green-500"
-                          : activity.type === "error"
-                          ? "bg-red-500"
-                          : "bg-blue-500"
-                      }`}
-                    ></div>
+                    <div className="flex-shrink-0 mt-0.5 text-lg">
+                      {getEventIcon()}
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-300">
+                      <p className="text-sm font-medium text-white">
                         {activity.description}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {timeLabel} • {date.toLocaleTimeString()}
-                      </p>
+                      {activity.page_url && (
+                        <p className="text-xs text-gray-400 mt-1 truncate">
+                          {activity.page_url.length > 60
+                            ? activity.page_url.substring(0, 60) + "..."
+                            : activity.page_url}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        <span
+                          className={`w-2 h-2 rounded-full ${getEventColor()}`}
+                        ></span>
+                        <p className="text-xs text-gray-500">
+                          {timeLabel} • {date.toLocaleTimeString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 );
