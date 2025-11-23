@@ -103,65 +103,86 @@ export default function AdminDashboard() {
   const fetchAdminData = async () => {
     try {
       if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
+        console.log("User is not admin, stopping loading");
         setLoading(false);
         return;
       }
 
       const token = localStorage.getItem("auth_token");
       if (!token) {
+        console.log("No auth token found, stopping loading");
         setLoading(false);
         return;
       }
 
-      // Fetch real data from admin API
-      const [statsResponse, activityResponse, alertsResponse, usageResponse] =
-        await Promise.all([
-          fetch(getApiUrl("/api/admin/stats"), {
-            headers: getAuthHeaders(token),
-          }),
-          fetch(getApiUrl("/api/admin/activity"), {
-            headers: getAuthHeaders(token),
-          }),
-          fetch(getApiUrl("/api/admin/alerts"), {
-            headers: getAuthHeaders(token),
-          }),
-          fetch(getApiUrl("/api/admin/usage/stats"), {
-            headers: getAuthHeaders(token),
-          }),
-        ]);
+      // Fetch real data from admin API with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setStats(statsData);
-      }
+      try {
+        const [statsResponse, activityResponse, alertsResponse, usageResponse] =
+          await Promise.all([
+            fetch(getApiUrl("/api/admin/stats"), {
+              headers: getAuthHeaders(token),
+              signal: controller.signal,
+            }),
+            fetch(getApiUrl("/api/admin/activity"), {
+              headers: getAuthHeaders(token),
+              signal: controller.signal,
+            }),
+            fetch(getApiUrl("/api/admin/alerts"), {
+              headers: getAuthHeaders(token),
+              signal: controller.signal,
+            }),
+            fetch(getApiUrl("/api/admin/usage/stats"), {
+              headers: getAuthHeaders(token),
+              signal: controller.signal,
+            }),
+          ]);
 
-      if (usageResponse.ok) {
-        const usageData = await usageResponse.json();
-        if (usageData.summary) {
-          setStats((prev) => ({
-            ...prev,
-            monthlyCalls: usageData.summary.monthly_calls || 0,
-            usersByTier: usageData.summary.users_by_tier || {},
-          }));
+        clearTimeout(timeoutId);
+
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setStats(statsData);
         }
-        if (usageData.users_usage) {
-          setUsersUsage(usageData.users_usage);
+
+        if (usageResponse.ok) {
+          const usageData = await usageResponse.json();
+          if (usageData.summary) {
+            setStats((prev) => ({
+              ...prev,
+              monthlyCalls: usageData.summary.monthly_calls || 0,
+              usersByTier: usageData.summary.users_by_tier || {},
+            }));
+          }
+          if (usageData.users_usage) {
+            setUsersUsage(usageData.users_usage);
+          }
         }
-      }
 
-      if (activityResponse.ok) {
-        const activityData = await activityResponse.json();
-        setUserActivity(activityData);
-      }
+        if (activityResponse.ok) {
+          const activityData = await activityResponse.json();
+          setUserActivity(activityData);
+        }
 
-      if (alertsResponse.ok) {
-        const alertsData = await alertsResponse.json();
-        setSystemAlerts(alertsData);
+        if (alertsResponse.ok) {
+          const alertsData = await alertsResponse.json();
+          setSystemAlerts(alertsData);
+        }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === "AbortError") {
+          console.warn("Admin API fetch timeout - continuing with empty data");
+        } else {
+          console.error("Error fetching admin data:", fetchError);
+        }
+        // Continue anyway - show dashboard with empty/default data
       }
 
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching admin data:", error);
+      console.error("Error in fetchAdminData:", error);
       setLoading(false);
     }
   };
@@ -268,6 +289,18 @@ export default function AdminDashboard() {
     }
   };
 
+  // Show loading while checking authentication (with timeout to prevent infinite loading)
+  useEffect(() => {
+    // Safety timeout: if loading takes more than 10 seconds, stop loading
+    if (loading) {
+      const timeout = setTimeout(() => {
+        console.warn("Admin dashboard loading timeout - stopping loading state");
+        setLoading(false);
+      }, 10000);
+      return () => clearTimeout(timeout);
+    }
+  }, [loading]);
+
   // Show loading while checking authentication
   if (userLoading || loading) {
     return (
@@ -276,6 +309,9 @@ export default function AdminDashboard() {
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-400 mx-auto mb-4"></div>
           <p className="text-foreground dark:text-gray-300">
             Loading admin dashboard...
+          </p>
+          <p className="text-sm text-muted-foreground dark:text-gray-500 mt-2">
+            If this takes too long, try refreshing the page
           </p>
         </div>
       </div>
