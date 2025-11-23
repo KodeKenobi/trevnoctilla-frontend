@@ -54,15 +54,29 @@ export default function AnalyticsDashboard() {
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
+      console.log(`[AnalyticsDashboard] Fetching analytics data for range: ${timeRange}`);
+      
       const response = await fetch(
         `/api/analytics/dashboard?range=${timeRange}`
       );
 
+      console.log(`[AnalyticsDashboard] Response status: ${response.status}`);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[AnalyticsDashboard] Failed to fetch analytics: ${response.status} - ${errorText}`);
         throw new Error(`Failed to fetch analytics: ${response.statusText}`);
       }
 
       const analyticsData = await response.json();
+      console.log(`[AnalyticsDashboard] Received data:`, {
+        totalUsers: analyticsData.totalUsers,
+        totalSessions: analyticsData.totalSessions,
+        totalPageViews: analyticsData.totalPageViews,
+        totalEvents: analyticsData.totalEvents,
+        hasTopPages: !!analyticsData.topPages && analyticsData.topPages.length > 0,
+        hasTopEvents: !!analyticsData.topEvents && analyticsData.topEvents.length > 0,
+      });
 
       // Validate data structure
       if (analyticsData && typeof analyticsData === "object") {
@@ -71,7 +85,7 @@ export default function AnalyticsDashboard() {
         throw new Error("Invalid analytics data format");
       }
     } catch (error) {
-      console.error("Error fetching analytics data:", error);
+      console.error("[AnalyticsDashboard] Error fetching analytics data:", error);
       // Set empty data structure instead of mock data
       setData({
         totalUsers: 0,

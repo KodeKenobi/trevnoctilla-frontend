@@ -54,11 +54,49 @@ export async function GET(request: NextRequest) {
     const startTime = new Date(now.getTime() - getTimeRangeMs(range));
 
     // Get auth token from session
-    const token = (session as any).accessToken || null;
-    
+    let token = (session as any).accessToken || null;
+
+    console.log(`[ANALYTICS] Session check:`, {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userEmail: session?.user?.email,
+      userRole: (session?.user as any)?.role,
+      hasToken: !!token,
+    });
+
     if (!token) {
-      console.warn("[ANALYTICS] No backend token in session - trying to get from localStorage fallback");
-      // This won't work server-side, but log it for debugging
+      console.warn(
+        "[ANALYTICS] No backend token in session, attempting to fetch from backend"
+      );
+      // Try to get token from backend using email (no password required)
+      try {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 
+          (process.env.NODE_ENV === "production" 
+            ? "https://web-production-737b.up.railway.app"
+            : "http://localhost:5000");
+        
+        const tokenResponse = await fetch(`${apiBaseUrl}/auth/get-token-from-session`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: session.user.email,
+            role: userRole,
+          }),
+        });
+        
+        if (tokenResponse.ok) {
+          const tokenData = await tokenResponse.json();
+          token = tokenData.access_token;
+          console.log("[ANALYTICS] Successfully fetched token from backend");
+        } else {
+          const errorText = await tokenResponse.text();
+          console.error(`[ANALYTICS] Failed to fetch token from backend: ${tokenResponse.status} - ${errorText}`);
+        }
+      } catch (error) {
+        console.error("[ANALYTICS] Error fetching token:", error);
+      }
     }
 
     // Fetch analytics data from backend API
@@ -68,13 +106,15 @@ export async function GET(request: NextRequest) {
 
       console.log(`[ANALYTICS] Fetching from backend: ${backendUrl}`);
       console.log(`[ANALYTICS] Has token: ${!!token}`);
-      console.log(`[ANALYTICS] Range: ${range}, Start time: ${startTime.toISOString()}`);
+      console.log(
+        `[ANALYTICS] Range: ${range}, Start time: ${startTime.toISOString()}`
+      );
       console.log(`[ANALYTICS] Auth headers:`, Object.keys(authHeaders));
 
       // Use fetch with proper error handling and timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
+
       let response;
       try {
         response = await fetch(
@@ -103,6 +143,8 @@ export async function GET(request: NextRequest) {
           totalSessions: data.totalSessions,
           totalPageViews: data.totalPageViews,
           totalEvents: data.totalEvents,
+          hasTopPages: !!data.topPages && data.topPages.length > 0,
+          hasTopEvents: !!data.topEvents && data.topEvents.length > 0,
         });
         return NextResponse.json(data);
       } else {
@@ -110,13 +152,20 @@ export async function GET(request: NextRequest) {
         const errorText = await response.text();
         console.error(
           `[ANALYTICS] Backend analytics endpoint error (${response.status}):`,
-          errorText
+          errorText.substring(0, 500) // Limit error text length
         );
 
-        // If backend doesn't have analytics endpoint yet, return empty data structure
+        // If 401/403, it's an auth issue - log it but return empty data
+        if (response.status === 401 || response.status === 403) {
+          console.error(
+            `[ANALYTICS] Authentication failed - token may be invalid or user role incorrect`
+          );
+        }
+
+        // Return empty data structure if backend doesn't have analytics endpoint yet or auth fails
         // This allows the frontend to work while backend is being set up
         console.warn(
-          "Backend analytics endpoint not available, returning empty data"
+          "Backend analytics endpoint not available or auth failed, returning empty data"
         );
         return NextResponse.json({
           totalUsers: 0,
