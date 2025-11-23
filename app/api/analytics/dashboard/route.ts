@@ -59,17 +59,38 @@ export async function GET(request: NextRequest) {
     // Fetch analytics data from backend API
     try {
       const backendUrl = getApiUrl("/api/analytics/dashboard");
+      const authHeaders = token ? getAuthHeaders(token) : {};
+
+      console.log(`[ANALYTICS] Fetching from backend: ${backendUrl}`);
+      console.log(`[ANALYTICS] Has token: ${!!token}`);
+      console.log(`[ANALYTICS] Auth headers:`, Object.keys(authHeaders));
+
       const response = await fetch(
         `${backendUrl}?range=${range}&start_time=${startTime.toISOString()}`,
         {
-          headers: token ? getAuthHeaders(token) : {},
+          headers: authHeaders,
         }
       );
 
+      console.log(`[ANALYTICS] Backend response status: ${response.status}`);
+
       if (response.ok) {
         const data = await response.json();
+        console.log(`[ANALYTICS] Backend returned data:`, {
+          totalUsers: data.totalUsers,
+          totalSessions: data.totalSessions,
+          totalPageViews: data.totalPageViews,
+          totalEvents: data.totalEvents,
+        });
         return NextResponse.json(data);
       } else {
+        // Get error details from backend
+        const errorText = await response.text();
+        console.error(
+          `[ANALYTICS] Backend analytics endpoint error (${response.status}):`,
+          errorText
+        );
+
         // If backend doesn't have analytics endpoint yet, return empty data structure
         // This allows the frontend to work while backend is being set up
         console.warn(
@@ -92,7 +113,10 @@ export async function GET(request: NextRequest) {
         });
       }
     } catch (backendError) {
-      console.error("Error fetching analytics from backend:", backendError);
+      console.error(
+        "[ANALYTICS] Error fetching analytics from backend:",
+        backendError
+      );
       // Return empty data structure if backend is unavailable
       return NextResponse.json({
         totalUsers: 0,
