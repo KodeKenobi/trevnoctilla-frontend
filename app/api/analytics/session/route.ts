@@ -24,7 +24,6 @@ export async function POST(request: NextRequest) {
       forwarded?.split(",")[0]?.trim() ||
       realIp ||
       request.headers.get("cf-connecting-ip") ||
-      request.ip ||
       "unknown";
 
     // Add IP address to session data if not already present
