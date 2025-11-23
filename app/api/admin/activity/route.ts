@@ -14,17 +14,29 @@ export async function GET(request: NextRequest) {
       } as any,
     });
 
+    console.log(`[Admin Activity] Session check:`, {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userEmail: session?.user?.email,
+      userRole: (session?.user as any)?.role,
+      hasToken: !!(session as any)?.accessToken,
+    });
+
     if (!session?.user) {
+      console.error("[Admin Activity] No session or user");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userRole = (session.user as any).role;
+    console.log(`[Admin Activity] User role: ${userRole}`);
     if (userRole !== "admin" && userRole !== "super_admin") {
+      console.error(`[Admin Activity] Insufficient role: ${userRole}`);
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const token = (session as any).accessToken || null;
     if (!token) {
+      console.error("[Admin Activity] No backend token in session");
       return NextResponse.json({ error: "No backend token" }, { status: 401 });
     }
 
@@ -38,10 +50,10 @@ export async function GET(request: NextRequest) {
 
     if (response.ok) {
       const data = await response.json();
-      
+
       // Transform usage data to activity format
       const activities: any[] = [];
-      
+
       // Add top users as activities
       if (data.top_users) {
         data.top_users.forEach((user: any, index: number) => {
@@ -54,7 +66,7 @@ export async function GET(request: NextRequest) {
           });
         });
       }
-      
+
       // Add daily usage as activities
       if (data.daily_usage) {
         data.daily_usage.slice(-10).forEach((day: any, index: number) => {
@@ -71,7 +83,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(activities);
     } else {
       const errorText = await response.text();
-      console.error(`[Admin Activity] Backend error: ${response.status} - ${errorText}`);
+      console.error(
+        `[Admin Activity] Backend error: ${response.status} - ${errorText}`
+      );
       return NextResponse.json([]);
     }
   } catch (error) {
@@ -79,4 +93,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json([]);
   }
 }
-

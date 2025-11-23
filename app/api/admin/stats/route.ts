@@ -14,17 +14,29 @@ export async function GET(request: NextRequest) {
       } as any,
     });
 
+    console.log(`[Admin Stats] Session check:`, {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userEmail: session?.user?.email,
+      userRole: (session?.user as any)?.role,
+      hasToken: !!(session as any)?.accessToken,
+    });
+
     if (!session?.user) {
+      console.error("[Admin Stats] No session or user");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userRole = (session.user as any).role;
+    console.log(`[Admin Stats] User role: ${userRole}`);
     if (userRole !== "admin" && userRole !== "super_admin") {
+      console.error(`[Admin Stats] Insufficient role: ${userRole}`);
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const token = (session as any).accessToken || null;
     if (!token) {
+      console.error("[Admin Stats] No backend token in session");
       return NextResponse.json({ error: "No backend token" }, { status: 401 });
     }
 
@@ -39,7 +51,7 @@ export async function GET(request: NextRequest) {
     if (response.ok) {
       const data = await response.json();
       const summary = data.summary || {};
-      
+
       // Transform to stats format expected by frontend
       return NextResponse.json({
         totalUsers: summary.total_users || 0,
@@ -51,7 +63,9 @@ export async function GET(request: NextRequest) {
       });
     } else {
       const errorText = await response.text();
-      console.error(`[Admin Stats] Backend error: ${response.status} - ${errorText}`);
+      console.error(
+        `[Admin Stats] Backend error: ${response.status} - ${errorText}`
+      );
       // Return empty stats on error
       return NextResponse.json({
         totalUsers: 0,
@@ -77,4 +91,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

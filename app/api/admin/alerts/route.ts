@@ -14,17 +14,29 @@ export async function GET(request: NextRequest) {
       } as any,
     });
 
+    console.log(`[Admin Alerts] Session check:`, {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userEmail: session?.user?.email,
+      userRole: (session?.user as any)?.role,
+      hasToken: !!(session as any)?.accessToken,
+    });
+
     if (!session?.user) {
+      console.error("[Admin Alerts] No session or user");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userRole = (session.user as any).role;
+    console.log(`[Admin Alerts] User role: ${userRole}`);
     if (userRole !== "admin" && userRole !== "super_admin") {
+      console.error(`[Admin Alerts] Insufficient role: ${userRole}`);
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const token = (session as any).accessToken || null;
     if (!token) {
+      console.error("[Admin Alerts] No backend token in session");
       return NextResponse.json({ error: "No backend token" }, { status: 401 });
     }
 
@@ -38,10 +50,10 @@ export async function GET(request: NextRequest) {
 
     if (response.ok) {
       const data = await response.json();
-      
+
       // Transform health data to alerts format
       const alerts: any[] = [];
-      
+
       // Check for system issues
       if (data.status !== "healthy") {
         alerts.push({
@@ -52,7 +64,7 @@ export async function GET(request: NextRequest) {
           resolved: false,
         });
       }
-      
+
       // Check memory usage
       if (data.memory_usage && data.memory_usage > 80) {
         alerts.push({
@@ -63,7 +75,7 @@ export async function GET(request: NextRequest) {
           resolved: false,
         });
       }
-      
+
       // Check CPU usage
       if (data.cpu_usage && data.cpu_usage > 80) {
         alerts.push({
@@ -85,4 +97,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json([]);
   }
 }
-
