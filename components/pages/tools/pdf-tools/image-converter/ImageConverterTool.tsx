@@ -180,18 +180,69 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
 
   const downloadResult = async () => {
     if (conversionResult) {
+      // Verify the download URL is accessible before showing monetization modal
+      try {
+        const response = await fetch(conversionResult, { method: "HEAD" });
+        if (!response.ok) {
+          setResult({
+            type: "error",
+            message: `File not found. The converted file may have been removed. Please try converting again.`,
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("Error verifying download URL:", error);
+        // Continue anyway - might be a CORS issue with HEAD request
+      }
+
       const completed = await showMonetizationModal({
-        title: "Download Image",
+        title: outputFormat === "pdf" ? "Download PDF" : "Download Image",
         message: `Choose how you'd like to download ${
-          file?.name || "this image"
+          file?.name || outputFormat === "pdf" ? "this PDF" : "this image"
         }`,
-        fileName: file?.name || "converted-image",
-        fileType: "image",
+        fileName: file?.name || `converted.${outputFormat}`,
+        fileType: outputFormat === "pdf" ? "PDF" : "image",
         downloadUrl: conversionResult,
       });
 
       if (completed) {
-        window.open(conversionResult, "_blank");
+        // Try to download the file using fetch and blob download
+        try {
+          console.log("Starting download for:", conversionResult);
+
+          // First, try direct download link (works for same-origin)
+          const link = document.createElement("a");
+          link.href = conversionResult;
+          const downloadName = file?.name
+            ? file.name.replace(/\.[^/.]+$/, "") + `.${outputFormat}`
+            : `converted.${outputFormat}`;
+          link.download = downloadName;
+          link.style.display = "none";
+          document.body.appendChild(link);
+          link.click();
+
+          // Clean up after a delay
+          setTimeout(() => {
+            document.body.removeChild(link);
+          }, 100);
+
+          // Also open in new tab as fallback for browsers that don't support download attribute
+          setTimeout(() => {
+            const newWindow = window.open(conversionResult, "_blank");
+            if (!newWindow) {
+              console.warn("Popup blocked, user may need to allow popups");
+              setResult({
+                type: "error",
+                message:
+                  "Download blocked. Please allow popups and try again, or right-click the download button and select 'Save link as'.",
+              });
+            }
+          }, 200);
+        } catch (error) {
+          console.error("Error downloading file:", error);
+          // Fallback: just open the URL
+          window.open(conversionResult, "_blank");
+        }
       }
     }
   };
