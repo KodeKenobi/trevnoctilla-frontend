@@ -37,7 +37,7 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
   );
   const [conversionResult, setConversionResult] = useState<string | null>(null);
   const [outputFormat, setOutputFormat] = useState<
-    "jpg" | "png" | "webp" | "bmp" | "tiff" | "gif"
+    "jpg" | "png" | "webp" | "bmp" | "tiff" | "gif" | "pdf"
   >("jpg");
   const [quality, setQuality] = useState(85);
   const [resize, setResize] = useState(false);
@@ -197,7 +197,8 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
               Universal Image Converter
             </h2>
             <p className="text-gray-400">
-              Convert images between all formats with resize and quality control
+              Convert images between all formats including PDF, with resize and
+              quality control
             </p>
           </div>
 
@@ -252,7 +253,8 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
             Universal Image Converter
           </h2>
           <p className="text-gray-400">
-            Convert images between all formats with resize and quality control
+            Convert images between all formats including PDF, with resize and
+            quality control
           </p>
         </div>
 
@@ -334,6 +336,7 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
               <option value="bmp">BMP (.bmp)</option>
               <option value="tiff">TIFF (.tiff)</option>
               <option value="gif">GIF (.gif)</option>
+              <option value="pdf">PDF (.pdf)</option>
             </select>
           </div>
 
@@ -347,8 +350,14 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
               max="100"
               value={quality}
               onChange={(e) => setQuality(parseInt(e.target.value))}
-              className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
+              disabled={outputFormat === "pdf"}
+              className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer slider disabled:opacity-50 disabled:cursor-not-allowed"
             />
+            {outputFormat === "pdf" && (
+              <p className="text-xs text-gray-400 mt-1">
+                Quality setting not applicable for PDF
+              </p>
+            )}
           </div>
 
           <div className="flex items-center space-x-2">
@@ -357,7 +366,8 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
               id="resize"
               checked={resize}
               onChange={(e) => setResize(e.target.checked)}
-              className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+              disabled={outputFormat === "pdf"}
+              className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <label
               htmlFor="resize"
@@ -365,6 +375,11 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
             >
               Resize image
             </label>
+            {outputFormat === "pdf" && (
+              <span className="text-xs text-gray-400">
+                (Not available for PDF)
+              </span>
+            )}
           </div>
         </div>
 
