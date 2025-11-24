@@ -110,22 +110,39 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
 
       if (response.ok) {
         const result = await response.json();
-        // Construct full URL using the backend base URL
-        const fullDownloadUrl = result.downloadUrl.startsWith("http")
-          ? result.downloadUrl
-          : `${getApiUrl("")}${result.downloadUrl}`;
-        setConversionResult(fullDownloadUrl);
-        setConvertedFileSize(result.convertedSize);
-        setResult({
-          type: "success",
-          message: "Image converted successfully!",
-          data: result,
-        });
+        console.log("Conversion result:", result);
+
+        // Check if conversion was successful
+        if (result.success && result.downloadUrl) {
+          // Construct full URL using the backend base URL
+          const fullDownloadUrl = result.downloadUrl.startsWith("http")
+            ? result.downloadUrl
+            : `${getApiUrl("")}${result.downloadUrl}`;
+          console.log("Full download URL:", fullDownloadUrl);
+          setConversionResult(fullDownloadUrl);
+          setConvertedFileSize(result.convertedSize);
+          setResult({
+            type: "success",
+            message: result.message || "Image converted successfully!",
+            data: result,
+          });
+        } else {
+          setResult({
+            type: "error",
+            message:
+              result.error ||
+              result.message ||
+              "Conversion failed - no download URL provided",
+          });
+        }
       } else {
-        const error = await response.json();
+        const error = await response
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
+        console.error("Conversion error:", error);
         setResult({
           type: "error",
-          message: error.message || "Conversion failed",
+          message: error.error || error.message || "Conversion failed",
         });
       }
     } catch (error) {
