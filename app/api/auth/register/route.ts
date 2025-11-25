@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {
-    console.error("Registration proxy error:", error);
+    
     return NextResponse.json(
       { error: error.message || "Registration failed" },
       { status: 500 }

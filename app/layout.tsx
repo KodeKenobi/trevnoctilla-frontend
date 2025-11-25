@@ -7,7 +7,6 @@ import { AlertProvider } from "@/contexts/AlertProvider";
 import { MonetizationProvider } from "@/contexts/MonetizationProvider";
 import AuthProvider from "@/components/providers/AuthProvider";
 import Script from "next/script";
-// adConfig removed - using Google AdSense only
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.trevnoctilla.com"),
@@ -107,6 +106,44 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Resource Hints - Preconnect to third-party domains (excluding Ezoic) */}
+        <link
+          rel="preconnect"
+          href="https://pagead2.googlesyndication.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
+        <link
+          rel="preconnect"
+          href="https://www.googletagmanager.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        <link
+          rel="preconnect"
+          href="https://www.payfast.co.za"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://www.payfast.co.za" />
+        <link
+          rel="preconnect"
+          href="https://sandbox.payfast.co.za"
+          crossOrigin="anonymous"
+        />
+        <link rel="dns-prefetch" href="https://sandbox.payfast.co.za" />
+
         {/* Ezoic Privacy Scripts */}
         <script
           src="https://cmp.gatekeeperconsent.com/min.js"
@@ -129,12 +166,12 @@ export default function RootLayout({
         />
         <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
 
-        {/* Google AdSense - Updated */}
-        <script
-          async
+        {/* Google AdSense - Defer loading */}
+        <Script
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3267907607581065"
+          strategy="lazyOnload"
           crossOrigin="anonymous"
-        ></script>
+        />
 
         <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
         <link rel="shortcut icon" href="/favicon.ico" />
@@ -154,6 +191,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/favicon.png" sizes="180x180" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0ea5e9" />
+
+        {/* Preload critical resources */}
+        <link rel="preload" href="/globals.css" as="style" />
+        <link rel="preload" href="/favicon.ico" as="image" />
 
         {/* Structured Data */}
         <script

@@ -114,9 +114,9 @@ export default function CookieConsent() {
                     src="/logo.png"
                     alt="Trevnoctilla Logo"
                     className="w-12 h-12 object-contain flex-shrink-0"
-                    onLoad={() => console.log("Logo loaded successfully")}
+                    onLoad={() => }
                     onError={(e) => {
-                      console.error("Logo failed to load:", e);
+                      
                       // Fallback to a simple text logo
                       e.currentTarget.style.display = "none";
                       const fallback = document.createElement("div");

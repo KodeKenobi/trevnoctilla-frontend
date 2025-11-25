@@ -10,10 +10,10 @@ export const dynamic = "force-dynamic";
 // This helps debug if PayFast is calling but failing before we log
 if (typeof process !== "undefined") {
   process.on("uncaughtException", (error) => {
-    console.error("UNCAUGHT EXCEPTION in notify endpoint:", error);
+    
   });
   process.on("unhandledRejection", (reason) => {
-    console.error("UNHANDLED REJECTION in notify endpoint:", reason);
+    
   });
 }
 
@@ -90,11 +90,11 @@ function verifyPayFastSignature(data: Record<string, string>): boolean {
 
   // Debug logging
   if (!isValid) {
-    console.error("=== PayFast Signature Verification Failed ===");
-    console.log("Received Signature:", receivedSignature);
-    console.log("Expected Signature:", expectedSignature);
-    console.log("Parameter String:", pfParamString);
-    console.log("Passphrase used:", PAYFAST_CONFIG.PASSPHRASE ? "YES" : "NO");
+    
+    
+    
+    
+    
   }
 
   return isValid;
@@ -112,14 +112,12 @@ export async function POST(request: NextRequest) {
 
   try {
     // Log request details immediately
-    console.log(`\n${"=".repeat(80)}`);
-    console.log(`[${requestId}] === PayFast ITN CALLBACK RECEIVED ===`);
-    console.log(`[${requestId}] Timestamp: ${new Date().toISOString()}`);
-    console.log(`[${requestId}] URL: ${request.url}`);
-    console.log(`[${requestId}] Method: ${request.method}`);
-    console.log(
-      `[${requestId}] Headers:`,
-      Object.fromEntries(request.headers.entries())
+    }`);
+    
+    .toISOString()}`);
+    
+    
+    )
     );
 
     // Parse form data from PayFast
@@ -130,9 +128,9 @@ export async function POST(request: NextRequest) {
     let formData: FormData;
     try {
       formData = await request.formData();
-      console.log(`[${requestId}] ✅ Form data parsed successfully`);
+      
     } catch (error) {
-      console.error(`[${requestId}] ❌ Error parsing form data:`, error);
+      
       // Return INVALID but still 200 OK
       return new NextResponse("INVALID", {
         status: 200,
@@ -148,48 +146,31 @@ export async function POST(request: NextRequest) {
     });
 
     // Log received ITN data (for debugging)
-    console.log(`[${requestId}] === PayFast ITN Data ===`);
-    console.log(`[${requestId}] All fields:`, Object.keys(data));
-    console.log(`[${requestId}] Full data:`, JSON.stringify(data, null, 2));
-    console.log(`[${requestId}] Merchant ID (received):`, data.merchant_id);
-    console.log(`[${requestId}] Merchant Key (received):`, data.merchant_key);
-    console.log(`[${requestId}] Payment Status:`, data.payment_status);
-    console.log(`[${requestId}] Signature (received):`, data.signature);
-    console.log(
-      `[${requestId}] Expected Merchant ID:`,
-      PAYFAST_CONFIG.MERCHANT_ID
+    
     );
-    console.log(
-      `[${requestId}] Expected Merchant Key:`,
-      PAYFAST_CONFIG.MERCHANT_KEY
     );
-    console.log(
-      `[${requestId}] Passphrase configured:`,
-      PAYFAST_CONFIG.PASSPHRASE ? "YES" : "NO"
-    );
+    :`, data.merchant_id);
+    :`, data.merchant_key);
+    
+    :`, data.signature);
+    
+    
+    
 
     // TEMPORARY: For wallet payments, PayFast calls notify BEFORE payment completes
     // If signature verification fails, wallet payment is rejected
     // Log the verification attempt but allow it to proceed for testing
-    console.log(`[${requestId}] 🔐 Verifying signature...`);
+    
     const signatureValid = verifyPayFastSignature(data);
     if (!signatureValid) {
       const errorMsg = `SIGNATURE VERIFICATION FAILED - This is why PayFast shows "Unable to verify payment"`;
-      console.error(`[${requestId}] ❌ ${errorMsg}`);
-      console.error(
-        `[${requestId}] Received data:`,
-        JSON.stringify(data, null, 2)
+      
+      
       );
-      console.error(
-        `[${requestId}] Expected Merchant ID:`,
-        PAYFAST_CONFIG.MERCHANT_ID
-      );
-      console.error(`[${requestId}] Received Merchant ID:`, data.merchant_id);
-      console.error(
-        `[${requestId}] Expected Merchant Key:`,
-        PAYFAST_CONFIG.MERCHANT_KEY
-      );
-      console.error(`[${requestId}] Received Merchant Key:`, data.merchant_key);
+      
+      
+      
+      
 
       // Store for debugging
       setLastITNAttempt({
@@ -213,15 +194,12 @@ export async function POST(request: NextRequest) {
           data.merchant_id === PAYFAST_CONFIG.MERCHANT_ID &&
           data.merchant_key === PAYFAST_CONFIG.MERCHANT_KEY
         ) {
-          console.log(
-            `[${requestId}] ⚠️ Signature failed but merchant credentials match - allowing pre-payment verification`
-          );
+          
           const responseTime = Date.now() - startTime;
-          console.log(`[${requestId}] ⏱️ Response time: ${responseTime}ms`);
-          console.log(
-            `[${requestId}] 📤 Returning: VALID (200 OK) - Pre-payment verification`
+          
+           - Pre-payment verification`
           );
-          console.log(`${"=".repeat(80)}\n`);
+          }\n`);
           return new NextResponse("VALID", {
             status: 200,
             headers: { "Content-Type": "text/plain" },
@@ -232,42 +210,30 @@ export async function POST(request: NextRequest) {
       // Still return 200 to prevent PayFast from retrying, but log the error
       // PayFast expects plain text response
       const responseTime = Date.now() - startTime;
-      console.log(`[${requestId}] ⏱️ Response time: ${responseTime}ms`);
-      console.log(`[${requestId}] 📤 Returning: INVALID (200 OK)`);
-      console.log(`${"=".repeat(80)}\n`);
+      
+      `);
+      }\n`);
       return new NextResponse("INVALID", {
         status: 200,
         headers: { "Content-Type": "text/plain" },
       });
     }
-    console.log(`[${requestId}] ✅ Signature verified successfully`);
+    
 
     // Verify merchant ID and key
-    console.log(`[${requestId}] 🔍 Verifying merchant credentials...`);
+    
     if (
       data.merchant_id !== PAYFAST_CONFIG.MERCHANT_ID ||
       data.merchant_key !== PAYFAST_CONFIG.MERCHANT_KEY
     ) {
       const errorMsg = `MERCHANT CREDENTIALS MISMATCH - This is why PayFast shows "Unable to verify payment"`;
-      console.error(`[${requestId}] ❌ ${errorMsg}`);
-      console.error(
-        `[${requestId}] Expected Merchant ID:`,
-        PAYFAST_CONFIG.MERCHANT_ID
-      );
-      console.error(`[${requestId}] Received Merchant ID:`, data.merchant_id);
-      console.error(
-        `[${requestId}] Match:`,
-        data.merchant_id === PAYFAST_CONFIG.MERCHANT_ID
-      );
-      console.error(
-        `[${requestId}] Expected Merchant Key:`,
-        PAYFAST_CONFIG.MERCHANT_KEY
-      );
-      console.error(`[${requestId}] Received Merchant Key:`, data.merchant_key);
-      console.error(
-        `[${requestId}] Match:`,
-        data.merchant_key === PAYFAST_CONFIG.MERCHANT_KEY
-      );
+      
+      
+      
+      
+      
+      
+      
 
       // Store for debugging
       setLastITNAttempt({
@@ -287,15 +253,15 @@ export async function POST(request: NextRequest) {
       // Still return 200 to prevent PayFast from retrying, but log the error
       // PayFast expects plain text response
       const responseTime = Date.now() - startTime;
-      console.log(`[${requestId}] ⏱️ Response time: ${responseTime}ms`);
-      console.log(`[${requestId}] 📤 Returning: INVALID (200 OK)`);
-      console.log(`${"=".repeat(80)}\n`);
+      
+      `);
+      }\n`);
       return new NextResponse("INVALID", {
         status: 200,
         headers: { "Content-Type": "text/plain" },
       });
     }
-    console.log(`[${requestId}] ✅ Merchant credentials verified`);
+    
 
     const paymentStatus = data.payment_status;
     const mPaymentId = data.m_payment_id;
@@ -311,30 +277,28 @@ export async function POST(request: NextRequest) {
     const cycles = data.cycles || null;
 
     // Log payment notification
-    console.log(`[${requestId}] === PayFast ITN Payment Details ===`);
-    console.log(`[${requestId}] Payment Status:`, paymentStatus);
-    console.log(`[${requestId}] Merchant Payment ID:`, mPaymentId);
-    console.log(`[${requestId}] PayFast Payment ID:`, pfPaymentId);
-    console.log(`[${requestId}] Amount:`, amount);
+    
+    
+    
+    
+    
 
     // Log subscription details if present
     if (token || subscriptionType) {
-      console.log(`[${requestId}] === Subscription Details ===`);
-      console.log(`[${requestId}] Token:`, token);
-      console.log(`[${requestId}] Subscription Type:`, subscriptionType);
-      console.log(`[${requestId}] Billing Date:`, billingDate);
-      console.log(`[${requestId}] Recurring Amount:`, recurringAmount);
-      console.log(`[${requestId}] Frequency:`, frequency);
-      console.log(`[${requestId}] Cycles:`, cycles);
+      
+      
+      
+      
+      
+      
+      
     }
 
     // Handle different payment statuses
     switch (paymentStatus) {
       case "COMPLETE":
         // Payment successful - update your database, send confirmation email, etc.
-        console.log(
-          `[${requestId}] ✅ Payment ${mPaymentId} completed successfully`
-        );
+        
 
         // Extract plan info from custom fields
         const planId = data.custom_str1 || "";
@@ -346,15 +310,13 @@ export async function POST(request: NextRequest) {
         const itemName = data.item_name || "";
 
         // Log extracted fields for debugging
-        console.log(`[${requestId}] === Extracted Payment Fields ===`);
-        console.log(`[${requestId}] custom_str1 (planId): "${planId}"`);
-        console.log(`[${requestId}] custom_str2 (userId): "${userId}"`);
-        console.log(`[${requestId}] email_address: "${userEmail}"`);
-        console.log(`[${requestId}] item_name: "${itemName}"`);
-        console.log(`[${requestId}] token: "${token || "none"}"`);
-        console.log(
-          `[${requestId}] subscription_type: "${subscriptionType || "none"}"`
-        );
+        
+        : "${planId}"`);
+        : "${userId}"`);
+        
+        
+        
+        
 
         // Determine plan name from item_name or plan_id
         let planName = itemName;
@@ -370,32 +332,23 @@ export async function POST(request: NextRequest) {
         const isSubscriptionPayment = token && subscriptionType;
         const isFirstPayment = !token && planId && (userId || userEmail);
 
-        console.log(`[${requestId}] === Payment Type Detection ===`);
-        console.log(
-          `[${requestId}] isSubscriptionPayment: ${isSubscriptionPayment}`
-        );
-        console.log(`[${requestId}] isFirstPayment: ${isFirstPayment}`);
-        console.log(
-          `[${requestId}] Will process upgrade: ${
-            isSubscriptionPayment || isFirstPayment
-          }`
-        );
+        
+        
+        
+        
 
         if (isSubscriptionPayment || isFirstPayment) {
           if (isSubscriptionPayment) {
-            console.log(`[${requestId}] 📝 Processing subscription payment`);
+            
           } else {
-            console.log(
-              `[${requestId}] 📝 Processing first subscription payment (no token yet)`
+            `
             );
           }
 
           // Call backend to upgrade subscription
           // CRITICAL: Prioritize user_id over email for subscriptions
           if (planId && (userId || userEmail)) {
-            console.log(
-              `[${requestId}] ✅ Conditions met for upgrade: planId="${planId}", userId="${userId}", userEmail="${userEmail}"`
-            );
+            
             try {
               const backendUrl =
                 process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -403,19 +356,14 @@ export async function POST(request: NextRequest) {
                   ? "https://web-production-737b.up.railway.app"
                   : "http://localhost:5000");
 
-              console.log(
-                `[${requestId}] 🔄 Calling backend to upgrade subscription...`
-              );
-              console.log(`[${requestId}] Backend URL: ${backendUrl}`);
-              console.log(
-                `[${requestId}] User ID: ${userId || "not provided"}`
-              );
-              console.log(
-                `[${requestId}] User Email (from PayFast): ${
+              
+              
+              
+              : ${
                   userEmail || "not provided"
                 }`
               );
-              console.log(`[${requestId}] Plan ID: ${planId}`);
+              
 
               const upgradeResponse = await fetch(
                 `${backendUrl}/api/payment/upgrade-subscription`,
@@ -437,42 +385,27 @@ export async function POST(request: NextRequest) {
 
               if (upgradeResponse.ok) {
                 const upgradeData = await upgradeResponse.json();
-                console.log(
-                  `[${requestId}] ✅ Subscription upgraded successfully:`,
-                  upgradeData
-                );
+                
               } else {
                 const errorText = await upgradeResponse.text();
-                console.error(
-                  `[${requestId}] ❌ Failed to upgrade subscription:`,
-                  upgradeResponse.status,
-                  errorText
-                );
+                
               }
             } catch (error) {
-              console.error(
-                `[${requestId}] ❌ Error calling upgrade endpoint:`,
-                error
-              );
+              
               if (error instanceof Error) {
-                console.error(`[${requestId}] Error message:`, error.message);
-                console.error(`[${requestId}] Error stack:`, error.stack);
+                
+                
               }
               // Don't fail the webhook if upgrade fails - we can retry later
             }
           } else {
-            console.log(
-              `[${requestId}] ⚠️ Skipping upgrade - missing required fields`
+            
+            `
             );
-            console.log(
-              `[${requestId}]   planId: "${planId}" (required: non-empty)`
+            `);
+            `
             );
-            console.log(`[${requestId}]   userId: "${userId}" (optional)`);
-            console.log(
-              `[${requestId}]   userEmail: "${userEmail}" (optional)`
-            );
-            console.log(
-              `[${requestId}]   Need: planId AND (userId OR userEmail)`
+            `
             );
           }
         }
@@ -484,28 +417,26 @@ export async function POST(request: NextRequest) {
 
       case "FAILED":
         // Payment failed
-        console.log(`[${requestId}] ❌ Payment ${mPaymentId} failed`);
+        
         // TODO: Update payment status in database
         // TODO: Notify user of payment failure
         break;
 
       case "PENDING":
         // Payment is pending (e.g., EFT payment)
-        console.log(`[${requestId}] ⏳ Payment ${mPaymentId} is pending`);
+        
         // TODO: Update payment status in database
         break;
 
       case "CANCELLED":
         // Payment was cancelled
-        console.log(`[${requestId}] 🚫 Payment ${mPaymentId} was cancelled`);
+        
         // TODO: Update payment status in database
         // TODO: Cancel subscription if applicable
         break;
 
       default:
-        console.log(
-          `[${requestId}] ⚠️ Unknown payment status: ${paymentStatus}`
-        );
+        
     }
 
     // Handle subscription webhook notifications (trial, promo, update)
@@ -517,12 +448,12 @@ export async function POST(request: NextRequest) {
         webhookType === "subscription.promo" ||
         webhookType === "subscription.update")
     ) {
-      console.log(`[${requestId}] === Subscription Webhook Notification ===`);
-      console.log(`[${requestId}] Webhook Type:`, webhookType);
-      console.log(`[${requestId}] Token:`, token);
-      console.log(`[${requestId}] Initial Amount:`, data.initial_amount);
-      console.log(`[${requestId}] Subscription Amount:`, data.amount);
-      console.log(`[${requestId}] Next Run Date:`, data.next_run);
+      
+      
+      
+      
+      
+      
 
       // TODO: Handle subscription webhook notifications
       // - subscription.free-trial: Trial ending soon
@@ -544,10 +475,10 @@ export async function POST(request: NextRequest) {
     // CRITICAL: Response must be fast (< 30 seconds) or PayFast shows "Unable to verify payment"
     // Return "VALID" to confirm successful processing
     const responseTime = Date.now() - startTime;
-    console.log(`[${requestId}] ✅ Payment processed successfully`);
-    console.log(`[${requestId}] ⏱️ Response time: ${responseTime}ms`);
-    console.log(`[${requestId}] 📤 Returning: VALID (200 OK)`);
-    console.log(`${"=".repeat(80)}\n`);
+    
+    
+    `);
+    }\n`);
     return new NextResponse("VALID", {
       status: 200,
       headers: {
@@ -557,14 +488,11 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const responseTime = Date.now() - startTime;
-    console.error(`[${requestId}] ❌ EXCEPTION in ITN processing:`, error);
-    console.error(
-      `[${requestId}] Error stack:`,
-      error instanceof Error ? error.stack : "No stack"
-    );
-    console.log(`[${requestId}] ⏱️ Response time: ${responseTime}ms`);
-    console.log(`[${requestId}] 📤 Returning: INVALID (200 OK)`);
-    console.log(`${"=".repeat(80)}\n`);
+    
+    
+    
+    `);
+    }\n`);
     // Still return 200 to prevent PayFast from retrying
     // PayFast expects plain text response
     return new NextResponse("INVALID", {
@@ -581,7 +509,7 @@ export async function GET(request: NextRequest) {
 
   // If it's a test request (no PayFast data), return success to confirm endpoint is accessible
   if (searchParams.size === 0 || searchParams.get("test") === "true") {
-    console.log("✅ PayFast notify endpoint is accessible (test request)");
+    ");
     return new NextResponse("ENDPOINT_ACCESSIBLE", {
       status: 200,
       headers: { "Content-Type": "text/plain" },
@@ -610,7 +538,7 @@ export async function GET(request: NextRequest) {
 
     return POST(newRequest);
   } catch (error) {
-    console.error("PayFast ITN GET processing error:", error);
+    
     return new NextResponse("INVALID", {
       status: 200,
       headers: { "Content-Type": "text/plain" },

@@ -68,9 +68,7 @@ export function ApiTester({ toolId }: ApiTesterProps) {
             localStorage.setItem("auth_token", token);
           }
         }
-      } catch (error) {
-        console.error("Failed to get backend token:", error);
-      }
+      } catch (error) {}
     }
 
     if (!backendToken) {
@@ -719,6 +717,9 @@ export function ApiTester({ toolId }: ApiTesterProps) {
                                       img.image_index || index
                                     } from page ${img.page || "unknown"}`}
                                     className="w-full h-24 object-contain bg-white rounded"
+                                    width={96}
+                                    height={96}
+                                    loading="lazy"
                                   />
                                   <div className="text-xs text-gray-500 mt-1">
                                     Page {img.page || "?"}, Image{" "}

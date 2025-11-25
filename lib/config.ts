@@ -7,18 +7,10 @@ export function getBaseUrl(): string {
     const hostname = window.location.hostname;
     if (hostname === "localhost" || hostname === "127.0.0.1") {
       // Localhost: use direct backend URL for development
-      console.log(
-        "🔧 API Config: Client-side on localhost, using http://localhost:5000"
-      );
       return "http://localhost:5000";
     }
     // Production: use relative URLs (Next.js rewrites will proxy to Railway)
     // This hides the Railway URL from frontend
-    console.log(
-      "🔧 API Config: Client-side on",
-      hostname,
-      ", using relative URLs (Railway URL hidden)"
-    );
     return "";
   }
 
@@ -37,11 +29,6 @@ export function getBaseUrl(): string {
     ? "https://web-production-737b.up.railway.app"
     : "http://localhost:5000";
 
-  console.log(
-    `🔧 API Config: Server-side, NODE_ENV: ${
-      process.env.NODE_ENV || "undefined"
-    }, Using: ${baseUrl}`
-  );
   return baseUrl;
 }
 
@@ -56,8 +43,6 @@ export const API_CONFIG = {
     MERCHANT_ID: process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID || "",
     MERCHANT_KEY: process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY || "",
     PASSPHRASE: process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE || "",
-    // Use sandbox for testing: https://sandbox.payfast.co.za/eng/process
-    // Use production for live: https://www.payfast.co.za/eng/process
     // Automatically use sandbox for local, production for deployed
     // Priority: 1. Check if we're on production domain (client-side: window.location, server-side: env var)
     //           2. Explicit NEXT_PUBLIC_PAYFAST_URL env var
@@ -68,7 +53,9 @@ export const API_CONFIG = {
         const hostname = window.location.hostname;
         const isProductionDomain =
           hostname.includes("trevnoctilla.com") ||
-          (hostname.includes("www.") && !hostname.includes("localhost") && !hostname.includes("127.0.0.1"));
+          (hostname.includes("www.") &&
+            !hostname.includes("localhost") &&
+            !hostname.includes("127.0.0.1"));
 
         // If on production domain, force production PayFast URL
         if (isProductionDomain) {

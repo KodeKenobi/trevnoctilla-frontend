@@ -49,26 +49,26 @@ export const HtmlToPdfTool: React.FC<HtmlToPdfToolProps> = ({
     setConvertedFilename(null);
 
     try {
-      console.log("🔄 Starting HTML to PDF conversion...");
-      console.log("📄 File:", file.name, "Size:", file.size, "bytes");
+      
+      
 
       const formData = new FormData();
       formData.append("html", file);
 
-      console.log("📤 Sending request to:", getApiUrl("/convert_html_to_pdf"));
+      );
 
       const response = await fetch(getApiUrl("/convert_html_to_pdf"), {
         method: "POST",
         body: formData,
       });
 
-      console.log("📥 Response status:", response.status, response.statusText);
+      
 
       if (!response.ok) {
         const errorData = await response
           .json()
           .catch(() => ({ error: "Failed to convert HTML" }));
-        console.error("❌ Conversion failed:", errorData);
+        
         throw new Error(
           errorData.error ||
             errorData.message ||
@@ -77,13 +77,13 @@ export const HtmlToPdfTool: React.FC<HtmlToPdfToolProps> = ({
       }
 
       const data = await response.json();
-      console.log("📦 Response data:", data);
+      
 
       if (data.status === "success") {
-        console.log("✅ Conversion successful!");
-        console.log("📄 Converted filename:", data.converted_filename);
-        console.log("📊 PDF size:", data.pdf_size, "bytes");
-        console.log("📊 Original size:", data.original_size, "bytes");
+        
+        
+        
+        
 
         setConvertedFilename(data.converted_filename);
         setResult({
@@ -92,16 +92,12 @@ export const HtmlToPdfTool: React.FC<HtmlToPdfToolProps> = ({
           data: data,
         });
       } else {
-        console.error("❌ Conversion returned non-success status:", data);
+        
         throw new Error(data.error || data.message || "Conversion failed");
       }
     } catch (error: any) {
-      console.error("❌ Error converting HTML to PDF:", error);
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
+      
+      
       setResult({
         type: "error",
         message:

@@ -114,29 +114,24 @@ export default function PayFastDollarForm({
         // The signature is calculated on the server's payment_data, so we must use that
         if (data.payment_data) {
           setPaymentData(data.payment_data);
-          console.log("✅ Payment data and signature fetched from server");
-          console.log("Payment data:", data.payment_data);
-          console.log(
-            "✅ PayFastDollarForm: paymentData state updated, form should render inputs now"
-          );
+          
+          
+          
           // Notify parent that payment data is loaded
           if (onPaymentDataLoaded) {
             onPaymentDataLoaded();
           }
         } else {
-          console.error(
-            "❌ PayFastDollarForm: No payment_data in response:",
-            data
-          );
+          
           throw new Error("No payment_data in response");
         }
       } catch (error) {
-        console.error("❌ Failed to fetch payment data:", error);
+        
         // Set error state so parent can handle it
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         setError(errorMessage);
-        console.error("   Error message:", errorMessage);
+        
       } finally {
         setIsLoadingSignature(false);
       }
@@ -194,19 +189,12 @@ export default function PayFastDollarForm({
           });
 
           if (allFieldsPresent) {
-            console.log(
-              "🚀 Auto-submitting PayFast form with payment data:",
-              paymentData
-            );
+            
             setHasAutoSubmitted(true);
             formRef.current.submit();
           } else {
-            console.error(
-              "❌ Cannot auto-submit: Missing required fields in form"
-            );
-            console.log(
-              "Form inputs:",
-              Array.from(formRef.current.querySelectorAll("input")).map(
+            
+            ).map(
                 (inp: HTMLInputElement) => ({
                   name: inp.name,
                   value: inp.value,
@@ -225,9 +213,7 @@ export default function PayFastDollarForm({
   // This ensures the form matches what the signature was calculated on
   const renderInputs = () => {
     if (!paymentData) {
-      console.log(
-        "⚠️ PayFastDollarForm: paymentData is null, not rendering inputs"
-      );
+      
       return null; // Don't render form until payment data is loaded
     }
 
@@ -244,17 +230,17 @@ export default function PayFastDollarForm({
       }
     }
 
-    console.log(`✅ PayFastDollarForm: Rendered ${inputs.length} form inputs`);
+    
     return inputs;
   };
 
   // Ensure form is in DOM and log payment data when ready
   useEffect(() => {
     if (formRef.current && paymentData) {
-      console.log("=== PayFastDollarForm Payment Data ===");
-      console.log("Form ref:", formRef.current);
-      console.log("Full payment data from API:", paymentData);
-      console.log("Form action:", formRef.current.action);
+      
+      
+      
+      
 
       // Verify all fields are in the form
       const requiredFields = [
@@ -267,9 +253,9 @@ export default function PayFastDollarForm({
       requiredFields.forEach((field) => {
         const input = formRef.current?.querySelector(`input[name="${field}"]`);
         if (input) {
-          console.log(`✅ ${field}:`, (input as HTMLInputElement).value);
+          .value);
         } else {
-          console.error(`❌ ${field} MISSING from form!`);
+          
         }
       });
     }

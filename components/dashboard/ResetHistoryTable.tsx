@@ -55,8 +55,7 @@ export function ResetHistoryTable({ userId }: ResetHistoryTableProps) {
         setHistory(data.reset_history || []);
       }
     } catch (error) {
-      console.error("Error fetching reset history:", error);
-    } finally {
+          } finally {
       setLoading(false);
     }
   };

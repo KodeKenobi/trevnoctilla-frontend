@@ -31,7 +31,9 @@ export default function AdminAnalyticsPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20">
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Analytics Dashboard</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Analytics Dashboard
+          </h1>
           <p className="text-gray-400">
             Comprehensive analytics and insights for your website
           </p>
@@ -41,4 +43,3 @@ export default function AdminAnalyticsPage() {
     </div>
   );
 }
-

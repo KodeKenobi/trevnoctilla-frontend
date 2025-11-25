@@ -80,7 +80,7 @@ export const PdfToHtmlTool: React.FC<PdfToHtmlToolProps> = ({
         throw new Error(data.error || "Conversion failed");
       }
     } catch (error: any) {
-      console.error("Error converting PDF to HTML:", error);
+      
       setResult({
         type: "error",
         message:

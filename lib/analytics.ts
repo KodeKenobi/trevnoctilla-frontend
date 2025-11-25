@@ -41,7 +41,7 @@ class AnalyticsManager {
           this.initializeAnalytics();
         }
       } catch (error) {
-        console.error("Error loading consent preferences:", error);
+        
       }
     }
   }
@@ -80,7 +80,7 @@ class AnalyticsManager {
         this.initFathom();
       }
     } catch (error) {
-      console.error("Error initializing analytics:", error);
+      
     }
   }
 
@@ -201,7 +201,7 @@ class AnalyticsManager {
     }
 
     // Log to console for debugging
-    console.log("Analytics Event:", eventData);
+    
   }
 
   // Track page views

@@ -164,7 +164,7 @@ const response = await fetch('${apiBaseUrl}/api/v1/convert/video', {
 });
 
 const result = await response.json();
-console.log(result);`,
+`,
         },
         {
           language: "python",
@@ -283,8 +283,7 @@ print(result)`,
       setCopiedCode(code);
       setTimeout(() => setCopiedCode(null), 2000);
     } catch (error) {
-      console.error("Error copying code:", error);
-    }
+          }
   };
 
   const getMethodColor = (method: string) => {

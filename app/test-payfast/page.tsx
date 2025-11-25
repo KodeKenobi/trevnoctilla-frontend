@@ -26,7 +26,7 @@ export default function TestPayFastPage() {
       try {
         setLogs(JSON.parse(savedLogs));
       } catch (e) {
-        console.error("Failed to parse saved logs", e);
+        
       }
     }
 
@@ -34,7 +34,7 @@ export default function TestPayFastPage() {
       try {
         setPaymentData(JSON.parse(savedPaymentData));
       } catch (e) {
-        console.error("Failed to parse saved payment data", e);
+        
       }
     }
 
@@ -80,7 +80,7 @@ export default function TestPayFastPage() {
       // Limit to last 1000 logs to prevent localStorage overflow
       return newLogs.slice(-1000);
     });
-    console.log(message);
+    
   };
 
   const clearLogs = () => {

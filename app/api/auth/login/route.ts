@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {
-    console.error("Login proxy error:", error);
+    
     return NextResponse.json(
       { error: error.message || "Login failed" },
       { status: 500 }

@@ -194,7 +194,7 @@ export default function PDFTools() {
         data: data,
       });
     } catch (error) {
-      console.error("Error processing file:", error);
+      
       setResult({
         type: "error",
         message: "Error processing file. Please try again.",

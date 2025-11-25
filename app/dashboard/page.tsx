@@ -191,9 +191,9 @@ function DashboardContent() {
       // Use subscription_tier from user object (fetched from profile endpoint)
       const subscriptionTier = user.subscription_tier?.toLowerCase() || "free";
 
-      console.log("🔍 Checking subscription tier for dashboard routing...");
-      console.log(`   User subscription_tier: ${subscriptionTier}`);
-      console.log(`   User role: ${user.role}`);
+      
+      
+      
 
       // Check if user has enterprise tier
       const isEnterprise =
@@ -204,19 +204,19 @@ function DashboardContent() {
       // Check for premium tier
       const isPremium = subscriptionTier === "premium";
 
-      console.log(`   Is Enterprise: ${isEnterprise}`);
-      console.log(`   Is Premium: ${isPremium}`);
+      
+      
 
       // Only redirect to enterprise if not already on enterprise page
       if (isEnterprise && window.location.pathname !== "/enterprise") {
-        console.log("   → Redirecting to enterprise dashboard");
+        
         router.push("/enterprise");
         return;
       }
 
       // Premium users stay on regular dashboard (no redirect needed)
       if (isPremium) {
-        console.log("   → Premium user, staying on regular dashboard");
+        
       }
     }
   }, [user, userLoading, router]);
@@ -227,7 +227,7 @@ function DashboardContent() {
       // Check if there's a token in localStorage as fallback
       const token = localStorage.getItem("auth_token");
       if (!token) {
-        console.log("🔐 No user and no token, redirecting to login");
+        
         router.push("/auth/login");
       }
     }
@@ -308,15 +308,13 @@ function DashboardContent() {
       // If using sessionStorage (no URL params), user completed payment and was redirected back
       // First trigger upgrade, wait for it, then logout to get fresh data with updated tier
       if (!hasUrlParams && hasPendingPayment) {
-        console.log(
-          "💳 User returned from PayFast - triggering upgrade then logging out to refresh data..."
-        );
+        
 
         // Get user email before logout
         const userEmail = pendingPayment?.user_email || user?.email;
 
         if (!userEmail) {
-          console.error("❌ No user email found, cannot process upgrade");
+          
           return;
         }
 
@@ -338,10 +336,10 @@ function DashboardContent() {
             ? parseFloat(pendingPayment.amount)
             : 495.9;
 
-          console.log("   Triggering upgrade manually...");
-          console.log("   User ID:", upgradeUserId);
-          console.log("   User Email:", upgradeEmail);
-          console.log("   Plan ID:", upgradePlanId);
+          
+          
+          
+          
 
           // Use relative URL in production (Next.js rewrite proxies to backend)
           // Use absolute URL in localhost for development
@@ -372,16 +370,16 @@ function DashboardContent() {
 
           if (upgradeResponse.ok) {
             const upgradeData = await upgradeResponse.json();
-            console.log("✅ Upgrade triggered successfully:", upgradeData);
+            
             // Wait a moment for database to update
             await new Promise((resolve) => setTimeout(resolve, 2000));
           } else {
             const errorData = await upgradeResponse.json().catch(() => ({}));
-            console.warn("⚠️ Upgrade API call failed:", errorData);
+            
             // Continue anyway - webhook might still process it
           }
         } catch (error) {
-          console.error("❌ Error triggering upgrade:", error);
+          
           // Continue anyway - webhook might still process it
         }
 
@@ -389,7 +387,7 @@ function DashboardContent() {
         sessionStorage.removeItem("pending_payment_upgrade");
 
         // Logout and redirect to auth
-        console.log("🔓 Logging out user after payment...");
+        
         // Clear all auth data
         localStorage.removeItem("auth_token");
         localStorage.removeItem("user_data");
@@ -406,9 +404,7 @@ function DashboardContent() {
         mPaymentId || pfPaymentId || pendingPayment?.timestamp || Date.now()
       }`;
       if (sessionStorage.getItem(upgradeKey)) {
-        console.log(
-          "🔄 Subscription upgrade already processed for this payment"
-        );
+        
         // Clean up pending payment if already processed
         if (pendingPayment) {
           sessionStorage.removeItem("pending_payment_upgrade");
@@ -416,19 +412,15 @@ function DashboardContent() {
         return;
       }
 
-      console.log(
-        "🔄 Detected PayFast subscription return - triggering upgrade..."
-      );
-      console.log("   Payment Status:", paymentStatus || "from sessionStorage");
-      console.log(
-        "   Plan ID (custom_str1):",
+      
+      
+      :",
         customStr1 || pendingPayment?.plan_id
       );
-      console.log(
-        "   User ID (custom_str2):",
+      :",
         customStr2 || pendingPayment?.user_id
       );
-      console.log("   Item Name:", itemName || pendingPayment?.plan_name);
+      
 
       try {
         // Get user info from session
@@ -438,7 +430,7 @@ function DashboardContent() {
         const sessionEmail = session?.user?.email || null;
 
         if (!sessionUserId && !sessionEmail) {
-          console.warn("⚠️ Could not get user info from session");
+          
           return;
         }
 
@@ -459,11 +451,11 @@ function DashboardContent() {
           ? parseFloat(pendingPayment.amount)
           : 495.9;
 
-        console.log("   User ID:", upgradeUserId);
-        console.log("   User Email:", upgradeEmail);
-        console.log("   Plan ID:", upgradePlanId);
-        console.log("   Plan Name:", upgradePlanName);
-        console.log("   Amount:", upgradeAmount);
+        
+        
+        
+        
+        
 
         // Call backend upgrade endpoint directly (matching test script logic)
         // Use relative URL to hide Railway backend URL
@@ -494,8 +486,8 @@ function DashboardContent() {
 
         if (upgradeResponse.ok) {
           const upgradeData = await upgradeResponse.json();
-          console.log("✅ Subscription upgrade successful!");
-          console.log("   Response:", upgradeData);
+          
+          
 
           // Mark as processed
           sessionStorage.setItem(upgradeKey, "true");
@@ -512,12 +504,12 @@ function DashboardContent() {
           const sessionEmail = session?.user?.email || userEmail;
 
           if (!sessionEmail) {
-            console.error("❌ No user email found, cannot auto-login");
+            
             return;
           }
 
           // Logout and redirect to auth
-          console.log("🔓 Logging out user after payment...");
+          
           // Clear all auth data
           localStorage.removeItem("auth_token");
           localStorage.removeItem("user_data");
@@ -527,12 +519,12 @@ function DashboardContent() {
           await signOut({ redirect: true, callbackUrl: "/auth/login" });
         } else {
           const errorData = await upgradeResponse.json().catch(() => ({}));
-          console.error("❌ Subscription upgrade failed:", errorData);
-          console.error("   Status:", upgradeResponse.status);
+          
+          
           // Don't show error to user - webhook may still process it
         }
       } catch (error) {
-        console.error("❌ Error triggering subscription upgrade:", error);
+        
         // Don't show error to user - webhook may still process it
       }
     };
@@ -552,9 +544,7 @@ function DashboardContent() {
   // This ensures user tier is updated after subscription payment
   useEffect(() => {
     const effectStartTime = Date.now();
-    console.log(
-      `[Dashboard] Refresh effect triggered - user: ${!!user}, userLoading: ${userLoading}, checkAuthStatus: ${!!checkAuthStatus}`
-    );
+    
 
     if (user && checkAuthStatus) {
       // Check if we just came from payment (pending payment in sessionStorage or URL params)
@@ -574,16 +564,12 @@ function DashboardContent() {
         !lastRefresh || Date.now() - parseInt(lastRefresh) > 30000;
       const shouldRefresh = justFromPayment || isStale;
 
-      console.log(
-        `[Dashboard] Should refresh: ${shouldRefresh}, justFromPayment: ${justFromPayment}, isStale: ${isStale}, lastRefresh: ${
-          lastRefresh ? new Date(parseInt(lastRefresh)).toISOString() : "never"
+      ).toISOString() : "never"
         }`
       );
 
       if (shouldRefresh) {
-        console.log(
-          `[Dashboard] 🔄 Refreshing user data on dashboard load... (${
-            Date.now() - effectStartTime
+         - effectStartTime
           }ms)`
         );
 
@@ -593,23 +579,18 @@ function DashboardContent() {
 
         const timer = setTimeout(() => {
           const refreshStartTime = Date.now();
-          console.log(
-            `[Dashboard] Starting refresh after ${waitTime}ms delay (${
-              refreshStartTime - effectStartTime
-            }ms total)`
+          `
           );
 
           // If coming from payment, clear cached data to force fresh fetch
           // The backend has the updated tier, but cached data might be stale
           if (justFromPayment) {
-            console.log(
-              `[Dashboard] Payment detected - clearing cached user_data to force fresh fetch`
-            );
+            
             localStorage.removeItem("user_data");
             // Also clear refresh timestamp to ensure we fetch
             sessionStorage.removeItem("user_data_last_refresh");
           } else {
-            console.log(`[Dashboard] Keeping cached user_data as fallback`);
+            
           }
 
           // Refresh user data (will fetch fresh but use cached as fallback if it fails)
@@ -620,20 +601,18 @@ function DashboardContent() {
             "user_data_last_refresh",
             Date.now().toString()
           );
-          console.log(`[Dashboard] Refresh initiated, checkAuthStatus called`);
+          
         }, waitTime);
 
         return () => {
           clearTimeout(timer);
-          console.log(`[Dashboard] Refresh effect cleanup`);
+          
         };
       } else {
-        console.log(`[Dashboard] Skipping refresh - data is fresh`);
+        
       }
     } else {
-      console.log(
-        `[Dashboard] Not refreshing - user: ${!!user}, checkAuthStatus: ${!!checkAuthStatus}`
-      );
+      
     }
   }, [user, checkAuthStatus, userLoading, searchParams]);
 
@@ -653,7 +632,7 @@ function DashboardContent() {
 
   const refreshToken = async () => {
     if (!user?.email) {
-      console.log("🔐 No user email available for token refresh");
+      
       return null;
     }
 
@@ -665,7 +644,7 @@ function DashboardContent() {
           window.location.hostname === "127.0.0.1")
           ? "http://localhost:5000"
           : "";
-      console.log("🔐 Attempting to refresh token for:", user.email);
+      
 
       const tokenResponse = await fetch(
         `${apiUrl}/auth/get-token-from-session`,
@@ -691,22 +670,18 @@ function DashboardContent() {
             "user_data",
             JSON.stringify(backendData.user || user)
           );
-          console.log("✅ Token refreshed successfully");
+          
           return newToken;
         } else {
-          console.error("❌ Invalid token format received");
+          
         }
       } else {
         const errorText = await tokenResponse.text();
-        console.error(
-          "❌ Token refresh failed:",
-          tokenResponse.status,
-          errorText
-        );
+        
 
         // If 401, try direct login
         if (tokenResponse.status === 401) {
-          console.log("🔐 Attempting direct login...");
+          
           try {
             const loginResponse = await fetch(`${apiUrl}/auth/login`, {
               method: "POST",
@@ -728,17 +703,17 @@ function DashboardContent() {
                   "user_data",
                   JSON.stringify(loginData.user || user)
                 );
-                console.log("✅ Direct login successful");
+                
                 return loginToken;
               }
             }
           } catch (loginError) {
-            console.error("❌ Direct login failed:", loginError);
+            
           }
         }
       }
     } catch (error) {
-      console.error("❌ Failed to refresh token:", error);
+      
       setAuthError("Failed to authenticate. Please try logging in again.");
     }
     return null;
@@ -824,10 +799,10 @@ function DashboardContent() {
           }
         }
       } else {
-        console.error("Failed to fetch API keys:", await response.text());
+        );
       }
     } catch (error) {
-      console.error("Error fetching API keys:", error);
+      
     }
   };
 
@@ -1070,11 +1045,11 @@ function DashboardContent() {
         }
         setLoading(false);
       } else {
-        console.error("Failed to fetch stats:", await response.text());
+        );
         setLoading(false);
       }
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      
       setLoading(false);
     }
   };
@@ -1084,7 +1059,7 @@ function DashboardContent() {
   };
 
   const handleDownloadActivity = (activityId: string) => {
-    console.log("Download activity:", activityId);
+    
     // Mock download - show custom alert
     showInfo("Download Started", `Downloading activity ${activityId}...`, {
       primary: {
@@ -1252,7 +1227,7 @@ function DashboardContent() {
         );
       }
     } catch (error) {
-      console.error("Error creating API key:", error);
+      
       showError(
         "Failed to Create API Key",
         "An error occurred while creating the API key",
@@ -1318,7 +1293,7 @@ function DashboardContent() {
         );
       }
     } catch (error) {
-      console.error("Error deleting API key:", error);
+      
       showError(
         "Failed to Delete API Key",
         "An error occurred while deleting the API key",
@@ -1415,15 +1390,12 @@ function DashboardContent() {
   // Show loading state while checking authentication
   // Log loading state changes
   useEffect(() => {
-    console.log(
-      `[Dashboard] userLoading changed: ${userLoading}, user: ${!!user}, timestamp: ${new Date().toISOString()}`
+    .toISOString()}`
     );
   }, [userLoading, user]);
 
   if (userLoading) {
-    console.log(
-      `[Dashboard] Rendering loading state - userLoading: ${userLoading}`
-    );
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] text-white flex items-center justify-center">
         <div className="text-center">
@@ -1512,8 +1484,7 @@ function DashboardContent() {
                     };
                     const displayTier = tierNames[tier] || "Free Plan";
                     // Log tier display for debugging
-                    console.log(
-                      `[Dashboard] Displaying tier: "${displayTier}" (from user.subscription_tier: "${user?.subscription_tier}")`
+                    `
                     );
                     return displayTier;
                   })()}

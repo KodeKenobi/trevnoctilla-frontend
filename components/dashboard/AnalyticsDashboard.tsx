@@ -106,35 +106,22 @@ export default function AnalyticsDashboard() {
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
-      console.log(
-        `[AnalyticsDashboard] Fetching analytics data for range: ${timeRange}`
-      );
+      
 
       const response = await fetch(
         `/api/analytics/dashboard?range=${timeRange}`
       );
 
-      console.log(`[AnalyticsDashboard] Response status: ${response.status}`);
+      
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(
-          `[AnalyticsDashboard] Failed to fetch analytics: ${response.status} - ${errorText}`
-        );
+        
         throw new Error(`Failed to fetch analytics: ${response.statusText}`);
       }
 
       const analyticsData = await response.json();
-      console.log(`[AnalyticsDashboard] Received data:`, {
-        totalUsers: analyticsData.totalUsers,
-        totalSessions: analyticsData.totalSessions,
-        totalPageViews: analyticsData.totalPageViews,
-        totalEvents: analyticsData.totalEvents,
-        hasTopPages:
-          !!analyticsData.topPages && analyticsData.topPages.length > 0,
-        hasTopEvents:
-          !!analyticsData.topEvents && analyticsData.topEvents.length > 0,
-      });
+      
 
       // Validate data structure
       if (analyticsData && typeof analyticsData === "object") {
@@ -143,10 +130,7 @@ export default function AnalyticsDashboard() {
         throw new Error("Invalid analytics data format");
       }
     } catch (error) {
-      console.error(
-        "[AnalyticsDashboard] Error fetching analytics data:",
-        error
-      );
+      
       // Set empty data structure instead of mock data
       setData({
         totalUsers: 0,
@@ -1038,8 +1022,16 @@ export default function AnalyticsDashboard() {
                   const eventName = activity.event_name || "";
                   if (eventName.includes("api_call")) return "🌐";
                   if (eventName.includes("api_error")) return "❌";
-                  if (eventName.includes("page_load") || eventName.includes("pageview")) return "📄";
-                  if (eventName.includes("navigation") || eventName.includes("click")) return "🔗";
+                  if (
+                    eventName.includes("page_load") ||
+                    eventName.includes("pageview")
+                  )
+                    return "📄";
+                  if (
+                    eventName.includes("navigation") ||
+                    eventName.includes("click")
+                  )
+                    return "🔗";
                   if (eventName.includes("user_interaction")) return "👆";
                   return "📊";
                 };
@@ -1048,7 +1040,11 @@ export default function AnalyticsDashboard() {
                   const eventName = activity.event_name || "";
                   if (eventName.includes("error")) return "bg-red-500";
                   if (eventName.includes("api_call")) return "bg-blue-500";
-                  if (eventName.includes("page_load") || eventName.includes("pageview")) return "bg-green-500";
+                  if (
+                    eventName.includes("page_load") ||
+                    eventName.includes("pageview")
+                  )
+                    return "bg-green-500";
                   if (eventName.includes("navigation")) return "bg-purple-500";
                   if (activity.type === "conversion") return "bg-green-500";
                   return "bg-blue-500";

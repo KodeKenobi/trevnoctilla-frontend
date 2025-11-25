@@ -56,19 +56,12 @@ export async function GET(request: NextRequest) {
     // Get auth token from session
     let token = (session as any).accessToken || null;
 
-    console.log(`[ANALYTICS] Session check:`, {
-      hasSession: !!session,
-      hasUser: !!session?.user,
-      userEmail: session?.user?.email,
-      userRole: (session?.user as any)?.role,
+    ?.role,
       hasToken: !!token,
     });
 
     if (!token) {
-      console.warn(
-        "[ANALYTICS] No backend token in session, attempting to fetch from backend"
-      );
-      // Try to get token from backend using email (no password required)
+            // Try to get token from backend using email (no password required)
       try {
         const apiBaseUrl =
           process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -93,16 +86,11 @@ export async function GET(request: NextRequest) {
         if (tokenResponse.ok) {
           const tokenData = await tokenResponse.json();
           token = tokenData.access_token;
-          console.log("[ANALYTICS] Successfully fetched token from backend");
-        } else {
+                  } else {
           const errorText = await tokenResponse.text();
-          console.error(
-            `[ANALYTICS] Failed to fetch token from backend: ${tokenResponse.status} - ${errorText}`
-          );
-        }
+                  }
       } catch (error) {
-        console.error("[ANALYTICS] Error fetching token:", error);
-      }
+              }
     }
 
     // Fetch analytics data from backend API
@@ -110,12 +98,9 @@ export async function GET(request: NextRequest) {
       const backendUrl = getApiUrl("/api/analytics/dashboard");
       const authHeaders = token ? getAuthHeaders(token) : {};
 
-      console.log(`[ANALYTICS] Fetching from backend: ${backendUrl}`);
-      console.log(`[ANALYTICS] Has token: ${!!token}`);
-      console.log(
-        `[ANALYTICS] Range: ${range}, Start time: ${startTime.toISOString()}`
+                  }`
       );
-      console.log(`[ANALYTICS] Auth headers:`, Object.keys(authHeaders));
+      );
 
       // Use fetch with proper error handling and timeout
       const controller = new AbortController();
@@ -134,46 +119,29 @@ export async function GET(request: NextRequest) {
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         if (fetchError.name === "AbortError") {
-          console.error("[ANALYTICS] Request timeout");
-          throw new Error("Request timeout");
+                    throw new Error("Request timeout");
         }
         throw fetchError;
       }
 
-      console.log(`[ANALYTICS] Backend response status: ${response.status}`);
-
+      
       if (response.ok) {
         const data = await response.json();
-        console.log(`[ANALYTICS] Backend returned data:`, {
-          totalUsers: data.totalUsers,
-          totalSessions: data.totalSessions,
-          totalPageViews: data.totalPageViews,
-          totalEvents: data.totalEvents,
-          hasTopPages: !!data.topPages && data.topPages.length > 0,
-          hasTopEvents: !!data.topEvents && data.topEvents.length > 0,
-        });
-        return NextResponse.json(data);
+                return NextResponse.json(data);
       } else {
         // Get error details from backend
         const errorText = await response.text();
-        console.error(
-          `[ANALYTICS] Backend analytics endpoint error (${response.status}):`,
+        :`,
           errorText.substring(0, 500) // Limit error text length
         );
 
         // If 401/403, it's an auth issue - log it but return empty data
         if (response.status === 401 || response.status === 403) {
-          console.error(
-            `[ANALYTICS] Authentication failed - token may be invalid or user role incorrect`
-          );
-        }
+                  }
 
         // Return empty data structure if backend doesn't have analytics endpoint yet or auth fails
         // This allows the frontend to work while backend is being set up
-        console.warn(
-          "Backend analytics endpoint not available or auth failed, returning empty data"
-        );
-        return NextResponse.json({
+                return NextResponse.json({
           totalUsers: 0,
           totalSessions: 0,
           totalPageViews: 0,
@@ -192,11 +160,7 @@ export async function GET(request: NextRequest) {
         });
       }
     } catch (backendError) {
-      console.error(
-        "[ANALYTICS] Error fetching analytics from backend:",
-        backendError
-      );
-      // Return empty data structure if backend is unavailable
+            // Return empty data structure if backend is unavailable
       return NextResponse.json({
         totalUsers: 0,
         totalSessions: 0,
@@ -214,8 +178,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error("Analytics dashboard error:", error);
-    return NextResponse.json(
+        return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );

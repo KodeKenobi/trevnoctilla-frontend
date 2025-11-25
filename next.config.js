@@ -29,7 +29,17 @@ const nextConfig = {
       "web-production-737b.up.railway.app",
       "web-production-ef253.up.railway.app",
     ],
-    unoptimized: true, // Disable image optimization for static files
+    unoptimized: false, // Enable image optimization for better performance
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60,
+  },
+  // Compress output
+  compress: true,
+  // Optimize production builds
+  swcMinify: true,
+  // Experimental features for better performance
+  experimental: {
+    optimizeCss: true,
   },
   webpack: (config) => {
     config.resolve.alias = {

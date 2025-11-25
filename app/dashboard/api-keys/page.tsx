@@ -102,12 +102,11 @@ export default function ApiKeysPage() {
         }));
         setApiKeys(transformedKeys);
       } else {
-        console.error("Failed to fetch API keys:", await response.text());
+        );
       }
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching API keys:", error);
-      setLoading(false);
+            setLoading(false);
     }
   };
 
@@ -160,8 +159,7 @@ export default function ApiKeysPage() {
         alert(errorData.error || "Failed to create API key");
       }
     } catch (error) {
-      console.error("Error creating API key:", error);
-      alert("An error occurred while creating the API key");
+            alert("An error occurred while creating the API key");
     }
   };
 
@@ -182,8 +180,7 @@ export default function ApiKeysPage() {
       await navigator.clipboard.writeText(key);
       // You could add a toast notification here
     } catch (error) {
-      console.error("Error copying key:", error);
-    }
+          }
   };
 
   const handleDeleteKey = async (keyId: number) => {
@@ -225,8 +222,7 @@ export default function ApiKeysPage() {
         alert(errorData.error || "Failed to delete API key");
       }
     } catch (error) {
-      console.error("Error deleting API key:", error);
-      alert("An error occurred while deleting the API key");
+            alert("An error occurred while deleting the API key");
     }
   };
 
@@ -238,8 +234,7 @@ export default function ApiKeysPage() {
         )
       );
     } catch (error) {
-      console.error("Error updating API key:", error);
-    }
+          }
   };
 
   const formatDate = (dateString: string) => {
@@ -538,8 +533,7 @@ function ShowKeyModal({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error("Error copying key:", error);
-    }
+          }
   };
 
   return (

@@ -141,16 +141,13 @@ function generatePayFastSignature(data: Record<string, string>): string {
   }
 
   // CRITICAL DEBUG: Log the exact string being hashed
-  console.log("🔐 EXACT SIGNATURE STRING (copy this to verify):");
-  console.log(getString);
-  console.log("🔐 String length:", getString.length);
-
+  :");
+    
   // PHP: return md5( $getString );
   // Generate MD5 hash (lowercase hex)
   const signature = crypto.createHash("md5").update(getString).digest("hex");
 
-  console.log("Generated Signature:", signature);
-
+  
   return signature;
 }
 
@@ -179,22 +176,13 @@ export async function POST(request: NextRequest) {
 
     const userEmail = session?.user?.email;
 
-    console.log("🔐 [PAYMENT INITIATE] Session check:", {
-      hasSession: !!session,
-      userEmail: userEmail || "none",
-      isSimplePayment,
-      sessionUser: session?.user ? Object.keys(session.user) : "none",
+     : "none",
       cookieHeader: headersList.get("cookie") ? "present" : "missing",
     });
 
     // Only require authentication for subscriptions or payments with user_id
     if (!isSimplePayment && !userEmail) {
-      console.error(
-        "❌ [PAYMENT INITIATE] No user email in session - returning 401"
-      );
-      console.error("   Session:", session);
-      console.error("   Request headers:", {
-        cookie: headersList.get("cookie") ? "present" : "missing",
+                   ? "present" : "missing",
         authorization: headersList.get("authorization") ? "present" : "missing",
       });
       return NextResponse.json(
@@ -278,22 +266,7 @@ export async function POST(request: NextRequest) {
           !PAYFAST_CONFIG.PASSPHRASE ||
           PAYFAST_CONFIG.PASSPHRASE.trim() === ""
         ) {
-          console.error(
-            "❌ CRITICAL ERROR: Passphrase is missing for subscription!"
-          );
-          console.error(
-            "PAYFAST_CONFIG.PASSPHRASE:",
-            PAYFAST_CONFIG.PASSPHRASE
-          );
-          console.error(
-            "process.env.PAYFAST_PASSPHRASE:",
-            process.env.PAYFAST_PASSPHRASE
-          );
-          console.error(
-            "process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE:",
-            process.env.NEXT_PUBLIC_PAYFAST_PASSPHRASE
-          );
-          return NextResponse.json(
+                                                  return NextResponse.json(
             {
               error:
                 "PASSPHRASE is REQUIRED for subscriptions. Please set PAYFAST_PASSPHRASE environment variable.",
@@ -301,30 +274,14 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        console.log(
-          "✅ Passphrase configured for subscription (length:",
-          PAYFAST_CONFIG.PASSPHRASE.length,
-          "chars)"
+        "
         );
       }
     }
 
     // Validate PayFast configuration
     if (!PAYFAST_CONFIG.MERCHANT_ID || !PAYFAST_CONFIG.MERCHANT_KEY) {
-      console.error("PayFast config missing:", {
-        MERCHANT_ID: PAYFAST_CONFIG.MERCHANT_ID ? "exists" : "missing",
-        MERCHANT_KEY: PAYFAST_CONFIG.MERCHANT_KEY ? "exists" : "missing",
-        PASSPHRASE: PAYFAST_CONFIG.PASSPHRASE ? "exists" : "missing",
-        env_check: {
-          PAYFAST_MERCHANT_ID: !!process.env.PAYFAST_MERCHANT_ID,
-          NEXT_PUBLIC_PAYFAST_MERCHANT_ID:
-            !!process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID,
-          PAYFAST_MERCHANT_KEY: !!process.env.PAYFAST_MERCHANT_KEY,
-          NEXT_PUBLIC_PAYFAST_MERCHANT_KEY:
-            !!process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY,
-        },
-      });
-      return NextResponse.json(
+            return NextResponse.json(
         {
           error:
             "PayFast configuration is missing. Please set PAYFAST_MERCHANT_ID, PAYFAST_MERCHANT_KEY, and PAYFAST_PASSPHRASE environment variables in your hosting platform.",
@@ -407,10 +364,7 @@ export async function POST(request: NextRequest) {
       paymentData.notify_url = notifyUrl;
     } else {
       // For $1 payments, explicitly exclude notify_url to prevent 400 errors
-      console.log(
-        "💰 [PAYMENT INITIATE] Simple $1 payment detected - excluding notify_url"
-      );
-    }
+          }
 
     // Add amount and item_name (matching test script order)
     paymentData.amount = parseFloat(amount).toFixed(2);
@@ -470,22 +424,9 @@ export async function POST(request: NextRequest) {
     paymentData.signature = signature;
 
     // Debug logging (remove in production)
-    console.log("=== PayFast Payment Initiation ===");
-    console.log("Payment Data:", JSON.stringify(paymentData, null, 2));
-    console.log("Signature:", signature);
-    console.log("Passphrase exists:", !!PAYFAST_CONFIG.PASSPHRASE);
-    console.log("PayFast URL:", PAYFAST_CONFIG.PAYFAST_URL);
-    console.log("Return URL:", paymentData.return_url);
-    console.log("Cancel URL:", paymentData.cancel_url);
-    console.log("Notify URL:", paymentData.notify_url);
-    console.log("Merchant ID:", PAYFAST_CONFIG.MERCHANT_ID);
-    console.log("Merchant Key:", PAYFAST_CONFIG.MERCHANT_KEY);
-    console.log("All fields for form submission:");
-    Object.keys(paymentData).forEach((key) => {
-      console.log(
-        `  ${key}: "${paymentData[key]}" (type: ${typeof paymentData[
-          key
-        ]}, length: ${String(paymentData[key]).length})`
+        );
+                                        Object.keys(paymentData).forEach((key) => {
+      .length})`
       );
     });
 
@@ -497,15 +438,7 @@ export async function POST(request: NextRequest) {
       !finalUrl.includes("sandbox") &&
       finalUrl.includes("www.payfast.co.za")
     ) {
-      console.error(
-        "❌ CRITICAL: Using PRODUCTION URL! This should not happen in development."
-      );
-      console.error("PAYFAST_CONFIG.PAYFAST_URL:", finalUrl);
-      console.error(
-        "NEXT_PUBLIC_PAYFAST_URL env:",
-        process.env.NEXT_PUBLIC_PAYFAST_URL
-      );
-    }
+                      }
 
     // Return payment data and URL
     // Include debug info in development to see signature string
@@ -563,14 +496,12 @@ export async function POST(request: NextRequest) {
     if (userEmail) {
       storePendingPayment(userEmail, plan, paymentData.amount);
     }
-    console.log(
-      `💾 [PAYMENT INITIATE] Stored pending payment for ${userEmail}: ${plan} plan (${paymentData.amount})`
+    `
     );
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("PayFast initiate payment error:", error);
-    return NextResponse.json(
+        return NextResponse.json(
       {
         error: `Failed to initiate payment: ${
           error instanceof Error ? error.message : "Unknown error"

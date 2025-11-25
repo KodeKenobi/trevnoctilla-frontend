@@ -59,7 +59,7 @@ export class ApiTestClient {
 
       // Use getApiUrl to construct the full URL
       const fullUrl = getApiUrl(url);
-      console.log("🔗 API Test: Calling", fullUrl);
+      
 
       // When using FormData, don't set Content-Type - browser will set it with boundary
       const fetchHeaders = { ...headers };

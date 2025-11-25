@@ -787,8 +787,7 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
   });
   
   const data = await response.json();
-  console.log(data);
-});
+  });
 </script>`}
                     </pre>
                   </div>

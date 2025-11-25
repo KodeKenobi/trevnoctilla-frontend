@@ -92,7 +92,7 @@ class InternalAnalytics {
         this.userId = user.id;
       }
     } catch (error) {
-      console.error("Error loading user data:", error);
+      
     }
 
     // Get device info
@@ -152,12 +152,12 @@ class InternalAnalytics {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Analytics API error (${endpoint}): ${response.status}`, errorText);
+        : ${response.status}`, errorText);
       } else {
-        console.log(`✅ Analytics data sent to ${endpoint}`);
+        
       }
     } catch (error) {
-      console.error(`Error sending analytics data to ${endpoint}:`, error);
+      
     }
   }
 
@@ -188,7 +188,7 @@ class InternalAnalytics {
     try {
       await this.sendToBackend("events", { events: eventsForBackend });
     } catch (error) {
-      console.error("Error flushing events:", error);
+      
       // Re-add events to queue if sending failed
       this.eventQueue.unshift(...eventsToSend);
     }

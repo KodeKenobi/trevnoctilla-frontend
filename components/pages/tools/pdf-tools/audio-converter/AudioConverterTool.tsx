@@ -119,9 +119,9 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
   };
 
   const downloadResult = async () => {
-    console.log("🎵 AudioConverterTool downloadResult called");
-    console.log("🎵 conversionResult:", conversionResult);
-    console.log("🎵 file?.name:", file?.name);
+    
+    
+    
 
     if (conversionResult) {
       const completed = await showMonetizationModal({
@@ -143,7 +143,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
         document.body.removeChild(link);
       }
     } else {
-      console.error("🎵 ERROR: conversionResult is null or undefined!");
+      
     }
   };
 
@@ -166,9 +166,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
           currentProgress += 1;
           const roundedProgress = Math.round(currentProgress);
           setProgress(roundedProgress);
-          console.log(
-            `📊 [PROGRESS] Backend complete - finishing: ${roundedProgress}%`
-          );
+          
           setTimeout(progressStep, 50);
         }
       } else {
@@ -177,12 +175,12 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
           currentProgress += 0.5;
           const roundedProgress = Math.round(currentProgress);
           setProgress(roundedProgress);
-          console.log(`📊 [PROGRESS] Processing: ${roundedProgress}%`);
+          
           setTimeout(progressStep, 100);
         } else {
           // Stay at 85% until backend completes
           setProgress(85);
-          console.log(`📊 [PROGRESS] Waiting at 85% for backend completion...`);
+          
           setTimeout(progressStep, 500);
         }
       }
@@ -211,10 +209,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
 
       if (result.status === "success") {
         // Backend is complete, trigger smooth finish
-        console.log(
-          `✅ [BACKEND] Conversion completed successfully at progress: ${Math.round(
-            currentProgress
-          )}%`
+        }%`
         );
         isBackendComplete = true;
 
@@ -222,9 +217,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
         const checkProgress = () => {
           if (currentProgress >= 100) {
             // Show success screen
-            console.log(
-              `🎉 [SUCCESS] Progress reached 100%, showing success screen`
-            );
+            
             if (result.original_size) {
               setOriginalFileSize(result.original_size);
             }
@@ -235,9 +228,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
             setConversionResult(downloadUrl);
 
             setTimeout(() => {
-              console.log(
-                `🏁 [COMPLETE] Loading state set to false, conversion complete`
-              );
+              
               setLoading(false);
             }, 500);
           } else {

@@ -83,7 +83,7 @@ export default function EnterpriseDashboard() {
             }
           }
         } catch (error) {
-          console.error("Error checking enterprise status:", error);
+          
         }
       };
 
@@ -179,7 +179,7 @@ export default function EnterpriseDashboard() {
 
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching enterprise data:", error);
+      
       setLoading(false);
     }
   };

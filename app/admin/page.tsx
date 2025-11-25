@@ -103,14 +103,14 @@ export default function AdminDashboard() {
   const fetchAdminData = async () => {
     try {
       if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
-        console.log("User is not admin, stopping loading");
+        
         setLoading(false);
         return;
       }
 
       const token = localStorage.getItem("auth_token");
       if (!token) {
-        console.log("No auth token found, stopping loading");
+        
         setLoading(false);
         return;
       }
@@ -173,16 +173,16 @@ export default function AdminDashboard() {
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         if (fetchError.name === "AbortError") {
-          console.warn("Admin API fetch timeout - continuing with empty data");
+          
         } else {
-          console.error("Error fetching admin data:", fetchError);
+          
         }
         // Continue anyway - show dashboard with empty/default data
       }
 
       setLoading(false);
     } catch (error) {
-      console.error("Error in fetchAdminData:", error);
+      
       setLoading(false);
     }
   };
@@ -294,7 +294,7 @@ export default function AdminDashboard() {
     // Safety timeout: if loading takes more than 10 seconds, stop loading
     if (loading) {
       const timeout = setTimeout(() => {
-        console.warn("Admin dashboard loading timeout - stopping loading state");
+        
         setLoading(false);
       }, 10000);
       return () => clearTimeout(timeout);

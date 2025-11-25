@@ -110,7 +110,6 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
 
       if (response.ok) {
         const result = await response.json();
-        console.log("Conversion result:", result);
 
         // Check if conversion was successful
         if (result.success && result.downloadUrl) {
@@ -118,7 +117,6 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
           const fullDownloadUrl = result.downloadUrl.startsWith("http")
             ? result.downloadUrl
             : `${getApiUrl("")}${result.downloadUrl}`;
-          console.log("Full download URL:", fullDownloadUrl);
           setConversionResult(fullDownloadUrl);
           setConvertedFileSize(result.convertedSize);
           setResult({
@@ -139,7 +137,6 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
         const error = await response
           .json()
           .catch(() => ({ error: "Unknown error" }));
-        console.error("Conversion error:", error);
         setResult({
           type: "error",
           message: error.error || error.message || "Conversion failed",
@@ -191,7 +188,6 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
           return;
         }
       } catch (error) {
-        console.error("Error verifying download URL:", error);
         // Continue anyway - might be a CORS issue with HEAD request
       }
 
@@ -208,8 +204,6 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
       if (completed) {
         // Try to download the file using fetch and blob download
         try {
-          console.log("Starting download for:", conversionResult);
-
           // First, try direct download link (works for same-origin)
           const link = document.createElement("a");
           link.href = conversionResult;
@@ -230,7 +224,6 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
           setTimeout(() => {
             const newWindow = window.open(conversionResult, "_blank");
             if (!newWindow) {
-              console.warn("Popup blocked, user may need to allow popups");
               setResult({
                 type: "error",
                 message:
@@ -239,7 +232,6 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
             }
           }, 200);
         } catch (error) {
-          console.error("Error downloading file:", error);
           // Fallback: just open the URL
           window.open(conversionResult, "_blank");
         }

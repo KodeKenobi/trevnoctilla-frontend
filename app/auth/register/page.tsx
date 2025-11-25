@@ -131,7 +131,7 @@ export default function RegisterPage() {
               await checkAuthStatus();
             }
           } catch (e) {
-            console.error("Session refresh error:", e);
+            
           }
           setLoadingMessage("Redirecting to dashboard...");
           setTimeout(() => {

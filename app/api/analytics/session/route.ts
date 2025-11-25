@@ -52,14 +52,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(result);
     } else {
       const error = await response.text();
-      console.error("Backend analytics error:", error);
+      
       return NextResponse.json(
         { error: "Failed to store analytics data" },
         { status: response.status }
       );
     }
   } catch (error) {
-    console.error("Analytics session error:", error);
+    
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
