@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   },
   other: {
     monetag: "6a1c8e9c1dd41add268aac02d05eeaca",
-    "google-site-verification": "your-google-verification-code-here",
+    "google-site-verification": "v3OpUgQr5DG7MSb3pzlkM_MpddSuZHJVyCGicmfCbFg",
   },
   openGraph: {
     type: "website",
