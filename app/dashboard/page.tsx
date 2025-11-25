@@ -412,15 +412,6 @@ function DashboardContent() {
         return;
       }
 
-      
-      
-      :",
-        customStr1 || pendingPayment?.plan_id
-      );
-      :",
-        customStr2 || pendingPayment?.user_id
-      );
-      
 
       try {
         // Get user info from session

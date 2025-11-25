@@ -50,12 +50,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     if (cachedUserData && !user) {
       try {
         const userData = JSON.parse(cachedUserData);
-        
+
         setUser(userData);
         setLoading(false);
-      } catch (e) {
-        
-      }
+      } catch (e) {}
     }
 
     try {
@@ -71,13 +69,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             signal: AbortSignal.timeout(30000), // 30 second timeout (increased to handle slow backend responses)
           });
           const fetchTime = Date.now() - fetchStartTime;
-          
 
           if (response.ok) {
             const userData = await response.json();
             const totalTime = Date.now() - startTime;
-            
-            
+
             // Store fresh user data
             localStorage.setItem("user_data", JSON.stringify(userData));
             setUser(userData);
@@ -99,35 +95,30 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             if (cachedUserData) {
               try {
                 const userData = JSON.parse(cachedUserData);
-                
+
                 setUser(userData);
                 setLoading(false);
                 return;
-              } catch (e) {
-                
-              }
+              } catch (e) {}
             }
           }
         } catch (profileError: any) {
           const totalTime = Date.now() - startTime;
-          
+
           if (
             profileError.name === "TimeoutError" ||
             profileError.name === "AbortError"
           ) {
-            
             // Use cached data if API times out
             const cachedUserData = localStorage.getItem("user_data");
             if (cachedUserData) {
               try {
                 const userData = JSON.parse(cachedUserData);
-                
+
                 setUser(userData);
                 setLoading(false);
                 return;
-              } catch (e) {
-                
-              }
+              } catch (e) {}
             }
           }
         }
@@ -136,7 +127,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       // Fallback: If we have a NextAuth session, use it
       if (session?.user) {
         const totalTime = Date.now() - startTime;
-        
+
         const userFromSession: User = {
           id: parseInt(session.user.id),
           email: session.user.email || "",
@@ -151,7 +142,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         // If no backend token exists, get one from NextAuth session
         const existingToken = localStorage.getItem("auth_token");
         if (!existingToken && session.user.email) {
-          
           try {
             // Use endpoint to get backend token from NextAuth session
             // NOTE: This will return 404 if user was deleted (prevents resurrection)
@@ -177,7 +167,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
             // If user not found (404), user was deleted - log them out
             if (tokenResponse.status === 404) {
-              
               // Clear all auth data
               localStorage.removeItem("auth_token");
               localStorage.removeItem("user_data");
@@ -196,7 +185,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 "user_data",
                 JSON.stringify(backendData.user)
               );
-              
+
               // Update user with backend data (includes subscription_tier)
               setUser(backendData.user);
             }
@@ -211,11 +200,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       // Fallback to localStorage token check (token already defined above)
       const totalTime = Date.now() - startTime;
-      
-      
 
       if (!token) {
-        
         setLoading(false);
         return;
       }
@@ -225,20 +211,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       if (storedUser) {
         try {
           const userData = JSON.parse(storedUser);
-          
-          
+
           setUser(userData);
           setLoading(false);
           return;
-        } catch (error) {
-          
-        }
+        } catch (error) {}
       }
 
       // Fallback: Try to decode the JWT token to get user info
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
-        
 
         // Create a user object from the token
         const userFromToken: User = {
@@ -250,52 +232,43 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           last_login: new Date().toISOString(),
         };
 
-        
         setUser(userFromToken);
         setLoading(false);
         return;
-      } catch (jwtError) {
-        
-      }
+      } catch (jwtError) {}
 
-      
       const response = await fetch(getApiUrl("/auth/profile"), {
         headers: getAuthHeaders(token),
       });
 
-      
-
       if (response.ok) {
         const userData = await response.json();
-        
+
         setUser(userData);
       } else {
-        
         localStorage.removeItem("auth_token");
       }
     } catch (error) {
       const totalTime = Date.now() - startTime;
-      
+
       // Don't remove token on network errors, just log
-      
+
       // Ensure loading is set to false even on error
       setLoading(false);
     } finally {
       const totalTime = Date.now() - startTime;
-      
+
       // Double-check loading is false
       if (loading) {
-        
         setLoading(false);
       }
-      
+
       setLoading(false);
     }
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -304,23 +277,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
 
-      
-
       if (response.ok) {
         const data = await response.json();
-        
+
         localStorage.setItem("auth_token", data.access_token);
         localStorage.setItem("user_data", JSON.stringify(data.user));
         setUser(data.user);
-        
+
         return true;
       } else {
         const errorData = await response.json();
-        
+
         return false;
       }
     } catch (error) {
-      
       return false;
     }
   };
@@ -340,15 +310,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
    */
   const refreshSessionSilently = async (): Promise<boolean> => {
     try {
-      
-
       // Get current user email before clearing tokens
       const currentUser = user;
       const currentEmail = currentUser?.email;
       const currentToken = localStorage.getItem("auth_token");
 
       if (!currentEmail && !currentToken) {
-        
         return false;
       }
 
@@ -360,17 +327,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           const session = await sessionResponse.json();
           emailToUse = session?.user?.email;
         } catch (error) {
-          
           return false;
         }
       }
 
       if (!emailToUse) {
-        
         return false;
       }
-
-      
 
       // Clear current tokens and user data (silently, no redirect)
       localStorage.removeItem("auth_token");
@@ -387,8 +350,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       // Wait a moment for cleanup
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      
-
       // Now fetch fresh user data using checkAuthStatus
       // This will use NextAuth session if available, or try to get a new token
       await checkAuthStatus();
@@ -396,15 +357,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       // Verify we got fresh user data
       const freshUser = user;
       if (freshUser && freshUser.email === emailToUse) {
-        
-        
         return true;
       } else {
-        
         return false;
       }
     } catch (error) {
-      
       return false;
     }
   };

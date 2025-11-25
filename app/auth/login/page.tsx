@@ -85,7 +85,6 @@ export default function LoginPage() {
             localStorage.setItem("user_data", JSON.stringify(backendData.user));
           }
         } catch (backendError) {
-          :", backendError);
           // Don't block login if backend auth fails - NextAuth session is enough for UI
         }
 

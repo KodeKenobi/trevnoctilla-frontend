@@ -91,9 +91,7 @@ class InternalAnalytics {
         const user = JSON.parse(userData);
         this.userId = user.id;
       }
-    } catch (error) {
-      
-    }
+    } catch (error) {}
 
     // Get device info
     const deviceInfo = this.getDeviceInfo();
@@ -153,11 +151,8 @@ class InternalAnalytics {
       if (!response.ok) {
         const errorText = await response.text();
       } else {
-        
       }
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   }
 
   private startBatchProcessing() {
@@ -187,7 +182,6 @@ class InternalAnalytics {
     try {
       await this.sendToBackend("events", { events: eventsForBackend });
     } catch (error) {
-      
       // Re-add events to queue if sending failed
       this.eventQueue.unshift(...eventsToSend);
     }

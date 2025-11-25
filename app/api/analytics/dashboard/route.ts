@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     let token = (session as any).accessToken || null;
 
     if (!token) {
-            // Try to get token from backend using email (no password required)
+      // Try to get token from backend using email (no password required)
       try {
         const apiBaseUrl =
           process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -82,11 +82,10 @@ export async function GET(request: NextRequest) {
         if (tokenResponse.ok) {
           const tokenData = await tokenResponse.json();
           token = tokenData.access_token;
-                  } else {
+        } else {
           const errorText = await tokenResponse.text();
-                  }
-      } catch (error) {
-              }
+        }
+      } catch (error) {}
     }
 
     // Fetch analytics data from backend API
@@ -111,26 +110,25 @@ export async function GET(request: NextRequest) {
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         if (fetchError.name === "AbortError") {
-                    throw new Error("Request timeout");
+          throw new Error("Request timeout");
         }
         throw fetchError;
       }
 
-      
       if (response.ok) {
         const data = await response.json();
-                return NextResponse.json(data);
+        return NextResponse.json(data);
       } else {
         // Get error details from backend
         const errorText = await response.text();
 
         // If 401/403, it's an auth issue - log it but return empty data
         if (response.status === 401 || response.status === 403) {
-                  }
+        }
 
         // Return empty data structure if backend doesn't have analytics endpoint yet or auth fails
         // This allows the frontend to work while backend is being set up
-                return NextResponse.json({
+        return NextResponse.json({
           totalUsers: 0,
           totalSessions: 0,
           totalPageViews: 0,
@@ -149,7 +147,7 @@ export async function GET(request: NextRequest) {
         });
       }
     } catch (backendError) {
-            // Return empty data structure if backend is unavailable
+      // Return empty data structure if backend is unavailable
       return NextResponse.json({
         totalUsers: 0,
         totalSessions: 0,
@@ -167,7 +165,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-        return NextResponse.json(
+    return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );

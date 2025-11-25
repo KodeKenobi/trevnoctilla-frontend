@@ -101,8 +101,6 @@ export default function ApiKeysPage() {
           rate_limit: key.rate_limit || 1000,
         }));
         setApiKeys(transformedKeys);
-      } else {
-        );
       }
       setLoading(false);
     } catch (error) {

@@ -71,7 +71,6 @@ export default function PayFastForm({
   // CRITICAL: PayFastForm is for SUBSCRIPTIONS ONLY
   // Require subscription_type to be provided
   if (!subscription_type) {
-    
     return (
       <div className="text-red-500 p-4">
         <p className="font-bold">
@@ -99,21 +98,14 @@ export default function PayFastForm({
   useEffect(() => {
     // CRITICAL: Ensure amount is valid before making API call
     if (!amount || parseFloat(amount) <= 0) {
-      
       setError("Invalid payment amount");
       setIsLoadingSignature(false);
       return;
     }
 
-    
-    
-    
-    
-
     const fetchPaymentData = async () => {
       try {
         setIsLoadingSignature(true);
-        
 
         // Build request data from props (what we want to send)
         const requestData: Record<string, any> = {
@@ -150,12 +142,10 @@ export default function PayFastForm({
             if (frequency) {
               requestData.frequency = frequency;
             } else {
-              
             }
             if (cycles !== undefined && cycles !== null) {
               requestData.cycles = cycles;
             } else {
-              
             }
             if (billing_date) requestData.billing_date = billing_date.trim();
             if (recurring_amount)
@@ -190,24 +180,19 @@ export default function PayFastForm({
         // The signature is calculated on the server's payment_data, so we must use that
         if (data.payment_data) {
           setPaymentData(data.payment_data);
-          
-          
-          
+
           // Notify parent that payment data is loaded
           if (onPaymentDataLoaded) {
             onPaymentDataLoaded();
           }
         } else {
-          
           throw new Error("No payment_data in response");
         }
       } catch (error) {
-        
         // Set error state so parent can handle it
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         setError(errorMessage);
-        
       } finally {
         setIsLoadingSignature(false);
       }
@@ -269,7 +254,6 @@ export default function PayFastForm({
           });
 
           if (allFieldsPresent) {
-            
             setHasAutoSubmitted(true);
             formRef.current.submit();
           }
@@ -284,7 +268,6 @@ export default function PayFastForm({
   // This ensures the form matches what the signature was calculated on
   const renderInputs = () => {
     if (!paymentData) {
-      
       return null; // Don't render form until payment data is loaded
     }
 
@@ -301,18 +284,12 @@ export default function PayFastForm({
       }
     }
 
-    
     return inputs;
   };
 
   // Ensure form is in DOM and log payment data when ready
   useEffect(() => {
     if (formRef.current && paymentData) {
-      
-      
-      
-      
-
       // Verify all fields are in the form
       const requiredFields = [
         "merchant_id",

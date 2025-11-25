@@ -141,8 +141,6 @@ function generatePayFastSignature(data: Record<string, string>): string {
   }
 
   // CRITICAL DEBUG: Log the exact string being hashed
-  :");
-    
   // PHP: return md5( $getString );
   // Generate MD5 hash (lowercase hex)
   const signature = crypto.createHash("md5").update(getString).digest("hex");
@@ -176,14 +174,13 @@ export async function POST(request: NextRequest) {
 
     const userEmail = session?.user?.email;
 
-     : "none",
-      cookieHeader: headersList.get("cookie") ? "present" : "missing",
-    });
-
     // Only require authentication for subscriptions or payments with user_id
     if (!isSimplePayment && !userEmail) {
-                   ? "present" : "missing",
-        authorization: headersList.get("authorization") ? "present" : "missing",
+      return NextResponse.json(
+        { error: "User must be authenticated for subscriptions" },
+        { status: 401 }
+      );
+    }
       });
       return NextResponse.json(
         { error: "User must be authenticated to initiate payment" },
@@ -274,8 +271,6 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        "
-        );
       }
     }
 
@@ -424,10 +419,8 @@ export async function POST(request: NextRequest) {
     paymentData.signature = signature;
 
     // Debug logging (remove in production)
-        );
-                                        Object.keys(paymentData).forEach((key) => {
-      .length})`
-      );
+    Object.keys(paymentData).forEach((key) => {
+      // Process payment data
     });
 
     // CRITICAL: Ensure we're using the correct URL
@@ -496,8 +489,6 @@ export async function POST(request: NextRequest) {
     if (userEmail) {
       storePendingPayment(userEmail, plan, paymentData.amount);
     }
-    `
-    );
 
     return NextResponse.json(response);
   } catch (error) {

@@ -15,20 +15,17 @@ export async function GET(request: NextRequest) {
     });
 
     if (!session?.user) {
-      
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userRole = (session.user as any).role;
-    
+
     if (userRole !== "admin" && userRole !== "super_admin") {
-      
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     let token = (session as any).accessToken || null;
     if (!token) {
-      
       // Try to get token from backend using email (no password required)
       try {
         const apiBaseUrl =
@@ -54,16 +51,11 @@ export async function GET(request: NextRequest) {
         if (tokenResponse.ok) {
           const tokenData = await tokenResponse.json();
           token = tokenData.access_token;
-          
         } else {
-          
         }
-      } catch (error) {
-        
-      }
+      } catch (error) {}
 
       if (!token) {
-        
         return NextResponse.json(
           { error: "No backend token" },
           { status: 401 }
@@ -94,7 +86,7 @@ export async function GET(request: NextRequest) {
       });
     } else {
       const errorText = await response.text();
-      
+
       // Return empty stats on error
       return NextResponse.json({
         totalUsers: 0,
@@ -106,7 +98,6 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    
     return NextResponse.json(
       {
         totalUsers: 0,

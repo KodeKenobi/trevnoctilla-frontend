@@ -128,8 +128,6 @@ export async function POST(request: NextRequest) {
             content: invoiceData.pdf_base64,
             contentType: "application/pdf",
           });
-          } KB)`
-          );
         }
       } else {
         
@@ -161,8 +159,6 @@ export async function POST(request: NextRequest) {
         const emailHtmlData = await emailHtmlResponse.json();
         if (emailHtmlData.success && emailHtmlData.html) {
           emailHtml = emailHtmlData.html;
-          `
-          );
         } else {
           throw new Error("Failed to get email HTML from backend");
         }

@@ -114,24 +114,19 @@ export default function PayFastDollarForm({
         // The signature is calculated on the server's payment_data, so we must use that
         if (data.payment_data) {
           setPaymentData(data.payment_data);
-          
-          
-          
+
           // Notify parent that payment data is loaded
           if (onPaymentDataLoaded) {
             onPaymentDataLoaded();
           }
         } else {
-          
           throw new Error("No payment_data in response");
         }
       } catch (error) {
-        
         // Set error state so parent can handle it
         const errorMessage =
           error instanceof Error ? error.message : String(error);
         setError(errorMessage);
-        
       } finally {
         setIsLoadingSignature(false);
       }
@@ -189,7 +184,6 @@ export default function PayFastDollarForm({
           });
 
           if (allFieldsPresent) {
-            
             setHasAutoSubmitted(true);
             formRef.current.submit();
           }
@@ -204,7 +198,6 @@ export default function PayFastDollarForm({
   // This ensures the form matches what the signature was calculated on
   const renderInputs = () => {
     if (!paymentData) {
-      
       return null; // Don't render form until payment data is loaded
     }
 
@@ -221,18 +214,12 @@ export default function PayFastDollarForm({
       }
     }
 
-    
     return inputs;
   };
 
   // Ensure form is in DOM and log payment data when ready
   useEffect(() => {
     if (formRef.current && paymentData) {
-      
-      
-      
-      
-
       // Verify all fields are in the form
       const requiredFields = [
         "merchant_id",

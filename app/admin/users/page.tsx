@@ -118,7 +118,6 @@ export default function UsersPage() {
         throw new Error("No active session found");
       }
 
-      
       // Build query parameters - increase per_page to get all users
       const params = new URLSearchParams();
       params.append("per_page", "1000"); // Get up to 1000 users
@@ -140,7 +139,7 @@ export default function UsersPage() {
         // Use the JWT token from localStorage (auth_token)
         const authToken = localStorage.getItem("auth_token");
         if (!authToken) {
-                    throw new Error("No authentication token");
+          throw new Error("No authentication token");
         }
 
         // Use relative URL to hide Railway backend URL
@@ -164,10 +163,9 @@ export default function UsersPage() {
 
         if (response.ok) {
           const data = await response.json();
-                              
+
           // Log each user returned
-                    data.users?.forEach((user: any, index: number) => {
-                      });
+          data.users?.forEach((user: any, index: number) => {});
 
           // Transform the data to match our interface
           const transformedUsers = data.users.map((user: any) => ({
@@ -192,16 +190,14 @@ export default function UsersPage() {
           return;
         } else {
           const errorText = await response.text();
-                    try {
+          try {
             const errorJson = JSON.parse(errorText);
-                      } catch (e) {
-                      }
+          } catch (e) {}
         }
-      } catch (adminError) {
-              }
+      } catch (adminError) {}
 
       // Fallback: Create user entry from current session
-      
+
       const currentUser = {
         id: session.user.id || 1,
         email: session.user.email || "unknown@example.com",
@@ -215,7 +211,6 @@ export default function UsersPage() {
       setUsers([currentUser]);
       setLoading(false);
     } catch (error) {
-      
       // Ultimate fallback: show current user if available
       if (user) {
         setUsers([
@@ -326,7 +321,7 @@ export default function UsersPage() {
         }
       }
     } catch (error) {
-            // Show empty stats on error
+      // Show empty stats on error
       setUserStats({
         total_calls: 0,
         recent_calls: 0,
@@ -398,7 +393,7 @@ export default function UsersPage() {
 
       alert(`User ${action}d successfully`);
     } catch (error) {
-            alert(
+      alert(
         `Failed to ${action} user: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
@@ -456,7 +451,7 @@ export default function UsersPage() {
         alert(`Error: ${error.error || "Failed to reset calls"}`);
       }
     } catch (error) {
-            alert("Failed to reset API calls");
+      alert("Failed to reset API calls");
     }
   };
 

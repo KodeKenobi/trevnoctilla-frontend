@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-        const response = await fetch(`${BACKEND_URL}/auth/profile`, {
+    const response = await fetch(`${BACKEND_URL}/auth/profile`, {
       method: "GET",
       headers: {
         Authorization: authHeader,
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {
-        return NextResponse.json(
+    return NextResponse.json(
       { error: error.message || "Failed to fetch profile" },
       { status: 500 }
     );

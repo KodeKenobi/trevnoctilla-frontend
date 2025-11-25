@@ -228,7 +228,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
 
   const cancelConversion = async () => {
     if (!currentConversionId) {
-      
       return;
     }
 
@@ -245,7 +244,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
       const result = await response.json();
 
       if (result.status === "success") {
-        
         setLoading(false);
         setIsInitializing(false);
         setInitializationStep(0);
@@ -253,11 +251,8 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         setCurrentConversionId(null);
         setWarning("Conversion cancelled by user");
       } else {
-        
       }
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 
   const convert = async () => {
@@ -270,11 +265,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
     const conversionStartTime = Date.now();
     const timestamp = new Date().toISOString();
     const fileSizeMB = file.size / 1024 / 1024;
-
-    
-    
-    
-    
 
     // Set file-size aware messages
     setCurrentInitializationMessages(getInitializationMessages(fileSizeMB));
@@ -300,7 +290,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
       try {
         // Only poll if we have a unique filename from the backend
         if (!uniqueFilename) {
-          
           return false;
         }
 
@@ -314,17 +303,16 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         if (progressData.status === "completed") {
           if (progressInterval) clearInterval(progressInterval);
           setProgress(100);
-          
 
           // COMPREHENSIVE LOGGING - CONVERSION COMPLETE
           const conversionCompleteTime = Date.now();
           const totalConversionTime =
-            conversionCompleteTime - conversionStartTime;          // Set the conversion result for download
+            conversionCompleteTime - conversionStartTime; // Set the conversion result for download
           const downloadUrl = `${getApiUrl("/download_converted_video")}/${
             progressData.converted_filename ||
             uniqueFilename.replace(/\.[^/.]+$/, "_converted.mp4")
           }`;
-          
+
           setConversionResult(downloadUrl);
 
           // Set converted file size if available
@@ -334,7 +322,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
 
           // Stop loading
           setTimeout(() => {
-            
             // Log final size comparison
             if (originalFileSize && progressData.converted_size) {
               const compressionRatio =
@@ -355,23 +342,18 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
             const timeToProgressStart = progressStartTime - conversionStartTime;
 
             // COMPREHENSIVE LOGGING - PROGRESS BAR STARTS
-            
 
             setIsInitializing(false);
             setIsBackendProcessing(false);
           }
-          
 
           // Update converted file size if available in progress data
           if (progressData.converted_size) {
             setConvertedFileSize(progressData.converted_size);
           }
         } else {
-          
         }
-      } catch (error) {
-        
-      }
+      } catch (error) {}
       return false;
     };
 
@@ -440,9 +422,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
       const timeToBackendResponse = backendResponseTime - conversionStartTime;
 
       // COMPREHENSIVE LOGGING - BACKEND RESPONSE
-      
-      
-      
 
       if (result.status === "success") {
         // Upload complete, switch to processing mode
@@ -453,12 +432,9 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         // Store unique filename and start polling
         uniqueFilename = result.unique_filename || file.name;
         setCurrentConversionId(uniqueFilename);
-        
 
         // Start polling every 1 second after getting unique filename
         progressInterval = setInterval(pollProgress, 1000);
-
-        
 
         if (result.original_size) {
           setOriginalFileSize(result.original_size);
@@ -468,7 +444,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         }
 
         // Don't set conversion result yet - wait for actual completion via polling
-        
       } else {
         throw new Error(result.message || "Conversion failed");
       }
@@ -484,10 +459,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
   };
 
   const downloadResult = async () => {
-    
-    
-    
-
     if (conversionResult) {
       const completed = await showMonetizationModal({
         title: "Download Video",
@@ -508,7 +479,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         document.body.removeChild(link);
       }
     } else {
-      
     }
   };
 

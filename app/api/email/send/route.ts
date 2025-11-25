@@ -63,26 +63,18 @@ export async function POST(request: NextRequest) {
           content: contentBuffer, // Resend SDK expects Buffer, not base64 string
         };
       });
-       for Resend`
-      );
       attachments.forEach((att: any, index: number) => {
-        .length / 1024
-          )} KB)`
-        );
+        // Process attachment
       });
     }
 
     // Log attachment details before sending
     if (emailPayload.attachments && emailPayload.attachments.length > 0) {
-      :`
-      );
       emailPayload.attachments.forEach((att: any, index: number) => {
         const sizeKB =
           att.content instanceof Buffer
             ? Math.round(att.content.length / 1024)
             : "unknown";
-        `
-        );
       });
     }
 
@@ -90,19 +82,9 @@ export async function POST(request: NextRequest) {
     const { data, error } = await resend.emails.send(emailPayload);
 
     if (error) {
-      
-      
-      );
       return NextResponse.json(
         { success: false, error: error.message || "Failed to send email" },
         { status: 500 }
-      );
-    }
-
-    `
-    );
-    if (emailPayload.attachments && emailPayload.attachments.length > 0) {
-      `
       );
     }
     return NextResponse.json({
