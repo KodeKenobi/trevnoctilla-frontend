@@ -106,73 +106,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Resource Hints - Preconnect to third-party domains (excluding Ezoic) */}
-        <link
-          rel="preconnect"
-          href="https://pagead2.googlesyndication.com"
-          crossOrigin="anonymous"
-        />
-        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
-        <link
-          rel="preconnect"
-          href="https://www.googletagmanager.com"
-          crossOrigin="anonymous"
-        />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        {/* Critical Resource Hints - Limited to 4 most important for performance */}
         <link
           rel="preconnect"
           href="https://fonts.googleapis.com"
           crossOrigin="anonymous"
         />
-        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        <link
-          rel="preconnect"
-          href="https://www.payfast.co.za"
-          crossOrigin="anonymous"
-        />
-        <link rel="dns-prefetch" href="https://www.payfast.co.za" />
-        <link
-          rel="preconnect"
-          href="https://sandbox.payfast.co.za"
-          crossOrigin="anonymous"
-        />
-        <link rel="dns-prefetch" href="https://sandbox.payfast.co.za" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
 
-        {/* Ezoic Privacy Scripts */}
-        <script
-          src="https://cmp.gatekeeperconsent.com/min.js"
-          data-cfasync="false"
-        ></script>
-        <script
-          src="https://the.gatekeeperconsent.com/cmp.min.js"
-          data-cfasync="false"
-        ></script>
-
-        {/* Ezoic Header Script */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.ezstandalone = window.ezstandalone || {};
-              ezstandalone.cmd = ezstandalone.cmd || [];
-              window._ezaq = window._ezaq || [];
-            `,
-          }}
-        />
-        <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
-
-        {/* Google AdSense - Defer loading */}
-        <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3267907607581065"
-          strategy="lazyOnload"
-          crossOrigin="anonymous"
-        />
-
+        {/* Favicon links */}
         <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="icon" href="/favicon.png" sizes="32x32" type="image/png" />
@@ -192,11 +140,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0ea5e9" />
 
-        {/* Preload critical resources */}
-        <link rel="preload" href="/globals.css" as="style" />
-        <link rel="preload" href="/favicon.ico" as="image" />
-
-        {/* Structured Data */}
+        {/* Structured Data - Critical for SEO */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -246,6 +190,54 @@ export default function RootLayout({
             </ViewProvider>
           </UserProvider>
         </AuthProvider>
+
+        {/* === NON-BLOCKING SCRIPTS - Loaded after page is interactive === */}
+
+        {/* Ezoic initialization - lazyOnload for non-blocking */}
+        <Script id="ezoic-init" strategy="lazyOnload">
+          {`
+            window.ezstandalone = window.ezstandalone || {};
+            ezstandalone.cmd = ezstandalone.cmd || [];
+            window._ezaq = window._ezaq || [];
+          `}
+        </Script>
+
+        {/* Ezoic Scripts - lazyOnload */}
+        <Script
+          src="https://cmp.gatekeeperconsent.com/min.js"
+          strategy="lazyOnload"
+          data-cfasync="false"
+        />
+        <Script
+          src="https://the.gatekeeperconsent.com/cmp.min.js"
+          strategy="lazyOnload"
+          data-cfasync="false"
+        />
+        <Script
+          src="//www.ezojs.com/ezoic/sa.min.js"
+          strategy="lazyOnload"
+        />
+
+        {/* Google AdSense - lazyOnload */}
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3267907607581065"
+          strategy="lazyOnload"
+          crossOrigin="anonymous"
+        />
+
+        {/* Google Analytics - afterInteractive for better tracking accuracy */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}');
+          `}
+        </Script>
       </body>
     </html>
   );
