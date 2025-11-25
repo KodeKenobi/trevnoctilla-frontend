@@ -1453,9 +1453,6 @@ function DashboardContent() {
                       client: "Client Plan",
                     };
                     const displayTier = tierNames[tier] || "Free Plan";
-                    // Log tier display for debugging
-                    `
-                    );
                     return displayTier;
                   })()}
                 </p>
