@@ -355,11 +355,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
           "*"
         );
       }
-      
-    } else {
-      
-      
-      );
     }
   };
 

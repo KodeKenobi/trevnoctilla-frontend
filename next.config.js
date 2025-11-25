@@ -35,8 +35,6 @@ const nextConfig = {
   },
   // Compress output
   compress: true,
-  // Optimize production builds
-  swcMinify: true,
   // Experimental features for better performance
   experimental: {
     optimizeCss: true,

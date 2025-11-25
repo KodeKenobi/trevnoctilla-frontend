@@ -209,8 +209,6 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
 
       if (result.status === "success") {
         // Backend is complete, trigger smooth finish
-        }%`
-        );
         isBackendComplete = true;
 
         // Wait for progress to reach 100% before showing success screen
