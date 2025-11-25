@@ -103,7 +103,7 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       // Upload PDF
-      
+
       const formData = new FormData();
       formData.append("pdf", uploadedFile);
 
@@ -119,7 +119,6 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
       const uploadData = await uploadResponse.json();
       const filename = uploadData.filename || uploadedFile.name;
       setUploadedFilename(filename);
-      
 
       // Get PDF info
       const pdfInfoResponse = await fetch(
@@ -142,7 +141,6 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
-      
       alertModal.showError("Error", "Failed to process PDF");
     } finally {
       isProcessingRef.current = false;
@@ -159,19 +157,15 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
 
   // Handle tool selection
   const handleToolSelect = (toolId: string) => {
-    
-    
     setActiveTool(toolId);
 
     // Handle special tools
     if (toolId === "sign") {
-      
       setShowSignatureModal(true);
       return;
     }
 
     if (toolId === "text") {
-      
       const iframe = iframeRef.current;
       if (iframe?.contentWindow) {
         iframe.contentWindow.postMessage(
@@ -181,13 +175,12 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
           },
           "*"
         );
-        
       }
       return;
     }
 
     // Send message to iframe for other tools
-    
+
     const iframe = iframeRef.current;
     if (iframe?.contentWindow) {
       iframe.contentWindow.postMessage(
@@ -197,23 +190,17 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
         },
         "*"
       );
-      
     } else {
-      
     }
   };
 
   // Handle signature save
   const handleSignatureSave = () => {
-    
     if (!signatureData) {
-      
       alertModal.showError("Error", "Please draw a signature first");
       return;
     }
 
-    
-    
     // Send signature to iframe
     const iframe = iframeRef.current;
     if (iframe?.contentWindow) {
@@ -225,9 +212,7 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
         },
         "*"
       );
-      
     } else {
-      
     }
 
     setShowSignatureModal(false);
@@ -247,21 +232,15 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
         setShowDownloadButton(false); // Don't show Download until user views
         setIsSaving(false);
       } else if (event.data.type === "EDIT_MODE_SET") {
-        
         setActiveTool(event.data.mode);
       } else if (event.data.type === "SIGNATURE_INSERTED") {
-        
       } else if (event.data.type === "SHOW_CONFIRMATION") {
-        
-        
-        
         const modalState = {
           isOpen: true,
           id: event.data.id,
           message: event.data.message,
         };
         setConfirmationModal(modalState);
-        
       }
     };
 
@@ -272,17 +251,12 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
   // Debug: Log when confirmation modal state changes
   React.useEffect(() => {
     if (confirmationModal) {
-      
-      
     } else {
-      
     }
   }, [confirmationModal]);
 
   // Handle page change
   const handlePageChange = (pageNumber: number) => {
-    
-    
     setCurrentPage(pageNumber);
 
     // Send message to iframe to change page
@@ -295,18 +269,15 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
         },
         "*"
       );
-      
     } else {
-      
     }
   };
 
   // Zoom handlers
   const handleZoomIn = useCallback(() => {
-    
     setZoomLevel((prev) => {
       const newZoom = Math.min(prev + 0.25, 3.0); // Max 300%
-      
+
       const iframe = iframeRef.current;
       if (iframe?.contentWindow) {
         iframe.contentWindow.postMessage(
@@ -316,17 +287,15 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
           },
           "*"
         );
-        
       }
       return newZoom;
     });
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    
     setZoomLevel((prev) => {
       const newZoom = Math.max(prev - 0.25, 0.25); // Min 25%
-      
+
       const iframe = iframeRef.current;
       if (iframe?.contentWindow) {
         iframe.contentWindow.postMessage(
@@ -336,16 +305,14 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
           },
           "*"
         );
-        
       }
       return newZoom;
     });
   }, []);
 
   const handleZoomReset = useCallback(() => {
-    
     setZoomLevel(1.0);
-    
+
     const iframe = iframeRef.current;
     if (iframe?.contentWindow) {
       iframe.contentWindow.postMessage(
@@ -355,7 +322,6 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
         },
         "*"
       );
-      
     }
   }, []);
 
@@ -404,9 +370,7 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
 
   // Handle save changes
   const handleSaveChanges = () => {
-    
     setIsSaving(true);
-    
 
     const iframe = iframeRef.current;
     if (iframe?.contentWindow) {
@@ -416,33 +380,25 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
         },
         "*"
       );
-      
     } else {
-      
     }
   };
 
   // Handle view PDF
   const handleViewPdf = () => {
-    
     setShowViewModal(true);
     setHasViewedPdf(true);
     setShowDownloadButton(true); // Show Download button after user views
-    
   };
 
   // Handle close view modal
   const handleCloseViewModal = () => {
-    
     setShowViewModal(false);
-    
   };
 
   // Handle download PDF
   const handleDownloadPdf = async () => {
-    
     if (generatedPdfUrl) {
-      
       const completed = await showMonetizationModal({
         title: "Download PDF",
         message: `Choose how you'd like to download ${
@@ -454,13 +410,10 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
       });
 
       if (completed) {
-        
         window.open(generatedPdfUrl, "_blank");
       } else {
-        
       }
     } else {
-      
     }
   };
 
@@ -632,13 +585,11 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
                           },
                           "*"
                         );
-                        
                       }
                     }, 1000);
                   }
                 }}
                 onError={async () => {
-                  
                   if (editorUrl) {
                     try {
                       const response = await fetch(editorUrl);
@@ -649,14 +600,13 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
                         const errorText = await response.text();
                         errorData = { error: errorText };
                       }
-                      
+
                       alertModal.showError(
                         "Error Loading PDF",
                         errorData.error ||
                           `Failed to load PDF: ${response.status}`
                       );
                     } catch (err) {
-                      
                       alertModal.showError(
                         "Error",
                         "Failed to load PDF document. Please check backend console for details."
@@ -766,10 +716,9 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
           <AlertModal
             isOpen={true}
             onClose={() => {
-              
               // Send cancel response
               const iframe = iframeRef.current;
-              
+
               if (iframe?.contentWindow) {
                 iframe.contentWindow.postMessage(
                   {
@@ -787,7 +736,6 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
                   "*"
                 );
               } else {
-                
               }
               setConfirmationModal(null);
             }}
@@ -797,19 +745,18 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
             primaryButton={{
               text: "Cancel",
               onClick: () => {
-                
-              // Send cancel response
-              const iframe = iframeRef.current;
-              
-              if (iframe?.contentWindow) {
-                iframe.contentWindow.postMessage(
-                  {
-                    type: "CANCEL_CONFIRMATION",
-                    id: confirmationModal.id,
-                  },
-                  "*"
-                );
-                iframe.contentWindow.postMessage(
+                // Send cancel response
+                const iframe = iframeRef.current;
+
+                if (iframe?.contentWindow) {
+                  iframe.contentWindow.postMessage(
+                    {
+                      type: "CANCEL_CONFIRMATION",
+                      id: confirmationModal.id,
+                    },
+                    "*"
+                  );
+                  iframe.contentWindow.postMessage(
                     {
                       type: "CONFIRMATION_RESPONSE",
                       id: confirmationModal.id,
@@ -818,7 +765,6 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
                     "*"
                   );
                 } else {
-                  
                 }
                 setConfirmationModal(null);
               },
@@ -827,10 +773,9 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
             secondaryButton={{
               text: "Confirm",
               onClick: () => {
-                
                 // Send confirm response
                 const iframe = iframeRef.current;
-                
+
                 if (iframe?.contentWindow) {
                   iframe.contentWindow.postMessage(
                     {
@@ -848,7 +793,6 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
                     "*"
                   );
                 } else {
-                  
                 }
                 setConfirmationModal(null);
               },
