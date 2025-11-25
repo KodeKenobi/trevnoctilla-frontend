@@ -53,7 +53,6 @@ function PaymentContent() {
       // Check if we've already tried reloading (prevent infinite loop)
       const hasReloaded = sessionStorage.getItem("payment_page_reloaded");
       if (!hasReloaded) {
-        
         sessionStorage.setItem("payment_page_reloaded", "true");
         // Silent reload - no visible redirect, just refresh the page
         window.location.reload();
@@ -118,7 +117,6 @@ function PaymentContent() {
           setIsLoading(false);
         })
         .catch((err) => {
-          
           setError("Failed to convert currency. Please try again.");
           setIsLoading(false);
         });
@@ -131,7 +129,6 @@ function PaymentContent() {
           setIsLoading(false);
         })
         .catch((err) => {
-          
           setError("Failed to convert currency. Please try again.");
           setIsLoading(false);
         });
@@ -163,14 +160,12 @@ function PaymentContent() {
 
     const checkFormReady = () => {
       if (!formRef.current) {
-        
         return;
       }
 
       // First check if form has any inputs at all (means paymentData was loaded)
       const allInputs = formRef.current.querySelectorAll("input");
       if (allInputs.length === 0) {
-        
         return;
       }
 
@@ -188,23 +183,18 @@ function PaymentContent() {
         const hasValue = input && (input as HTMLInputElement).value;
         fieldStatus[field] = !!hasValue;
         if (!hasValue) {
-          
         }
         return hasValue;
       });
 
       if (allFieldsPresent) {
-        
         isFormReadyRef.current = true;
         setIsFormReady(true);
         setPaymentDataLoaded(true);
       } else {
-        
-        
+        // Log missing fields
         allInputs.forEach((input) => {
-          .value ? "✅" : "❌"
-            }`
-          );
+          console.log(`Field ${input.name}: ${input.value ? "✅" : "❌"}`);
         });
       }
     };
@@ -225,8 +215,6 @@ function PaymentContent() {
       timeout = setTimeout(() => {
         if (interval) clearInterval(interval);
         if (!isFormReady) {
-          
-          
         }
       }, 15000);
     }, 1000);
@@ -392,7 +380,7 @@ function PaymentContent() {
                   timestamp: Date.now(),
                 })
               );
-              
+
               setPaymentDataLoaded(true);
               // Trigger form readiness check immediately and repeatedly until ready
               let attempts = 0;
@@ -417,20 +405,17 @@ function PaymentContent() {
                   });
 
                   if (allFieldsPresent) {
-                    
                     isFormReadyRef.current = true;
                     setIsFormReady(true);
                     clearInterval(checkInterval);
                   } else if (attempts >= maxAttempts) {
-                    
-                    
                     clearInterval(checkInterval);
                   } else if (attempts % 5 === 0) {
                     // Log every 5 attempts to avoid spam
-                    ...`
+                    console.log(
+                      `[PaymentForm] Still waiting for form (attempt ${attempts}/${maxAttempts})`
                     );
                     const allInputs = formRef.current.querySelectorAll("input");
-                    
                   }
                 } else if (isFormReadyRef.current) {
                   clearInterval(checkInterval);
@@ -442,13 +427,7 @@ function PaymentContent() {
           {/* Submit Button */}
           <button
             onClick={() => {
-              
-              
-              
-              
-
               if (formRef.current && isFormReady) {
-                
                 setIsSubmitting(true);
 
                 // Verify form has all fields before submitting
@@ -470,19 +449,23 @@ function PaymentContent() {
                 });
 
                 if (missingFields.length > 0) {
-                  
+                  console.warn(
+                    "[PaymentForm] Missing required fields:",
+                    missingFields
+                  );
                   setIsSubmitting(false);
                   return;
                 }
 
-                
-                
+                console.log(
+                  "[PaymentForm] All fields validated, submitting form"
+                );
                 formRef.current.submit();
-                 called");
+                console.log("[PaymentForm] Form submit called");
               } else {
-                
-                
-                
+                console.warn(
+                  "[PaymentForm] Form not ready or already submitting"
+                );
               }
             }}
             disabled={!isFormReady || isSubmitting}

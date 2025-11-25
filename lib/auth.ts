@@ -1,4 +1,4 @@
-﻿import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 // Auth options configuration
@@ -43,8 +43,7 @@ export const authOptions: NextAuthOptions = {
 
           const responseText = await response.text();
           
-          }`
-          );
+          `);
 
           if (!response.ok) {
             
@@ -105,7 +104,11 @@ export const authOptions: NextAuthOptions = {
         session.user.is_active = token.is_active as boolean;
         (session.user as any).subscription_tier =
           (token.subscription_tier as string) || "free";
-        .subscription_tier})`
+        (session as any).accessToken = (token.accessToken as string) || null; // Store backend JWT token in session (may be null)
+        console.log(
+          `[NextAuth Session] Session created for: ${
+            session.user.email
+          } (tier: ${(session.user as any).subscription_tier})`
         );
       }
       return session;
@@ -115,4 +118,5 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/login",
   },
   secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
+  debug: process.env.NODE_ENV === "development",
 };

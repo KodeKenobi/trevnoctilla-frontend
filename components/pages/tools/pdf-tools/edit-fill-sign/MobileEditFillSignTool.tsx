@@ -568,12 +568,10 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
             fileName={uploadedFile?.name}
             instructionText="Select a tool to edit, add text, or sign"
             onBack={() => {
-              
               setUploadedFile(null);
               setEditorUrl("");
               setActiveTool("edit-text");
               setResult(null);
-              
             }}
             activeTool={activeTool}
             onToolSelect={handleToolSelect}

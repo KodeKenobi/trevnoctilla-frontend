@@ -79,7 +79,6 @@ export async function POST(request: NextRequest) {
         });
       }
     } catch (error: any) {
-      
       return NextResponse.json(
         { success: false, error: "Failed to download file" },
         { status: 500 }
@@ -130,10 +129,8 @@ export async function POST(request: NextRequest) {
           });
         }
       } else {
-        
       }
     } catch (error: any) {
-      
       // Continue without invoice if generation fails
     }
 
@@ -168,7 +165,6 @@ export async function POST(request: NextRequest) {
         );
       }
     } catch (error: any) {
-      
       // Fallback to simple HTML if template fails
       emailHtml = `
         <!DOCTYPE html>
@@ -251,7 +247,6 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error: any) {
-    
     return NextResponse.json(
       { success: false, error: error.message || "Internal server error" },
       { status: 500 }

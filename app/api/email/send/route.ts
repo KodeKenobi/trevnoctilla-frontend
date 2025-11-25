@@ -22,7 +22,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (!process.env.RESEND_API_KEY) {
-      
       return NextResponse.json(
         { success: false, error: "RESEND_API_KEY not configured" },
         { status: 500 }
@@ -93,7 +92,6 @@ export async function POST(request: NextRequest) {
       email_id: data?.id,
     });
   } catch (error: any) {
-    
     return NextResponse.json(
       { success: false, error: error.message || "Internal server error" },
       { status: 500 }

@@ -104,7 +104,7 @@ export default function ApiKeysPage() {
       }
       setLoading(false);
     } catch (error) {
-            setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -157,7 +157,7 @@ export default function ApiKeysPage() {
         alert(errorData.error || "Failed to create API key");
       }
     } catch (error) {
-            alert("An error occurred while creating the API key");
+      alert("An error occurred while creating the API key");
     }
   };
 
@@ -177,8 +177,7 @@ export default function ApiKeysPage() {
     try {
       await navigator.clipboard.writeText(key);
       // You could add a toast notification here
-    } catch (error) {
-          }
+    } catch (error) {}
   };
 
   const handleDeleteKey = async (keyId: number) => {
@@ -220,7 +219,7 @@ export default function ApiKeysPage() {
         alert(errorData.error || "Failed to delete API key");
       }
     } catch (error) {
-            alert("An error occurred while deleting the API key");
+      alert("An error occurred while deleting the API key");
     }
   };
 
@@ -231,8 +230,7 @@ export default function ApiKeysPage() {
           key.id === keyId ? { ...key, is_active: !key.is_active } : key
         )
       );
-    } catch (error) {
-          }
+    } catch (error) {}
   };
 
   const formatDate = (dateString: string) => {
@@ -530,8 +528,7 @@ function ShowKeyModal({
       await navigator.clipboard.writeText(apiKey.key);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-          }
+    } catch (error) {}
   };
 
   return (

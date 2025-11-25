@@ -12,23 +12,16 @@ function PaymentCancelContent() {
 
   useEffect(() => {
     // Log ALL parameters from PayFast cancel_url callback
-    
+
     const allParams: Record<string, string | null> = {};
     searchParams.forEach((value, key) => {
       allParams[key] = value;
     });
-    
-    );
 
     const mPaymentId = searchParams.get("m_payment_id");
     const pfPaymentId = searchParams.get("pf_payment_id");
     const paymentStatus = searchParams.get("payment_status");
     const signature = searchParams.get("signature");
-
-    
-    
-    
-    
 
     // Get the stored return path from before payment was initiated
     if (typeof window !== "undefined") {
@@ -50,9 +43,7 @@ function PaymentCancelContent() {
         if (debugData.lastITN) {
           setItnDebug(debugData.lastITN);
         }
-      } catch (error) {
-        
-      }
+      } catch (error) {}
     };
     fetchDebugInfo();
   }, [searchParams]);

@@ -145,7 +145,6 @@ function generatePayFastSignature(data: Record<string, string>): string {
   // Generate MD5 hash (lowercase hex)
   const signature = crypto.createHash("md5").update(getString).digest("hex");
 
-  
   return signature;
 }
 
@@ -178,12 +177,6 @@ export async function POST(request: NextRequest) {
     if (!isSimplePayment && !userEmail) {
       return NextResponse.json(
         { error: "User must be authenticated for subscriptions" },
-        { status: 401 }
-      );
-    }
-      });
-      return NextResponse.json(
-        { error: "User must be authenticated to initiate payment" },
         { status: 401 }
       );
     }
@@ -263,7 +256,7 @@ export async function POST(request: NextRequest) {
           !PAYFAST_CONFIG.PASSPHRASE ||
           PAYFAST_CONFIG.PASSPHRASE.trim() === ""
         ) {
-                                                  return NextResponse.json(
+          return NextResponse.json(
             {
               error:
                 "PASSPHRASE is REQUIRED for subscriptions. Please set PAYFAST_PASSPHRASE environment variable.",
@@ -276,7 +269,7 @@ export async function POST(request: NextRequest) {
 
     // Validate PayFast configuration
     if (!PAYFAST_CONFIG.MERCHANT_ID || !PAYFAST_CONFIG.MERCHANT_KEY) {
-            return NextResponse.json(
+      return NextResponse.json(
         {
           error:
             "PayFast configuration is missing. Please set PAYFAST_MERCHANT_ID, PAYFAST_MERCHANT_KEY, and PAYFAST_PASSPHRASE environment variables in your hosting platform.",
@@ -359,7 +352,7 @@ export async function POST(request: NextRequest) {
       paymentData.notify_url = notifyUrl;
     } else {
       // For $1 payments, explicitly exclude notify_url to prevent 400 errors
-          }
+    }
 
     // Add amount and item_name (matching test script order)
     paymentData.amount = parseFloat(amount).toFixed(2);
@@ -431,7 +424,7 @@ export async function POST(request: NextRequest) {
       !finalUrl.includes("sandbox") &&
       finalUrl.includes("www.payfast.co.za")
     ) {
-                      }
+    }
 
     // Return payment data and URL
     // Include debug info in development to see signature string
@@ -492,7 +485,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-        return NextResponse.json(
+    return NextResponse.json(
       {
         error: `Failed to initiate payment: ${
           error instanceof Error ? error.message : "Unknown error"

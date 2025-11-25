@@ -555,33 +555,19 @@ function DashboardContent() {
         !lastRefresh || Date.now() - parseInt(lastRefresh) > 30000;
       const shouldRefresh = justFromPayment || isStale;
 
-      ).toISOString() : "never"
-        }`
-      );
-
       if (shouldRefresh) {
-         - effectStartTime
-          }ms)`
-        );
 
         // If coming from payment, wait a bit for webhook to process (5 seconds)
         // Otherwise, wait 2 seconds for normal refresh
         const waitTime = justFromPayment ? 5000 : 2000;
 
         const timer = setTimeout(() => {
-          const refreshStartTime = Date.now();
-          `
-          );
-
           // If coming from payment, clear cached data to force fresh fetch
           // The backend has the updated tier, but cached data might be stale
           if (justFromPayment) {
-            
             localStorage.removeItem("user_data");
             // Also clear refresh timestamp to ensure we fetch
             sessionStorage.removeItem("user_data_last_refresh");
-          } else {
-            
           }
 
           // Refresh user data (will fetch fresh but use cached as fallback if it fails)
@@ -789,11 +775,9 @@ function DashboardContent() {
             }));
           }
         }
-      } else {
-        );
       }
     } catch (error) {
-      
+      console.error("Error fetching stats:", error);
     }
   };
 
@@ -1035,12 +1019,9 @@ function DashboardContent() {
           }
         }
         setLoading(false);
-      } else {
-        );
-        setLoading(false);
       }
     } catch (error) {
-      
+      console.error("Error fetching activities:", error);
       setLoading(false);
     }
   };
@@ -1379,10 +1360,8 @@ function DashboardContent() {
   };
 
   // Show loading state while checking authentication
-  // Log loading state changes
   useEffect(() => {
-    .toISOString()}`
-    );
+    // Loading state handled by userLoading
   }, [userLoading, user]);
 
   if (userLoading) {
