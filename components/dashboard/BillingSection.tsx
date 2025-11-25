@@ -246,8 +246,6 @@ export function BillingSection({ user }: BillingSectionProps) {
   };
 
   const handleSubscribe = async (plan: Plan) => {
-                    .toISOString());
-
     // Convert USD to ZAR for PayFast payment
     if (plan.isSubscription && plan.price > 0) {
             try {
@@ -271,14 +269,12 @@ export function BillingSection({ user }: BillingSectionProps) {
         const paymentUrl = `/payment?plan=${plan.id}&amount=${zarAmount}`;
                         window.location.href = paymentUrl;
       } catch (error) {
-                ,
+        console.error("Error converting currency:", {
+          message: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
         });
         // Fallback: redirect without conversion (payment page should handle it)
         const fallbackUrl = `/payment?plan=${plan.id}&usdAmount=${plan.price}`;
-        :",
-          fallbackUrl
-        );
         window.location.href = fallbackUrl;
       }
     } else {
