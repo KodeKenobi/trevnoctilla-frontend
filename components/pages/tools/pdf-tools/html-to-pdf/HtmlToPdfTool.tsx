@@ -55,8 +55,6 @@ export const HtmlToPdfTool: React.FC<HtmlToPdfToolProps> = ({
       const formData = new FormData();
       formData.append("html", file);
 
-      );
-
       const response = await fetch(getApiUrl("/convert_html_to_pdf"), {
         method: "POST",
         body: formData,

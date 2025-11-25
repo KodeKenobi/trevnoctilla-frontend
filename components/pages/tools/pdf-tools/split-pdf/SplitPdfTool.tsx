@@ -254,8 +254,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
       }, 200);
 
       // Call split API
-       => page.pageNumber)
-      );
       const response = await fetch(`${getApiUrl("")}/split_pdf`, {
         method: "POST",
         headers: {
