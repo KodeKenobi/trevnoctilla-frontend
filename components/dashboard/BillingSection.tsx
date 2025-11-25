@@ -146,14 +146,14 @@ export function BillingSection({ user }: BillingSectionProps) {
         }
       }
     } catch (error) {
-          } finally {
+    } finally {
       setLoading(false);
     }
   };
 
   const downloadInvoice = async (item: BillingHistory) => {
     if (!user?.email || !item.payment_id) {
-            return;
+      return;
     }
 
     setDownloadingInvoice(item.id);
@@ -162,7 +162,7 @@ export function BillingSection({ user }: BillingSectionProps) {
       // Use relative URL - Next.js rewrites proxy to backend (Railway URL hidden)
       const authToken = localStorage.getItem("auth_token");
       if (!authToken) {
-                return;
+        return;
       }
 
       const response = await fetch(`/api/payment/download-invoice`, {
@@ -204,10 +204,10 @@ export function BillingSection({ user }: BillingSectionProps) {
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
-                alert("Failed to download invoice. Please try again.");
+        alert("Failed to download invoice. Please try again.");
       }
     } catch (error) {
-            alert("Error downloading invoice. Please try again.");
+      alert("Error downloading invoice. Please try again.");
     } finally {
       setDownloadingInvoice(null);
     }
@@ -248,9 +248,9 @@ export function BillingSection({ user }: BillingSectionProps) {
   const handleSubscribe = async (plan: Plan) => {
     // Convert USD to ZAR for PayFast payment
     if (plan.isSubscription && plan.price > 0) {
-            try {
-                        const zarAmount = await convertUSDToZAR(plan.price);
-                
+      try {
+        const zarAmount = await convertUSDToZAR(plan.price);
+
         const subscriptionData = {
           planId: plan.id,
           planName: plan.name,
@@ -258,16 +258,16 @@ export function BillingSection({ user }: BillingSectionProps) {
           zarAmount: zarAmount,
           description: plan.description,
         };
-        
+
         // Store plan info and ZAR amount for payment processing
         sessionStorage.setItem(
           "pending_subscription",
           JSON.stringify(subscriptionData)
         );
-        
+
         // Redirect to payment page with converted amount
         const paymentUrl = `/payment?plan=${plan.id}&amount=${zarAmount}`;
-                        window.location.href = paymentUrl;
+        window.location.href = paymentUrl;
       } catch (error) {
         console.error("Error converting currency:", {
           message: error instanceof Error ? error.message : String(error),
@@ -278,7 +278,7 @@ export function BillingSection({ user }: BillingSectionProps) {
         window.location.href = fallbackUrl;
       }
     } else {
-                      }
+    }
   };
 
   return (

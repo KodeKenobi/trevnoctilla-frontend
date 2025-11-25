@@ -771,8 +771,12 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
               const iframe = iframeRef.current;
               
               if (iframe?.contentWindow) {
-                :",
-                  confirmationModal.id
+                iframe.contentWindow.postMessage(
+                  {
+                    type: "CANCEL_CONFIRMATION",
+                    id: confirmationModal.id,
+                  },
+                  "*"
                 );
                 iframe.contentWindow.postMessage(
                   {
@@ -794,14 +798,18 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
               text: "Cancel",
               onClick: () => {
                 
-                // Send cancel response
-                const iframe = iframeRef.current;
-                
-                if (iframe?.contentWindow) {
-                  :",
-                    confirmationModal.id
-                  );
-                  iframe.contentWindow.postMessage(
+              // Send cancel response
+              const iframe = iframeRef.current;
+              
+              if (iframe?.contentWindow) {
+                iframe.contentWindow.postMessage(
+                  {
+                    type: "CANCEL_CONFIRMATION",
+                    id: confirmationModal.id,
+                  },
+                  "*"
+                );
+                iframe.contentWindow.postMessage(
                     {
                       type: "CONFIRMATION_RESPONSE",
                       id: confirmationModal.id,
@@ -824,8 +832,12 @@ export const MobileEditFillSignTool: React.FC<MobileEditFillSignToolProps> = ({
                 const iframe = iframeRef.current;
                 
                 if (iframe?.contentWindow) {
-                  :",
-                    confirmationModal.id
+                  iframe.contentWindow.postMessage(
+                    {
+                      type: "CONFIRM_CONFIRMATION",
+                      id: confirmationModal.id,
+                    },
+                    "*"
                   );
                   iframe.contentWindow.postMessage(
                     {

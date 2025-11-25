@@ -43,7 +43,6 @@ export const authOptions: NextAuthOptions = {
 
           const responseText = await response.text();
           
-          `);
 
           if (!response.ok) {
             
@@ -120,4 +119,5 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-development",
   debug: process.env.NODE_ENV === "development",
 };
+
 
