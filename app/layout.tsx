@@ -213,10 +213,7 @@ export default function RootLayout({
           strategy="lazyOnload"
           data-cfasync="false"
         />
-        <Script
-          src="//www.ezojs.com/ezoic/sa.min.js"
-          strategy="lazyOnload"
-        />
+        <Script src="//www.ezojs.com/ezoic/sa.min.js" strategy="lazyOnload" />
 
         {/* Google AdSense - lazyOnload */}
         <Script

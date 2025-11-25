@@ -191,10 +191,6 @@ function DashboardContent() {
       // Use subscription_tier from user object (fetched from profile endpoint)
       const subscriptionTier = user.subscription_tier?.toLowerCase() || "free";
 
-      
-      
-      
-
       // Check if user has enterprise tier
       const isEnterprise =
         subscriptionTier === "enterprise" ||
@@ -204,19 +200,14 @@ function DashboardContent() {
       // Check for premium tier
       const isPremium = subscriptionTier === "premium";
 
-      
-      
-
       // Only redirect to enterprise if not already on enterprise page
       if (isEnterprise && window.location.pathname !== "/enterprise") {
-        
         router.push("/enterprise");
         return;
       }
 
       // Premium users stay on regular dashboard (no redirect needed)
       if (isPremium) {
-        
       }
     }
   }, [user, userLoading, router]);
@@ -227,7 +218,6 @@ function DashboardContent() {
       // Check if there's a token in localStorage as fallback
       const token = localStorage.getItem("auth_token");
       if (!token) {
-        
         router.push("/auth/login");
       }
     }
@@ -308,13 +298,10 @@ function DashboardContent() {
       // If using sessionStorage (no URL params), user completed payment and was redirected back
       // First trigger upgrade, wait for it, then logout to get fresh data with updated tier
       if (!hasUrlParams && hasPendingPayment) {
-        
-
         // Get user email before logout
         const userEmail = pendingPayment?.user_email || user?.email;
 
         if (!userEmail) {
-          
           return;
         }
 
@@ -335,11 +322,6 @@ function DashboardContent() {
           const upgradeAmount = pendingPayment?.amount
             ? parseFloat(pendingPayment.amount)
             : 495.9;
-
-          
-          
-          
-          
 
           // Use relative URL in production (Next.js rewrite proxies to backend)
           // Use absolute URL in localhost for development
@@ -370,16 +352,15 @@ function DashboardContent() {
 
           if (upgradeResponse.ok) {
             const upgradeData = await upgradeResponse.json();
-            
+
             // Wait a moment for database to update
             await new Promise((resolve) => setTimeout(resolve, 2000));
           } else {
             const errorData = await upgradeResponse.json().catch(() => ({}));
-            
+
             // Continue anyway - webhook might still process it
           }
         } catch (error) {
-          
           // Continue anyway - webhook might still process it
         }
 
@@ -387,7 +368,7 @@ function DashboardContent() {
         sessionStorage.removeItem("pending_payment_upgrade");
 
         // Logout and redirect to auth
-        
+
         // Clear all auth data
         localStorage.removeItem("auth_token");
         localStorage.removeItem("user_data");
@@ -404,14 +385,12 @@ function DashboardContent() {
         mPaymentId || pfPaymentId || pendingPayment?.timestamp || Date.now()
       }`;
       if (sessionStorage.getItem(upgradeKey)) {
-        
         // Clean up pending payment if already processed
         if (pendingPayment) {
           sessionStorage.removeItem("pending_payment_upgrade");
         }
         return;
       }
-
 
       try {
         // Get user info from session
@@ -421,7 +400,6 @@ function DashboardContent() {
         const sessionEmail = session?.user?.email || null;
 
         if (!sessionUserId && !sessionEmail) {
-          
           return;
         }
 
@@ -441,12 +419,6 @@ function DashboardContent() {
           : pendingPayment?.amount
           ? parseFloat(pendingPayment.amount)
           : 495.9;
-
-        
-        
-        
-        
-        
 
         // Call backend upgrade endpoint directly (matching test script logic)
         // Use relative URL to hide Railway backend URL
@@ -477,8 +449,6 @@ function DashboardContent() {
 
         if (upgradeResponse.ok) {
           const upgradeData = await upgradeResponse.json();
-          
-          
 
           // Mark as processed
           sessionStorage.setItem(upgradeKey, "true");
@@ -495,12 +465,11 @@ function DashboardContent() {
           const sessionEmail = session?.user?.email || userEmail;
 
           if (!sessionEmail) {
-            
             return;
           }
 
           // Logout and redirect to auth
-          
+
           // Clear all auth data
           localStorage.removeItem("auth_token");
           localStorage.removeItem("user_data");
@@ -510,12 +479,10 @@ function DashboardContent() {
           await signOut({ redirect: true, callbackUrl: "/auth/login" });
         } else {
           const errorData = await upgradeResponse.json().catch(() => ({}));
-          
-          
+
           // Don't show error to user - webhook may still process it
         }
       } catch (error) {
-        
         // Don't show error to user - webhook may still process it
       }
     };
@@ -535,7 +502,6 @@ function DashboardContent() {
   // This ensures user tier is updated after subscription payment
   useEffect(() => {
     const effectStartTime = Date.now();
-    
 
     if (user && checkAuthStatus) {
       // Check if we just came from payment (pending payment in sessionStorage or URL params)
@@ -556,7 +522,6 @@ function DashboardContent() {
       const shouldRefresh = justFromPayment || isStale;
 
       if (shouldRefresh) {
-
         // If coming from payment, wait a bit for webhook to process (5 seconds)
         // Otherwise, wait 2 seconds for normal refresh
         const waitTime = justFromPayment ? 5000 : 2000;
@@ -578,18 +543,14 @@ function DashboardContent() {
             "user_data_last_refresh",
             Date.now().toString()
           );
-          
         }, waitTime);
 
         return () => {
           clearTimeout(timer);
-          
         };
       } else {
-        
       }
     } else {
-      
     }
   }, [user, checkAuthStatus, userLoading, searchParams]);
 
@@ -609,7 +570,6 @@ function DashboardContent() {
 
   const refreshToken = async () => {
     if (!user?.email) {
-      
       return null;
     }
 
@@ -621,7 +581,6 @@ function DashboardContent() {
           window.location.hostname === "127.0.0.1")
           ? "http://localhost:5000"
           : "";
-      
 
       const tokenResponse = await fetch(
         `${apiUrl}/auth/get-token-from-session`,
@@ -647,18 +606,15 @@ function DashboardContent() {
             "user_data",
             JSON.stringify(backendData.user || user)
           );
-          
+
           return newToken;
         } else {
-          
         }
       } else {
         const errorText = await tokenResponse.text();
-        
 
         // If 401, try direct login
         if (tokenResponse.status === 401) {
-          
           try {
             const loginResponse = await fetch(`${apiUrl}/auth/login`, {
               method: "POST",
@@ -680,17 +636,14 @@ function DashboardContent() {
                   "user_data",
                   JSON.stringify(loginData.user || user)
                 );
-                
+
                 return loginToken;
               }
             }
-          } catch (loginError) {
-            
-          }
+          } catch (loginError) {}
         }
       }
     } catch (error) {
-      
       setAuthError("Failed to authenticate. Please try logging in again.");
     }
     return null;
@@ -1031,7 +984,6 @@ function DashboardContent() {
   };
 
   const handleDownloadActivity = (activityId: string) => {
-    
     // Mock download - show custom alert
     showInfo("Download Started", `Downloading activity ${activityId}...`, {
       primary: {
@@ -1199,7 +1151,6 @@ function DashboardContent() {
         );
       }
     } catch (error) {
-      
       showError(
         "Failed to Create API Key",
         "An error occurred while creating the API key",
@@ -1265,7 +1216,6 @@ function DashboardContent() {
         );
       }
     } catch (error) {
-      
       showError(
         "Failed to Delete API Key",
         "An error occurred while deleting the API key",
@@ -1365,7 +1315,6 @@ function DashboardContent() {
   }, [userLoading, user]);
 
   if (userLoading) {
-    
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] text-white flex items-center justify-center">
         <div className="text-center">
