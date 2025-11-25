@@ -76,7 +76,6 @@ export default function UniversalHeader() {
   }, [currentPage]);
 
   const handleNavClick = (item: string) => {
-    
     setSelectedMenuItem(item);
     setIsMobileMenuOpen(false); // Close mobile menu after selection
 
@@ -111,7 +110,6 @@ export default function UniversalHeader() {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => {
-              
               navigateTo("home");
             }}
             className="flex items-center space-x-2 text-lg sm:text-xl font-bold text-white hover:text-purple-400 transition-colors"
@@ -121,7 +119,6 @@ export default function UniversalHeader() {
               alt="Trevnoctilla Logo"
               className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
               onError={(e) => {
-                
                 // Fallback to a simple text logo
                 e.currentTarget.style.display = "none";
                 const fallback = document.createElement("div");

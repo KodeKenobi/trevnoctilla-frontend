@@ -152,7 +152,6 @@ class InternalAnalytics {
 
       if (!response.ok) {
         const errorText = await response.text();
-        : ${response.status}`, errorText);
       } else {
         
       }

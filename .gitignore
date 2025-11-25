@@ -124,6 +124,7 @@ edited/
 # Large media files
 converted_videos/
 saved_html/
+test-files/
 
 # Lock files
 pnpm-lock.yaml

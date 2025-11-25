@@ -203,8 +203,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
       setConvertedFileSize(null);
       setWarning("");
       setConversionResult(null);
-      .toFixed(2)} MB)`
-      );
     },
     [setUploadedFile]
   );
@@ -276,12 +274,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
     
     
     
-    } MB`);
-    
-    
-    
-    
-    
     
 
     // Set file-size aware messages
@@ -319,11 +311,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         );
         const progressData = await response.json();
 
-        
-        }/${encodeURIComponent(uniqueFilename)}`
-        );
-        
-
         if (progressData.status === "completed") {
           if (progressInterval) clearInterval(progressInterval);
           setProgress(100);
@@ -333,19 +320,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
           const conversionCompleteTime = Date.now();
           const totalConversionTime =
             conversionCompleteTime - conversionStartTime;
-
-          
-          .toISOString()}`);
-          
-          .toFixed(2)}s`
-          );
-          }/${
-              progressData.converted_filename ||
-              uniqueFilename.replace(/\.[^/.]+$/, "_converted.mp4")
-            }`
-          );
-          
-            }`
           );
           
 

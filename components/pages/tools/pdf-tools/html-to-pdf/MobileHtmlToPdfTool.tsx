@@ -49,9 +49,6 @@ export const MobileHtmlToPdfTool: React.FC<MobileHtmlToPdfToolProps> = ({
     setConvertedFilename(null);
 
     try {
-      
-      
-
       const formData = new FormData();
       formData.append("html", file);
 
@@ -60,13 +57,11 @@ export const MobileHtmlToPdfTool: React.FC<MobileHtmlToPdfToolProps> = ({
         body: formData,
       });
 
-      
-
       if (!response.ok) {
         const errorData = await response
           .json()
           .catch(() => ({ error: "Failed to convert HTML" }));
-        
+
         throw new Error(
           errorData.error ||
             errorData.message ||
@@ -75,14 +70,8 @@ export const MobileHtmlToPdfTool: React.FC<MobileHtmlToPdfToolProps> = ({
       }
 
       const data = await response.json();
-      
 
       if (data.status === "success") {
-        
-        
-        
-        
-
         setConvertedFilename(data.converted_filename);
         setResult({
           type: "success",
@@ -90,12 +79,9 @@ export const MobileHtmlToPdfTool: React.FC<MobileHtmlToPdfToolProps> = ({
           data: data,
         });
       } else {
-        
         throw new Error(data.error || data.message || "Conversion failed");
       }
     } catch (error: any) {
-      
-      
       setResult({
         type: "error",
         message:

@@ -13,9 +13,6 @@ export async function GET(request: NextRequest) {
         headers: headersList,
       } as any,
     });
-
-    ?.role,
-      hasToken: !!(session as any)?.accessToken,
     });
 
     if (!session?.user) {

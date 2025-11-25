@@ -133,34 +133,31 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
       const formData = new FormData();
       formData.append("pdf", uploadedFile);
 
-      
       const uploadResponse = await fetch(`${getApiUrl("")}/api/upload`, {
         method: "POST",
         body: formData,
       });
 
       if (!uploadResponse.ok) {
-        
         throw new Error("Failed to upload PDF");
       }
 
       // Get the unique filename from the upload response
       const uploadData = await uploadResponse.json();
       const filename = uploadData.filename || uploadedFile.name;
-      
 
       // Get PDF info including page count
-      
+
       const pdfInfoResponse = await fetch(
         `${getApiUrl("")}/api/pdf_info/${encodeURIComponent(filename)}`
       );
       if (pdfInfoResponse.ok) {
         const pdfInfo = await pdfInfoResponse.json();
-        
+
         setTotalPages(pdfInfo.page_count);
 
         // Generate page thumbnails
-        
+
         const pageList: PageInfo[] = Array.from(
           { length: pdfInfo.page_count },
           (_, index) => ({
@@ -171,7 +168,7 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
             isSelected: true, // Select all pages by default
           })
         );
-        
+
         setPages(pageList);
       } else {
         throw new Error("Failed to get PDF info");
@@ -179,7 +176,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
 
       await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
-      
       alertModal.showError("Error", "Failed to process PDF");
     } finally {
       isProcessingRef.current = false;
@@ -289,7 +285,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
         `PDF split into ${selectedPages.length} pages successfully!`
       );
     } catch (error) {
-      
       alertModal.showError("Error", "Failed to split PDF");
     } finally {
       setIsSplitting(false);
@@ -370,7 +365,6 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
   const getPdfViewUrl = (pageNumber: number) => {
     // Use the viewUrls array that's populated after splitting
     if (viewUrls.length > 0 && viewUrls[pageNumber - 1]) {
-      
       return viewUrls[pageNumber - 1];
     }
     // Fallback to constructing URL if viewUrls not available
@@ -378,7 +372,7 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
     const fallbackUrl = `${getApiUrl(
       ""
     )}/view_split/${fileName}_page_${pageNumber}.pdf`;
-    
+
     return fallbackUrl;
   };
 

@@ -135,8 +135,6 @@ export default function UsersPage() {
         tierFilter.forEach((tier) => params.append("subscription_tier", tier));
       }
 
-      );
-
       // Try admin API first
       try {
         // Use the JWT token from localStorage (auth_token)

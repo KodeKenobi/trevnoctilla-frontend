@@ -192,15 +192,6 @@ export default function PayFastDollarForm({
             
             setHasAutoSubmitted(true);
             formRef.current.submit();
-          } else {
-            
-            ).map(
-                (inp: HTMLInputElement) => ({
-                  name: inp.name,
-                  value: inp.value,
-                })
-              )
-            );
           }
         }
       }, 500);
@@ -253,9 +244,7 @@ export default function PayFastDollarForm({
       requiredFields.forEach((field) => {
         const input = formRef.current?.querySelector(`input[name="${field}"]`);
         if (input) {
-          .value);
-        } else {
-          
+          // Input found
         }
       });
     }

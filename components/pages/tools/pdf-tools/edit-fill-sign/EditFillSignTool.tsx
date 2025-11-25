@@ -208,7 +208,7 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       // Save PDF file first, then convert using template
-      
+
       const formData = new FormData();
       formData.append("pdf", uploadedFile);
 
@@ -218,7 +218,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
       });
 
       if (!uploadResponse.ok) {
-        
         throw new Error("Failed to upload PDF");
       }
 
@@ -226,19 +225,17 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
       const uploadData = await uploadResponse.json();
       const filename = uploadData.filename || uploadedFile.name;
       setUploadedFilename(filename);
-      
 
       // Get PDF info including page count
-      
+
       const pdfInfoResponse = await fetch(
         `${getApiUrl("")}/api/pdf_info/${encodeURIComponent(filename)}`
       );
       if (pdfInfoResponse.ok) {
         const pdfInfo = await pdfInfoResponse.json();
-        
+
         setTotalPages(pdfInfo.page_count);
       } else {
-        
         setTotalPages(1);
       }
 
@@ -248,7 +245,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
       // Brief pause before showing completion
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
-      
       alertModal.showError("Error", "Failed to process PDF");
     } finally {
       isProcessingRef.current = false;
@@ -299,10 +295,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
 
   // Handle tool selection
   const handleToolSelect = (toolId: string) => {
-    
-    
-    
-
     // Handle undo/redo buttons
     if (toolId === "undo") {
       // Send message to iframe to perform undo
@@ -333,10 +325,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
       'iframe[title="PDF Editor"]'
     ) as HTMLIFrameElement;
     if (iframe && iframe.contentWindow) {
-      
-      
-      
-      
       iframe.contentWindow.postMessage(
         {
           type: "SET_EDIT_MODE",
@@ -361,45 +349,29 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
   // Listen for messages from iframe
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      
-
       if (event.data.type === "SAVE_COMPLETE") {
-        
         // Handle save completion - could show success message or redirect
         alertModal.showSuccess("Success", "PDF saved successfully!");
       } else if (event.data.type === "PDF_GENERATED") {
-        
         // Handle PDF generation completion
       } else if (event.data.type === "TEXT_ADDED") {
-        
-        
-        
-        
       } else if (event.data.type === "EDIT_MODE_SET") {
-        
-        
         // Update the active tool in React to match iframe state
         setActiveTool(event.data.mode);
-        
       } else if (event.data.type === "SIGNATURE_ADDED") {
-        
       } else if (event.data.type === "PDF_GENERATED_FOR_PREVIEW") {
-        
-
         // Convert blob URL to data URL for iframe compatibility
-        
+
         fetch(event.data.pdfUrl)
           .then((response) => response.blob())
           .then((blob) => {
             const reader = new FileReader();
             reader.onload = () => {
-              
               setGeneratedPdfUrl(reader.result as string);
             };
             reader.readAsDataURL(blob);
           })
           .catch((error) => {
-            
             setGeneratedPdfUrl(event.data.pdfUrl);
           });
 
@@ -407,14 +379,12 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
         setShowDownloadButton(true); // Show Download button
         setIsSaving(false); // Clear loading state
       } else if (event.data.type === "SHOW_CONFIRMATION") {
-        
         setConfirmationModal({
           isOpen: true,
           id: event.data.id,
           message: event.data.message,
         });
       } else {
-        
       }
     };
 
@@ -424,7 +394,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
 
   // Handle page change
   const handlePageChange = (pageNumber: number) => {
-    
     setCurrentPage(pageNumber);
 
     // Send message to iframe to change page
@@ -432,7 +401,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
       'iframe[title="PDF Editor"]'
     ) as HTMLIFrameElement;
     if (iframe && iframe.contentWindow) {
-      
       iframe.contentWindow.postMessage(
         {
           type: "CHANGE_PAGE",
@@ -441,7 +409,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
         "*"
       );
     } else {
-      
     }
   };
 
@@ -461,7 +428,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
 
   // Handle save changes - show view button first
   const handleSaveChanges = () => {
-    
     setIsSaving(true);
 
     // Send message to iframe to generate PDF (without download)
@@ -469,7 +435,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
       'iframe[title="PDF Editor"]'
     ) as HTMLIFrameElement;
     if (iframe && iframe.contentWindow) {
-      
       iframe.contentWindow.postMessage(
         {
           type: "GENERATE_PDF_FOR_PREVIEW",
@@ -477,13 +442,11 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
         "*"
       );
     } else {
-      
     }
   };
 
   // Handle view PDF
   const handleViewPdf = () => {
-    
     setShowViewModal(true);
     setHasViewedPdf(true);
   };
@@ -496,10 +459,6 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
 
   // Handle download PDF (with monetization)
   const handleDownloadPdf = async () => {
-    
-    
-    
-
     if (generatedPdfUrl) {
       const completed = await showMonetizationModal({
         title: "Download PDF",
@@ -515,22 +474,16 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
         window.open(generatedPdfUrl, "_blank");
       }
     } else {
-      
     }
   };
 
   // Handle canvas click for adding elements
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    
-
     if (activeTool === "text") {
-      
       const rect = canvasRef.current?.getBoundingClientRect();
       if (rect) {
         const x = (e.clientX - rect.left) / (zoomLevel / 100);
         const y = (e.clientY - rect.top) / (zoomLevel / 100);
-
-        
 
         const newText: TextElement = {
           id: Date.now().toString(),
@@ -540,15 +493,12 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
           fontSize: 16,
           color: "#000000",
         };
-        
+
         setTextElements((prev) => [...prev, newText]);
       } else {
-        
       }
     } else if (activeTool === "image") {
-      
     } else {
-      
     }
   };
 
@@ -863,9 +813,7 @@ export const EditFillSignTool: React.FC<EditFillSignToolProps> = ({
               setActiveTool("select");
               setResult(null);
             }}
-            onSearch={() => {
-              
-            }}
+            onSearch={() => {}}
             zoomLevel={zoomLevel}
             onZoomIn={handleZoomIn}
             onZoomOut={handleZoomOut}

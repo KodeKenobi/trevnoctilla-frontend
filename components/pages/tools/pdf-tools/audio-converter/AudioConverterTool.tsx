@@ -119,10 +119,6 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
   };
 
   const downloadResult = async () => {
-    
-    
-    
-
     if (conversionResult) {
       const completed = await showMonetizationModal({
         title: "Download Audio",
@@ -143,7 +139,6 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
         document.body.removeChild(link);
       }
     } else {
-      
     }
   };
 
@@ -166,7 +161,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
           currentProgress += 1;
           const roundedProgress = Math.round(currentProgress);
           setProgress(roundedProgress);
-          
+
           setTimeout(progressStep, 50);
         }
       } else {
@@ -175,12 +170,12 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
           currentProgress += 0.5;
           const roundedProgress = Math.round(currentProgress);
           setProgress(roundedProgress);
-          
+
           setTimeout(progressStep, 100);
         } else {
           // Stay at 85% until backend completes
           setProgress(85);
-          
+
           setTimeout(progressStep, 500);
         }
       }
@@ -215,7 +210,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
         const checkProgress = () => {
           if (currentProgress >= 100) {
             // Show success screen
-            
+
             if (result.original_size) {
               setOriginalFileSize(result.original_size);
             }
@@ -226,7 +221,6 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
             setConversionResult(downloadUrl);
 
             setTimeout(() => {
-              
               setLoading(false);
             }, 500);
           } else {

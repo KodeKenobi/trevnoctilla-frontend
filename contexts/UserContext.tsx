@@ -44,8 +44,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuthStatus = async () => {
     const startTime = Date.now();
-    .toISOString()}`
-    );
 
     // Use cached data immediately to avoid showing loading state
     const cachedUserData = localStorage.getItem("user_data");
@@ -66,9 +64,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const token = localStorage.getItem("auth_token");
 
       if (token) {
-         - startTime
-          }ms)`
-        );
         try {
           const fetchStartTime = Date.now();
           const response = await fetch("/api/auth/profile", {
