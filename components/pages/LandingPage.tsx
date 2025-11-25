@@ -2,15 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  Play,
-  FileText,
-  QrCode,
-  Image,
-  Zap,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, Play, FileText, QrCode, Image, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigation } from "@/contexts/NavigationContext";
 
@@ -52,75 +44,35 @@ export default function LandingPage() {
             backgroundPosition: "center -50px",
           }}
         ></div> */}
-        {/* Background glow orbs */}
-        <motion.div
-          className="absolute w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[150px] top-[-200px] left-[-200px]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        ></motion.div>
-        <motion.div
-          className="absolute w-[500px] h-[500px] bg-pink-500/20 rounded-full blur-[120px] top-[-100px] right-[-100px]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        ></motion.div>
-        <motion.div
-          className="absolute w-[400px] h-[400px] bg-purple-500/20 rounded-full blur-[100px] bottom-[-100px] left-1/2 transform -translate-x-1/2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-        ></motion.div>
-        <motion.div
-          className="absolute w-[300px] h-[300px] bg-orange-500/15 rounded-full blur-[80px] top-1/2 right-1/4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.4 }}
-        ></motion.div>
+        {/* Background glow orbs - CSS animations for better performance */}
+        <div className="absolute w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[150px] top-[-200px] left-[-200px] animate-fade-in"></div>
+        <div className="absolute w-[500px] h-[500px] bg-pink-500/20 rounded-full blur-[120px] top-[-100px] right-[-100px] animate-fade-in" style={{ animationDelay: "0.1s" }}></div>
+        <div className="absolute w-[400px] h-[400px] bg-purple-500/20 rounded-full blur-[100px] bottom-[-100px] left-1/2 transform -translate-x-1/2 animate-fade-in" style={{ animationDelay: "0.2s" }}></div>
+        <div className="absolute w-[300px] h-[300px] bg-orange-500/15 rounded-full blur-[80px] top-1/2 right-1/4 animate-fade-in" style={{ animationDelay: "0.3s" }}></div>
 
         {/* Hero Section */}
         <main className="relative z-20 px-6 lg:px-12 pt-12 sm:pt-16 lg:pt-24 pb-32">
           <div className="max-w-6xl mx-auto text-center">
-            {/* Hero Text Container */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.1, delay: 0.02 }}
-              className="relative mb-12"
-            >
+            {/* Hero Text Container - CSS animations for faster initial paint */}
+            <div className="relative mb-12 animate-slide-up">
               {/* Main Headline */}
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.1, delay: 0.05 }}
-                className="text-4xl lg:text-6xl font-bold text-foreground dark:text-white mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14"
-              >
+              <h1 className="text-4xl lg:text-6xl font-bold text-foreground dark:text-white mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14">
                 The only file conversion that{" "}
                 <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
                   works where you work
                 </span>
-              </motion.h1>
+              </h1>
 
               {/* Subtitle */}
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.1, delay: 0.1 }}
-                className="text-xl text-muted-foreground dark:text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed"
-              >
+              <p className="text-xl text-muted-foreground dark:text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: "0.1s" }}>
                 Transform your media files with our intelligent conversion
                 system. From video to audio, PDF merging to QR generation,
                 manage everything in one place.
-              </motion.p>
-            </motion.div>
+              </p>
+            </div>
 
             {/* Stacked Cards */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.1, delay: 0.15 }}
-              className="max-w-2xl mx-auto px-4 sm:px-0"
-            >
+            <div className="max-w-2xl mx-auto px-4 sm:px-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
               <div className="relative h-80 flex flex-col items-center">
                 {cardOrder.map((card, index) => {
                   const IconComponent = card.icon;
@@ -157,15 +109,10 @@ export default function LandingPage() {
                   );
                 })}
               </div>
-            </motion.div>
+            </div>
 
             {/* CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.2 }}
-              className="mt-[-120px] flex flex-row items-center justify-center space-x-2 sm:space-x-6 relative z-50"
-            >
+            <div className="mt-[-120px] flex flex-row items-center justify-center space-x-2 sm:space-x-6 relative z-50 animate-fade-in" style={{ animationDelay: "0.3s" }}>
               <Link
                 href="/tools"
                 className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-1 sm:space-x-2 group text-sm sm:text-base hover:scale-105 active:scale-95 relative z-50"
@@ -179,7 +126,7 @@ export default function LandingPage() {
               >
                 API Docs
               </Link>
-            </motion.div>
+            </div>
 
             {/* Ezoic Ad Placement - Above Features */}
             <div id="ezoic-pub-ad-placeholder-101"></div>

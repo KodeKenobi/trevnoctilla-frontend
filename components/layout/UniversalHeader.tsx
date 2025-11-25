@@ -117,6 +117,8 @@ export default function UniversalHeader() {
             <img
               src="/logo.png"
               alt="Trevnoctilla Logo"
+              width={40}
+              height={40}
               className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
               onError={(e) => {
                 // Fallback to a simple text logo
