@@ -36,9 +36,10 @@ const nextConfig = {
   // Compress output
   compress: true,
   // Experimental features for better performance
-  experimental: {
-    optimizeCss: true,
-  },
+  // Note: optimizeCss requires 'critters' package which can cause build issues
+  // experimental: {
+  //   optimizeCss: true,
+  // },
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
