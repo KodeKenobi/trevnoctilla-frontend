@@ -319,29 +319,17 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
           // COMPREHENSIVE LOGGING - CONVERSION COMPLETE
           const conversionCompleteTime = Date.now();
           const totalConversionTime =
-            conversionCompleteTime - conversionStartTime;
-          );
-          
-
-          // Set the conversion result for download
+            conversionCompleteTime - conversionStartTime;          // Set the conversion result for download
           const downloadUrl = `${getApiUrl("/download_converted_video")}/${
             progressData.converted_filename ||
             uniqueFilename.replace(/\.[^/.]+$/, "_converted.mp4")
           }`;
           
-          
-          
-          
-          );
           setConversionResult(downloadUrl);
 
           // Set converted file size if available
           if (progressData.converted_size) {
             setConvertedFileSize(progressData.converted_size);
-            .toFixed(
-                2
-              )} MB)`
-            );
           }
 
           // Stop loading
@@ -353,12 +341,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
                 ((originalFileSize - progressData.converted_size) /
                   originalFileSize) *
                 100;
-              .toFixed(2)} MB, Converted: ${(
-                  progressData.converted_size /
-                  1024 /
-                  1024
-                ).toFixed(2)} MB, Compression: ${compressionRatio.toFixed(1)}%`
-              );
             }
             setLoading(false);
             setCurrentConversionId(null);
@@ -374,11 +356,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
 
             // COMPREHENSIVE LOGGING - PROGRESS BAR STARTS
             
-            .toISOString()}`);
-            
-            
-            
-            
 
             setIsInitializing(false);
             setIsBackendProcessing(false);
@@ -388,10 +365,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
           // Update converted file size if available in progress data
           if (progressData.converted_size) {
             setConvertedFileSize(progressData.converted_size);
-            .toFixed(
-                2
-              )} MB)`
-            );
           }
         } else {
           
@@ -406,15 +379,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
       // COMPREHENSIVE LOGGING - BACKEND REQUEST
       const backendRequestTime = Date.now();
       const timeToBackend = backendRequestTime - conversionStartTime;
-
-      
-      .toISOString()}`);
-      
-      }`);
-      
-      .toFixed(2)} MB`
-      );
-      
 
       // Switch to backend processing messages
       setIsInitializing(false);
@@ -444,8 +408,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
           if (event.lengthComputable) {
             const percentComplete = (event.loaded / event.total) * 100;
             setUploadProgress(Math.round(percentComplete));
-            }%`
-            );
           }
         });
 
@@ -479,10 +441,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
 
       // COMPREHENSIVE LOGGING - BACKEND RESPONSE
       
-      .toISOString()}`);
-      
-      
-      
       
       
 
@@ -504,15 +462,9 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
 
         if (result.original_size) {
           setOriginalFileSize(result.original_size);
-          .toFixed(2)} MB)`
-          );
         }
         if (result.converted_size) {
           setConvertedFileSize(result.converted_size);
-          .toFixed(2)} MB)`
-          );
-        } else {
-          
         }
 
         // Don't set conversion result yet - wait for actual completion via polling

@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
         headers: headersList,
       } as any,
     });
-    });
 
     if (!session?.user) {
       

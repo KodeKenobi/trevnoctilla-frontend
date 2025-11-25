@@ -29,10 +29,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    
-    
     if (attachments && attachments.length > 0) {
-      `);
+      // Process attachments
     }
 
     // Format FROM_EMAIL properly: "Name <email@domain.com>"

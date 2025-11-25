@@ -82,14 +82,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             localStorage.setItem("user_data", JSON.stringify(userData));
             setUser(userData);
             setLoading(false);
-             - startTime
-              }ms total`
-            );
             return;
           } else if (response.status === 404) {
             // User was deleted - log them out
-             - user was deleted. Logging out..."
-            );
             localStorage.removeItem("auth_token");
             localStorage.removeItem("user_data");
             const { signOut } = await import("next-auth/react");
@@ -99,8 +94,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             return;
           } else {
             const totalTime = Date.now() - startTime;
-             after ${totalTime}ms, falling back to cached data or session`
-            );
             // Try to use cached user data as fallback
             const cachedUserData = localStorage.getItem("user_data");
             if (cachedUserData) {
@@ -109,10 +102,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 
                 setUser(userData);
                 setLoading(false);
-                 - ${
-                    Date.now() - startTime
-                  }ms total`
-                );
                 return;
               } catch (e) {
                 
@@ -135,10 +124,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 
                 setUser(userData);
                 setLoading(false);
-                 - ${
-                    Date.now() - startTime
-                  }ms total`
-                );
                 return;
               } catch (e) {
                 
@@ -214,20 +199,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               
               // Update user with backend data (includes subscription_tier)
               setUser(backendData.user);
-            } else {
-              ");
             }
           } catch (backendError) {
-            :", backendError);
             // Don't block - NextAuth session is enough for UI
           }
         }
 
         setLoading(false);
-         - ${
-            Date.now() - startTime
-          }ms total`
-        );
         return;
       }
 
@@ -403,7 +381,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       try {
         await signOut({ redirect: false });
       } catch (signOutError) {
-        :", signOutError);
+        // Sign out error (non-critical)
       }
 
       // Wait a moment for cleanup

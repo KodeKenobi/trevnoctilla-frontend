@@ -14,10 +14,6 @@ export async function GET(request: NextRequest) {
       } as any,
     });
 
-    ?.role,
-      hasToken: !!(session as any)?.accessToken,
-    });
-
     if (!session?.user) {
       
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

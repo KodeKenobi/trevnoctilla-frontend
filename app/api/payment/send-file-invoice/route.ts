@@ -77,8 +77,6 @@ export async function POST(request: NextRequest) {
           content: fileBase64,
           contentType: fileMimeType,
         });
-        } KB)`
-        );
       }
     } catch (error: any) {
       

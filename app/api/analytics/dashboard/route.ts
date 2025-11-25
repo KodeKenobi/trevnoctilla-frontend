@@ -56,10 +56,6 @@ export async function GET(request: NextRequest) {
     // Get auth token from session
     let token = (session as any).accessToken || null;
 
-    ?.role,
-      hasToken: !!token,
-    });
-
     if (!token) {
             // Try to get token from backend using email (no password required)
       try {
@@ -98,10 +94,6 @@ export async function GET(request: NextRequest) {
       const backendUrl = getApiUrl("/api/analytics/dashboard");
       const authHeaders = token ? getAuthHeaders(token) : {};
 
-                  }`
-      );
-      );
-
       // Use fetch with proper error handling and timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
@@ -131,9 +123,6 @@ export async function GET(request: NextRequest) {
       } else {
         // Get error details from backend
         const errorText = await response.text();
-        :`,
-          errorText.substring(0, 500) // Limit error text length
-        );
 
         // If 401/403, it's an auth issue - log it but return empty data
         if (response.status === 401 || response.status === 403) {
