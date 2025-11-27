@@ -13,6 +13,11 @@ import {
   HelpCircle,
   MessageSquare,
   Code,
+  Twitter,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Youtube,
 } from "lucide-react";
 import { useNavigation } from "@/contexts/NavigationContext";
 
@@ -78,6 +83,55 @@ export default function Footer() {
                   The ultimate file conversion platform. Transform, convert, and
                   optimize your files with professional-grade tools.
                 </p>
+
+                {/* Social Media Icons */}
+                <div className="flex items-center justify-center md:justify-start space-x-4">
+                  <a
+                    href="https://twitter.com/trevnoctilla"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gray-800/50 hover:bg-cyan-500/20 border border-gray-700/50 hover:border-cyan-500/50 rounded-lg flex items-center justify-center text-gray-400 hover:text-cyan-400 transition-all duration-300"
+                    aria-label="Follow us on Twitter"
+                  >
+                    <Twitter className="w-5 h-5" />
+                  </a>
+                  <a
+                    href="https://facebook.com/trevnoctilla"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gray-800/50 hover:bg-blue-500/20 border border-gray-700/50 hover:border-blue-500/50 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-400 transition-all duration-300"
+                    aria-label="Follow us on Facebook"
+                  >
+                    <Facebook className="w-5 h-5" />
+                  </a>
+                  <a
+                    href="https://instagram.com/trevnoctilla"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gray-800/50 hover:bg-pink-500/20 border border-gray-700/50 hover:border-pink-500/50 rounded-lg flex items-center justify-center text-gray-400 hover:text-pink-400 transition-all duration-300"
+                    aria-label="Follow us on Instagram"
+                  >
+                    <Instagram className="w-5 h-5" />
+                  </a>
+                  <a
+                    href="https://linkedin.com/company/trevnoctilla"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gray-800/50 hover:bg-blue-600/20 border border-gray-700/50 hover:border-blue-600/50 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-500 transition-all duration-300"
+                    aria-label="Follow us on LinkedIn"
+                  >
+                    <Linkedin className="w-5 h-5" />
+                  </a>
+                  <a
+                    href="https://youtube.com/@trevnoctilla"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gray-800/50 hover:bg-red-500/20 border border-gray-700/50 hover:border-red-500/50 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 transition-all duration-300"
+                    aria-label="Subscribe on YouTube"
+                  >
+                    <Youtube className="w-5 h-5" />
+                  </a>
+                </div>
               </motion.div>
             </div>
 
