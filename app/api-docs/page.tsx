@@ -23,7 +23,8 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "TechArticle",
   headline: "Trevnoctilla API Documentation - File Processing APIs",
-  description: "Comprehensive API documentation for Trevnoctilla's file processing APIs. Convert PDFs, videos, images, and audio.",
+  description:
+    "Comprehensive API documentation for Trevnoctilla's file processing APIs. Convert PDFs, videos, images, and audio.",
   url: "https://www.trevnoctilla.com/api-docs",
   author: {
     "@type": "Organization",
@@ -45,7 +46,8 @@ const structuredData = {
   about: {
     "@type": "WebAPI",
     name: "Trevnoctilla File Processing API",
-    description: "REST API for file processing including PDF, video, audio, and image conversion.",
+    description:
+      "REST API for file processing including PDF, video, audio, and image conversion.",
     documentation: "https://www.trevnoctilla.com/api-docs",
     provider: {
       "@type": "Organization",
@@ -55,8 +57,18 @@ const structuredData = {
   breadcrumb: {
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.trevnoctilla.com" },
-      { "@type": "ListItem", position: 2, name: "API Documentation", item: "https://www.trevnoctilla.com/api-docs" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.trevnoctilla.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "API Documentation",
+        item: "https://www.trevnoctilla.com/api-docs",
+      },
     ],
   },
 };

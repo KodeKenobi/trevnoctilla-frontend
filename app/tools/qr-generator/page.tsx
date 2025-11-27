@@ -44,7 +44,8 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: "QR Code Generator - Create Custom QR Codes",
-  description: "Generate QR codes for URLs, text, WiFi, contact info, and more. Free online QR code generator with customizable design.",
+  description:
+    "Generate QR codes for URLs, text, WiFi, contact info, and more. Free online QR code generator with customizable design.",
   url: "https://www.trevnoctilla.com/tools/qr-generator",
   applicationCategory: "UtilitiesApplication",
   operatingSystem: "Any",
@@ -83,9 +84,24 @@ const structuredData = {
   breadcrumb: {
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.trevnoctilla.com" },
-      { "@type": "ListItem", position: 2, name: "Tools", item: "https://www.trevnoctilla.com/tools" },
-      { "@type": "ListItem", position: 3, name: "QR Generator", item: "https://www.trevnoctilla.com/tools/qr-generator" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.trevnoctilla.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Tools",
+        item: "https://www.trevnoctilla.com/tools",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: "QR Generator",
+        item: "https://www.trevnoctilla.com/tools/qr-generator",
+      },
     ],
   },
 };

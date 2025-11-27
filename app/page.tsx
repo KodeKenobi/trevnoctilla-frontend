@@ -27,13 +27,15 @@ const structuredData = {
       "@id": "https://www.trevnoctilla.com/#website",
       url: "https://www.trevnoctilla.com",
       name: "Trevnoctilla",
-      description: "Free PDF editor and file converter — merge, split, sign and edit PDFs online.",
+      description:
+        "Free PDF editor and file converter — merge, split, sign and edit PDFs online.",
       publisher: { "@id": "https://www.trevnoctilla.com/#organization" },
       potentialAction: {
         "@type": "SearchAction",
         target: {
           "@type": "EntryPoint",
-          urlTemplate: "https://www.trevnoctilla.com/tools?q={search_term_string}",
+          urlTemplate:
+            "https://www.trevnoctilla.com/tools?q={search_term_string}",
         },
         "query-input": "required name=search_term_string",
       },

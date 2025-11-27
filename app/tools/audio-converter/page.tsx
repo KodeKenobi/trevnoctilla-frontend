@@ -44,7 +44,8 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: "Audio Converter - Convert MP3, WAV, AAC, FLAC, OGG",
-  description: "Convert audio between all formats with bitrate and quality control. MP3, WAV, AAC, FLAC, OGG, and more. Free online audio converter.",
+  description:
+    "Convert audio between all formats with bitrate and quality control. MP3, WAV, AAC, FLAC, OGG, and more. Free online audio converter.",
   url: "https://www.trevnoctilla.com/tools/audio-converter",
   applicationCategory: "MultimediaApplication",
   operatingSystem: "Any",
@@ -80,9 +81,24 @@ const structuredData = {
   breadcrumb: {
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.trevnoctilla.com" },
-      { "@type": "ListItem", position: 2, name: "Tools", item: "https://www.trevnoctilla.com/tools" },
-      { "@type": "ListItem", position: 3, name: "Audio Converter", item: "https://www.trevnoctilla.com/tools/audio-converter" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.trevnoctilla.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Tools",
+        item: "https://www.trevnoctilla.com/tools",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: "Audio Converter",
+        item: "https://www.trevnoctilla.com/tools/audio-converter",
+      },
     ],
   },
 };

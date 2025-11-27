@@ -43,7 +43,8 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: "PDF Tools - Merge, Split, Compress, Sign PDFs",
-  description: "Comprehensive PDF processing: extract text/images, merge, split, sign, watermark, and compress PDFs. Free online PDF tools.",
+  description:
+    "Comprehensive PDF processing: extract text/images, merge, split, sign, watermark, and compress PDFs. Free online PDF tools.",
   url: "https://www.trevnoctilla.com/tools/pdf-tools",
   applicationCategory: "UtilitiesApplication",
   operatingSystem: "Any",
@@ -83,9 +84,24 @@ const structuredData = {
   breadcrumb: {
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.trevnoctilla.com" },
-      { "@type": "ListItem", position: 2, name: "Tools", item: "https://www.trevnoctilla.com/tools" },
-      { "@type": "ListItem", position: 3, name: "PDF Tools", item: "https://www.trevnoctilla.com/tools/pdf-tools" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.trevnoctilla.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Tools",
+        item: "https://www.trevnoctilla.com/tools",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: "PDF Tools",
+        item: "https://www.trevnoctilla.com/tools/pdf-tools",
+      },
     ],
   },
 };

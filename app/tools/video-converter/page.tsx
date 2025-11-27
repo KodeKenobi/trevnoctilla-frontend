@@ -44,7 +44,8 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: "Video Converter - Convert MP4, AVI, MOV, MKV, WEBM",
-  description: "Convert videos between all formats with compression and quality control. MP4, AVI, MOV, MKV, WEBM, and more. Free online video converter.",
+  description:
+    "Convert videos between all formats with compression and quality control. MP4, AVI, MOV, MKV, WEBM, and more. Free online video converter.",
   url: "https://www.trevnoctilla.com/tools/video-converter",
   applicationCategory: "MultimediaApplication",
   operatingSystem: "Any",
@@ -80,9 +81,24 @@ const structuredData = {
   breadcrumb: {
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.trevnoctilla.com" },
-      { "@type": "ListItem", position: 2, name: "Tools", item: "https://www.trevnoctilla.com/tools" },
-      { "@type": "ListItem", position: 3, name: "Video Converter", item: "https://www.trevnoctilla.com/tools/video-converter" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.trevnoctilla.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Tools",
+        item: "https://www.trevnoctilla.com/tools",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: "Video Converter",
+        item: "https://www.trevnoctilla.com/tools/video-converter",
+      },
     ],
   },
 };

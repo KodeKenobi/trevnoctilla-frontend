@@ -25,14 +25,25 @@ const structuredData = {
   "@type": "CollectionPage",
   "@id": "https://www.trevnoctilla.com/tools",
   name: "Free Online Tools - Video, Audio, Image, PDF Converters",
-  description: "Free online tools for video conversion, audio conversion, image conversion, PDF processing, and QR code generation.",
+  description:
+    "Free online tools for video conversion, audio conversion, image conversion, PDF processing, and QR code generation.",
   url: "https://www.trevnoctilla.com/tools",
   isPartOf: { "@id": "https://www.trevnoctilla.com/#website" },
   breadcrumb: {
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.trevnoctilla.com" },
-      { "@type": "ListItem", position: 2, name: "Tools", item: "https://www.trevnoctilla.com/tools" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.trevnoctilla.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Tools",
+        item: "https://www.trevnoctilla.com/tools",
+      },
     ],
   },
   mainEntity: {

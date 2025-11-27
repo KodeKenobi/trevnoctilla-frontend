@@ -23,7 +23,8 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "ContactPage",
   name: "Contact Trevnoctilla",
-  description: "Contact Trevnoctilla for support, feedback, partnership inquiries, or any questions.",
+  description:
+    "Contact Trevnoctilla for support, feedback, partnership inquiries, or any questions.",
   url: "https://www.trevnoctilla.com/contact",
   mainEntity: {
     "@type": "Organization",
@@ -50,8 +51,18 @@ const structuredData = {
   breadcrumb: {
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.trevnoctilla.com" },
-      { "@type": "ListItem", position: 2, name: "Contact", item: "https://www.trevnoctilla.com/contact" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.trevnoctilla.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Contact",
+        item: "https://www.trevnoctilla.com/contact",
+      },
     ],
   },
 };
@@ -67,4 +78,3 @@ export default function ContactPage() {
     </>
   );
 }
-

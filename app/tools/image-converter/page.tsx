@@ -44,7 +44,8 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: "Image Converter - Convert JPG, PNG, WEBP, GIF, HEIC",
-  description: "Convert images between all formats with resize and quality control. JPG, PNG, WEBP, GIF, HEIC, and more. Free online image converter.",
+  description:
+    "Convert images between all formats with resize and quality control. JPG, PNG, WEBP, GIF, HEIC, and more. Free online image converter.",
   url: "https://www.trevnoctilla.com/tools/image-converter",
   applicationCategory: "MultimediaApplication",
   operatingSystem: "Any",
@@ -81,9 +82,24 @@ const structuredData = {
   breadcrumb: {
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.trevnoctilla.com" },
-      { "@type": "ListItem", position: 2, name: "Tools", item: "https://www.trevnoctilla.com/tools" },
-      { "@type": "ListItem", position: 3, name: "Image Converter", item: "https://www.trevnoctilla.com/tools/image-converter" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.trevnoctilla.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Tools",
+        item: "https://www.trevnoctilla.com/tools",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: "Image Converter",
+        item: "https://www.trevnoctilla.com/tools/image-converter",
+      },
     ],
   },
 };

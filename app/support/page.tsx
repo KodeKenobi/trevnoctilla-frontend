@@ -155,8 +155,18 @@ const structuredData = {
   breadcrumb: {
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.trevnoctilla.com" },
-      { "@type": "ListItem", position: 2, name: "Support", item: "https://www.trevnoctilla.com/support" },
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.trevnoctilla.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Support",
+        item: "https://www.trevnoctilla.com/support",
+      },
     ],
   },
 };
@@ -172,4 +182,3 @@ export default function SupportPage() {
     </>
   );
 }
-
