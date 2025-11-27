@@ -32,6 +32,7 @@ export default function Footer() {
   ];
 
   const support = [
+    { name: "Features", href: "/features", icon: Zap },
     { name: "Help Center", href: "/support", icon: HelpCircle },
     { name: "Contact Us", href: "/contact", icon: MessageSquare },
     { name: "API Documentation", href: "/api-docs", icon: Code },
