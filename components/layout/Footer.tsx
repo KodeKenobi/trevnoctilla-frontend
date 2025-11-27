@@ -10,6 +10,9 @@ import {
   QrCode,
   Mail,
   ArrowUp,
+  HelpCircle,
+  MessageSquare,
+  Code,
 } from "lucide-react";
 import { useNavigation } from "@/contexts/NavigationContext";
 
@@ -28,13 +31,10 @@ export default function Footer() {
     { name: "QR Generator", page: "qr-generator", icon: QrCode },
   ];
 
-  const features = [
-    "100% Free",
-    "No Registration Required",
-    "Secure & Private",
-    "Instant Processing",
-    "All File Formats",
-    "High Quality Output",
+  const support = [
+    { name: "Help Center", href: "/support", icon: HelpCircle },
+    { name: "Contact Us", href: "/contact", icon: MessageSquare },
+    { name: "API Documentation", href: "/api-docs", icon: Code },
   ];
 
   const legal = [
@@ -112,7 +112,7 @@ export default function Footer() {
               </motion.div>
             </div>
 
-            {/* Features Section */}
+            {/* Support Section */}
             <div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -121,19 +121,23 @@ export default function Footer() {
                 className="space-y-6"
               >
                 <h4 className="text-lg font-semibold text-foreground dark:text-white">
-                  Features
+                  Support
                 </h4>
                 <ul className="space-y-3">
-                  {features.map((feature, index) => (
+                  {support.map((item, index) => (
                     <motion.li
-                      key={feature}
+                      key={item.name}
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.4, delay: index * 0.1 }}
-                      className="flex items-center justify-center md:justify-start space-x-2 text-muted-foreground dark:text-gray-400"
                     >
-                      <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full"></div>
-                      <span>{feature}</span>
+                      <a
+                        href={item.href}
+                        className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400 hover:text-cyan-400 transition-colors group"
+                      >
+                        <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <span>{item.name}</span>
+                      </a>
                     </motion.li>
                   ))}
                 </ul>
@@ -149,16 +153,23 @@ export default function Footer() {
                 className="space-y-6"
               >
                 <h4 className="text-lg font-semibold text-foreground dark:text-white">
-                  Contact
+                  Get in Touch
                 </h4>
                 <div className="space-y-4">
+                  <a
+                    href="/contact"
+                    className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400 hover:text-cyan-400 transition-colors group"
+                  >
+                    <MessageSquare className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                    <span>Contact Form</span>
+                  </a>
                   <div className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400">
                     <Mail className="w-5 h-5 text-cyan-400" />
                     <a
-                      href="mailto:info@trevnoctilla.com"
+                      href="mailto:support@trevnoctilla.com"
                       className="hover:text-cyan-400 transition-colors"
                     >
-                      info@trevnoctilla.com
+                      support@trevnoctilla.com
                     </a>
                   </div>
                 </div>
