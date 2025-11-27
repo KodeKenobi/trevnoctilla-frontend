@@ -56,13 +56,6 @@ const structuredData = {
     priceCurrency: "USD",
     availability: "https://schema.org/InStock",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.7",
-    ratingCount: "1850",
-    bestRating: "5",
-    worstRating: "1",
-  },
   featureList: [
     "Convert MP4 to AVI, MOV, MKV, WEBM",
     "Convert AVI to MP4, MOV, MKV, WEBM",

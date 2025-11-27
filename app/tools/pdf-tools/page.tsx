@@ -55,13 +55,6 @@ const structuredData = {
     priceCurrency: "USD",
     availability: "https://schema.org/InStock",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.8",
-    ratingCount: "2150",
-    bestRating: "5",
-    worstRating: "1",
-  },
   featureList: [
     "Merge multiple PDFs into one",
     "Split PDF into individual pages",

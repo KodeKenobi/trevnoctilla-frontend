@@ -56,13 +56,6 @@ const structuredData = {
     priceCurrency: "USD",
     availability: "https://schema.org/InStock",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    ratingCount: "980",
-    bestRating: "5",
-    worstRating: "1",
-  },
   featureList: [
     "Generate QR codes for URLs",
     "Generate QR codes for plain text",

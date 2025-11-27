@@ -56,13 +56,6 @@ const structuredData = {
     priceCurrency: "USD",
     availability: "https://schema.org/InStock",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.8",
-    ratingCount: "1420",
-    bestRating: "5",
-    worstRating: "1",
-  },
   featureList: [
     "Convert MP3 to WAV, AAC, FLAC, OGG",
     "Convert WAV to MP3, AAC, FLAC, OGG",
