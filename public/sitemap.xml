@@ -93,6 +93,21 @@
     <priority>0.5</priority>
   </url>
   
+  <!-- Support & Contact -->
+  <url>
+    <loc>https://www.trevnoctilla.com/support</loc>
+    <lastmod>2025-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://www.trevnoctilla.com/contact</loc>
+    <lastmod>2025-11-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
   <!-- Legal Pages -->
   <url>
     <loc>https://www.trevnoctilla.com/privacy</loc>
@@ -115,4 +130,4 @@
     <priority>0.3</priority>
   </url>
 </urlset>
-<!-- Last updated: 2025-11-25 -->
+<!-- Last updated: 2025-11-27 -->

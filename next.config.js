@@ -476,6 +476,32 @@ const nextConfig = {
         destination: "https://srv.adstxtmanager.com/19390/trevnoctilla.com",
         permanent: true,
       },
+      // Redirects for old URLs that Google indexed (now under /tools/)
+      {
+        source: "/video-converter",
+        destination: "/tools/video-converter",
+        permanent: true,
+      },
+      {
+        source: "/audio-converter",
+        destination: "/tools/audio-converter",
+        permanent: true,
+      },
+      {
+        source: "/image-converter",
+        destination: "/tools/image-converter",
+        permanent: true,
+      },
+      {
+        source: "/pdf-tools",
+        destination: "/tools/pdf-tools",
+        permanent: true,
+      },
+      {
+        source: "/qr-generator",
+        destination: "/tools/qr-generator",
+        permanent: true,
+      },
     ];
   },
 };
