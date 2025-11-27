@@ -5,7 +5,15 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
+      disallow: [
+        '/favicon.ico',
+        '/manifest.json',
+        '/api/',
+        '/admin/',
+        '/_next/',
+        '/icons/',
+      ],
     },
-    sitemap: 'https://trevnoctilla.com/sitemap.xml',
+    sitemap: 'https://www.trevnoctilla.com/sitemap.xml',
   }
 }
