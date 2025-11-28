@@ -553,7 +553,8 @@ export default function AnalyticsDashboard() {
                   data.topPages.slice(0, 5).map((page, index) => (
                     <div
                       key={page.page}
-                      className="flex justify-between items-center p-2 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors"
+                      className="flex justify-between items-center p-2 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors cursor-pointer"
+                      onClick={() => fetchDetailedMetrics("page", page.page)}
                     >
                       <div className="flex items-center space-x-2 flex-1 min-w-0">
                         <span className="text-xs text-gray-500 w-6">
@@ -589,7 +590,8 @@ export default function AnalyticsDashboard() {
                   data.topEvents.slice(0, 5).map((event, index) => (
                     <div
                       key={event.event}
-                      className="flex justify-between items-center p-2 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors"
+                      className="flex justify-between items-center p-2 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors cursor-pointer"
+                      onClick={() => fetchDetailedMetrics("event", event.event)}
                     >
                       <div className="flex items-center space-x-2 flex-1 min-w-0">
                         <span className="text-xs text-gray-500 w-6">
@@ -699,7 +701,8 @@ export default function AnalyticsDashboard() {
                   return (
                     <div
                       key={page.page}
-                      className="p-4 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors"
+                      className="p-4 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors cursor-pointer"
+                      onClick={() => fetchDetailedMetrics("page", page.page)}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
@@ -798,7 +801,10 @@ export default function AnalyticsDashboard() {
                   {eventsData.events.map((event) => (
                     <div
                       key={event.id}
-                      className="p-4 hover:bg-gray-700/30 transition-colors"
+                      className="p-4 hover:bg-gray-700/30 transition-colors cursor-pointer"
+                      onClick={() =>
+                        fetchDetailedMetrics("event", event.event_name)
+                      }
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
@@ -917,10 +923,7 @@ export default function AnalyticsDashboard() {
                     <div
                       key={event.event}
                       className="p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors cursor-pointer"
-                      onClick={() => {
-                        setEventTypeFilter(event.event);
-                        setEventsPage(1);
-                      }}
+                      onClick={() => fetchDetailedMetrics("event", event.event)}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span
@@ -1149,7 +1152,10 @@ export default function AnalyticsDashboard() {
                     return (
                       <div
                         key={country.country}
-                        className="p-3 rounded-lg bg-gray-700/30"
+                        className="p-3 rounded-lg bg-gray-700/30 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                        onClick={() =>
+                          fetchDetailedMetrics("country", country.country)
+                        }
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-2">
@@ -1208,7 +1214,13 @@ export default function AnalyticsDashboard() {
                     return (
                       <div
                         key={`${city.city}-${city.country}`}
-                        className="p-3 rounded-lg bg-gray-700/30"
+                        className="p-3 rounded-lg bg-gray-700/30 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                        onClick={() =>
+                          fetchDetailedMetrics(
+                            "city",
+                            `${city.city}, ${city.country}`
+                          )
+                        }
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-2 flex-1 min-w-0">
@@ -1471,7 +1483,7 @@ export default function AnalyticsDashboard() {
 
       {/* Detailed Metrics Modal */}
       {showDetailsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -1488,6 +1500,10 @@ export default function AnalyticsDashboard() {
                   {detailedMetrics?.filter_type === "device" && "Device Type"}
                   {detailedMetrics?.filter_type === "browser" && "Browser"}
                   {detailedMetrics?.filter_type === "os" && "Operating System"}
+                  {detailedMetrics?.filter_type === "country" && "Country"}
+                  {detailedMetrics?.filter_type === "city" && "City"}
+                  {detailedMetrics?.filter_type === "page" && "Page"}
+                  {detailedMetrics?.filter_type === "event" && "Event"}
                 </p>
               </div>
               <button
