@@ -23,6 +23,9 @@ import {
   Percent,
   AlertCircle,
   MapPin,
+  X,
+  Calendar,
+  Link as LinkIcon,
 } from "lucide-react";
 
 interface AnalyticsData {
@@ -119,17 +122,62 @@ const formatPageUrl = (url: string): string => {
   }
 };
 
+interface DetailedMetrics {
+  filter_type: string;
+  filter_value: string;
+  total_sessions: number;
+  total_page_views: number;
+  total_events: number;
+  sessions: Array<{
+    session_id: string;
+    start_time: string;
+    last_activity: string;
+    duration: number;
+    page_views: number;
+    events: number;
+    country: string;
+    city: string;
+    device_type: string;
+    browser: string;
+    os: string;
+    ip_address: string;
+    pages_visited: Array<{
+      url: string;
+      title: string;
+      timestamp: string;
+      duration: number | null;
+    }>;
+    events_list: Array<{
+      event_name: string;
+      event_type: string;
+      page_url: string;
+      page_title: string;
+      timestamp: string;
+      properties: Record<string, any>;
+    }>;
+  }>;
+  location_breakdown: Record<string, number>;
+  pages_breakdown: Record<string, number>;
+  events_breakdown: Record<string, number>;
+}
+
 export default function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("24h");
   const [activeTab, setActiveTab] = useState("overview");
-  
+
   // Detailed events state
   const [eventsData, setEventsData] = useState<EventsListData | null>(null);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsPage, setEventsPage] = useState(1);
   const [eventTypeFilter, setEventTypeFilter] = useState("");
+
+  // Detailed metrics modal state
+  const [detailedMetrics, setDetailedMetrics] =
+    useState<DetailedMetrics | null>(null);
+  const [detailedLoading, setDetailedLoading] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -141,25 +189,46 @@ export default function AnalyticsDashboard() {
     }
   }, [activeTab, timeRange, eventsPage, eventTypeFilter]);
 
+  const fetchDetailedMetrics = async (type: string, value: string) => {
+    try {
+      setDetailedLoading(true);
+      setShowDetailsModal(true);
+
+      const response = await fetch(
+        `/api/analytics/details?type=${type}&value=${encodeURIComponent(
+          value
+        )}&range=${timeRange}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch detailed metrics");
+      }
+
+      const metricsData = await response.json();
+      setDetailedMetrics(metricsData);
+    } catch (error) {
+      console.error("Error fetching detailed metrics:", error);
+      alert("Failed to load detailed metrics. Please try again.");
+    } finally {
+      setDetailedLoading(false);
+    }
+  };
+
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
-      
 
       const response = await fetch(
         `/api/analytics/dashboard?range=${timeRange}`
       );
 
-      
-
       if (!response.ok) {
         const errorText = await response.text();
-        
+
         throw new Error(`Failed to fetch analytics: ${response.statusText}`);
       }
 
       const analyticsData = await response.json();
-      
 
       // Validate data structure
       if (analyticsData && typeof analyticsData === "object") {
@@ -168,7 +237,6 @@ export default function AnalyticsDashboard() {
         throw new Error("Invalid analytics data format");
       }
     } catch (error) {
-      
       // Set empty data structure instead of mock data
       setData({
         totalUsers: 0,
@@ -204,8 +272,10 @@ export default function AnalyticsDashboard() {
         params.append("event_type", eventTypeFilter);
       }
 
-      const response = await fetch(`/api/analytics/events-list?${params.toString()}`);
-      
+      const response = await fetch(
+        `/api/analytics/events-list?${params.toString()}`
+      );
+
       if (response.ok) {
         const data = await response.json();
         setEventsData(data);
@@ -218,7 +288,9 @@ export default function AnalyticsDashboard() {
   };
 
   const formatEventTime = (timestamp: string | number): string => {
-    const date = new Date(typeof timestamp === "number" ? timestamp : timestamp);
+    const date = new Date(
+      typeof timestamp === "number" ? timestamp : timestamp
+    );
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
@@ -229,7 +301,11 @@ export default function AnalyticsDashboard() {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return (
+      date.toLocaleDateString() +
+      " " +
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
   };
 
   const tabs = [
@@ -690,7 +766,10 @@ export default function AnalyticsDashboard() {
             </div>
             <div className="text-sm text-gray-400">
               {eventsData ? (
-                <>Showing {eventsData.events.length} of {eventsData.total.toLocaleString()} events</>
+                <>
+                  Showing {eventsData.events.length} of{" "}
+                  {eventsData.total.toLocaleString()} events
+                </>
               ) : (
                 "Loading events..."
               )}
@@ -703,10 +782,12 @@ export default function AnalyticsDashboard() {
               <div className="flex items-center space-x-2">
                 <Activity className="w-5 h-5 text-purple-400" />
                 <h3 className="text-lg font-semibold text-white">Event Log</h3>
-                <span className="text-xs text-gray-500">({timeRangeLabels[timeRange]})</span>
+                <span className="text-xs text-gray-500">
+                  ({timeRangeLabels[timeRange]})
+                </span>
               </div>
             </div>
-            
+
             {eventsLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -727,7 +808,11 @@ export default function AnalyticsDashboard() {
                             </span>
                             {event.device_type && (
                               <span className="text-xs text-gray-500">
-                                {event.device_type === "mobile" ? "📱" : event.device_type === "tablet" ? "📟" : "💻"}
+                                {event.device_type === "mobile"
+                                  ? "📱"
+                                  : event.device_type === "tablet"
+                                  ? "📟"
+                                  : "💻"}
                               </span>
                             )}
                           </div>
@@ -741,18 +826,27 @@ export default function AnalyticsDashboard() {
                               </span>
                             )}
                           </div>
-                          {event.properties && Object.keys(event.properties).length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {Object.entries(event.properties).slice(0, 4).map(([key, value]) => (
-                                <span
-                                  key={key}
-                                  className="text-xs bg-gray-700/50 px-2 py-1 rounded text-gray-400"
-                                >
-                                  {key}: {typeof value === "string" ? value.substring(0, 30) : JSON.stringify(value).substring(0, 30)}
-                                </span>
-                              ))}
-                            </div>
-                          )}
+                          {event.properties &&
+                            Object.keys(event.properties).length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {Object.entries(event.properties)
+                                  .slice(0, 4)
+                                  .map(([key, value]) => (
+                                    <span
+                                      key={key}
+                                      className="text-xs bg-gray-700/50 px-2 py-1 rounded text-gray-400"
+                                    >
+                                      {key}:{" "}
+                                      {typeof value === "string"
+                                        ? value.substring(0, 30)
+                                        : JSON.stringify(value).substring(
+                                            0,
+                                            30
+                                          )}
+                                    </span>
+                                  ))}
+                              </div>
+                            )}
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className="text-sm text-gray-300">
@@ -766,7 +860,7 @@ export default function AnalyticsDashboard() {
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Pagination */}
                 {eventsData.total_pages > 1 && (
                   <div className="p-4 border-t border-gray-700 flex items-center justify-between">
@@ -781,7 +875,11 @@ export default function AnalyticsDashboard() {
                       Page {eventsPage} of {eventsData.total_pages}
                     </span>
                     <button
-                      onClick={() => setEventsPage(Math.min(eventsData.total_pages, eventsPage + 1))}
+                      onClick={() =>
+                        setEventsPage(
+                          Math.min(eventsData.total_pages, eventsPage + 1)
+                        )
+                      }
                       disabled={eventsPage === eventsData.total_pages}
                       className="px-4 py-2 bg-gray-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
                     >
@@ -793,7 +891,9 @@ export default function AnalyticsDashboard() {
             ) : (
               <div className="text-center py-12">
                 <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No events tracked in this time range</p>
+                <p className="text-gray-400">
+                  No events tracked in this time range
+                </p>
               </div>
             )}
           </div>
@@ -802,14 +902,17 @@ export default function AnalyticsDashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
             <div className="flex items-center space-x-2 mb-4">
               <BarChart3 className="w-5 h-5 text-blue-400" />
-              <h3 className="text-lg font-semibold text-white">Top Events Summary</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Top Events Summary
+              </h3>
             </div>
             {data.topEvents.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {data.topEvents.slice(0, 6).map((event, index) => {
-                  const percentage = data.totalEvents > 0
-                    ? ((event.count / data.totalEvents) * 100).toFixed(1)
-                    : 0;
+                  const percentage =
+                    data.totalEvents > 0
+                      ? ((event.count / data.totalEvents) * 100).toFixed(1)
+                      : 0;
                   return (
                     <div
                       key={event.event}
@@ -820,7 +923,10 @@ export default function AnalyticsDashboard() {
                       }}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-300 truncate flex-1" title={event.event}>
+                        <span
+                          className="text-sm text-gray-300 truncate flex-1"
+                          title={event.event}
+                        >
                           {event.event}
                         </span>
                         <span className="font-semibold text-white ml-2">
@@ -838,7 +944,9 @@ export default function AnalyticsDashboard() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 text-center py-4">No events tracked yet</p>
+              <p className="text-sm text-gray-500 text-center py-4">
+                No events tracked yet
+              </p>
             )}
           </div>
         </div>
@@ -864,7 +972,10 @@ export default function AnalyticsDashboard() {
                   return (
                     <div
                       key={device.device}
-                      className="p-3 rounded-lg bg-gray-700/30"
+                      className="p-3 rounded-lg bg-gray-700/30 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                      onClick={() =>
+                        fetchDetailedMetrics("device", device.device)
+                      }
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -928,7 +1039,10 @@ export default function AnalyticsDashboard() {
                   return (
                     <div
                       key={browser.browser}
-                      className="p-3 rounded-lg bg-gray-700/30"
+                      className="p-3 rounded-lg bg-gray-700/30 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                      onClick={() =>
+                        fetchDetailedMetrics("browser", browser.browser)
+                      }
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-300 capitalize">
@@ -975,7 +1089,11 @@ export default function AnalyticsDashboard() {
                   const percentage =
                     total > 0 ? ((os.count / total) * 100).toFixed(1) : 0;
                   return (
-                    <div key={os.os} className="p-3 rounded-lg bg-gray-700/30">
+                    <div
+                      key={os.os}
+                      className="p-3 rounded-lg bg-gray-700/30 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                      onClick={() => fetchDetailedMetrics("os", os.os)}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-300 capitalize">
                           {os.os || "Unknown"}
@@ -1185,9 +1303,13 @@ export default function AnalyticsDashboard() {
             <div className="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700/50">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-400">Active in {timeRangeLabels[timeRange]}</span>
+                <span className="text-sm text-gray-400">
+                  Active in {timeRangeLabels[timeRange]}
+                </span>
               </div>
-              <p className="text-2xl font-bold text-white">{data.recentActivity.length}</p>
+              <p className="text-2xl font-bold text-white">
+                {data.recentActivity.length}
+              </p>
               <p className="text-xs text-gray-500">Recent events</p>
             </div>
             <div className="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700/50">
@@ -1195,21 +1317,27 @@ export default function AnalyticsDashboard() {
                 <Eye className="w-4 h-4 text-blue-400" />
                 <span className="text-sm text-gray-400">Page Views</span>
               </div>
-              <p className="text-2xl font-bold text-white">{data.totalPageViews.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-white">
+                {data.totalPageViews.toLocaleString()}
+              </p>
             </div>
             <div className="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700/50">
               <div className="flex items-center gap-2 mb-2">
                 <Activity className="w-4 h-4 text-purple-400" />
                 <span className="text-sm text-gray-400">Events</span>
               </div>
-              <p className="text-2xl font-bold text-white">{data.totalEvents.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-white">
+                {data.totalEvents.toLocaleString()}
+              </p>
             </div>
             <div className="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700/50">
               <div className="flex items-center gap-2 mb-2">
                 <Users className="w-4 h-4 text-cyan-400" />
                 <span className="text-sm text-gray-400">Sessions</span>
               </div>
-              <p className="text-2xl font-bold text-white">{data.totalSessions.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-white">
+                {data.totalSessions.toLocaleString()}
+              </p>
             </div>
           </div>
 
@@ -1218,7 +1346,9 @@ export default function AnalyticsDashboard() {
             <div className="p-4 border-b border-gray-700 flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Eye className="w-5 h-5 text-cyan-400" />
-                <h3 className="text-lg font-semibold text-white">Live Activity Stream</h3>
+                <h3 className="text-lg font-semibold text-white">
+                  Live Activity Stream
+                </h3>
                 <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
                   {timeRangeLabels[timeRange]}
                 </span>
@@ -1235,7 +1365,9 @@ export default function AnalyticsDashboard() {
               {data.recentActivity.length > 0 ? (
                 data.recentActivity.map((activity) => {
                   const date = new Date(activity.timestamp);
-                  const timeAgo = Math.floor((Date.now() - date.getTime()) / 1000);
+                  const timeAgo = Math.floor(
+                    (Date.now() - date.getTime()) / 1000
+                  );
                   let timeLabel = "";
                   if (timeAgo < 60) {
                     timeLabel = `${timeAgo}s ago`;
@@ -1251,8 +1383,16 @@ export default function AnalyticsDashboard() {
                     const eventName = activity.event_name || "";
                     if (eventName.includes("api_call")) return "🌐";
                     if (eventName.includes("api_error")) return "❌";
-                    if (eventName.includes("page_load") || eventName.includes("pageview")) return "📄";
-                    if (eventName.includes("navigation") || eventName.includes("click")) return "🔗";
+                    if (
+                      eventName.includes("page_load") ||
+                      eventName.includes("pageview")
+                    )
+                      return "📄";
+                    if (
+                      eventName.includes("navigation") ||
+                      eventName.includes("click")
+                    )
+                      return "🔗";
                     if (eventName.includes("user_interaction")) return "👆";
                     return "📊";
                   };
@@ -1260,9 +1400,15 @@ export default function AnalyticsDashboard() {
                   const getEventColor = () => {
                     const eventName = activity.event_name || "";
                     if (eventName.includes("error")) return "border-l-red-500";
-                    if (eventName.includes("api_call")) return "border-l-blue-500";
-                    if (eventName.includes("page_load") || eventName.includes("pageview")) return "border-l-green-500";
-                    if (eventName.includes("navigation")) return "border-l-purple-500";
+                    if (eventName.includes("api_call"))
+                      return "border-l-blue-500";
+                    if (
+                      eventName.includes("page_load") ||
+                      eventName.includes("pageview")
+                    )
+                      return "border-l-green-500";
+                    if (eventName.includes("navigation"))
+                      return "border-l-purple-500";
                     return "border-l-gray-500";
                   };
 
@@ -1282,13 +1428,17 @@ export default function AnalyticsDashboard() {
                       key={activity.id}
                       className={`flex items-start gap-3 p-4 border-l-4 ${getEventColor()} hover:bg-gray-700/30 transition-colors`}
                     >
-                      <div className="flex-shrink-0 mt-0.5 text-lg">{getEventIcon()}</div>
+                      <div className="flex-shrink-0 mt-0.5 text-lg">
+                        {getEventIcon()}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-sm font-medium text-white">
                             {activity.event_name || "Event"}
                           </span>
-                          <span className="text-xs text-cyan-400 font-mono">{pagePath}</span>
+                          <span className="text-xs text-cyan-400 font-mono">
+                            {pagePath}
+                          </span>
                         </div>
                         <p className="text-sm text-gray-400 truncate">
                           {activity.description}
@@ -1296,7 +1446,9 @@ export default function AnalyticsDashboard() {
                       </div>
                       <div className="text-right flex-shrink-0">
                         <p className="text-sm text-gray-300">{timeLabel}</p>
-                        <p className="text-xs text-gray-500">{date.toLocaleTimeString()}</p>
+                        <p className="text-xs text-gray-500">
+                          {date.toLocaleTimeString()}
+                        </p>
                       </div>
                     </div>
                   );
@@ -1304,12 +1456,263 @@ export default function AnalyticsDashboard() {
               ) : (
                 <div className="text-center py-12">
                   <Eye className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400">No activity in {timeRangeLabels[timeRange].toLowerCase()}</p>
-                  <p className="text-sm text-gray-500 mt-1">Events will appear here as users interact with your site</p>
+                  <p className="text-gray-400">
+                    No activity in {timeRangeLabels[timeRange].toLowerCase()}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Events will appear here as users interact with your site
+                  </p>
                 </div>
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Detailed Metrics Modal */}
+      {showDetailsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+              <div>
+                <h2 className="text-2xl font-bold text-white">
+                  {detailedMetrics?.filter_value || "Loading..."} Details
+                </h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  {detailedMetrics?.filter_type === "device" && "Device Type"}
+                  {detailedMetrics?.filter_type === "browser" && "Browser"}
+                  {detailedMetrics?.filter_type === "os" && "Operating System"}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setDetailedMetrics(null);
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {detailedLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                </div>
+              ) : detailedMetrics ? (
+                <div className="space-y-6">
+                  {/* Summary Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-gray-700/30 p-4 rounded-lg">
+                      <div className="text-sm text-gray-400">
+                        Total Sessions
+                      </div>
+                      <div className="text-2xl font-bold text-white mt-1">
+                        {detailedMetrics.total_sessions.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="bg-gray-700/30 p-4 rounded-lg">
+                      <div className="text-sm text-gray-400">
+                        Total Page Views
+                      </div>
+                      <div className="text-2xl font-bold text-white mt-1">
+                        {detailedMetrics.total_page_views.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="bg-gray-700/30 p-4 rounded-lg">
+                      <div className="text-sm text-gray-400">Total Events</div>
+                      <div className="text-2xl font-bold text-white mt-1">
+                        {detailedMetrics.total_events.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Location Breakdown */}
+                  {Object.keys(detailedMetrics.location_breakdown).length >
+                    0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-cyan-400" />
+                        Locations
+                      </h3>
+                      <div className="space-y-2">
+                        {Object.entries(detailedMetrics.location_breakdown)
+                          .sort((a, b) => b[1] - a[1])
+                          .map(([location, count]) => (
+                            <div
+                              key={location}
+                              className="flex items-center justify-between p-3 rounded-lg bg-gray-700/30"
+                            >
+                              <span className="text-gray-300">{location}</span>
+                              <span className="font-semibold text-white">
+                                {count}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pages Visited Breakdown */}
+                  {Object.keys(detailedMetrics.pages_breakdown).length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <LinkIcon className="w-5 h-5 text-cyan-400" />
+                        Pages Visited
+                      </h3>
+                      <div className="space-y-2">
+                        {Object.entries(detailedMetrics.pages_breakdown)
+                          .sort((a, b) => b[1] - a[1])
+                          .slice(0, 10)
+                          .map(([page, count]) => (
+                            <div
+                              key={page}
+                              className="flex items-center justify-between p-3 rounded-lg bg-gray-700/30"
+                            >
+                              <span className="text-gray-300 text-sm truncate flex-1 mr-4">
+                                {page}
+                              </span>
+                              <span className="font-semibold text-white">
+                                {count}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Events Breakdown */}
+                  {Object.keys(detailedMetrics.events_breakdown).length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <Activity className="w-5 h-5 text-cyan-400" />
+                        Events
+                      </h3>
+                      <div className="space-y-2">
+                        {Object.entries(detailedMetrics.events_breakdown)
+                          .sort((a, b) => b[1] - a[1])
+                          .slice(0, 10)
+                          .map(([event, count]) => (
+                            <div
+                              key={event}
+                              className="flex items-center justify-between p-3 rounded-lg bg-gray-700/30"
+                            >
+                              <span className="text-gray-300">{event}</span>
+                              <span className="font-semibold text-white">
+                                {count}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sessions List */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <Users className="w-5 h-5 text-cyan-400" />
+                      Recent Sessions ({detailedMetrics.sessions.length})
+                    </h3>
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {detailedMetrics.sessions.slice(0, 20).map((session) => (
+                        <div
+                          key={session.session_id}
+                          className="p-4 rounded-lg bg-gray-700/30 border border-gray-600/50"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Calendar className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm text-gray-400">
+                                  {new Date(
+                                    session.start_time
+                                  ).toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                                <div>
+                                  <span className="text-gray-400">
+                                    Duration:
+                                  </span>
+                                  <span className="text-white ml-2">
+                                    {formatDuration(session.duration)}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">Pages:</span>
+                                  <span className="text-white ml-2">
+                                    {session.page_views}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">Events:</span>
+                                  <span className="text-white ml-2">
+                                    {session.events}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400">
+                                    Location:
+                                  </span>
+                                  <span className="text-white ml-2">
+                                    {session.city}, {session.country}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {session.pages_visited.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-gray-600/50">
+                              <div className="text-xs text-gray-400 mb-2">
+                                Pages Visited:
+                              </div>
+                              <div className="space-y-1">
+                                {session.pages_visited
+                                  .slice(0, 5)
+                                  .map((page, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="text-xs text-gray-300 flex items-center gap-2"
+                                    >
+                                      <LinkIcon className="w-3 h-3" />
+                                      <span className="truncate">
+                                        {formatPageUrl(page.url)}
+                                      </span>
+                                      {page.title && (
+                                        <span className="text-gray-500">
+                                          - {page.title}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))}
+                                {session.pages_visited.length > 5 && (
+                                  <div className="text-xs text-gray-500">
+                                    +{session.pages_visited.length - 5} more
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-400">
+                  No detailed metrics available
+                </div>
+              )}
+            </div>
+          </motion.div>
         </div>
       )}
     </div>
