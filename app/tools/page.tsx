@@ -3,18 +3,18 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title:
-    "Free Online Tools - Video, Audio, Image, PDF Converters | Trevnoctilla",
+    "Only Free Browser File Converter Tools | Mobile Friendly | Trevnoctilla",
   description:
-    "Free online tools for video conversion, audio conversion, image conversion, PDF processing, and QR code generation. High-quality, fast, and secure file conversion tools.",
+    "Only free browser file converter tools - no download, no signup, no credit card. Mobile-friendly. Convert videos, audio, images, PDFs, and generate QR codes instantly in your browser.",
   keywords:
-    "online tools, video converter, audio converter, image converter, pdf tools, qr generator, file converter, free tools, online converter",
+    "only free file converter mobile, mobile friendly browser converter, browser file converter no download, only free video converter mobile, mobile friendly audio converter, browser image converter free, only free pdf tools mobile, mobile friendly browser tools, no signup file converter mobile, browser instant converter free, only free web converter, mobile converter browser free",
   alternates: {
     canonical: "https://www.trevnoctilla.com/tools",
   },
   openGraph: {
-    title: "Free Online Tools - Video, Audio, Image, PDF Converters",
+    title: "Free Online File Converter Tools | Mobile Friendly",
     description:
-      "Free online tools for video conversion, audio conversion, image conversion, PDF processing, and QR code generation.",
+      "Free online file converter tools - no download, no signup, no credit card. Mobile-friendly. Convert videos, audio, images, PDFs, and generate QR codes instantly in your browser.",
     type: "website",
     url: "https://www.trevnoctilla.com/tools",
   },
@@ -24,9 +24,9 @@ const structuredData = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   "@id": "https://www.trevnoctilla.com/tools",
-  name: "Free Online Tools - Video, Audio, Image, PDF Converters",
+  name: "Free Online File Converter Tools | Mobile Friendly",
   description:
-    "Free online tools for video conversion, audio conversion, image conversion, PDF processing, and QR code generation.",
+    "Free online file converter tools - no download, no signup, no credit card. Mobile-friendly. Convert videos, audio, images, PDFs, and generate QR codes instantly in your browser.",
   url: "https://www.trevnoctilla.com/tools",
   isPartOf: { "@id": "https://www.trevnoctilla.com/#website" },
   breadcrumb: {
@@ -54,7 +54,7 @@ const structuredData = {
         position: 1,
         item: {
           "@type": "SoftwareApplication",
-          name: "Video Converter",
+          name: "Free Online Video Converter | Mobile Friendly",
           url: "https://www.trevnoctilla.com/tools/video-converter",
           applicationCategory: "MultimediaApplication",
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -65,7 +65,7 @@ const structuredData = {
         position: 2,
         item: {
           "@type": "SoftwareApplication",
-          name: "Audio Converter",
+          name: "Free Online Audio Converter | Mobile Friendly",
           url: "https://www.trevnoctilla.com/tools/audio-converter",
           applicationCategory: "MultimediaApplication",
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -76,7 +76,7 @@ const structuredData = {
         position: 3,
         item: {
           "@type": "SoftwareApplication",
-          name: "Image Converter",
+          name: "Free Online Image Converter | Mobile Friendly",
           url: "https://www.trevnoctilla.com/tools/image-converter",
           applicationCategory: "MultimediaApplication",
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -87,7 +87,7 @@ const structuredData = {
         position: 4,
         item: {
           "@type": "SoftwareApplication",
-          name: "PDF Tools",
+          name: "Free Online PDF Tools | Mobile Friendly",
           url: "https://www.trevnoctilla.com/tools/pdf-tools",
           applicationCategory: "UtilitiesApplication",
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -98,7 +98,7 @@ const structuredData = {
         position: 5,
         item: {
           "@type": "SoftwareApplication",
-          name: "QR Code Generator",
+          name: "Free Online QR Code Generator | Mobile Friendly",
           url: "https://www.trevnoctilla.com/tools/qr-generator",
           applicationCategory: "UtilitiesApplication",
           offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },

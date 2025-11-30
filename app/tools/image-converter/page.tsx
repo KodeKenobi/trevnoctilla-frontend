@@ -22,19 +22,19 @@ function ImageConverterLoading() {
 }
 
 export const metadata: Metadata = {
-  title:
-    "Image Converter - Convert Images to JPG, PNG, WEBP, GIF | Trevnoctilla",
+  title: "Free Online Image Converter | Mobile Friendly | Trevnoctilla",
   description:
-    "Convert images between all formats with resize and quality control. JPG, PNG, WEBP, GIF, and more. Free online image converter with high-quality output.",
+    "Free online image converter - no download, no signup, no credit card. Mobile-friendly. Convert JPG, PNG, WebP, GIF instantly in your browser.",
   keywords:
-    "image converter, jpg converter, png converter, webp converter, gif converter, image resize, image quality, online image converter, heic to jpg",
+    "free image converter mobile, mobile friendly online image converter, online image converter no download, free JPG converter mobile, mobile image converter online free, no signup image converter mobile, online instant image converter, free online image converter mobile, mobile friendly instant image converter",
   alternates: {
     canonical: "https://www.trevnoctilla.com/tools/image-converter",
   },
   openGraph: {
-    title: "Image Converter - Convert Images to JPG, PNG, WEBP, GIF",
+    title:
+      "Free Online Image Converter | Mobile Friendly | Convert JPG, PNG, WEBP",
     description:
-      "Convert images between all formats with resize and quality control. JPG, PNG, WEBP, GIF, and more.",
+      "Free online image converter - no download, no signup, no credit card. Mobile-friendly. Convert JPG, PNG, WebP, GIF instantly in your browser.",
     type: "website",
     url: "https://www.trevnoctilla.com/tools/image-converter",
   },
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "Image Converter - Convert JPG, PNG, WEBP, GIF, HEIC",
+  name: "Free Online Image Converter | Mobile Friendly",
   description:
-    "Convert images between all formats with resize and quality control. JPG, PNG, WEBP, GIF, HEIC, and more. Free online image converter.",
+    "Free online image converter - no download, no signup, no credit card. Mobile-friendly. Convert JPG, PNG, WebP, GIF instantly in your browser.",
   url: "https://www.trevnoctilla.com/tools/image-converter",
   applicationCategory: "MultimediaApplication",
   operatingSystem: "Any",
@@ -57,14 +57,13 @@ const structuredData = {
     availability: "https://schema.org/InStock",
   },
   featureList: [
-    "Convert JPG to PNG, WEBP, GIF, BMP",
-    "Convert PNG to JPG, WEBP, GIF, BMP",
-    "Convert HEIC to JPG (iPhone photos)",
-    "Convert WEBP to JPG, PNG",
-    "Resize images by dimensions or percentage",
-    "Adjust image quality (1-100%)",
-    "Batch image conversion",
-    "Fast cloud-based processing",
+    "Convert images instantly in browser",
+    "No download or installation required",
+    "No signup or account needed",
+    "Works on mobile, tablet, and desktop",
+    "Instant processing in cloud",
+    "Support for all major image formats",
+    "Perfect for students and developers",
   ],
   screenshot: "https://www.trevnoctilla.com/logo.png",
   author: {

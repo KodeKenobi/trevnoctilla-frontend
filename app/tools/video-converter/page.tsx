@@ -22,19 +22,19 @@ function VideoConverterLoading() {
 }
 
 export const metadata: Metadata = {
-  title:
-    "Video Converter - Convert Videos to MP4, AVI, MOV, MKV | Trevnoctilla",
+  title: "Free Online Video Converter | Mobile Friendly | Trevnoctilla",
   description:
-    "Convert videos between all formats with compression and quality control. MP4, AVI, MOV, MKV, WEBM, and more. Free online video converter with high-quality output.",
+    "Free online video converter - no download, no signup, no credit card. Mobile-friendly. Convert MP4, AVI, MOV, WebM instantly in your browser.",
   keywords:
-    "video converter, mp4 converter, avi converter, mov converter, mkv converter, webm converter, video compression, video quality, online video converter",
+    "free video converter mobile, mobile friendly online video converter, online video converter no download, free MP4 converter mobile, mobile video converter online free, no signup video converter mobile, online instant video converter, free online video converter mobile, mobile friendly instant converter",
   alternates: {
     canonical: "https://www.trevnoctilla.com/tools/video-converter",
   },
   openGraph: {
-    title: "Video Converter - Convert Videos to MP4, AVI, MOV, MKV",
+    title:
+      "Free Online Video Converter | Mobile Friendly | Convert MP4, AVI, MOV",
     description:
-      "Convert videos between all formats with compression and quality control. MP4, AVI, MOV, MKV, WEBM, and more.",
+      "Free online video converter - no download, no signup, no credit card. Mobile-friendly. Convert MP4, AVI, MOV, WebM instantly in your browser.",
     type: "website",
     url: "https://www.trevnoctilla.com/tools/video-converter",
   },
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "Video Converter - Convert MP4, AVI, MOV, MKV, WEBM",
+  name: "Free Online Video Converter | Mobile Friendly",
   description:
-    "Convert videos between all formats with compression and quality control. MP4, AVI, MOV, MKV, WEBM, and more. Free online video converter.",
+    "Free online video converter - no download, no signup, no credit card. Mobile-friendly. Convert MP4, AVI, MOV, WebM instantly in your browser.",
   url: "https://www.trevnoctilla.com/tools/video-converter",
   applicationCategory: "MultimediaApplication",
   operatingSystem: "Any",
@@ -57,13 +57,13 @@ const structuredData = {
     availability: "https://schema.org/InStock",
   },
   featureList: [
-    "Convert MP4 to AVI, MOV, MKV, WEBM",
-    "Convert AVI to MP4, MOV, MKV, WEBM",
-    "Convert MOV to MP4, AVI, MKV, WEBM",
-    "Adjust video quality and bitrate",
-    "Compress videos without losing quality",
-    "Support for 4K and HD videos",
-    "Fast cloud-based processing",
+    "Convert videos instantly in browser",
+    "No download or installation required",
+    "No signup or account needed",
+    "Works on mobile, tablet, and desktop",
+    "Instant processing in cloud",
+    "Support for all major video formats",
+    "Perfect for students and developers",
   ],
   screenshot: "https://www.trevnoctilla.com/logo.png",
   author: {

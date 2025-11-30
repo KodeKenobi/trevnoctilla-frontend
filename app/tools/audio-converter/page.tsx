@@ -22,19 +22,19 @@ function AudioConverterLoading() {
 }
 
 export const metadata: Metadata = {
-  title:
-    "Audio Converter - Convert Audio to MP3, WAV, AAC, FLAC | Trevnoctilla",
+  title: "Free Online Audio Converter | Mobile Friendly | Trevnoctilla",
   description:
-    "Convert audio between all formats with bitrate and quality control. MP3, WAV, AAC, FLAC, OGG, and more. Free online audio converter with high-quality output.",
+    "Free online audio converter - no download, no signup, no credit card. Mobile-friendly. Convert MP3, WAV, AAC, FLAC instantly in your browser.",
   keywords:
-    "audio converter, mp3 converter, wav converter, aac converter, flac converter, ogg converter, audio bitrate, audio quality, online audio converter",
+    "free audio converter mobile, mobile friendly online audio converter, online audio converter no download, free MP3 converter mobile, mobile audio converter online free, no signup audio converter mobile, online instant audio converter, free online audio converter mobile, mobile friendly instant audio converter",
   alternates: {
     canonical: "https://www.trevnoctilla.com/tools/audio-converter",
   },
   openGraph: {
-    title: "Audio Converter - Convert Audio to MP3, WAV, AAC, FLAC",
+    title:
+      "Free Online Audio Converter | Mobile Friendly | Convert MP3, WAV, AAC",
     description:
-      "Convert audio between all formats with bitrate and quality control. MP3, WAV, AAC, FLAC, OGG, and more.",
+      "Free online audio converter - no download, no signup, no credit card. Mobile-friendly. Convert MP3, WAV, FLAC, AAC instantly in your browser.",
     type: "website",
     url: "https://www.trevnoctilla.com/tools/audio-converter",
   },
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "Audio Converter - Convert MP3, WAV, AAC, FLAC, OGG",
+  name: "Free Online Audio Converter | Mobile Friendly",
   description:
-    "Convert audio between all formats with bitrate and quality control. MP3, WAV, AAC, FLAC, OGG, and more. Free online audio converter.",
+    "Free online audio converter - no download, no signup, no credit card. Mobile-friendly. Convert MP3, WAV, AAC, FLAC instantly in your browser.",
   url: "https://www.trevnoctilla.com/tools/audio-converter",
   applicationCategory: "MultimediaApplication",
   operatingSystem: "Any",
@@ -57,13 +57,13 @@ const structuredData = {
     availability: "https://schema.org/InStock",
   },
   featureList: [
-    "Convert MP3 to WAV, AAC, FLAC, OGG",
-    "Convert WAV to MP3, AAC, FLAC, OGG",
-    "Convert FLAC to MP3, WAV, AAC, OGG",
-    "Adjust audio bitrate (32-320 kbps)",
-    "Preserve audio quality",
-    "Extract audio from video files",
-    "Fast cloud-based processing",
+    "Convert audio instantly in browser",
+    "No download or installation required",
+    "No signup or account needed",
+    "Works on mobile, tablet, and desktop",
+    "Instant processing in cloud",
+    "Support for all major audio formats",
+    "Perfect for students and developers",
   ],
   screenshot: "https://www.trevnoctilla.com/logo.png",
   author: {

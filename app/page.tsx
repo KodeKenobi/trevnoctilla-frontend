@@ -2,18 +2,18 @@ import LandingPage from "@/components/pages/LandingPage";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Trevnoctilla - Free Online File Conversion Tools",
+  title: "Trevnoctilla - Free Online PDF Editor | Mobile Friendly Tools",
   description:
-    "Free PDF editor and file converter — merge, split, sign and edit PDFs online. Convert videos, audio, and images across all major formats with lightning-fast, professional results.",
+    "Free online PDF editor and file converter - no download, no signup, no credit card. Mobile-friendly. Convert videos, audio, images instantly in your browser.",
   keywords:
-    "file converter, video converter, audio converter, image converter, pdf tools, qr generator, online converter, free tools, file conversion",
+    "free online pdf editor, mobile friendly pdf editor, online pdf editor no download, free pdf editor mobile, mobile pdf editor free, online file converter no signup, free video converter mobile, mobile friendly file converter, online audio converter free, free image converter mobile, no credit card required",
   alternates: {
     canonical: "https://www.trevnoctilla.com",
   },
   openGraph: {
-    title: "Trevnoctilla - Free Online File Conversion Tools",
+    title: "Trevnoctilla - Free Online PDF Editor | Mobile Friendly Tools",
     description:
-      "Free PDF editor and file converter — merge, split, sign and edit PDFs online. Convert videos, audio, and images across all major formats with lightning-fast, professional results.",
+      "Free online PDF editor and file converter - no download, no signup, no credit card. Mobile-friendly. Convert videos, audio, images instantly in your browser.",
     type: "website",
     url: "https://www.trevnoctilla.com",
   },
@@ -28,7 +28,7 @@ const structuredData = {
       url: "https://www.trevnoctilla.com",
       name: "Trevnoctilla",
       description:
-        "Free PDF editor and file converter — merge, split, sign and edit PDFs online.",
+        "Free online PDF editor and file converter - no download, no signup, no credit card. Mobile-friendly. Convert videos, audio, images instantly in your browser.",
       publisher: { "@id": "https://www.trevnoctilla.com/#organization" },
       potentialAction: {
         "@type": "SearchAction",

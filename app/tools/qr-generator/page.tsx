@@ -22,19 +22,19 @@ function QRGeneratorLoading() {
 }
 
 export const metadata: Metadata = {
-  title:
-    "QR Code Generator - Create QR Codes for URLs, Text, WiFi | Trevnoctilla",
+  title: "Free Online QR Code Generator | Mobile Friendly | Trevnoctilla",
   description:
-    "Generate QR codes for URLs, text, WiFi, contact info, and more. Free online QR code generator with customizable design and high-quality output.",
+    "Free online QR code generator - no download, no signup, no credit card. Mobile-friendly. Create QR codes for URLs, text, WiFi instantly in your browser.",
   keywords:
-    "qr code generator, qr code creator, qr code maker, qr code for url, qr code for wifi, qr code for text, online qr generator, free qr code",
+    "free QR generator mobile, mobile friendly online QR generator, online QR generator no download, free QR code maker mobile, mobile QR generator online free, no signup QR generator mobile, online instant QR generator, free online QR generator mobile, mobile friendly instant QR generator",
   alternates: {
     canonical: "https://www.trevnoctilla.com/tools/qr-generator",
   },
   openGraph: {
-    title: "QR Code Generator - Create QR Codes for URLs, Text, WiFi",
+    title:
+      "Free Online QR Code Generator | Mobile Friendly | Create QR Codes Instantly",
     description:
-      "Generate QR codes for URLs, text, WiFi, contact info, and more. Free online QR code generator.",
+      "Free online QR code generator - no download, no signup, no credit card. Mobile-friendly. Create QR codes for URLs, text, WiFi instantly in your browser.",
     type: "website",
     url: "https://www.trevnoctilla.com/tools/qr-generator",
   },
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "QR Code Generator - Create Custom QR Codes",
+  name: "Free Online QR Code Generator | Mobile Friendly",
   description:
-    "Generate QR codes for URLs, text, WiFi, contact info, and more. Free online QR code generator with customizable design.",
+    "Free online QR code generator - no download, no signup, no credit card. Mobile-friendly. Create QR codes for URLs, text, WiFi instantly in your browser.",
   url: "https://www.trevnoctilla.com/tools/qr-generator",
   applicationCategory: "UtilitiesApplication",
   operatingSystem: "Any",
@@ -57,16 +57,13 @@ const structuredData = {
     availability: "https://schema.org/InStock",
   },
   featureList: [
-    "Generate QR codes for URLs",
-    "Generate QR codes for plain text",
-    "Generate QR codes for WiFi networks",
-    "Generate QR codes for email addresses",
-    "Generate QR codes for phone numbers",
-    "Generate QR codes for SMS",
-    "Generate QR codes for vCards",
-    "Customize QR code colors",
-    "Download as PNG, SVG, or PDF",
-    "High-resolution output",
+    "Generate QR codes instantly in browser",
+    "No download or installation required",
+    "No signup or account needed",
+    "Works on mobile, tablet, and desktop",
+    "Instant generation in cloud",
+    "Support for URLs, text, WiFi, and more",
+    "Perfect for students and developers",
   ],
   screenshot: "https://www.trevnoctilla.com/logo.png",
   author: {

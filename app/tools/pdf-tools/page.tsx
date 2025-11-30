@@ -22,18 +22,20 @@ function PDFToolsLoading() {
 }
 
 export const metadata: Metadata = {
-  title: "PDF Tools - Extract Text, Merge, Split, Sign PDFs | Trevnoctilla",
+  title:
+    "Free Online PDF Tools | Mobile Friendly | Extract, Merge, Split PDFs | Trevnoctilla",
   description:
-    "Comprehensive PDF processing: extract text/images, merge, split, sign, watermark, and compress PDFs. Free online PDF tools with advanced features.",
+    "Free online PDF tools - no download, no signup, no credit card. Mobile-friendly. Extract text/images, merge, split, sign, watermark, and compress PDFs instantly in your browser.",
   keywords:
-    "pdf tools, pdf extractor, pdf merger, pdf splitter, pdf signature, pdf watermark, pdf compressor, pdf editor, online pdf tools",
+    "free pdf editor mobile, mobile friendly pdf editor, online PDF tools no download, free PDF tools mobile, mobile friendly online PDF tools, no signup PDF tools mobile, online instant PDF processing, free online PDF editor mobile, mobile PDF editor online free, free PDF merge mobile",
   alternates: {
     canonical: "https://www.trevnoctilla.com/tools/pdf-tools",
   },
   openGraph: {
-    title: "PDF Tools - Extract Text, Merge, Split, Sign PDFs",
+    title:
+      "Free Online PDF Tools | Mobile Friendly | Extract, Merge, Split PDFs",
     description:
-      "Comprehensive PDF processing: extract text/images, merge, split, sign, watermark, and compress PDFs.",
+      "Free online PDF tools - no download, no signup, no credit card. Mobile-friendly. Extract text/images, merge, split, sign, watermark, and compress PDFs instantly in your browser.",
     type: "website",
     url: "https://www.trevnoctilla.com/tools/pdf-tools",
   },
@@ -42,9 +44,9 @@ export const metadata: Metadata = {
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "PDF Tools - Merge, Split, Compress, Sign PDFs",
+  name: "Free Online PDF Tools | Mobile Friendly",
   description:
-    "Comprehensive PDF processing: extract text/images, merge, split, sign, watermark, and compress PDFs. Free online PDF tools.",
+    "Free online PDF tools - no download, no signup, no credit card. Mobile-friendly. Extract, merge, split, sign, compress PDFs instantly in your browser.",
   url: "https://www.trevnoctilla.com/tools/pdf-tools",
   applicationCategory: "UtilitiesApplication",
   operatingSystem: "Any",
@@ -56,16 +58,13 @@ const structuredData = {
     availability: "https://schema.org/InStock",
   },
   featureList: [
-    "Merge multiple PDFs into one",
-    "Split PDF into individual pages",
-    "Extract text from PDF with OCR",
-    "Extract images from PDF",
-    "Add digital signatures",
-    "Add watermarks",
-    "Compress PDF files",
-    "Convert PDF to Word",
-    "Convert Word to PDF",
-    "Convert PDF to Images",
+    "Process PDFs instantly in browser",
+    "No download or installation required",
+    "No signup or account needed",
+    "Works on mobile, tablet, and desktop",
+    "Instant processing in cloud",
+    "Merge, split, extract, sign, compress",
+    "Perfect for students and developers",
   ],
   screenshot: "https://www.trevnoctilla.com/logo.png",
   softwareVersion: "1.0",
