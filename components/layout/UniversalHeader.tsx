@@ -108,10 +108,8 @@ export default function UniversalHeader() {
       <header className="fixed top-0 left-0 right-0 z-[9999] flex items-center justify-between px-2 sm:px-6 py-3 lg:px-12 bg-background/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-border dark:border-gray-700/30 w-full max-w-full">
         {/* Logo */}
         <div className="flex items-center space-x-3">
-          <button
-            onClick={() => {
-              navigateTo("home");
-            }}
+          <Link
+            href="/"
             className="flex items-center space-x-2 text-lg sm:text-xl font-bold text-white hover:text-purple-400 transition-colors"
           >
             <img
@@ -135,32 +133,33 @@ export default function UniversalHeader() {
               }}
             />
             <span className="text-white">Trevnoctilla</span>
-          </button>
+          </Link>
         </div>
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center bg-white/10 backdrop-blur-lg border border-white/20 rounded-full px-2 py-2 shadow-lg">
           {[
-            "Home",
-            "Tools",
-            "Video Converter",
-            "Audio Converter",
-            "Image Converter",
-            "PDF Tools",
-            "QR Generator",
-            "API",
+            { label: "Home", href: "/", anchor: "Free Online PDF Editor" },
+            { label: "Tools", href: "/tools", anchor: "Free PDF Editor Tools" },
+            { label: "Video Converter", href: "/tools/video-converter", anchor: "Convert Video to MP3" },
+            { label: "Audio Converter", href: "/tools/audio-converter", anchor: "Free Audio Converter" },
+            { label: "Image Converter", href: "/tools/image-converter", anchor: "Image Format Converter" },
+            { label: "PDF Tools", href: "/tools/pdf-tools", anchor: "Edit PDF Online for Free" },
+            { label: "QR Generator", href: "/tools/qr-generator", anchor: "Free QR Code Generator" },
+            { label: "API", href: "/api-docs", anchor: "PDF Processing API" },
           ].map((item) => (
-            <div key={item} className="mx-1">
-              <button
-                onClick={() => handleNavClick(item)}
+            <div key={item.label} className="mx-1">
+              <Link
+                href={item.href}
                 className={`${
-                  selectedMenuItem === item
+                  selectedMenuItem === item.label
                     ? "bg-white/20 text-white backdrop-blur-sm"
                     : "text-gray-300 hover:text-white hover:bg-white/10"
                 } px-4 py-2 rounded-full transition-all duration-200 text-sm`}
+                title={item.anchor}
               >
-                {item}
-              </button>
+                {item.label}
+              </Link>
             </div>
           ))}
         </nav>
@@ -456,26 +455,28 @@ export default function UniversalHeader() {
         <div className="fixed top-16 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-md border-b border-gray-700/30 lg:hidden">
           <nav className="flex flex-col p-4 space-y-2">
             {[
-              "Home",
-              "Tools",
-              "Video Converter",
-              "Audio Converter",
-              "Image Converter",
-              "PDF Tools",
-              "QR Generator",
-              "API",
+              { label: "Home", href: "/", anchor: "Free Online PDF Editor" },
+              { label: "Tools", href: "/tools", anchor: "Free PDF Editor Tools" },
+              { label: "Video Converter", href: "/tools/video-converter", anchor: "Convert Video to MP3" },
+              { label: "Audio Converter", href: "/tools/audio-converter", anchor: "Free Audio Converter" },
+              { label: "Image Converter", href: "/tools/image-converter", anchor: "Image Format Converter" },
+              { label: "PDF Tools", href: "/tools/pdf-tools", anchor: "Edit PDF Online for Free" },
+              { label: "QR Generator", href: "/tools/qr-generator", anchor: "Free QR Code Generator" },
+              { label: "API", href: "/api-docs", anchor: "PDF Processing API" },
             ].map((item) => (
-              <button
-                key={item}
-                onClick={() => handleNavClick(item)}
+              <Link
+                key={item.label}
+                href={item.href}
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={`${
-                  selectedMenuItem === item
+                  selectedMenuItem === item.label
                     ? "bg-white/20 text-white"
                     : "text-gray-300 hover:text-white hover:bg-white/10"
                 } px-4 py-3 rounded-lg transition-all duration-200 text-left`}
+                title={item.anchor}
               >
-                {item}
-              </button>
+                {item.label}
+              </Link>
             ))}
           </nav>
         </div>

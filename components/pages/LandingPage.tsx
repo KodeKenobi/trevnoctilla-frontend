@@ -134,6 +134,7 @@ export default function LandingPage() {
               <Link
                 href="/tools"
                 className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-1 sm:space-x-2 group text-sm sm:text-base hover:scale-105 active:scale-95 relative z-50"
+                title="Free PDF Editor Tools"
               >
                 <span>Start Converting</span>
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
@@ -141,6 +142,7 @@ export default function LandingPage() {
               <Link
                 href="/api-docs"
                 className="text-gray-300 hover:text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-200 text-sm sm:text-base hover:scale-105 active:scale-95 relative z-50"
+                title="PDF Processing API Documentation"
               >
                 API Docs
               </Link>
@@ -180,7 +182,20 @@ export default function LandingPage() {
               </h2>
               <p className="text-xl text-gray-400 max-w-2xl mx-auto">
                 From simple file conversion to complex media processing,
-                Trevnoctilla has you covered with powerful features.
+                Trevnoctilla has you covered with powerful features. Use our{" "}
+                <Link href="/tools/pdf-tools" className="text-purple-400 hover:text-purple-300 underline">
+                  free PDF editor
+                </Link>{" "}
+                to <Link href="/tools/pdf-tools" className="text-purple-400 hover:text-purple-300 underline">
+                  merge PDF files
+                </Link>,{" "}
+                <Link href="/tools/video-converter" className="text-purple-400 hover:text-purple-300 underline">
+                  convert videos to MP3
+                </Link>, and{" "}
+                <Link href="/tools/image-converter" className="text-purple-400 hover:text-purple-300 underline">
+                  convert images
+                </Link>{" "}
+                - all in your browser.
               </p>
             </motion.div>
 
@@ -192,6 +207,7 @@ export default function LandingPage() {
                   description:
                     "Convert videos to MP3 audio and create animated GIFs with high quality output.",
                   color: "from-green-500 to-emerald-500",
+                  href: "/tools/video-converter",
                 },
                 {
                   icon: FileText,
@@ -199,6 +215,7 @@ export default function LandingPage() {
                   description:
                     "Merge PDF files seamlessly and generate custom QR codes for any content.",
                   color: "from-blue-500 to-cyan-500",
+                  href: "/tools/pdf-tools",
                 },
                 {
                   icon: Image,
@@ -206,27 +223,32 @@ export default function LandingPage() {
                   description:
                     "Convert images between different formats with quality preservation.",
                   color: "from-purple-500 to-pink-500",
+                  href: "/tools/image-converter",
                 },
               ].map((feature, index) => (
-                <motion.div
+                <Link
                   key={`feature-${index}`}
-                  initial={{ opacity: 0, y: 40, scale: 0.9, rotateY: -15 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1, rotateY: 0 }}
-                  transition={{
-                    duration: 0.8,
-                    delay: index * 0.2,
-                    type: "spring",
-                    stiffness: 100,
-                  }}
-                  viewport={{ once: true }}
-                  whileHover={{
-                    y: -10,
-                    scale: 1.02,
-                    rotateY: 5,
-                    transition: { duration: 0.3 },
-                  }}
-                  className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 text-center md:text-left"
+                  href={feature.href}
+                  className="block"
                 >
+                  <motion.div
+                    initial={{ opacity: 0, y: 40, scale: 0.9, rotateY: -15 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1, rotateY: 0 }}
+                    transition={{
+                      duration: 0.8,
+                      delay: index * 0.2,
+                      type: "spring",
+                      stiffness: 100,
+                    }}
+                    viewport={{ once: true }}
+                    whileHover={{
+                      y: -10,
+                      scale: 1.02,
+                      rotateY: 5,
+                      transition: { duration: 0.3 },
+                    }}
+                    className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 text-center md:text-left cursor-pointer"
+                  >
                   <motion.div
                     className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
                     initial={{ scale: 0, rotate: -180 }}
@@ -257,7 +279,8 @@ export default function LandingPage() {
                   >
                     {feature.description}
                   </motion.p>
-                </motion.div>
+                  </motion.div>
+                </Link>
               ))}
             </div>
 
@@ -344,9 +367,19 @@ export default function LandingPage() {
                 Powerful Tools for Every Need
               </h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-                From PDF editing to video conversion, our comprehensive toolkit
+                From <Link href="/tools/pdf-tools" className="text-cyan-400 hover:text-cyan-300 underline">
+                  PDF editing
+                </Link> to <Link href="/tools/video-converter" className="text-cyan-400 hover:text-cyan-300 underline">
+                  video conversion
+                </Link>, our comprehensive toolkit
                 handles all your file processing needs with professional-grade
-                quality.
+                quality. <Link href="/tools/pdf-tools" className="text-cyan-400 hover:text-cyan-300 underline">
+                  Edit PDFs online for free
+                </Link>, <Link href="/tools/pdf-tools" className="text-cyan-400 hover:text-cyan-300 underline">
+                  merge PDF files
+                </Link>, and <Link href="/tools/video-converter" className="text-cyan-400 hover:text-cyan-300 underline">
+                  convert videos
+                </Link> - all in your browser.
               </p>
             </motion.div>
 
@@ -355,7 +388,7 @@ export default function LandingPage() {
                 {
                   title: "PDF Powerhouse",
                   description:
-                    "Edit, split, merge, and convert PDFs with precision. Add watermarks, signatures, and more.",
+                    "Edit, split, merge, and convert PDFs with precision. Add watermarks, signatures, and more. All tools work in your browser with no download required.",
                   features: [
                     "Free PDF Editor",
                     "Split & Merge",
@@ -363,6 +396,7 @@ export default function LandingPage() {
                     "Digital Signatures",
                   ],
                   gradient: "from-red-500 to-pink-500",
+                  href: "/tools/pdf-tools",
                 },
                 {
                   title: "Media Converter",
@@ -375,6 +409,7 @@ export default function LandingPage() {
                     "Quality Control",
                   ],
                   gradient: "from-green-500 to-cyan-500",
+                  href: "/tools/video-converter",
                 },
                 {
                   title: "Smart Tools",
@@ -387,15 +422,20 @@ export default function LandingPage() {
                     "API Integration",
                   ],
                   gradient: "from-blue-500 to-purple-500",
+                  href: "/tools/qr-generator",
                 },
               ].map((tool, index) => (
-                <motion.div
+                <Link
                   key={tool.title}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.2 }}
-                  className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-cyan-500/50 transition-all duration-300 text-center md:text-left"
+                  href={tool.href}
+                  className="block"
                 >
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.2 }}
+                    className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-cyan-500/50 transition-all duration-300 text-center md:text-left cursor-pointer"
+                  >
                   <div
                     className={`w-12 h-12 bg-gradient-to-r ${tool.gradient} rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
                   >
@@ -418,7 +458,8 @@ export default function LandingPage() {
                       </li>
                     ))}
                   </ul>
-                </motion.div>
+                  </motion.div>
+                </Link>
               ))}
             </div>
 

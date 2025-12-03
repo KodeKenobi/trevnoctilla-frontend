@@ -330,6 +330,51 @@ export default function PDFTools() {
         >
           {renderTool()}
         </motion.div>
+
+        {/* Related Tools Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.4 }}
+          className="mt-16 pt-8 border-t border-gray-700/50"
+        >
+          <h3 className="text-xl font-semibold text-white mb-4 text-center">
+            Related Tools
+          </h3>
+          <div className="flex flex-wrap justify-center gap-4">
+            <a
+              href="/tools/image-converter"
+              className="px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-lg transition-all text-sm"
+            >
+              Image Converter
+            </a>
+            <a
+              href="/tools/video-converter"
+              className="px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-lg transition-all text-sm"
+            >
+              Video Converter
+            </a>
+            <a
+              href="/tools/audio-converter"
+              className="px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-lg transition-all text-sm"
+            >
+              Audio Converter
+            </a>
+            <a
+              href="/tools/qr-generator"
+              className="px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-lg transition-all text-sm"
+            >
+              QR Code Generator
+            </a>
+            <a
+              href="/features"
+              className="px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-lg transition-all text-sm"
+            >
+              View All Features
+            </a>
+          </div>
+        </motion.div>
       </div>
 
       {/* Monetization removed - using Google AdSense only */}

@@ -2,42 +2,43 @@ import { Metadata } from "next";
 import FeaturesClient from "./FeaturesClient";
 
 export const metadata: Metadata = {
-  title: "Features - Free PDF Editor & File Conversion Tools | Trevnoctilla",
+  title:
+    "Features - Browser-Based File Converter | No Download Required | Trevnoctilla",
   description:
-    "Explore all features of Trevnoctilla: Edit PDFs online free, merge & split PDFs, add digital signatures, convert videos, audio & images. Browser-based tools with no installation required.",
+    "Explore all browser-based features: Edit PDFs instantly, merge & split PDFs, add signatures, convert videos, audio & images. No download, no signup required. Perfect for students, developers, and mobile users.",
   keywords: [
-    "online PDF editor features",
-    "free pdf editing tools",
-    "browser pdf tools",
-    "pdf merge features",
-    "pdf split online",
-    "digital signature pdf",
-    "video converter features",
-    "audio converter online",
-    "image conversion tools",
-    "file converter features",
-    "pdf processing features",
-    "document editing online",
-    "pdf compression",
-    "pdf watermark",
-    "ocr text extraction",
-    "qr code generator",
+    "browser PDF editor features",
+    "no download PDF tools",
+    "instant file converter features",
+    "browser document tools",
+    "web PDF merge instant",
+    "browser PDF split no signup",
+    "instant PDF signature web",
+    "browser video converter features",
+    "web audio converter instant",
+    "browser image converter features",
+    "instant file converter web",
+    "browser document processing",
+    "no download PDF compress",
+    "browser PDF watermark",
+    "instant OCR text extraction",
+    "browser QR generator",
   ].join(", "),
   alternates: {
     canonical: "https://www.trevnoctilla.com/features",
   },
   openGraph: {
-    title: "Features - Free PDF Editor & File Conversion Tools",
+    title: "Features - Browser-Based File Converter | No Download Required",
     description:
-      "All-in-one file toolkit: Edit PDFs, merge, split, sign, convert videos, audio & images. 100% free, no registration.",
+      "Browser-based file toolkit: Edit PDFs instantly, merge, split, sign, convert videos, audio & images. No download, no signup required.",
     type: "website",
     url: "https://www.trevnoctilla.com/features",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Features - Free PDF Editor & File Conversion Tools",
+    title: "Features - Browser-Based File Converter | No Download Required",
     description:
-      "All-in-one file toolkit: Edit PDFs, merge, split, sign, convert videos, audio & images. 100% free, no registration.",
+      "Browser-based file toolkit: Edit PDFs instantly, merge, split, sign, convert videos, audio & images. No download, no signup required.",
   },
 };
 
@@ -47,9 +48,9 @@ const structuredData = {
     {
       "@type": "WebPage",
       "@id": "https://www.trevnoctilla.com/features",
-      name: "Features - Free PDF Editor & File Conversion Tools",
+      name: "Features - Browser-Based File Converter | No Download Required",
       description:
-        "Complete feature list for Trevnoctilla's free online PDF editor and file conversion tools.",
+        "Complete feature list for Trevnoctilla's browser-based PDF editor and file conversion tools. No download, no signup required.",
       url: "https://www.trevnoctilla.com/features",
       isPartOf: { "@id": "https://www.trevnoctilla.com/#website" },
       breadcrumb: {
@@ -81,7 +82,8 @@ const structuredData = {
           item: {
             "@type": "Thing",
             name: "PDF Editor",
-            description: "Edit PDF files directly in your browser - add text, images, annotations",
+            description:
+              "Edit PDF files instantly in your browser - no download, no signup. Add text, images, annotations",
           },
         },
         {
@@ -90,7 +92,8 @@ const structuredData = {
           item: {
             "@type": "Thing",
             name: "PDF Merge & Split",
-            description: "Combine multiple PDFs into one or split PDFs into separate files",
+            description:
+              "Combine or split PDFs instantly in your browser. No download required",
           },
         },
         {
@@ -99,7 +102,8 @@ const structuredData = {
           item: {
             "@type": "Thing",
             name: "Digital Signatures",
-            description: "Add legally binding digital signatures to PDF documents",
+            description:
+              "Add digital signatures instantly in your browser. No signup required",
           },
         },
         {
@@ -108,7 +112,8 @@ const structuredData = {
           item: {
             "@type": "Thing",
             name: "Video Converter",
-            description: "Convert videos between MP4, AVI, MOV, MKV, WebM and more",
+            description:
+              "Convert videos instantly in your browser. No software installation needed",
           },
         },
         {
@@ -117,7 +122,8 @@ const structuredData = {
           item: {
             "@type": "Thing",
             name: "Audio Converter",
-            description: "Convert audio files between MP3, WAV, FLAC, AAC, OGG and more",
+            description:
+              "Convert audio files instantly in your browser. No download required",
           },
         },
         {
@@ -126,7 +132,8 @@ const structuredData = {
           item: {
             "@type": "Thing",
             name: "Image Converter",
-            description: "Convert images between JPG, PNG, WebP, GIF, BMP and more",
+            description:
+              "Convert images instantly in your browser. No software needed",
           },
         },
       ],
@@ -145,4 +152,3 @@ export default function FeaturesPage() {
     </>
   );
 }
-

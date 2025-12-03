@@ -34,50 +34,66 @@ const pdfFeatures = [
   {
     icon: FileText,
     title: "PDF Editor",
-    description: "Edit PDF files directly in your browser. Add text, images, shapes, and annotations without any software installation.",
-    keywords: "edit pdf online, pdf editor free, modify pdf",
+    description:
+      "Edit PDF files directly in your browser. No software installation, no signup required. Add text, images, and annotations instantly.",
+    keywords:
+      "browser PDF editor, web PDF editor, no download PDF edit, instant PDF editor, browser document editor",
   },
   {
     icon: Merge,
     title: "Merge PDFs",
-    description: "Combine multiple PDF files into a single document. Arrange pages in any order before merging.",
-    keywords: "merge pdf, combine pdf files, join pdfs",
+    description:
+      "Combine multiple PDF files instantly in your browser. No download, no signup. Perfect for students and professionals.",
+    keywords:
+      "browser PDF merge, instant PDF merger, web PDF combine, no download merge, browser document merge",
   },
   {
     icon: Split,
     title: "Split PDF",
-    description: "Split large PDF documents into smaller files. Extract specific pages or split by page ranges.",
-    keywords: "split pdf, extract pages, separate pdf",
+    description:
+      "Split PDF documents instantly in your browser. Extract pages or split by ranges. No software needed.",
+    keywords:
+      "browser PDF split, web PDF splitter, instant PDF extract, no download split, browser document split",
   },
   {
     icon: PenTool,
     title: "Digital Signatures",
-    description: "Add legally binding digital signatures to your PDF documents. Draw, type, or upload your signature.",
-    keywords: "sign pdf online, digital signature, e-signature",
+    description:
+      "Add digital signatures to PDFs instantly in your browser. Draw, type, or upload signatures. No signup required.",
+    keywords:
+      "browser PDF sign, instant PDF signature, web PDF signer, no download sign, browser document sign",
   },
   {
     icon: Maximize,
     title: "Compress PDF",
-    description: "Reduce PDF file size while maintaining quality. Perfect for email attachments and web uploads.",
-    keywords: "compress pdf, reduce pdf size, shrink pdf",
+    description:
+      "Reduce PDF file size instantly in your browser. Perfect for email and web uploads. No download required.",
+    keywords:
+      "browser PDF compress, instant PDF shrink, web PDF reducer, no download compress, browser document compress",
   },
   {
     icon: Stamp,
     title: "Watermark",
-    description: "Add text or image watermarks to protect your PDF documents. Customize position, opacity, and rotation.",
-    keywords: "pdf watermark, add watermark, protect pdf",
+    description:
+      "Add watermarks to PDFs instantly in your browser. Customize position and opacity. No software needed.",
+    keywords:
+      "browser PDF watermark, instant watermark, web PDF protect, no download watermark, browser document watermark",
   },
   {
     icon: Eye,
     title: "OCR Text Extraction",
-    description: "Extract text from scanned documents and images using advanced OCR technology.",
-    keywords: "ocr pdf, extract text, scan to text",
+    description:
+      "Extract text from scanned documents instantly in your browser using OCR. No download required.",
+    keywords:
+      "browser OCR, instant text extraction, web OCR tool, no download OCR, browser text extract",
   },
   {
     icon: Type,
     title: "Add Text & Annotations",
-    description: "Add text boxes, highlights, underlines, and comments to your PDF documents.",
-    keywords: "annotate pdf, add text to pdf, pdf comments",
+    description:
+      "Add text boxes, highlights, and comments to PDFs instantly in your browser. No signup required.",
+    keywords:
+      "browser PDF annotate, instant PDF text, web PDF comments, no download annotate, browser document edit",
   },
 ];
 
@@ -85,29 +101,37 @@ const mediaFeatures = [
   {
     icon: Video,
     title: "Video Converter",
-    description: "Convert videos between all major formats: MP4, AVI, MOV, MKV, WebM, FLV, and more. Maintain quality with optimized encoding.",
-    keywords: "video converter, convert mp4, change video format",
+    description:
+      "Convert videos instantly in your browser. MP4, AVI, MOV, WebM formats. No software installation needed.",
+    keywords:
+      "browser video converter, instant video convert, web video tool, no download converter, browser media converter",
     href: "/tools/video-converter",
   },
   {
     icon: Music,
     title: "Audio Converter",
-    description: "Convert audio files between MP3, WAV, FLAC, AAC, OGG, M4A, and more. Perfect for music and podcast production.",
-    keywords: "audio converter, mp3 converter, convert audio",
+    description:
+      "Convert audio files instantly in your browser. MP3, WAV, FLAC, AAC formats. No download required.",
+    keywords:
+      "browser audio converter, instant audio convert, web audio tool, no download audio, browser sound converter",
     href: "/tools/audio-converter",
   },
   {
     icon: Image,
     title: "Image Converter",
-    description: "Convert images between JPG, PNG, WebP, GIF, BMP, TIFF, and more. Resize and optimize images for web.",
-    keywords: "image converter, jpg to png, convert images",
+    description:
+      "Convert images instantly in your browser. JPG, PNG, WebP, GIF formats. No software needed.",
+    keywords:
+      "browser image converter, instant image convert, web image tool, no download image, browser photo converter",
     href: "/tools/image-converter",
   },
   {
     icon: QrCode,
     title: "QR Code Generator",
-    description: "Generate custom QR codes for URLs, text, contact info, WiFi, and more. Download in PNG, SVG, or PDF format.",
-    keywords: "qr code generator, create qr code, qr maker",
+    description:
+      "Generate QR codes instantly in your browser. No download, no signup. Perfect for URLs, text, and WiFi.",
+    keywords:
+      "browser QR generator, instant QR code, web QR maker, no download QR, browser QR tool",
     href: "/tools/qr-generator",
   },
 ];
@@ -116,42 +140,50 @@ const platformFeatures = [
   {
     icon: Globe,
     title: "100% Browser-Based",
-    description: "No software to download or install. All tools work directly in your web browser on any device.",
+    description:
+      "No software to download or install. All tools work directly in your web browser on any device - desktop, tablet, or mobile.",
   },
   {
     icon: Shield,
     title: "Secure Processing",
-    description: "Your files are processed securely. We don't store your documents on our servers after processing.",
+    description:
+      "Your files are processed securely in the cloud. We don't store your documents after processing. Privacy-first approach.",
   },
   {
     icon: Zap,
     title: "Lightning Fast",
-    description: "Optimized processing engines deliver results in seconds, not minutes. No waiting around.",
+    description:
+      "Optimized cloud processing delivers results in seconds. No waiting, no queues. Instant results in your browser.",
   },
   {
     icon: Lock,
     title: "No Registration Required",
-    description: "Start using our tools immediately. No account creation, no email verification, no hassle.",
+    description:
+      "Start using our tools immediately. No account creation, no email verification, no hassle. Just open and use.",
   },
   {
     icon: Smartphone,
     title: "Mobile Friendly",
-    description: "Fully responsive design works perfectly on smartphones, tablets, and desktops.",
+    description:
+      "Fully responsive design works perfectly on smartphones, tablets, and desktops. Use anywhere, anytime.",
   },
   {
     icon: Cloud,
     title: "Cloud Processing",
-    description: "Heavy lifting happens in the cloud, so even complex operations work on any device.",
+    description:
+      "Heavy lifting happens in the cloud, so even complex operations work on any device with just a browser.",
   },
   {
     icon: Download,
     title: "Instant Downloads",
-    description: "Processed files are ready for immediate download. No email required, no waiting period.",
+    description:
+      "Processed files are ready for immediate download. No email required, no waiting period. Get results instantly.",
   },
   {
     icon: Settings,
     title: "REST API Access",
-    description: "Integrate our tools into your workflow with our powerful API. Perfect for developers.",
+    description:
+      "Integrate our tools into your workflow with our powerful browser-based API. Perfect for developers and web apps.",
   },
 ];
 
@@ -178,7 +210,7 @@ export default function FeaturesClient() {
       {/* Hero Section */}
       <section className="relative py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent" />
-        
+
         <div className="max-w-7xl mx-auto text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -195,19 +227,21 @@ export default function FeaturesClient() {
               </span>
             </h1>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto mb-8">
-              Edit PDFs, convert videos, audio & images, generate QR codes — all in your browser. 
-              No software to install, no registration required.
+              Edit PDFs, convert videos, audio & images, generate QR codes — all
+              in your browser. No software to install, no registration required.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 href="/tools"
                 className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-400 transition-all shadow-lg shadow-cyan-500/25"
+                title="Free PDF Editor Tools"
               >
                 Try All Tools Free
               </Link>
               <Link
                 href="/tools/pdf-tools"
                 className="px-8 py-3 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all"
+                title="Edit PDF Online for Free"
               >
                 Start with PDF Editor
               </Link>
@@ -229,7 +263,8 @@ export default function FeaturesClient() {
               PDF Editor Features
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Everything you need to edit, merge, split, sign, and process PDF documents online.
+              Everything you need to edit, merge, split, sign, and process PDF
+              documents online.
             </p>
           </motion.div>
 
@@ -242,18 +277,37 @@ export default function FeaturesClient() {
           >
             {pdfFeatures.map((feature) => {
               const Icon = feature.icon;
+              const getHref = (title: string) => {
+                if (title === "PDF Editor" || title === "Add Text & Annotations") return "/tools/pdf-tools";
+                if (title === "Merge PDFs") return "/tools/pdf-tools";
+                if (title === "Split PDF") return "/tools/pdf-tools";
+                if (title === "Digital Signatures") return "/tools/pdf-tools";
+                if (title === "Compress PDF") return "/tools/pdf-tools";
+                if (title === "Watermark") return "/tools/pdf-tools";
+                if (title === "OCR Text Extraction") return "/tools/pdf-tools";
+                return "/tools/pdf-tools";
+              };
               return (
-                <motion.div
+                <Link
                   key={feature.title}
-                  variants={itemVariants}
-                  className="group p-6 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl hover:border-cyan-500/50 hover:bg-gray-800/80 transition-all duration-300"
+                  href={getHref(feature.title)}
+                  className="block"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Icon className="w-6 h-6 text-cyan-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                  <p className="text-gray-400 text-sm leading-relaxed">{feature.description}</p>
-                </motion.div>
+                  <motion.div
+                    variants={itemVariants}
+                    className="group p-6 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl hover:border-cyan-500/50 hover:bg-gray-800/80 transition-all duration-300 cursor-pointer"
+                  >
+                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <Icon className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-400 transition-colors">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-400 text-sm leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </motion.div>
+                </Link>
               );
             })}
           </motion.div>
@@ -262,6 +316,7 @@ export default function FeaturesClient() {
             <Link
               href="/tools/pdf-tools"
               className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+              title="Edit PDF Online for Free"
             >
               Open PDF Tools <ArrowRight className="w-4 h-4" />
             </Link>
@@ -282,7 +337,8 @@ export default function FeaturesClient() {
               Media Conversion Tools
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Convert videos, audio files, and images between all popular formats with just a few clicks.
+              Convert videos, audio files, and images between all popular
+              formats with just a few clicks.
             </p>
           </motion.div>
 
@@ -311,7 +367,9 @@ export default function FeaturesClient() {
                     <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-purple-400 transition-colors">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-400 text-sm leading-relaxed">{feature.description}</p>
+                    <p className="text-gray-400 text-sm leading-relaxed">
+                      {feature.description}
+                    </p>
                     <div className="mt-4 flex items-center gap-1 text-purple-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                       Try Now <ArrowRight className="w-4 h-4" />
                     </div>
@@ -336,7 +394,8 @@ export default function FeaturesClient() {
               Why Choose Trevnoctilla?
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Built for speed, security, and simplicity. Here's what makes our platform stand out.
+              Built for speed, security, and simplicity. Here's what makes our
+              platform stand out.
             </p>
           </motion.div>
 
@@ -358,7 +417,9 @@ export default function FeaturesClient() {
                   <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center mb-4">
                     <Icon className="w-5 h-5 text-gray-300" />
                   </div>
-                  <h3 className="text-white font-semibold mb-2">{feature.title}</h3>
+                  <h3 className="text-white font-semibold mb-2">
+                    {feature.title}
+                  </h3>
                   <p className="text-gray-500 text-sm">{feature.description}</p>
                 </motion.div>
               );
@@ -377,14 +438,14 @@ export default function FeaturesClient() {
             className="relative p-8 md:p-12 bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-500/20 rounded-2xl text-center overflow-hidden"
           >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-cyan-500/5 via-transparent to-transparent" />
-            
+
             <div className="relative z-10">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                 Ready to Get Started?
               </h2>
               <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
-                All tools are free to use. No registration, no credit card, no hidden fees. 
-                Just open and start converting.
+                All tools are free to use. No registration, no credit card, no
+                hidden fees. Just open and start converting.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <Link
@@ -407,4 +468,3 @@ export default function FeaturesClient() {
     </div>
   );
 }
-

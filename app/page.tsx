@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     "Free online PDF editor and file converter - no download, no signup, no credit card. Mobile-friendly. Convert videos, audio, images instantly in your browser.",
   keywords:
-    "free online pdf editor, mobile friendly pdf editor, online pdf editor no download, free pdf editor mobile, mobile pdf editor free, online file converter no signup, free video converter mobile, mobile friendly file converter, online audio converter free, free image converter mobile, no credit card required",
+    "free pdf editor, free online pdf editor, edit pdf online for free, edit pdf, edit pdf for free, edit pdf for free on mobile, mobile pdf editor, online mobile pdf editor, pdf editor free, online pdf editor, pdf editor online, mobile friendly pdf editor, free pdf editor mobile, mobile pdf editor free, edit pdf on mobile, edit pdf on phone, online pdf editor no download, no download pdf editor, online file converter no signup, free video converter mobile, mobile friendly file converter, online audio converter free, free image converter mobile, no credit card required",
   alternates: {
     canonical: "https://www.trevnoctilla.com",
   },
