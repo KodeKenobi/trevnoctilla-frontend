@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Play, FileText, QrCode, Image, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigation } from "@/contexts/NavigationContext";
@@ -21,6 +21,12 @@ export default function LandingPage() {
     { text: "Generate custom QR codes instantly", icon: QrCode },
     { text: "Convert images between formats", icon: Image },
   ]);
+  const [isInitialMount, setIsInitialMount] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsInitialMount(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -93,12 +99,19 @@ export default function LandingPage() {
                   const IconComponent = card.icon;
                   return (
                     <motion.div
-                      key={`${card.text}-${index}`}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      key={card.text}
+                      initial={isInitialMount ? { opacity: 0, y: 20 } : false}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                        width: `${Math.max(85, 100 - index * 10)}%`,
+                        height: `${80 - index * 12}px`,
+                        top: `${index * 8}%`,
+                      }}
                       transition={{
-                        duration: 0.6,
-                        delay: 1 + index * 0.1,
+                        duration: isInitialMount ? 0.6 : 0.4,
+                        delay: isInitialMount ? 1 + index * 0.1 : 0,
+                        ease: "easeInOut",
                       }}
                       whileHover={{
                         scale: 1.02,
@@ -107,9 +120,6 @@ export default function LandingPage() {
                       }}
                       className="absolute bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-white transition-all duration-300 hover:bg-white/20 hover:border-white/40"
                       style={{
-                        width: `${Math.max(85, 100 - index * 10)}%`,
-                        height: `${80 - index * 12}px`,
-                        top: `${index * 8}%`,
                         zIndex: 5 - index,
                         padding: `${16 - index * 2}px 20px`,
                       }}
@@ -183,16 +193,31 @@ export default function LandingPage() {
               <p className="text-xl text-gray-400 max-w-2xl mx-auto">
                 From simple file conversion to complex media processing,
                 Trevnoctilla has you covered with powerful features. Use our{" "}
-                <Link href="/tools/pdf-tools" className="text-purple-400 hover:text-purple-300 underline">
+                <Link
+                  href="/tools/pdf-tools"
+                  className="text-purple-400 hover:text-purple-300 underline"
+                >
                   free PDF editor
                 </Link>{" "}
-                to <Link href="/tools/pdf-tools" className="text-purple-400 hover:text-purple-300 underline">
+                to{" "}
+                <Link
+                  href="/tools/pdf-tools"
+                  className="text-purple-400 hover:text-purple-300 underline"
+                >
                   merge PDF files
-                </Link>,{" "}
-                <Link href="/tools/video-converter" className="text-purple-400 hover:text-purple-300 underline">
+                </Link>
+                ,{" "}
+                <Link
+                  href="/tools/video-converter"
+                  className="text-purple-400 hover:text-purple-300 underline"
+                >
                   convert videos to MP3
-                </Link>, and{" "}
-                <Link href="/tools/image-converter" className="text-purple-400 hover:text-purple-300 underline">
+                </Link>
+                , and{" "}
+                <Link
+                  href="/tools/image-converter"
+                  className="text-purple-400 hover:text-purple-300 underline"
+                >
                   convert images
                 </Link>{" "}
                 - all in your browser.
@@ -249,36 +274,36 @@ export default function LandingPage() {
                     }}
                     className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 text-center md:text-left cursor-pointer"
                   >
-                  <motion.div
-                    className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
-                    initial={{ scale: 0, rotate: -180 }}
-                    whileInView={{ scale: 1, rotate: 0 }}
-                    transition={{
-                      duration: 0.6,
-                      delay: index * 0.2 + 0.3,
-                      type: "spring",
-                      stiffness: 200,
-                    }}
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                  >
-                    <feature.icon className="w-6 h-6 text-white" />
-                  </motion.div>
-                  <motion.h3
-                    className="text-xl font-semibold text-white mb-4"
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.2 + 0.4 }}
-                  >
-                    {feature.title}
-                  </motion.h3>
-                  <motion.p
-                    className="text-gray-400 leading-relaxed"
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.2 + 0.5 }}
-                  >
-                    {feature.description}
-                  </motion.p>
+                    <motion.div
+                      className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
+                      initial={{ scale: 0, rotate: -180 }}
+                      whileInView={{ scale: 1, rotate: 0 }}
+                      transition={{
+                        duration: 0.6,
+                        delay: index * 0.2 + 0.3,
+                        type: "spring",
+                        stiffness: 200,
+                      }}
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                    >
+                      <feature.icon className="w-6 h-6 text-white" />
+                    </motion.div>
+                    <motion.h3
+                      className="text-xl font-semibold text-white mb-4"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.6, delay: index * 0.2 + 0.4 }}
+                    >
+                      {feature.title}
+                    </motion.h3>
+                    <motion.p
+                      className="text-gray-400 leading-relaxed"
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: index * 0.2 + 0.5 }}
+                    >
+                      {feature.description}
+                    </motion.p>
                   </motion.div>
                 </Link>
               ))}
@@ -367,19 +392,43 @@ export default function LandingPage() {
                 Powerful Tools for Every Need
               </h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-                From <Link href="/tools/pdf-tools" className="text-cyan-400 hover:text-cyan-300 underline">
+                From{" "}
+                <Link
+                  href="/tools/pdf-tools"
+                  className="text-cyan-400 hover:text-cyan-300 underline"
+                >
                   PDF editing
-                </Link> to <Link href="/tools/video-converter" className="text-cyan-400 hover:text-cyan-300 underline">
+                </Link>{" "}
+                to{" "}
+                <Link
+                  href="/tools/video-converter"
+                  className="text-cyan-400 hover:text-cyan-300 underline"
+                >
                   video conversion
-                </Link>, our comprehensive toolkit
-                handles all your file processing needs with professional-grade
-                quality. <Link href="/tools/pdf-tools" className="text-cyan-400 hover:text-cyan-300 underline">
+                </Link>
+                , our comprehensive toolkit handles all your file processing
+                needs with professional-grade quality.{" "}
+                <Link
+                  href="/tools/pdf-tools"
+                  className="text-cyan-400 hover:text-cyan-300 underline"
+                >
                   Edit PDFs online for free
-                </Link>, <Link href="/tools/pdf-tools" className="text-cyan-400 hover:text-cyan-300 underline">
+                </Link>
+                ,{" "}
+                <Link
+                  href="/tools/pdf-tools"
+                  className="text-cyan-400 hover:text-cyan-300 underline"
+                >
                   merge PDF files
-                </Link>, and <Link href="/tools/video-converter" className="text-cyan-400 hover:text-cyan-300 underline">
+                </Link>
+                , and{" "}
+                <Link
+                  href="/tools/video-converter"
+                  className="text-cyan-400 hover:text-cyan-300 underline"
+                >
                   convert videos
-                </Link> - all in your browser.
+                </Link>{" "}
+                - all in your browser.
               </p>
             </motion.div>
 
@@ -425,39 +474,35 @@ export default function LandingPage() {
                   href: "/tools/qr-generator",
                 },
               ].map((tool, index) => (
-                <Link
-                  key={tool.title}
-                  href={tool.href}
-                  className="block"
-                >
+                <Link key={tool.title} href={tool.href} className="block">
                   <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: index * 0.2 }}
                     className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-cyan-500/50 transition-all duration-300 text-center md:text-left cursor-pointer"
                   >
-                  <div
-                    className={`w-12 h-12 bg-gradient-to-r ${tool.gradient} rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
-                  >
-                    <FileText className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-4">
-                    {tool.title}
-                  </h3>
-                  <p className="text-gray-300 mb-6 leading-relaxed">
-                    {tool.description}
-                  </p>
-                  <ul className="space-y-2">
-                    {tool.features.map((feature, idx) => (
-                      <li
-                        key={`${tool.title}-feature-${idx}`}
-                        className="flex items-center text-gray-400 justify-center md:justify-start"
-                      >
-                        <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3"></div>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
+                    <div
+                      className={`w-12 h-12 bg-gradient-to-r ${tool.gradient} rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
+                    >
+                      <FileText className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-4">
+                      {tool.title}
+                    </h3>
+                    <p className="text-gray-300 mb-6 leading-relaxed">
+                      {tool.description}
+                    </p>
+                    <ul className="space-y-2">
+                      {tool.features.map((feature, idx) => (
+                        <li
+                          key={`${tool.title}-feature-${idx}`}
+                          className="flex items-center text-gray-400 justify-center md:justify-start"
+                        >
+                          <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3"></div>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
                   </motion.div>
                 </Link>
               ))}
