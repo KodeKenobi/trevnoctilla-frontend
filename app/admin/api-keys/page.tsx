@@ -88,7 +88,7 @@ export default function AdminApiKeys() {
               404
             </h1>
             <motion.div
-              className="absolute inset-0 text-9xl md:text-[12rem] font-black text-cyan-400/20 blur-sm"
+              className="absolute inset-0 text-9xl md:text-[12rem] font-black text-white/20 blur-sm"
               animate={{
                 scale: [1, 1.1, 1],
                 opacity: [0.2, 0.4, 0.2],
@@ -114,8 +114,8 @@ export default function AdminApiKeys() {
               API Keys Page Not Found
             </h2>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-              The API Keys management page is currently under development. 
-              This feature will be available soon for managing your API access keys!
+              The API Keys management page is currently under development. This
+              feature will be available soon for managing your API access keys!
             </p>
           </motion.div>
 
@@ -198,9 +198,9 @@ export default function AdminApiKeys() {
                 Coming Soon! 🚀
               </h3>
               <p className="text-gray-300 text-sm leading-relaxed">
-                The API Keys management page will allow you to create, manage, and monitor 
-                your API access keys. You'll be able to generate new keys, view usage statistics, 
-                and control access permissions.
+                The API Keys management page will allow you to create, manage,
+                and monitor your API access keys. You'll be able to generate new
+                keys, view usage statistics, and control access permissions.
               </p>
             </div>
           </motion.div>
@@ -218,7 +218,11 @@ export default function AdminApiKeys() {
                 { name: "Dashboard", href: "/admin", icon: Shield },
                 { name: "Users", href: "/admin/users", icon: Key },
                 { name: "PDF Tools", href: "/tools", icon: Home },
-                { name: "Video Converter", href: "/tools/video-converter", icon: Home },
+                {
+                  name: "Video Converter",
+                  href: "/tools/video-converter",
+                  icon: Home,
+                },
               ].map((link, index) => (
                 <motion.div
                   key={link.name}
@@ -228,7 +232,7 @@ export default function AdminApiKeys() {
                 >
                   <Link
                     href={link.href}
-                    className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-800/50 hover:bg-cyan-500/20 border border-gray-700/50 hover:border-cyan-400/50 text-gray-300 hover:text-cyan-400 rounded-lg text-sm font-medium transition-all duration-300"
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-800/50 hover:bg-cyan-500/20 border border-gray-700/50 hover:border-cyan-400/50 text-gray-300 hover:text-white rounded-lg text-sm font-medium transition-all duration-300"
                   >
                     <link.icon className="w-4 h-4" />
                     <span>{link.name}</span>

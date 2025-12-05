@@ -141,11 +141,31 @@ export default function UniversalHeader() {
           {[
             { label: "Home", href: "/", anchor: "Free Online PDF Editor" },
             { label: "Tools", href: "/tools", anchor: "Free PDF Editor Tools" },
-            { label: "Video Converter", href: "/tools/video-converter", anchor: "Convert Video to MP3" },
-            { label: "Audio Converter", href: "/tools/audio-converter", anchor: "Free Audio Converter" },
-            { label: "Image Converter", href: "/tools/image-converter", anchor: "Image Format Converter" },
-            { label: "PDF Tools", href: "/tools/pdf-tools", anchor: "Edit PDF Online for Free" },
-            { label: "QR Generator", href: "/tools/qr-generator", anchor: "Free QR Code Generator" },
+            {
+              label: "Video Converter",
+              href: "/tools/video-converter",
+              anchor: "Convert Video to MP3",
+            },
+            {
+              label: "Audio Converter",
+              href: "/tools/audio-converter",
+              anchor: "Free Audio Converter",
+            },
+            {
+              label: "Image Converter",
+              href: "/tools/image-converter",
+              anchor: "Image Format Converter",
+            },
+            {
+              label: "PDF Tools",
+              href: "/tools/pdf-tools",
+              anchor: "Edit PDF Online for Free",
+            },
+            {
+              label: "QR Generator",
+              href: "/tools/qr-generator",
+              anchor: "Free QR Code Generator",
+            },
             { label: "API", href: "/api-docs", anchor: "PDF Processing API" },
           ].map((item) => (
             <div key={item.label} className="mx-1">
@@ -209,7 +229,7 @@ export default function UniversalHeader() {
             <div className="w-20 h-8 bg-gray-700 rounded-lg animate-pulse"></div>
           ) : user ? (
             <div className="flex items-center space-x-3">
-              {currentView !== "client" && (
+              {/* {currentView !== "client" && (
                 <Link
                   href="/dashboard"
                   className="text-gray-300 hover:text-white transition-colors text-sm"
@@ -224,7 +244,7 @@ export default function UniversalHeader() {
                 >
                   Admin Panel
                 </Link>
-              )}
+              )} */}
               <div className="flex items-center space-x-2">
                 <div className="relative z-[99999]" data-profile-dropdown>
                   <button
@@ -456,12 +476,36 @@ export default function UniversalHeader() {
           <nav className="flex flex-col p-4 space-y-2">
             {[
               { label: "Home", href: "/", anchor: "Free Online PDF Editor" },
-              { label: "Tools", href: "/tools", anchor: "Free PDF Editor Tools" },
-              { label: "Video Converter", href: "/tools/video-converter", anchor: "Convert Video to MP3" },
-              { label: "Audio Converter", href: "/tools/audio-converter", anchor: "Free Audio Converter" },
-              { label: "Image Converter", href: "/tools/image-converter", anchor: "Image Format Converter" },
-              { label: "PDF Tools", href: "/tools/pdf-tools", anchor: "Edit PDF Online for Free" },
-              { label: "QR Generator", href: "/tools/qr-generator", anchor: "Free QR Code Generator" },
+              {
+                label: "Tools",
+                href: "/tools",
+                anchor: "Free PDF Editor Tools",
+              },
+              {
+                label: "Video Converter",
+                href: "/tools/video-converter",
+                anchor: "Convert Video to MP3",
+              },
+              {
+                label: "Audio Converter",
+                href: "/tools/audio-converter",
+                anchor: "Free Audio Converter",
+              },
+              {
+                label: "Image Converter",
+                href: "/tools/image-converter",
+                anchor: "Image Format Converter",
+              },
+              {
+                label: "PDF Tools",
+                href: "/tools/pdf-tools",
+                anchor: "Edit PDF Online for Free",
+              },
+              {
+                label: "QR Generator",
+                href: "/tools/qr-generator",
+                anchor: "Free QR Code Generator",
+              },
               { label: "API", href: "/api-docs", anchor: "PDF Processing API" },
             ].map((item) => (
               <Link

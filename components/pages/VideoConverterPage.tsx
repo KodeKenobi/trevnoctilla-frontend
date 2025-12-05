@@ -52,11 +52,17 @@ export default function VideoConverterPage() {
           </h3>
           <p className="text-gray-400 text-sm text-center mb-4">
             Need to extract audio from video? Try our{" "}
-            <Link href="/tools/audio-converter" className="text-cyan-400 hover:text-cyan-300 underline">
+            <Link
+              href="/tools/audio-converter"
+              className="text-white hover:text-cyan-300 underline"
+            >
               free audio converter
             </Link>
             . Or convert images with our{" "}
-            <Link href="/tools/image-converter" className="text-cyan-400 hover:text-cyan-300 underline">
+            <Link
+              href="/tools/image-converter"
+              className="text-white hover:text-cyan-300 underline"
+            >
               image converter
             </Link>
             .

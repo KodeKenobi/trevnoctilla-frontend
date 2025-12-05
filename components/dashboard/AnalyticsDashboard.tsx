@@ -823,7 +823,7 @@ export default function AnalyticsDashboard() {
                             )}
                           </div>
                           <div className="flex items-center gap-2 text-sm">
-                            <span className="text-cyan-400 font-mono">
+                            <span className="text-white font-mono">
                               {event.page_path || "/"}
                             </span>
                             {event.page_title && (
@@ -1344,7 +1344,7 @@ export default function AnalyticsDashboard() {
             </div>
             <div className="bg-gray-800/50 backdrop-blur-sm p-4 rounded-xl border border-gray-700/50">
               <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-cyan-400" />
+                <Users className="w-4 h-4 text-white" />
                 <span className="text-sm text-gray-400">Sessions</span>
               </div>
               <p className="text-2xl font-bold text-white">
@@ -1357,7 +1357,7 @@ export default function AnalyticsDashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 shadow-lg overflow-hidden">
             <div className="p-4 border-b border-gray-700 flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Eye className="w-5 h-5 text-cyan-400" />
+                <Eye className="w-5 h-5 text-white" />
                 <h3 className="text-lg font-semibold text-white">
                   Live Activity Stream
                 </h3>
@@ -1448,7 +1448,7 @@ export default function AnalyticsDashboard() {
                           <span className="text-sm font-medium text-white">
                             {activity.event_name || "Event"}
                           </span>
-                          <span className="text-xs text-cyan-400 font-mono">
+                          <span className="text-xs text-white font-mono">
                             {pagePath}
                           </span>
                         </div>
@@ -1556,7 +1556,7 @@ export default function AnalyticsDashboard() {
                     0 && (
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-cyan-400" />
+                        <MapPin className="w-5 h-5 text-white" />
                         Locations
                       </h3>
                       <div className="space-y-2">
@@ -1581,7 +1581,7 @@ export default function AnalyticsDashboard() {
                   {Object.keys(detailedMetrics.pages_breakdown).length > 0 && (
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <LinkIcon className="w-5 h-5 text-cyan-400" />
+                        <LinkIcon className="w-5 h-5 text-white" />
                         Pages Visited
                       </h3>
                       <div className="space-y-2">
@@ -1609,7 +1609,7 @@ export default function AnalyticsDashboard() {
                   {Object.keys(detailedMetrics.events_breakdown).length > 0 && (
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-cyan-400" />
+                        <Activity className="w-5 h-5 text-white" />
                         Events
                       </h3>
                       <div className="space-y-2">
@@ -1634,7 +1634,7 @@ export default function AnalyticsDashboard() {
                   {/* Sessions List */}
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                      <Users className="w-5 h-5 text-cyan-400" />
+                      <Users className="w-5 h-5 text-white" />
                       Recent Sessions ({detailedMetrics.sessions.length})
                     </h3>
                     <div className="space-y-3 max-h-96 overflow-y-auto">

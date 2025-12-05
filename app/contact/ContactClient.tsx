@@ -197,7 +197,7 @@ This email was sent from the Trevnoctilla contact form.
                 </p>
                 <a
                   href="mailto:support@trevnoctilla.com"
-                  className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+                  className="text-white hover:text-cyan-300 font-medium transition-colors"
                 >
                   support@trevnoctilla.com
                 </a>

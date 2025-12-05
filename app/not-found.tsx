@@ -88,7 +88,7 @@ export default function NotFound() {
               404
             </h1>
             <motion.div
-              className="absolute inset-0 text-9xl md:text-[12rem] font-black text-cyan-400/20 blur-sm"
+              className="absolute inset-0 text-9xl md:text-[12rem] font-black text-white/20 blur-sm"
               animate={{
                 scale: [1, 1.1, 1],
                 opacity: [0.2, 0.4, 0.2],
@@ -229,7 +229,7 @@ export default function NotFound() {
                 >
                   <Link
                     href={link.href}
-                    className="inline-block px-4 py-2 bg-gray-800/50 hover:bg-cyan-500/20 border border-gray-700/50 hover:border-cyan-400/50 text-gray-300 hover:text-cyan-400 rounded-lg text-sm font-medium transition-all duration-300"
+                    className="inline-block px-4 py-2 bg-gray-800/50 hover:bg-cyan-500/20 border border-gray-700/50 hover:border-cyan-400/50 text-gray-300 hover:text-white rounded-lg text-sm font-medium transition-all duration-300"
                   >
                     {link.name}
                   </Link>

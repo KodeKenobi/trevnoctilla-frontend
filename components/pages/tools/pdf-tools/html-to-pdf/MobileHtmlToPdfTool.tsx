@@ -136,7 +136,7 @@ export const MobileHtmlToPdfTool: React.FC<MobileHtmlToPdfToolProps> = ({
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <FileText className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+            <FileText className="w-4 h-4 text-white flex-shrink-0" />
             <div className="min-w-0 flex-1">
               <h3 className="text-white font-medium text-sm truncate">
                 {uploadedFile.name}
@@ -161,7 +161,7 @@ export const MobileHtmlToPdfTool: React.FC<MobileHtmlToPdfToolProps> = ({
         {/* Processing State */}
         {isProcessing && (
           <div className="flex flex-col items-center justify-center py-8">
-            <Loader2 className="w-10 h-10 text-cyan-400 animate-spin mb-3" />
+            <Loader2 className="w-10 h-10 text-white animate-spin mb-3" />
             <p className="text-gray-300 text-sm text-center">
               Converting HTML to PDF...
             </p>

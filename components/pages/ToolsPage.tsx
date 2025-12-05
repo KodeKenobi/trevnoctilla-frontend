@@ -103,7 +103,7 @@ export default function ToolsPage() {
             >
               Transform, convert, and optimize your files with our comprehensive
               suite of professional-grade tools.
-              <span className="text-cyan-400 font-semibold">
+              <span className="text-white font-semibold">
                 {" "}
                 All completely free and secure.
               </span>
@@ -144,63 +144,50 @@ export default function ToolsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center md:justify-items-stretch">
             {tools.map((tool, index) => {
-              const href =
-                tool.page === "pdf-tools"
-                  ? "/tools/pdf-tools"
-                  : tool.page === "video-converter"
-                  ? "/tools/video-converter"
-                  : tool.page === "audio-converter"
-                  ? "/tools/audio-converter"
-                  : tool.page === "image-converter"
-                  ? "/tools/image-converter"
-                  : tool.page === "qr-generator"
-                  ? "/tools/qr-generator"
-                  : "/";
+              const hrefMap: Record<string, string> = {
+                "pdf-tools": "/tools/pdf-tools",
+                "video-converter": "/tools/video-converter",
+                "audio-converter": "/tools/audio-converter",
+                "image-converter": "/tools/image-converter",
+                "qr-generator": "/tools/qr-generator",
+              };
+              const href = hrefMap[tool.page] || "/";
 
               return (
-                <motion.div
-                  key={tool.page}
-                  whileHover={{ scale: 1.02, y: -5 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="card card-hover p-8 group animate-fade-in-up text-center md:text-left w-full max-w-md md:max-w-none mx-auto"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="flex flex-col md:flex-row items-center mb-6">
-                    <div
-                      className={`w-14 h-14 rounded-xl bg-gradient-to-r ${tool.gradient} flex items-center justify-center mb-4 md:mb-0 md:mr-4 group-hover:scale-110 transition-transform`}
-                    >
-                      <tool.icon className="w-7 h-7 text-white" />
+                <Link key={tool.page} href={href} className="block">
+                  <motion.div
+                    whileHover={{ scale: 1.02, y: -5 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="card card-hover p-8 group animate-fade-in-up text-center md:text-left w-full max-w-md md:max-w-none mx-auto relative"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className="flex flex-col md:flex-row items-center mb-6">
+                      <h3 className="text-2xl font-bold text-white group-hover:text-white transition-colors">
+                        {tool.title}
+                      </h3>
                     </div>
-                    <h3 className="text-2xl font-bold text-white group-hover:text-cyan-400 transition-colors">
-                      {tool.title}
-                    </h3>
-                  </div>
 
-                  <p className="text-gray-300 mb-6 leading-relaxed text-center md:text-left">
-                    {tool.description}
-                  </p>
+                    <p className="text-gray-300 mb-6 leading-relaxed text-center md:text-left">
+                      {tool.description}
+                    </p>
 
-                  <div className="flex flex-wrap gap-2 mb-6 justify-center md:justify-start">
-                    {tool.features.map((feature, featureIndex) => (
-                      <span
-                        key={`${tool.page}-feature-${featureIndex}`}
-                        className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-cyan-400 border border-cyan-500/30"
-                      >
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
+                    <div className="flex flex-wrap gap-2 mb-6 justify-center md:justify-start">
+                      {tool.features.map((feature, featureIndex) => (
+                        <span
+                          key={`${tool.page}-feature-${featureIndex}`}
+                          className="px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-white border border-cyan-500/30"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
 
-                  <div className="flex items-center text-cyan-400 group-hover:text-cyan-300 justify-center md:justify-start">
-                    <span className="font-medium">Try it now</span>
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                  <Link
-                    href={href}
-                    className="absolute inset-0"
-                    aria-label={tool.title}
-                  />
-                </motion.div>
+                    <div className="flex items-center text-white group-hover:text-cyan-300 justify-center md:justify-start">
+                      <span className="font-medium">Try it now</span>
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </motion.div>
+                </Link>
               );
             })}
           </div>
@@ -235,7 +222,7 @@ export default function ToolsPage() {
               {
                 title: "Lightning Fast",
                 description:
-                  "Process files in seconds, not minutes. Our optimized algorithms ensure maximum speed.",
+                  "Process files in seconds. Our optimized algorithms ensure maximum speed.",
                 features: [
                   "Instant Processing",
                   "Cloud-Powered",
@@ -276,11 +263,6 @@ export default function ToolsPage() {
                 transition={{ duration: 0.6, delay: index * 0.2 }}
                 className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-cyan-500/50 transition-all duration-300 text-center md:text-left"
               >
-                <div
-                  className={`w-12 h-12 bg-gradient-to-r ${feature.gradient} rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
-                >
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
                 <h3 className="text-2xl font-bold text-white mb-4">
                   {feature.title}
                 </h3>
@@ -335,9 +317,6 @@ export default function ToolsPage() {
               transition={{ duration: 0.6 }}
               className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 text-center md:text-left"
             >
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
               <h3 className="text-2xl font-bold text-white mb-4">
                 PDF Processing APIs
               </h3>
@@ -355,7 +334,7 @@ export default function ToolsPage() {
                   "Metadata Extraction",
                 ].map((feature, idx) => (
                   <li
-                    key={`api-feature-${idx}`}
+                    key={`pdf-feature-${idx}`}
                     className="flex items-center text-gray-400 justify-center md:justify-start"
                   >
                     <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
@@ -365,7 +344,7 @@ export default function ToolsPage() {
               </ul>
               <motion.button
                 onClick={() => window.open("/api-docs", "_blank")}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+                className="w-full bg-white text-gray-900 font-bold py-3 px-6 rounded-xl transition-all duration-300"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -379,9 +358,6 @@ export default function ToolsPage() {
               transition={{ duration: 0.6 }}
               className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 text-center md:text-left"
             >
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0">
-                <Zap className="w-6 h-6 text-white" />
-              </div>
               <h3 className="text-2xl font-bold text-white mb-4">
                 Media Conversion APIs
               </h3>
@@ -409,7 +385,7 @@ export default function ToolsPage() {
               </ul>
               <motion.button
                 onClick={() => window.open("/auth/register", "_self")}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+                className="w-full bg-white text-gray-900 font-bold py-3 px-6 rounded-xl transition-all duration-300"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >

@@ -500,7 +500,7 @@ export function ApiReferenceContent({
                         className="border-b border-[#2a2a2a] hover:bg-[#0a0a0a] transition-colors"
                       >
                         <td className="py-3 px-4">
-                          <code className="text-cyan-400">{error.code}</code>
+                          <code className="text-white">{error.code}</code>
                         </td>
                         <td className="py-3 px-4 text-gray-300">
                           {error.meaning}
@@ -603,7 +603,7 @@ export function ApiReferenceContent({
                               >
                                 {endpoint.method}
                               </span>
-                              <code className="text-cyan-400 text-sm">
+                              <code className="text-white text-sm">
                                 {endpoint.path}
                               </code>
                             </div>
@@ -647,7 +647,7 @@ export function ApiReferenceContent({
                                       className="border-b border-[#2a2a2a] hover:bg-[#1a1a1a] transition-colors"
                                     >
                                       <td className="py-2 px-3">
-                                        <code className="text-cyan-400">
+                                        <code className="text-white">
                                           {param.name}
                                         </code>
                                         {param.required && (

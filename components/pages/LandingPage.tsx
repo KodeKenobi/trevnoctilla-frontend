@@ -71,11 +71,9 @@ export default function LandingPage() {
             {/* Hero Text Container - CSS animations for faster initial paint */}
             <div className="relative mb-12 animate-slide-up">
               {/* Main Headline */}
-              <h1 className="text-4xl lg:text-6xl font-bold text-foreground dark:text-white mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14">
+              <h1 className="text-4xl lg:text-6xl font-bold mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14 text-[#ec4899]">
                 The only file conversion that{" "}
-                <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-                  works where you work
-                </span>
+                <span className="text-[#ffffff]">works where you work</span>
               </h1>
 
               {/* Subtitle */}
@@ -141,36 +139,31 @@ export default function LandingPage() {
               className="mt-[-120px] flex flex-row items-center justify-center space-x-2 sm:space-x-6 relative z-50 animate-fade-in"
               style={{ animationDelay: "0.3s" }}
             >
+              {/* Primary Button */}
               <Link
                 href="/tools"
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-1 sm:space-x-2 group text-sm sm:text-base hover:scale-105 active:scale-95 relative z-50"
+                className="bg-white/10 backdrop-blur-xl text-white font-bold px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-lg 
+               transition-all duration-200 flex items-center 
+               space-x-1 sm:space-x-2 group text-xs sm:text-sm
+               hover:bg-neutral-200 hover:scale-[1.03] active:scale-95 relative z-50"
                 title="Free PDF Editor Tools"
               >
                 <span>Start Converting</span>
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover:translate-x-1 text-[#ec4899]" />
               </Link>
+
+              {/* Secondary Button */}
               <Link
                 href="/api-docs"
-                className="text-gray-300 hover:text-white px-4 sm:px-8 py-3 sm:py-4 rounded-xl border border-white/20 hover:border-white/40 transition-all duration-200 text-sm sm:text-base hover:scale-105 active:scale-95 relative z-50"
+                className="bg-white text-gray-900 font-bold px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-lg 
+               border border-black/20 hover:border-black/40 
+               transition-all duration-200 text-xs sm:text-sm
+               hover:bg-neutral-200 hover:scale-[1.03] active:scale-95 relative z-50"
                 title="PDF Processing API Documentation"
               >
                 API Docs
               </Link>
             </div>
-
-            {/* Ezoic Ad Placement - Above Features */}
-            <div id="ezoic-pub-ad-placeholder-101"></div>
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `
-                  if (typeof ezstandalone !== 'undefined') {
-                    ezstandalone.cmd.push(function () {
-                      ezstandalone.showAds(101);
-                    });
-                  }
-                `,
-              }}
-            />
           </div>
         </main>
 
@@ -195,28 +188,28 @@ export default function LandingPage() {
                 Trevnoctilla has you covered with powerful features. Use our{" "}
                 <Link
                   href="/tools/pdf-tools"
-                  className="text-purple-400 hover:text-purple-300 underline"
+                  className="italic text-white hover:text-gray-300"
                 >
                   free PDF editor
                 </Link>{" "}
                 to{" "}
                 <Link
                   href="/tools/pdf-tools"
-                  className="text-purple-400 hover:text-purple-300 underline"
+                  className="italic text-white hover:text-gray-300"
                 >
                   merge PDF files
                 </Link>
                 ,{" "}
                 <Link
                   href="/tools/video-converter"
-                  className="text-purple-400 hover:text-purple-300 underline"
+                  className="italic text-white hover:text-gray-300"
                 >
                   convert videos to MP3
                 </Link>
                 , and{" "}
                 <Link
                   href="/tools/image-converter"
-                  className="text-purple-400 hover:text-purple-300 underline"
+                  className="italic text-white hover:text-gray-300"
                 >
                   convert images
                 </Link>{" "}
@@ -231,7 +224,7 @@ export default function LandingPage() {
                   title: "Video Processing",
                   description:
                     "Convert videos to MP3 audio and create animated GIFs with high quality output.",
-                  color: "from-green-500 to-emerald-500",
+                  color: "#ec4899",
                   href: "/tools/video-converter",
                 },
                 {
@@ -239,7 +232,7 @@ export default function LandingPage() {
                   title: "Document Management",
                   description:
                     "Merge PDF files seamlessly and generate custom QR codes for any content.",
-                  color: "from-blue-500 to-cyan-500",
+                  // color: "from-blue-500 to-cyan-500",
                   href: "/tools/pdf-tools",
                 },
                 {
@@ -275,7 +268,7 @@ export default function LandingPage() {
                     className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 text-center md:text-left cursor-pointer"
                   >
                     <motion.div
-                      className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
                       initial={{ scale: 0, rotate: -180 }}
                       whileInView={{ scale: 1, rotate: 0 }}
                       transition={{
@@ -314,72 +307,26 @@ export default function LandingPage() {
             <script
               dangerouslySetInnerHTML={{
                 __html: `
-                  if (typeof ezstandalone !== 'undefined') {
-                    ezstandalone.cmd.push(function () {
-                      ezstandalone.showAds(102);
-                    });
-                  }
-                `,
+          if (typeof ezstandalone !== 'undefined') {
+            ezstandalone.cmd.push(function () {
+              ezstandalone.showAds(102);
+            });
+          }
+        `,
               }}
             />
           </div>
         </section>
 
         {/* Stats Section */}
-        <section className="relative z-10 px-6 lg:px-12 py-20">
-          <div className="max-w-4xl mx-auto">
-            <div className="grid grid-cols-3 gap-8 text-center">
-              {[
-                { number: "5+", label: "File Types" },
-                { number: "∞", label: "Unlimited Conversions" },
-                { number: "24/7", label: "Access" },
-              ].map((stat, index) => (
-                <motion.div
-                  key={`stat-${index}`}
-                  initial={{ opacity: 0, scale: 0.8, y: 30 }}
-                  whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{
-                    duration: 0.8,
-                    delay: index * 0.2,
-                    type: "spring",
-                    stiffness: 100,
-                  }}
-                  viewport={{ once: true }}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                >
-                  <motion.div
-                    className="text-4xl font-bold text-white mb-2"
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{
-                      duration: 0.6,
-                      delay: index * 0.2 + 0.3,
-                      type: "spring",
-                      stiffness: 200,
-                    }}
-                  >
-                    {stat.number}
-                  </motion.div>
-                  <motion.div
-                    className="text-gray-400"
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.2 + 0.4 }}
-                  >
-                    {stat.label}
-                  </motion.div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <section className="relative z-10 px-6 lg:px-12 py-20"></section>
 
         {/* Powerful Tools CTA Section */}
         <section className="py-24 relative overflow-hidden">
           {/* Background Elements */}
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"></div>
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute inset-0 bg-gray-900"></div>
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-gray-700/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gray-700/10 rounded-full blur-3xl"></div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div
@@ -395,14 +342,14 @@ export default function LandingPage() {
                 From{" "}
                 <Link
                   href="/tools/pdf-tools"
-                  className="text-cyan-400 hover:text-cyan-300 underline"
+                  className="italic text-white hover:text-gray-300"
                 >
                   PDF editing
                 </Link>{" "}
                 to{" "}
                 <Link
                   href="/tools/video-converter"
-                  className="text-cyan-400 hover:text-cyan-300 underline"
+                  className="italic text-white hover:text-gray-300"
                 >
                   video conversion
                 </Link>
@@ -410,21 +357,21 @@ export default function LandingPage() {
                 needs with professional-grade quality.{" "}
                 <Link
                   href="/tools/pdf-tools"
-                  className="text-cyan-400 hover:text-cyan-300 underline"
+                  className="italic text-white hover:text-gray-300"
                 >
                   Edit PDFs online for free
                 </Link>
                 ,{" "}
                 <Link
                   href="/tools/pdf-tools"
-                  className="text-cyan-400 hover:text-cyan-300 underline"
+                  className="italic text-white hover:text-gray-300"
                 >
                   merge PDF files
                 </Link>
                 , and{" "}
                 <Link
                   href="/tools/video-converter"
-                  className="text-cyan-400 hover:text-cyan-300 underline"
+                  className="italic text-white hover:text-gray-300"
                 >
                   convert videos
                 </Link>{" "}
@@ -437,14 +384,13 @@ export default function LandingPage() {
                 {
                   title: "PDF Powerhouse",
                   description:
-                    "Edit, split, merge, and convert PDFs with precision. Add watermarks, signatures, and more. All tools work in your browser with no download required.",
+                    "Edit, split, merge, and convert PDFs with real-time processing.",
                   features: [
                     "Free PDF Editor",
                     "Split & Merge",
                     "Add Watermarks",
                     "Digital Signatures",
                   ],
-                  gradient: "from-red-500 to-pink-500",
                   href: "/tools/pdf-tools",
                 },
                 {
@@ -457,7 +403,6 @@ export default function LandingPage() {
                     "Image Processing",
                     "Quality Control",
                   ],
-                  gradient: "from-green-500 to-cyan-500",
                   href: "/tools/video-converter",
                 },
                 {
@@ -470,7 +415,6 @@ export default function LandingPage() {
                     "Batch Processing",
                     "API Integration",
                   ],
-                  gradient: "from-blue-500 to-purple-500",
                   href: "/tools/qr-generator",
                 },
               ].map((tool, index) => (
@@ -479,13 +423,8 @@ export default function LandingPage() {
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: index * 0.2 }}
-                    className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-cyan-500/50 transition-all duration-300 text-center md:text-left cursor-pointer"
+                    className="bg-gray-800/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-gray-500/50 transition-all duration-300 text-center md:text-left cursor-pointer"
                   >
-                    <div
-                      className={`w-12 h-12 bg-gradient-to-r ${tool.gradient} rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
-                    >
-                      <FileText className="w-6 h-6 text-white" />
-                    </div>
                     <h3 className="text-2xl font-bold text-white mb-4">
                       {tool.title}
                     </h3>
@@ -496,9 +435,9 @@ export default function LandingPage() {
                       {tool.features.map((feature, idx) => (
                         <li
                           key={`${tool.title}-feature-${idx}`}
-                          className="flex items-center text-gray-400 justify-center md:justify-start"
+                          className="flex items-center text-gray-400 justify-center md:justify-start italic"
                         >
-                          <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
                           {feature}
                         </li>
                       ))}
@@ -516,7 +455,7 @@ export default function LandingPage() {
             >
               <motion.button
                 onClick={() => navigateTo("tools")}
-                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-lg px-10 py-5 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300"
+                className="bg-gray-700 text-white font-bold text-lg px-10 py-3 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 italic"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -557,9 +496,6 @@ export default function LandingPage() {
                 transition={{ duration: 0.6 }}
                 className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 text-center md:text-left"
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0">
-                  <FileText className="w-6 h-6 text-white" />
-                </div>
                 <h3 className="text-2xl font-bold text-white mb-4">
                   PDF Processing APIs
                 </h3>
@@ -587,7 +523,7 @@ export default function LandingPage() {
                 </ul>
                 <motion.button
                   onClick={() => window.open("/api-docs", "_blank")}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+                  className="w-full bg-white text-gray-900 font-bold py-3 px-6 rounded-xl transition-all duration-300"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -601,9 +537,6 @@ export default function LandingPage() {
                 transition={{ duration: 0.6 }}
                 className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 text-center md:text-left"
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
                 <h3 className="text-2xl font-bold text-white mb-4">
                   Media Conversion APIs
                 </h3>
@@ -631,7 +564,7 @@ export default function LandingPage() {
                 </ul>
                 <motion.button
                   onClick={() => window.open("/auth/register", "_self")}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+                  className="w-full bg-white text-gray-900 font-bold py-3 px-6 rounded-xl transition-all duration-300"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >

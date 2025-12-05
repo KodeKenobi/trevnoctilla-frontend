@@ -256,8 +256,8 @@ export default function ApiDocsClient() {
     },
     {
       name: "Production",
-      price: "$29/month",
-      usdAmount: 29,
+      price: "$9/month",
+      usdAmount: 9,
       description: "For production applications",
       features: [
         "5,000 API calls/month",
@@ -274,8 +274,8 @@ export default function ApiDocsClient() {
     },
     {
       name: "Enterprise",
-      price: "$49/month",
-      usdAmount: 49,
+      price: "$19/month",
+      usdAmount: 19,
       description: "For large-scale applications",
       features: [
         "Unlimited API calls",
@@ -330,7 +330,7 @@ export default function ApiDocsClient() {
         >
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground dark:text-white mb-6">
             Powerful APIs for{" "}
-            <span className="text-cyan-400">File Processing</span>
+            <span className="text-white">File Processing</span>
           </h1>
           <p className="text-xl text-foreground/90 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8">
             Integrate advanced file processing capabilities into your
@@ -340,7 +340,7 @@ export default function ApiDocsClient() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <motion.button
               onClick={handleGetStarted}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
+              className="border-2 border-border dark:border-gray-600 hover:border-cyan-400 text-white font-bold px-8 py-3 rounded-xl transition-all duration-300 w-full sm:w-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -352,7 +352,7 @@ export default function ApiDocsClient() {
                   .getElementById("code-examples")
                   ?.scrollIntoView({ behavior: "smooth" })
               }
-              className="border-2 border-border dark:border-gray-600 hover:border-cyan-400 text-foreground/90 dark:text-gray-300 hover:text-foreground dark:hover:text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
+              className="border-2 border-border dark:border-gray-600 hover:border-cyan-400 text-foreground/90 dark:text-gray-300 hover:text-foreground dark:hover:text-white font-bold px-8 py-3 rounded-xl transition-all duration-300 w-full sm:w-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -376,9 +376,9 @@ export default function ApiDocsClient() {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 text-center md:text-left"
             >
-              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto md:mx-0 mb-4">
+              {/* <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto md:mx-0 mb-4">
                 {feature.icon}
-              </div>
+              </div> */}
               <h3 className="text-xl font-bold text-foreground dark:text-white mb-2">
                 {feature.title}
               </h3>
@@ -411,41 +411,37 @@ export default function ApiDocsClient() {
               </div>
               <div className="space-y-3">
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /extract_text</code>
+                  <code className="text-white">POST /extract_text</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Extract text from PDFs
                   </p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /merge_pdfs</code>
+                  <code className="text-white">POST /merge_pdfs</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Merge multiple PDFs
                   </p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /split_pdf</code>
+                  <code className="text-white">POST /split_pdf</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Split PDF into pages
                   </p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /extract_images</code>
+                  <code className="text-white">POST /extract_images</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Extract images from PDFs
                   </p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">
-                    POST /convert_pdf_to_html
-                  </code>
+                  <code className="text-white">POST /convert_pdf_to_html</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Convert PDF to HTML with layout preservation
                   </p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">
-                    POST /convert_html_to_pdf
-                  </code>
+                  <code className="text-white">POST /convert_html_to_pdf</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Convert HTML to PDF with 100% accuracy
                   </p>
@@ -463,25 +459,25 @@ export default function ApiDocsClient() {
               </div>
               <div className="space-y-3">
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /convert-video</code>
+                  <code className="text-white">POST /convert-video</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Convert video formats
                   </p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /convert-audio</code>
+                  <code className="text-white">POST /convert-audio</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Convert audio formats
                   </p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /convert-image</code>
+                  <code className="text-white">POST /convert-image</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Convert image formats
                   </p>
                 </div>
-                <div className="text-sm">
-                  <code className="text-cyan-400">
+                {/* <div className="text-sm">
+                  <code className="text-white">
                     GET /conversion_progress/{"{filename}"}
                   </code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
@@ -489,13 +485,13 @@ export default function ApiDocsClient() {
                   </p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">
+                  <code className="text-white">
                     POST /cancel_conversion/{"{filename}"}
                   </code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Cancel ongoing conversion
                   </p>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -507,29 +503,29 @@ export default function ApiDocsClient() {
               </div>
               <div className="space-y-3">
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /generate-qr</code>
+                  <code className="text-white">POST /generate-qr</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Generate QR codes
                   </p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">GET /health</code>
+                  <code className="text-white">GET /health</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     API health check
                   </p>
                 </div>
-                <div className="text-sm">
-                  <code className="text-cyan-400">POST /cleanup-file</code>
+                {/* <div className="text-sm">
+                  <code className="text-white">POST /cleanup-file</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Clean up temporary files
                   </p>
                 </div>
                 <div className="text-sm">
-                  <code className="text-cyan-400">POST /cleanup-session</code>
+                  <code className="text-white">POST /cleanup-session</code>
                   <p className="text-muted-foreground dark:text-gray-400 mt-1">
                     Clean up session files
                   </p>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -583,7 +579,7 @@ export default function ApiDocsClient() {
                       key={`${plan.name}-feature-${idx}`}
                       className="flex items-center text-gray-300"
                     >
-                      <Check className="w-5 h-5 text-cyan-400 mr-3 flex-shrink-0" />
+                      <Check className="w-5 h-5 text-white mr-3 flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
@@ -670,7 +666,7 @@ export default function ApiDocsClient() {
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-500">Endpoint:</span>
-                <code className="bg-gray-800 px-3 py-1 rounded text-cyan-400 text-sm">
+                <code className="bg-gray-800 px-3 py-1 rounded text-white text-sm">
                   {
                     codeExamples[activeTab as keyof typeof codeExamples]
                       .endpoint
@@ -773,7 +769,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/extract_text</code>
+                    <code className="text-white">/extract_text</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     Extract text from PDF documents
@@ -787,7 +783,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/merge_pdfs</code>
+                    <code className="text-white">/merge_pdfs</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     Merge multiple PDF files
@@ -801,7 +797,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/split_pdf</code>
+                    <code className="text-white">/split_pdf</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     Split PDF into pages or ranges
@@ -817,7 +813,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/extract_images</code>
+                    <code className="text-white">/extract_images</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     Extract images from PDFs
@@ -831,7 +827,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/convert_pdf_to_html</code>
+                    <code className="text-white">/convert_pdf_to_html</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     Convert PDF to HTML with exact layout preservation
@@ -847,7 +843,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/convert_html_to_pdf</code>
+                    <code className="text-white">/convert_html_to_pdf</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     Convert HTML to PDF with 100% layout accuracy
@@ -863,7 +859,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/convert-video</code>
+                    <code className="text-white">/convert-video</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     Convert video formats (MP4, WebM, AVI, MOV)
@@ -877,7 +873,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/convert-audio</code>
+                    <code className="text-white">/convert-audio</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     Convert audio formats (MP3, WAV, AAC, OGG)
@@ -891,7 +887,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/convert-image</code>
+                    <code className="text-white">/convert-image</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     Convert image formats (JPG, PNG, WebP, BMP)
@@ -905,7 +901,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/generate-qr</code>
+                    <code className="text-white">/generate-qr</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     Generate QR codes with custom styling
@@ -921,7 +917,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">
+                    <code className="text-white">
                       /conversion_progress/{"{filename}"}
                     </code>
                   </td>
@@ -937,7 +933,7 @@ export default function ApiDocsClient() {
                     </span>
                   </td>
                   <td className="py-4">
-                    <code className="text-cyan-400">/health</code>
+                    <code className="text-white">/health</code>
                   </td>
                   <td className="py-4 text-gray-300">
                     API health check and status
@@ -989,7 +985,7 @@ export default function ApiDocsClient() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.button
               onClick={handleGetStarted}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold px-8 py-3 rounded-xl transition-all duration-300 w-full sm:w-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -999,7 +995,7 @@ export default function ApiDocsClient() {
               onClick={() =>
                 window.open("mailto:api@trevnoctilla.com", "_blank")
               }
-              className="border-2 border-border dark:border-gray-600 hover:border-cyan-400 text-foreground/90 dark:text-gray-300 hover:text-foreground dark:hover:text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 w-full sm:w-auto"
+              className="border-2 border-border dark:border-gray-600 hover:border-cyan-400 text-foreground/90 dark:text-gray-300 hover:text-foreground dark:hover:text-white font-bold px-8 py-3 rounded-xl transition-all duration-300 w-full sm:w-auto"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >

@@ -217,7 +217,7 @@ export default function FeaturesClient() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-block px-4 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-cyan-400 text-sm font-medium mb-6">
+            <span className="inline-block px-4 py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-white text-sm font-medium mb-6">
               All Features Included Free
             </span>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
@@ -278,7 +278,11 @@ export default function FeaturesClient() {
             {pdfFeatures.map((feature) => {
               const Icon = feature.icon;
               const getHref = (title: string) => {
-                if (title === "PDF Editor" || title === "Add Text & Annotations") return "/tools/pdf-tools";
+                if (
+                  title === "PDF Editor" ||
+                  title === "Add Text & Annotations"
+                )
+                  return "/tools/pdf-tools";
                 if (title === "Merge PDFs") return "/tools/pdf-tools";
                 if (title === "Split PDF") return "/tools/pdf-tools";
                 if (title === "Digital Signatures") return "/tools/pdf-tools";
@@ -298,9 +302,9 @@ export default function FeaturesClient() {
                     className="group p-6 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl hover:border-cyan-500/50 hover:bg-gray-800/80 transition-all duration-300 cursor-pointer"
                   >
                     <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                      <Icon className="w-6 h-6 text-cyan-400" />
+                      <Icon className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-400 transition-colors">
+                    <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-white transition-colors">
                       {feature.title}
                     </h3>
                     <p className="text-gray-400 text-sm leading-relaxed">
@@ -315,7 +319,7 @@ export default function FeaturesClient() {
           <div className="text-center mt-8">
             <Link
               href="/tools/pdf-tools"
-              className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+              className="inline-flex items-center gap-2 text-white hover:text-cyan-300 font-medium transition-colors"
               title="Edit PDF Online for Free"
             >
               Open PDF Tools <ArrowRight className="w-4 h-4" />

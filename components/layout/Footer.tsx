@@ -148,7 +148,7 @@ export default function Footer() {
                     >
                       <button
                         onClick={() => navigateTo(tool.page as any)}
-                        className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400 hover:text-cyan-400 transition-colors group w-full"
+                        className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400 hover:text-white transition-colors group w-full"
                       >
                         <tool.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         <span>{tool.name}</span>
@@ -180,7 +180,7 @@ export default function Footer() {
                     >
                       <a
                         href={item.href}
-                        className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400 hover:text-cyan-400 transition-colors group"
+                        className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400 hover:text-white transition-colors group"
                       >
                         <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         <span>{item.name}</span>
@@ -205,16 +205,16 @@ export default function Footer() {
                 <div className="space-y-4">
                   <a
                     href="/contact"
-                    className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400 hover:text-cyan-400 transition-colors group"
+                    className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400 hover:text-white transition-colors group"
                   >
-                    <MessageSquare className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                    <MessageSquare className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
                     <span>Contact Form</span>
                   </a>
                   <div className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400">
-                    <Mail className="w-5 h-5 text-cyan-400" />
+                    <Mail className="w-5 h-5 text-white" />
                     <a
                       href="mailto:support@trevnoctilla.com"
-                      className="hover:text-cyan-400 transition-colors"
+                      className="hover:text-white transition-colors"
                     >
                       support@trevnoctilla.com
                     </a>
@@ -250,7 +250,7 @@ export default function Footer() {
                   <motion.a
                     key={item.name}
                     href={item.href}
-                    className="text-muted-foreground dark:text-gray-400 hover:text-cyan-400 transition-colors"
+                    className="text-muted-foreground dark:text-gray-400 hover:text-white transition-colors"
                     whileHover={{ scale: 1.05 }}
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -264,7 +264,7 @@ export default function Footer() {
               {/* Back to Top Button */}
               <motion.button
                 onClick={scrollToTop}
-                className="flex items-center space-x-2 text-muted-foreground dark:text-gray-400 hover:text-cyan-400 transition-colors group"
+                className="flex items-center space-x-2 text-muted-foreground dark:text-gray-400 hover:text-white transition-colors group"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 initial={{ opacity: 0 }}

@@ -420,7 +420,7 @@ export default function SupportClient() {
                 {filteredCategories.map((category) => (
                   <div key={category.id} className="space-y-3">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <category.icon className="w-5 h-5 text-cyan-400" />
+                      <category.icon className="w-5 h-5 text-white" />
                       {category.title}
                     </h3>
                     {category.faqs.map((faq, index) => (
@@ -474,7 +474,7 @@ export default function SupportClient() {
                   keywords or{" "}
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="text-cyan-400 hover:underline"
+                    className="text-white hover:underline"
                   >
                     browse all categories
                   </button>
@@ -564,7 +564,7 @@ export default function SupportClient() {
                                 {faq.question}
                               </span>
                               <ChevronDown
-                                className={`w-5 h-5 text-cyan-400 flex-shrink-0 transition-transform duration-200 ${
+                                className={`w-5 h-5 text-white flex-shrink-0 transition-transform duration-200 ${
                                   expandedFAQ ===
                                   `${currentCategory.id}-${index}`
                                     ? "rotate-180"
