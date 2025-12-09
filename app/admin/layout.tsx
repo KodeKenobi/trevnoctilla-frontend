@@ -17,6 +17,7 @@ import {
   Database,
   Activity,
   Bell,
+  Gift,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -24,6 +25,7 @@ const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: Home },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/api-keys", label: "API Keys", icon: Key },
+  { href: "/admin/free-tier-keys", label: "Free Tier Keys", icon: Gift },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/settings", label: "Settings", icon: Settings },
