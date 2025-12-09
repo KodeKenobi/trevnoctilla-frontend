@@ -226,7 +226,7 @@ export function DashboardSidebar({
                           : null;
                       return child.id === urlSection || child.id === activeTab;
                     })()
-                      ? "bg-[#2a2a2a] text-white border-l-2 border-[#8b5cf6]"
+                      ? "bg-[#2a2a2a] text-white border-l-2 "
                       : "text-gray-400 hover:text-white hover:bg-[#2a2a2a]/50"
                   }
                   pl-8
