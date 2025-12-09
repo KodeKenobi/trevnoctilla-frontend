@@ -188,9 +188,14 @@ function DashboardContent() {
   // Check if user should be redirected to admin or enterprise dashboard
   useEffect(() => {
     if (user && !userLoading) {
-      // Redirect super_admin and admin users to admin dashboard
-      if (user.role === "super_admin" || user.role === "admin") {
-        if (window.location.pathname !== "/admin") {
+      // Only redirect regular admin users to admin dashboard (super admins can switch freely)
+      // Check for query parameter to bypass redirect (used by super admin switcher)
+      const bypassRedirect = searchParams.get("bypass") === "true";
+
+      // Super admins can access all dashboards freely - no redirect
+      // Only redirect regular admins (not super admins)
+      if (user.role === "admin") {
+        if (window.location.pathname !== "/admin" && !bypassRedirect) {
           router.push("/admin");
           return;
         }

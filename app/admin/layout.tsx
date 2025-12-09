@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Users,
   Key,
@@ -18,8 +18,13 @@ import {
   Activity,
   Bell,
   Gift,
+  TestTube,
+  Globe,
+  LayoutDashboard,
+  Crown,
 } from "lucide-react";
 import { useState } from "react";
+import { useUser } from "@/contexts/UserContext";
 
 const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: Home },
@@ -28,6 +33,7 @@ const adminNavItems = [
   { href: "/admin/free-tier-keys", label: "Free Tier Keys", icon: Gift },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/testing", label: "Testing", icon: TestTube },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -37,7 +43,10 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user } = useUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isSuperAdmin = user?.role === "super_admin";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -66,6 +75,39 @@ export default function AdminLayout({
               </button>
             </div>
             <nav className="mt-5 flex-1 px-2 space-y-1">
+              {/* Super Admin Navigation Switcher */}
+              {isSuperAdmin && (
+                <div className="mb-4 px-3 py-2 bg-gray-700/50 rounded-md border border-gray-600">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown className="h-4 w-4 text-yellow-400" />
+                    <p className="text-xs font-semibold text-yellow-400">
+                      Quick Switch
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Link
+                      href="/"
+                      className="flex items-center px-2 py-1.5 text-xs text-gray-300 hover:bg-gray-600 rounded transition-colors"
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <Globe className="h-3 w-3 mr-2" />
+                      Website
+                    </Link>
+                    <Link
+                      href="/dashboard?bypass=true"
+                      className="flex items-center px-2 py-1.5 text-xs text-gray-300 hover:bg-gray-600 rounded transition-colors"
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <LayoutDashboard className="h-3 w-3 mr-2" />
+                      Client Dashboard
+                    </Link>
+                    <div className="flex items-center px-2 py-1.5 text-xs text-purple-400 bg-purple-600/20 rounded">
+                      <Shield className="h-3 w-3 mr-2" />
+                      Admin Dashboard
+                    </div>
+                  </div>
+                </div>
+              )}
               {adminNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -92,8 +134,12 @@ export default function AdminLayout({
                   <Shield className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white">Admin</p>
-                  <p className="text-xs text-gray-400">System Administrator</p>
+                  <p className="text-sm font-medium text-white">
+                    {isSuperAdmin ? "Super Admin" : "Admin"}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {isSuperAdmin ? "System Administrator" : "Administrator"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -112,6 +158,37 @@ export default function AdminLayout({
               </div>
             </div>
             <nav className="mt-5 flex-1 px-2 space-y-1">
+              {/* Super Admin Navigation Switcher */}
+              {isSuperAdmin && (
+                <div className="mb-4 px-3 py-2 bg-gray-700/50 rounded-md border border-gray-600">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown className="h-4 w-4 text-yellow-400" />
+                    <p className="text-xs font-semibold text-yellow-400">
+                      Quick Switch
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Link
+                      href="/"
+                      className="flex items-center px-2 py-1.5 text-xs text-gray-300 hover:bg-gray-600 rounded transition-colors"
+                    >
+                      <Globe className="h-3 w-3 mr-2" />
+                      Website
+                    </Link>
+                    <Link
+                      href="/dashboard?bypass=true"
+                      className="flex items-center px-2 py-1.5 text-xs text-gray-300 hover:bg-gray-600 rounded transition-colors"
+                    >
+                      <LayoutDashboard className="h-3 w-3 mr-2" />
+                      Client Dashboard
+                    </Link>
+                    <div className="flex items-center px-2 py-1.5 text-xs text-purple-400 bg-purple-600/20 rounded">
+                      <Shield className="h-3 w-3 mr-2" />
+                      Admin Dashboard
+                    </div>
+                  </div>
+                </div>
+              )}
               {adminNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -138,8 +215,12 @@ export default function AdminLayout({
                 <Shield className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-white">Admin</p>
-                <p className="text-xs text-gray-400">System Administrator</p>
+                <p className="text-sm font-medium text-white">
+                  {isSuperAdmin ? "Super Admin" : "Admin"}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {isSuperAdmin ? "System Administrator" : "Administrator"}
+                </p>
               </div>
             </div>
           </div>
@@ -162,7 +243,32 @@ export default function AdminLayout({
               <Shield className="h-6 w-6 text-purple-400 mr-2" />
               <h1 className="text-lg font-semibold text-white">Admin Panel</h1>
             </div>
-            <div className="ml-4 flex items-center md:ml-6">
+            <div className="ml-4 flex items-center md:ml-6 gap-2">
+              {/* Super Admin Quick Switch */}
+              {isSuperAdmin && (
+                <div className="hidden sm:flex items-center gap-1 bg-gray-700/50 rounded-lg px-2 py-1 border border-gray-600">
+                  <Link
+                    href="/"
+                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-600 rounded transition-colors"
+                    title="Website"
+                  >
+                    <Globe className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href="/dashboard?bypass=true"
+                    className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-600 rounded transition-colors"
+                    title="Client Dashboard"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                  </Link>
+                  <div
+                    className="p-1.5 text-purple-400 bg-purple-600/20 rounded"
+                    title="Admin Dashboard"
+                  >
+                    <Shield className="h-4 w-4" />
+                  </div>
+                </div>
+              )}
               <button className="bg-gray-700 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
                 <LogOut className="h-6 w-6" />
               </button>
