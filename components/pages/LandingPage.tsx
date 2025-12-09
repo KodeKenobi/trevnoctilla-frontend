@@ -142,7 +142,7 @@ export default function LandingPage() {
               {/* Primary Button */}
               <Link
                 href="/tools"
-                className="bg-white/10 backdrop-blur-xl text-white font-bold px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-lg 
+                className="bg-white/10 backdrop-blur-xl text-white hover:text-gray-900 font-bold px-3 sm:px-6 py-2.5 sm:py-3.5 rounded-lg 
                transition-all duration-200 flex items-center 
                space-x-1 sm:space-x-2 group text-xs sm:text-sm
                hover:bg-neutral-200 hover:scale-[1.03] active:scale-95 relative z-50"

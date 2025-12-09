@@ -1,1 +1,0 @@
-For the PDF Tools, lets add an  Templates feature where you create a catalogue of beautiful html invoices, offeres or whatever templates that the coerate world uses and user can download template, edit and save as pdf or whatever format they want
