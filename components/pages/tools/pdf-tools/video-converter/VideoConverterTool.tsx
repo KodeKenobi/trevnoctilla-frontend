@@ -47,6 +47,9 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
   const [currentBackendMessages, setCurrentBackendMessages] = useState<any[]>(
     []
   );
+  const [currentXhr, setCurrentXhr] = useState<XMLHttpRequest | null>(null);
+  const [currentProgressInterval, setCurrentProgressInterval] =
+    useState<NodeJS.Timeout | null>(null);
 
   // Messages for backend processing after upload
   const getInitializationMessages = (fileSizeMB: number) => {
@@ -227,7 +230,39 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
   });
 
   const cancelConversion = async () => {
+    // Clear progress interval if it exists
+    if (currentProgressInterval) {
+      clearInterval(currentProgressInterval);
+      setCurrentProgressInterval(null);
+    }
+
+    // Abort XHR request if it's still in progress (during upload)
+    if (currentXhr) {
+      currentXhr.abort();
+      setCurrentXhr(null);
+      setLoading(false);
+      setIsInitializing(false);
+      setIsBackendProcessing(false);
+      setIsUploading(false);
+      setInitializationStep(0);
+      setProgress(0);
+      setCurrentConversionId(null);
+      setWarning("Conversion cancelled by user");
+      return;
+    }
+
+    // If we have a conversion ID, try to cancel on the backend
     if (!currentConversionId) {
+      // No conversion ID means we're still uploading or haven't started
+      // Just reset the state
+      setLoading(false);
+      setIsInitializing(false);
+      setIsBackendProcessing(false);
+      setIsUploading(false);
+      setInitializationStep(0);
+      setProgress(0);
+      setCurrentConversionId(null);
+      setWarning("Conversion cancelled by user");
       return;
     }
 
@@ -243,16 +278,40 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
 
       const result = await response.json();
 
-      if (result.status === "success") {
+      if (
+        result.status === "success" ||
+        result.status === "already_completed"
+      ) {
         setLoading(false);
         setIsInitializing(false);
+        setIsBackendProcessing(false);
+        setIsUploading(false);
         setInitializationStep(0);
         setProgress(0);
         setCurrentConversionId(null);
         setWarning("Conversion cancelled by user");
       } else {
+        // Even if backend cancel fails, reset the UI
+        setLoading(false);
+        setIsInitializing(false);
+        setIsBackendProcessing(false);
+        setIsUploading(false);
+        setInitializationStep(0);
+        setProgress(0);
+        setCurrentConversionId(null);
+        setWarning("Conversion cancelled by user");
       }
-    } catch (error) {}
+    } catch (error) {
+      // Even if request fails, reset the UI
+      setLoading(false);
+      setIsInitializing(false);
+      setIsBackendProcessing(false);
+      setIsUploading(false);
+      setInitializationStep(0);
+      setProgress(0);
+      setCurrentConversionId(null);
+      setWarning("Conversion cancelled by user");
+    }
   };
 
   const convert = async () => {
@@ -284,6 +343,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
     // Use ONLY backend progress - no fake frontend animation
     let progressInterval: NodeJS.Timeout | undefined;
     let uniqueFilename = "";
+    let xhrInstance: XMLHttpRequest | null = null;
 
     // Poll backend for real progress
     const pollProgress = async () => {
@@ -301,7 +361,10 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         const progressData = await response.json();
 
         if (progressData.status === "completed") {
-          if (progressInterval) clearInterval(progressInterval);
+          if (progressInterval) {
+            clearInterval(progressInterval);
+            setCurrentProgressInterval(null);
+          }
           setProgress(100);
 
           // COMPREHENSIVE LOGGING - CONVERSION COMPLETE
@@ -384,6 +447,8 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         json: () => Promise<any>;
       }>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
+        xhrInstance = xhr;
+        setCurrentXhr(xhr);
 
         // Track upload progress
         xhr.upload.addEventListener("progress", (event) => {
@@ -394,6 +459,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         });
 
         xhr.addEventListener("load", () => {
+          setCurrentXhr(null);
           if (xhr.status >= 200 && xhr.status < 300) {
             resolve({
               ok: true,
@@ -406,7 +472,13 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         });
 
         xhr.addEventListener("error", () => {
+          setCurrentXhr(null);
           reject(new Error("Network error"));
+        });
+
+        xhr.addEventListener("abort", () => {
+          setCurrentXhr(null);
+          reject(new Error("Request cancelled"));
         });
 
         xhr.open("POST", getApiUrl("/convert-video"));
@@ -435,6 +507,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
 
         // Start polling every 1 second after getting unique filename
         progressInterval = setInterval(pollProgress, 1000);
+        setCurrentProgressInterval(progressInterval);
 
         if (result.original_size) {
           setOriginalFileSize(result.original_size);
@@ -449,10 +522,19 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
       }
     } catch (error: any) {
       // Clear progress interval on error
-      if (progressInterval) clearInterval(progressInterval);
-      setWarning(`Conversion failed: ${error?.message || "Unknown error"}`);
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        setCurrentProgressInterval(null);
+      }
+      setCurrentXhr(null);
+      // Don't show error if it was cancelled
+      if (error?.message !== "Request cancelled") {
+        setWarning(`Conversion failed: ${error?.message || "Unknown error"}`);
+      }
       setLoading(false);
       setIsInitializing(false);
+      setIsBackendProcessing(false);
+      setIsUploading(false);
       setInitializationStep(0);
       setCurrentConversionId(null);
     }
@@ -714,7 +796,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
                 } ${outputFormat.toUpperCase()}`}
           </button>
 
-          {loading && currentConversionId && (
+          {loading && (
             <button
               onClick={cancelConversion}
               className="btn btn-secondary text-sm sm:text-base py-3 sm:py-4 px-4"
