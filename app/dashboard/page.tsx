@@ -185,9 +185,17 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Check if user should be redirected to enterprise dashboard
+  // Check if user should be redirected to admin or enterprise dashboard
   useEffect(() => {
     if (user && !userLoading) {
+      // Redirect super_admin and admin users to admin dashboard
+      if (user.role === "super_admin" || user.role === "admin") {
+        if (window.location.pathname !== "/admin") {
+          router.push("/admin");
+          return;
+        }
+      }
+
       // Use subscription_tier from user object (fetched from profile endpoint)
       const subscriptionTier = user.subscription_tier?.toLowerCase() || "free";
 
