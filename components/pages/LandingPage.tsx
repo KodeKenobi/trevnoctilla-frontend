@@ -24,7 +24,7 @@ export default function LandingPage() {
   const [isInitialMount, setIsInitialMount] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsInitialMount(false), 2000);
+    const timer = setTimeout(() => setIsInitialMount(false), 500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -40,7 +40,7 @@ export default function LandingPage() {
 
   return (
     <>
-      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-background via-background/95 to-background dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 page-content">
+      <div className="min-h-screen relative overflow-hidden bg-gray-900 dark:bg-gray-900 page-content">
         {/* Background Image Layer - Temporarily disabled */}
         {/* <div
           className="absolute inset-0 opacity-30"
@@ -69,7 +69,7 @@ export default function LandingPage() {
         <main className="relative z-20 px-6 lg:px-12 pt-12 sm:pt-16 lg:pt-24 pb-32">
           <div className="max-w-6xl mx-auto text-center">
             {/* Hero Text Container - CSS animations for faster initial paint */}
-            <div className="relative mb-12 animate-slide-up">
+            <div className="relative mb-12">
               {/* Main Headline */}
               <h1 className="text-4xl lg:text-6xl font-bold mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14 text-[#ec4899]">
                 The only file conversion that{" "}
@@ -77,10 +77,7 @@ export default function LandingPage() {
               </h1>
 
               {/* Subtitle */}
-              <p
-                className="text-xl text-muted-foreground dark:text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in"
-                style={{ animationDelay: "0.1s" }}
-              >
+              <p className="text-xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
                 Transform your media files with our intelligent conversion
                 system. From video to audio, PDF merging to QR generation,
                 manage everything in one place.
@@ -88,17 +85,18 @@ export default function LandingPage() {
             </div>
 
             {/* Stacked Cards */}
-            <div
-              className="max-w-2xl mx-auto px-4 sm:px-0 animate-fade-in"
-              style={{ animationDelay: "0.2s" }}
-            >
+            <div className="max-w-2xl mx-auto px-4 sm:px-0">
               <div className="relative h-80 flex flex-col items-center">
                 {cardOrder.map((card, index) => {
                   const IconComponent = card.icon;
                   return (
                     <motion.div
                       key={card.text}
-                      initial={isInitialMount ? { opacity: 0, y: 20 } : false}
+                      initial={
+                        isInitialMount
+                          ? { opacity: 0.9, y: 10 }
+                          : { opacity: 1, y: 0 }
+                      }
                       animate={{
                         opacity: 1,
                         y: 0,
@@ -107,8 +105,8 @@ export default function LandingPage() {
                         top: `${index * 8}%`,
                       }}
                       transition={{
-                        duration: isInitialMount ? 0.6 : 0.4,
-                        delay: isInitialMount ? 1 + index * 0.1 : 0,
+                        duration: isInitialMount ? 0.2 : 0.4,
+                        delay: isInitialMount ? 0.05 + index * 0.03 : 0,
                         ease: "easeInOut",
                       }}
                       whileHover={{
@@ -135,10 +133,7 @@ export default function LandingPage() {
             </div>
 
             {/* CTA Buttons */}
-            <div
-              className="mt-[-120px] flex flex-row items-center justify-center space-x-2 sm:space-x-6 relative z-50 animate-fade-in"
-              style={{ animationDelay: "0.3s" }}
-            >
+            <div className="mt-[-120px] flex flex-row items-center justify-center space-x-2 sm:space-x-6 relative z-50">
               {/* Primary Button */}
               <Link
                 href="/tools"
