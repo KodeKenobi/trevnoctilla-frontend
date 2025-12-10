@@ -9,7 +9,15 @@ export default function WebsiteTracker() {
   const startTimeRef = useRef<number>(Date.now());
   const lastActivityRef = useRef<number>(Date.now());
 
+  // Skip tracking on admin/analytics page to avoid polluting analytics data
+  const isAnalyticsPage = pathname === "/admin/analytics";
+
   useEffect(() => {
+    // Skip all tracking on analytics page
+    if (isAnalyticsPage) {
+      return;
+    }
+
     // Track page view when pathname changes
     internalAnalytics.trackPageView();
 
@@ -315,7 +323,7 @@ export default function WebsiteTracker() {
       document.removeEventListener("click", trackToolUsage, true);
       window.removeEventListener("beforeunload", trackPageLeave);
     };
-  }, [pathname]);
+  }, [pathname, isAnalyticsPage]);
 
   return null; // This component doesn't render anything
 }
