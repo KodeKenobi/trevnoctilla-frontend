@@ -452,11 +452,8 @@ const nextConfig = {
         source: "/api/payment/:path*",
         destination: `${backendUrl}/api/payment/:path*`,
       },
-      // Analytics API endpoints
-      {
-        source: "/api/analytics/:path*",
-        destination: `${backendUrl}/api/analytics/:path*`,
-      },
+      // Analytics API endpoints - HANDLED BY NEXT.JS API ROUTES (app/api/analytics/*)
+      // DO NOT REWRITE - Let Next.js API routes handle these and forward to backend
       // Health check
       {
         source: "/health",
