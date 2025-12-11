@@ -111,6 +111,65 @@ const formatDuration = (seconds: number): string => {
   }`;
 };
 
+// Helper function to format duration from milliseconds
+const formatDurationFromMs = (milliseconds: number): string => {
+  const seconds = Math.floor(milliseconds / 1000);
+  return formatDuration(seconds);
+};
+
+// Helper function to format property values for display
+const formatPropertyValue = (key: string, value: any): string => {
+  // Handle session_duration and time_since_last_activity (milliseconds)
+  if (
+    (key === "session_duration" || key === "time_since_last_activity") &&
+    typeof value === "number"
+  ) {
+    return formatDurationFromMs(value);
+  }
+
+  // Handle timestamp (milliseconds)
+  if (key === "timestamp" && typeof value === "number") {
+    const date = new Date(value);
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
+  // Handle page URL
+  if (key === "page" || key === "page_url") {
+    return String(value);
+  }
+
+  // Default: format as string or JSON
+  if (typeof value === "string") {
+    return value.length > 50 ? value.substring(0, 50) + "..." : value;
+  }
+  return JSON.stringify(value);
+};
+
+// Helper function to format property key for display
+const formatPropertyKey = (key: string): string => {
+  const keyMap: Record<string, string> = {
+    session_duration: "Session Duration",
+    time_since_last_activity: "Time Since Last Activity",
+    timestamp: "Timestamp",
+    page: "Page",
+    page_url: "Page URL",
+  };
+  return (
+    keyMap[key] ||
+    key
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
+  );
+};
+
 // Helper function to format numbers with proper labels
 const formatNumber = (num: number): string => {
   if (num === 0) return "0";
@@ -960,13 +1019,12 @@ export default function AnalyticsDashboard() {
                                       key={key}
                                       className="text-xs bg-gray-700/50 px-2 py-1 rounded text-gray-400"
                                     >
-                                      {key}:{" "}
-                                      {typeof value === "string"
-                                        ? value.substring(0, 30)
-                                        : JSON.stringify(value).substring(
-                                            0,
-                                            30
-                                          )}
+                                      <span className="font-medium text-gray-300">
+                                        {formatPropertyKey(key)}:
+                                      </span>{" "}
+                                      <span className="text-gray-400">
+                                        {formatPropertyValue(key, value)}
+                                      </span>
                                     </span>
                                   ))}
                               </div>
@@ -1531,7 +1589,8 @@ export default function AnalyticsDashboard() {
                 const totalPages = Math.ceil(
                   filteredActivities.length / activityStreamPerPage
                 );
-                const startIndex = (activityStreamPage - 1) * activityStreamPerPage;
+                const startIndex =
+                  (activityStreamPage - 1) * activityStreamPerPage;
                 const endIndex = startIndex + activityStreamPerPage;
                 const paginatedActivities = filteredActivities.slice(
                   startIndex,
@@ -1576,7 +1635,8 @@ export default function AnalyticsDashboard() {
 
                       const getEventColor = () => {
                         const eventName = activity.event_name || "";
-                        if (eventName.includes("error")) return "border-l-red-500";
+                        if (eventName.includes("error"))
+                          return "border-l-red-500";
                         if (eventName.includes("api_call"))
                           return "border-l-blue-500";
                         if (
@@ -1676,8 +1736,12 @@ export default function AnalyticsDashboard() {
                     <Eye className="w-12 h-12 text-gray-600 mx-auto mb-4" />
                     <p className="text-gray-400">
                       {activityStreamFilter
-                        ? `No ${activityStreamFilter} events in ${timeRangeLabels[timeRange].toLowerCase()}`
-                        : `No activity in ${timeRangeLabels[timeRange].toLowerCase()}`}
+                        ? `No ${activityStreamFilter} events in ${timeRangeLabels[
+                            timeRange
+                          ].toLowerCase()}`
+                        : `No activity in ${timeRangeLabels[
+                            timeRange
+                          ].toLowerCase()}`}
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
                       {activityStreamFilter
