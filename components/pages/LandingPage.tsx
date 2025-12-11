@@ -166,36 +166,10 @@ export default function LandingPage() {
                 Everything you need to convert files
               </h2>
               <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                From simple file conversion to complex media processing,
-                Trevnoctilla has you covered with powerful features. Use our{" "}
-                <Link
-                  href="/tools/pdf-tools"
-                  className="italic text-white hover:text-gray-300"
-                >
-                  free PDF editor
-                </Link>{" "}
-                to{" "}
-                <Link
-                  href="/tools/pdf-tools"
-                  className="italic text-white hover:text-gray-300"
-                >
-                  merge PDF files
-                </Link>
-                ,{" "}
-                <Link
-                  href="/tools/video-converter"
-                  className="italic text-white hover:text-gray-300"
-                >
-                  convert videos to MP3
-                </Link>
-                , and{" "}
-                <Link
-                  href="/tools/image-converter"
-                  className="italic text-white hover:text-gray-300"
-                >
-                  convert images
-                </Link>{" "}
-                - all in your browser.
+                Edit PDFs, merge documents, convert videos to MP3, transform
+                images, generate QR codes, and more. All processing happens
+                instantly in your browser with no software installation
+                required.
               </p>
             </motion.div>
 
@@ -321,43 +295,10 @@ export default function LandingPage() {
                 Powerful Tools for Every Need
               </h2>
               <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-                From{" "}
-                <Link
-                  href="/tools/pdf-tools"
-                  className="italic text-white hover:text-gray-300"
-                >
-                  PDF editing
-                </Link>{" "}
-                to{" "}
-                <Link
-                  href="/tools/video-converter"
-                  className="italic text-white hover:text-gray-300"
-                >
-                  video conversion
-                </Link>
-                , our comprehensive toolkit handles all your file processing
-                needs with professional-grade quality.{" "}
-                <Link
-                  href="/tools/pdf-tools"
-                  className="italic text-white hover:text-gray-300"
-                >
-                  Edit PDFs online for free
-                </Link>
-                ,{" "}
-                <Link
-                  href="/tools/pdf-tools"
-                  className="italic text-white hover:text-gray-300"
-                >
-                  merge PDF files
-                </Link>
-                , and{" "}
-                <Link
-                  href="/tools/video-converter"
-                  className="italic text-white hover:text-gray-300"
-                >
-                  convert videos
-                </Link>{" "}
-                - all in your browser.
+                From PDF editing to video conversion, our comprehensive toolkit
+                handles all your file processing needs with professional-grade
+                quality. Edit PDFs online for free, merge PDF files, and convert
+                videos - all in your browser.
               </p>
             </motion.div>
 
