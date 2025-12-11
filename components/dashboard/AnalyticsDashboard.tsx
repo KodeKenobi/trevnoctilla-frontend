@@ -26,6 +26,8 @@ import {
   X,
   Calendar,
   Link as LinkIcon,
+  CreditCard,
+  DollarSign,
 } from "lucide-react";
 
 interface AnalyticsData {
@@ -53,6 +55,11 @@ interface AnalyticsData {
   }>;
   errorRate: number;
   conversionRate: number;
+  adClicks?: number;
+  payments?: number;
+  totalRevenue?: number;
+  subscriptionPayments?: number;
+  oneTimePayments?: number;
 }
 
 interface DetailedEvent {
@@ -254,6 +261,11 @@ export default function AnalyticsDashboard() {
         recentActivity: [],
         errorRate: 0,
         conversionRate: 0,
+        adClicks: 0,
+        payments: 0,
+        totalRevenue: 0,
+        subscriptionPayments: 0,
+        oneTimePayments: 0,
       });
     } finally {
       setLoading(false);
@@ -329,7 +341,7 @@ export default function AnalyticsDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
       </div>
     );
   }
@@ -363,7 +375,7 @@ export default function AnalyticsDashboard() {
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-white focus:border-white"
+            className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
           >
             <option value="1h">Last Hour</option>
             <option value="24h">Last 24 Hours</option>
@@ -385,7 +397,7 @@ export default function AnalyticsDashboard() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "border-white text-white"
+                    ? "border-purple-500 text-purple-400"
                     : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600"
                 }`}
               >
@@ -468,8 +480,8 @@ export default function AnalyticsDashboard() {
                     Total pages viewed
                   </p>
                 </div>
-                <div className="p-3 bg-gray-800 rounded-lg">
-                  <Eye className="w-6 h-6 text-white" />
+                <div className="p-3 bg-purple-500/20 rounded-lg">
+                  <Eye className="w-6 h-6 text-purple-400" />
                 </div>
               </div>
             </motion.div>
@@ -494,6 +506,107 @@ export default function AnalyticsDashboard() {
                 </div>
                 <div className="p-3 bg-orange-500/20 rounded-lg">
                   <MousePointer className="w-6 h-6 text-orange-400" />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Monetization Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-400 mb-1">
+                    Ad Clicks
+                  </p>
+                  <p className="text-3xl font-bold text-white">
+                    {(data.adClicks || 0).toLocaleString()}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Total ad clicks</p>
+                </div>
+                <div className="p-3 bg-yellow-500/20 rounded-lg">
+                  <MousePointer className="w-6 h-6 text-yellow-400" />
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-400 mb-1">
+                    Payments
+                  </p>
+                  <p className="text-3xl font-bold text-white">
+                    {(data.payments || 0).toLocaleString()}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Successful payments
+                  </p>
+                </div>
+                <div className="p-3 bg-green-500/20 rounded-lg">
+                  <CreditCard className="w-6 h-6 text-green-400" />
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-400 mb-1">
+                    Total Revenue
+                  </p>
+                  <p className="text-3xl font-bold text-white">
+                    $
+                    {(data.totalRevenue || 0).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Revenue from payments
+                  </p>
+                </div>
+                <div className="p-3 bg-emerald-500/20 rounded-lg">
+                  <DollarSign className="w-6 h-6 text-emerald-400" />
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-400 mb-1">
+                    Payment Breakdown
+                  </p>
+                  <p className="text-lg font-bold text-white">
+                    {data.subscriptionPayments || 0} Subscriptions
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    {data.oneTimePayments || 0} One-time
+                  </p>
+                </div>
+                <div className="p-3 bg-blue-500/20 rounded-lg">
+                  <TrendingUp className="w-6 h-6 text-blue-400" />
                 </div>
               </div>
             </motion.div>
@@ -582,7 +695,7 @@ export default function AnalyticsDashboard() {
 
             <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
               <div className="flex items-center space-x-2 mb-4">
-                <Activity className="w-5 h-5 text-white" />
+                <Activity className="w-5 h-5 text-purple-400" />
                 <h3 className="text-lg font-semibold text-white">Top Events</h3>
               </div>
               <div className="space-y-3">
@@ -727,7 +840,7 @@ export default function AnalyticsDashboard() {
                       </div>
                       <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
                         <div
-                          className="bg-white h-2 rounded-full"
+                          className="bg-purple-500 h-2 rounded-full"
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
@@ -757,7 +870,7 @@ export default function AnalyticsDashboard() {
                   setEventTypeFilter(e.target.value);
                   setEventsPage(1);
                 }}
-                className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-white"
+                className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-purple-500"
               >
                 <option value="">All Event Types</option>
                 {eventsData?.event_types.map((type) => (
@@ -783,7 +896,7 @@ export default function AnalyticsDashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 shadow-lg overflow-hidden">
             <div className="p-4 border-b border-gray-700">
               <div className="flex items-center space-x-2">
-                <Activity className="w-5 h-5 text-white" />
+                <Activity className="w-5 h-5 text-purple-400" />
                 <h3 className="text-lg font-semibold text-white">Event Log</h3>
                 <span className="text-xs text-gray-500">
                   ({timeRangeLabels[timeRange]})
@@ -809,7 +922,7 @@ export default function AnalyticsDashboard() {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="px-2 py-0.5 bg-gray-800 text-white text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-medium rounded">
                               {event.event_name}
                             </span>
                             {event.device_type && (
@@ -989,7 +1102,7 @@ export default function AnalyticsDashboard() {
                             <Smartphone className="w-4 h-4 text-green-400" />
                           )}
                           {device.device === "tablet" && (
-                            <Tablet className="w-4 h-4 text-white" />
+                            <Tablet className="w-4 h-4 text-purple-400" />
                           )}
                           <span className="text-sm text-gray-300 capitalize">
                             {device.device || "Unknown"}
@@ -1006,7 +1119,7 @@ export default function AnalyticsDashboard() {
                               ? "bg-blue-500"
                               : device.device === "mobile"
                               ? "bg-green-500"
-                              : "bg-white"
+                              : "bg-purple-500"
                           }`}
                           style={{ width: `${percentage}%` }}
                         ></div>
@@ -1077,7 +1190,7 @@ export default function AnalyticsDashboard() {
 
           <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
             <div className="flex items-center space-x-2 mb-4">
-              <Monitor className="w-5 h-5 text-white" />
+              <Monitor className="w-5 h-5 text-purple-400" />
               <h3 className="text-lg font-semibold text-white">
                 Operating Systems
               </h3>
@@ -1199,7 +1312,7 @@ export default function AnalyticsDashboard() {
 
             <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
               <div className="flex items-center space-x-2 mb-6">
-                <MapPin className="w-5 h-5 text-white" />
+                <MapPin className="w-5 h-5 text-purple-400" />
                 <h3 className="text-lg font-semibold text-white">Top Cities</h3>
               </div>
               <div className="space-y-3">
@@ -1521,7 +1634,7 @@ export default function AnalyticsDashboard() {
             <div className="flex-1 overflow-y-auto p-6">
               {detailedLoading ? (
                 <div className="flex items-center justify-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
                 </div>
               ) : detailedMetrics ? (
                 <div className="space-y-6">

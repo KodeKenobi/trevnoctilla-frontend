@@ -6,6 +6,7 @@ import { useUser } from "@/contexts/UserContext";
 import { API_CONFIG } from "@/lib/config";
 import PayFastDollarForm from "./PayFastDollarForm";
 import { convertUSDToZAR } from "@/lib/currency";
+import internalAnalytics from "@/lib/internalAnalytics";
 
 interface MonetizationModalProps {
   isOpen: boolean;
@@ -83,6 +84,15 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   const handleViewAd = () => {
     const monetagUrl = "https://otieu.com/4/10115019";
 
+    // Track ad click
+    internalAnalytics.track("ad_click", {
+      ad_provider: "monetag",
+      ad_url: monetagUrl,
+      file_name: fileName || null,
+      download_url: downloadUrl || null,
+      page: typeof window !== "undefined" ? window.location.pathname : null,
+    });
+
     // Store download info in localStorage for success page
     if (typeof window !== "undefined" && downloadUrl) {
       localStorage.setItem("ad_download_url", downloadUrl);
@@ -115,6 +125,17 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
 
   const handleManualOpenClick = () => {
     const monetagUrl = "https://otieu.com/4/10115019";
+
+    // Track ad click (manual open)
+    internalAnalytics.track("ad_click", {
+      ad_provider: "monetag",
+      ad_url: monetagUrl,
+      file_name: fileName || null,
+      download_url: downloadUrl || null,
+      page: typeof window !== "undefined" ? window.location.pathname : null,
+      manual_open: true,
+    });
+
     window.open(monetagUrl, "_blank", "noopener,noreferrer");
     leftOnceRef.current = true;
     setHideWhileWaiting(true);
@@ -308,7 +329,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                 {/* View Ad Option */}
                 <button
                   onClick={handleViewAd}
-                  className="group relative p-4 bg-black rounded-lg border border-white hover:border-gray-600 transition-all h-full"
+                  className="group relative p-4 bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] rounded-lg border border-[#8b5cf6]/30 hover:border-[#8b5cf6] transition-all hover:shadow-lg hover:shadow-[#8b5cf6]/20 h-full"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0">
@@ -374,7 +395,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                   <button
                     onClick={handlePay}
                     disabled={isProcessingPayment}
-                    className="w-full group relative p-4 bg-black rounded-lg border border-white hover:border-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-1"
+                    className="w-full group relative p-4 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:shadow-lg hover:shadow-[#22c55e]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex-1"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0">
@@ -419,7 +440,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                   </p>
                   <button
                     onClick={handleManualOpenClick}
-                    className="inline-block px-5 py-2.5 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all border border-white"
+                    className="inline-block px-5 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
                   >
                     Open Ad in New Tab
                   </button>

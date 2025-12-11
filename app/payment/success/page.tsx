@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
+import internalAnalytics from "@/lib/internalAnalytics";
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
@@ -413,6 +414,35 @@ function PaymentSuccessContent() {
 
     verifyPayment();
   }, [searchParams, router]);
+
+  // Track payment when status becomes success
+  useEffect(() => {
+    if (paymentStatus === "success" && typeof window !== "undefined") {
+      const amount = searchParams.get("amount");
+      const itemName = searchParams.get("item_name");
+      const subscriptionType = searchParams.get("subscription_type");
+      const mPaymentId = searchParams.get("m_payment_id");
+
+      // Track payment success (only once)
+      if (
+        !localStorage.getItem(`payment_tracked_${mPaymentId || Date.now()}`)
+      ) {
+        internalAnalytics.track("payment_success", {
+          payment_id: mPaymentId || null,
+          amount: amount || null,
+          item_name: itemName || null,
+          is_subscription: !!subscriptionType,
+          payment_type: subscriptionType ? "subscription" : "one_time",
+          page: "/payment/success",
+        });
+
+        // Mark as tracked to avoid duplicate tracking
+        if (mPaymentId) {
+          localStorage.setItem(`payment_tracked_${mPaymentId}`, "true");
+        }
+      }
+    }
+  }, [paymentStatus, searchParams]);
 
   // Handle download - triggers file save dialog with correct filename
   const handleDownload = () => {
