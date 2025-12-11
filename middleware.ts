@@ -96,7 +96,7 @@ export const config = {
     "/admin/:path*",
     "/enterprise/:path*",
     "/api/protected/:path*",
-    // Apply security headers to all routes
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    // Apply security headers to all routes except analytics API routes
+    "/((?!_next/static|_next/image|favicon.ico|api/analytics).*)",
   ],
 };
