@@ -110,7 +110,7 @@ export default function UniversalHeader() {
         <div className="flex items-center space-x-3">
           <Link
             href="/"
-            className="flex items-center space-x-2 text-lg sm:text-xl font-bold text-white hover:text-gray-300 transition-colors"
+            className="flex items-center space-x-2 text-lg sm:text-xl font-bold text-white hover:text-purple-400 transition-colors"
           >
             <img
               src="/logo.png"
@@ -123,7 +123,7 @@ export default function UniversalHeader() {
                 e.currentTarget.style.display = "none";
                 const fallback = document.createElement("div");
                 fallback.className =
-                  "w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-lg flex items-center justify-center";
+                  "w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center";
                 fallback.innerHTML =
                   '<span class="text-white font-bold text-sm sm:text-base">T</span>';
                 e.currentTarget.parentNode?.insertBefore(
@@ -194,7 +194,7 @@ export default function UniversalHeader() {
                 onClick={() => handleViewSwitch("website")}
                 className={`p-2 rounded-md transition-all ${
                   currentView === "website"
-                    ? "bg-black text-white"
+                    ? "bg-purple-600 text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-700"
                 }`}
                 title="Website View"
@@ -205,7 +205,7 @@ export default function UniversalHeader() {
                 onClick={() => handleViewSwitch("client")}
                 className={`p-2 rounded-md transition-all ${
                   currentView === "client"
-                    ? "bg-black text-white"
+                    ? "bg-purple-600 text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-700"
                 }`}
                 title="Client Dashboard"
@@ -216,7 +216,7 @@ export default function UniversalHeader() {
                 onClick={() => handleViewSwitch("admin")}
                 className={`p-2 rounded-md transition-all ${
                   currentView === "admin"
-                    ? "bg-black text-white"
+                    ? "bg-purple-600 text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-700"
                 }`}
                 title="Admin Dashboard"
@@ -251,7 +251,7 @@ export default function UniversalHeader() {
                     onClick={() =>
                       setIsProfileDropdownOpen(!isProfileDropdownOpen)
                     }
-                    className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors cursor-pointer p-2 rounded-lg border border-gray-600 hover:border-gray-500"
+                    className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors cursor-pointer p-2 rounded-lg border border-purple-500/30 hover:border-purple-400/50"
                     title="Profile"
                   >
                     <UserCircle className="h-5 w-5" />
@@ -263,7 +263,7 @@ export default function UniversalHeader() {
                     <div className="absolute right-0 mt-2 w-64 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-[99999]">
                       <div className="p-4 border-b border-gray-700">
                         <div className="flex items-center space-x-3">
-                          <UserCircle className="h-8 w-8 text-white" />
+                          <UserCircle className="h-8 w-8 text-purple-400" />
                           <div>
                             <p className="text-sm font-medium text-white">
                               {user.email}
@@ -315,7 +315,7 @@ export default function UniversalHeader() {
             <div className="hover:scale-105 transition-transform">
               <Link
                 href="/auth/login"
-                className="bg-black text-white px-4 py-2 rounded-xl hover:bg-gray-800 transition-all duration-200 border border-white/20 shadow-lg text-sm"
+                className="bg-gradient-to-r from-purple-500/80 to-pink-500/80 backdrop-blur-sm text-white px-4 py-2 rounded-xl hover:from-purple-600/90 hover:to-pink-600/90 transition-all duration-200 border border-white/20 shadow-lg text-sm"
               >
                 Login
               </Link>
@@ -332,7 +332,7 @@ export default function UniversalHeader() {
                 onClick={() => handleViewSwitch("website")}
                 className={`p-2 rounded transition-all ${
                   currentView === "website"
-                    ? "bg-black text-white"
+                    ? "bg-purple-600 text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-700"
                 }`}
                 title="Website View"
@@ -343,7 +343,7 @@ export default function UniversalHeader() {
                 onClick={() => handleViewSwitch("client")}
                 className={`p-2 rounded transition-all ${
                   currentView === "client"
-                    ? "bg-black text-white"
+                    ? "bg-purple-600 text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-700"
                 }`}
                 title="Client Dashboard"
@@ -354,7 +354,7 @@ export default function UniversalHeader() {
                 onClick={() => handleViewSwitch("admin")}
                 className={`p-2 rounded transition-all ${
                   currentView === "admin"
-                    ? "bg-black text-white"
+                    ? "bg-purple-600 text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-700"
                 }`}
                 title="Admin Dashboard"
@@ -373,7 +373,7 @@ export default function UniversalHeader() {
                   onClick={() =>
                     setIsProfileDropdownOpen(!isProfileDropdownOpen)
                   }
-                  className="flex items-center space-x-1 text-gray-300 hover:text-white transition-colors cursor-pointer p-1.5 rounded-lg border border-gray-600 hover:border-gray-500"
+                  className="flex items-center space-x-1 text-gray-300 hover:text-white transition-colors cursor-pointer p-1.5 rounded-lg border border-purple-500/30 hover:border-purple-400/50"
                   title="Profile"
                 >
                   <UserCircle className="h-4 w-4" />
@@ -385,7 +385,7 @@ export default function UniversalHeader() {
                   <div className="absolute right-0 mt-2 w-56 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-[99999]">
                     <div className="p-3 border-b border-gray-700">
                       <div className="flex items-center space-x-2">
-                        <UserCircle className="h-6 w-6 text-white" />
+                        <UserCircle className="h-6 w-6 text-purple-400" />
                         <div>
                           <p className="text-xs font-medium text-white">
                             {user.email}
@@ -435,7 +435,7 @@ export default function UniversalHeader() {
           ) : (
             <Link
               href="/auth/login"
-              className="bg-black text-white px-3 py-1.5 rounded-lg text-xs hover:bg-gray-800"
+              className="bg-gradient-to-r from-purple-500/80 to-pink-500/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs"
             >
               Login
             </Link>

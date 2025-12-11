@@ -9,7 +9,7 @@ export default function NotFound() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden page-content">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative overflow-hidden page-content">
       {/* Main Content with Header Spacing */}
       <div className="relative z-20 flex items-center justify-center min-h-screen px-4 pt-16 sm:pt-20 lg:pt-24 pb-20">
         <div className="text-center max-w-4xl mx-auto">

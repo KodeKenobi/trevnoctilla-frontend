@@ -10,11 +10,6 @@ export default function WebsiteTracker() {
   const lastActivityRef = useRef<number>(Date.now());
 
   useEffect(() => {
-    // Skip all tracking on analytics page to avoid polluting analytics data
-    if (pathname === "/admin/analytics") {
-      return;
-    }
-
     // Track page view when pathname changes
     internalAnalytics.trackPageView();
 

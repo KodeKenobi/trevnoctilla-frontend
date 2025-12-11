@@ -541,7 +541,7 @@ export const SplitPdfTool: React.FC<SplitPdfToolProps> = ({
                   </div>
                 </div>
                 <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-black text-white text-xs px-2 py-1 rounded-full border border-white">
+                  <div className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
                     Page {page.pageNumber}
                   </div>
                 </div>

@@ -345,7 +345,7 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
                 {originalFileSize && convertedFileSize && (
                   <p className="text-xs text-gray-400">
                     Compression:{" "}
-                    <span className="text-white font-medium">
+                    <span className="text-purple-300 font-medium">
                       {(
                         ((originalFileSize - convertedFileSize) /
                           originalFileSize) *
@@ -490,7 +490,7 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
           <button
             onClick={convert}
             disabled={isProcessing || !file}
-            className="w-full sm:w-auto px-6 py-3 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base border border-white"
+            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
           >
             {isProcessing ? "Converting..." : "Convert Image"}
           </button>
@@ -509,7 +509,7 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2">
               <div
-                className="bg-white h-2 rounded-full transition-all duration-300"
+                className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>

@@ -51,7 +51,7 @@ export default function TestingPage() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen bg-black pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-purple-400 mx-auto mb-4" />
           <p className="text-gray-300">Loading...</p>
@@ -62,7 +62,7 @@ export default function TestingPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20 flex items-center justify-center">
         <div className="text-center p-8 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg">
           <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
           <p className="text-gray-400 mb-4">
@@ -70,7 +70,7 @@ export default function TestingPage() {
           </p>
           <Link
             href="/auth/login"
-            className="inline-flex items-center px-4 py-2 border border-white text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
           >
             Login
           </Link>
@@ -81,7 +81,7 @@ export default function TestingPage() {
 
   if (user.role !== "admin" && user.role !== "super_admin") {
     return (
-      <div className="min-h-screen bg-black pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20 flex items-center justify-center">
         <div className="text-center p-8 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg">
           <Shield className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
@@ -90,7 +90,7 @@ export default function TestingPage() {
           </p>
           <Link
             href="/auth/login"
-            className="inline-flex items-center px-4 py-2 border border-white text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
           >
             Login as Admin
           </Link>

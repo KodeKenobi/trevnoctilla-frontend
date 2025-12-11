@@ -24,7 +24,7 @@ export default function LandingPage() {
   const [isInitialMount, setIsInitialMount] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsInitialMount(false), 500);
+    const timer = setTimeout(() => setIsInitialMount(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -40,7 +40,7 @@ export default function LandingPage() {
 
   return (
     <>
-      <div className="min-h-screen relative overflow-hidden bg-gray-900 dark:bg-gray-900 page-content">
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-background via-background/95 to-background dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 page-content">
         {/* Background Image Layer - Temporarily disabled */}
         {/* <div
           className="absolute inset-0 opacity-30"
@@ -50,21 +50,37 @@ export default function LandingPage() {
             backgroundPosition: "center -50px",
           }}
         ></div> */}
-        {/* Background elements removed - no gradients */}
+        {/* Background glow orbs - CSS animations for better performance */}
+        <div className="absolute w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[150px] top-[-200px] left-[-200px] animate-fade-in"></div>
+        <div
+          className="absolute w-[500px] h-[500px] bg-pink-500/20 rounded-full blur-[120px] top-[-100px] right-[-100px] animate-fade-in"
+          style={{ animationDelay: "0.1s" }}
+        ></div>
+        <div
+          className="absolute w-[400px] h-[400px] bg-purple-500/20 rounded-full blur-[100px] bottom-[-100px] left-1/2 transform -translate-x-1/2 animate-fade-in"
+          style={{ animationDelay: "0.2s" }}
+        ></div>
+        <div
+          className="absolute w-[300px] h-[300px] bg-orange-500/15 rounded-full blur-[80px] top-1/2 right-1/4 animate-fade-in"
+          style={{ animationDelay: "0.3s" }}
+        ></div>
 
         {/* Hero Section */}
         <main className="relative z-20 px-6 lg:px-12 pt-12 sm:pt-16 lg:pt-24 pb-32">
           <div className="max-w-6xl mx-auto text-center">
             {/* Hero Text Container - CSS animations for faster initial paint */}
-            <div className="relative mb-12">
+            <div className="relative mb-12 animate-slide-up">
               {/* Main Headline */}
-              <h1 className="text-4xl lg:text-6xl font-bold mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14 text-white">
+              <h1 className="text-4xl lg:text-6xl font-bold mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14 text-[#ec4899]">
                 The only file conversion that{" "}
-                <span className="text-white">works where you work</span>
+                <span className="text-[#ffffff]">works where you work</span>
               </h1>
 
               {/* Subtitle */}
-              <p className="text-xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
+              <p
+                className="text-xl text-muted-foreground dark:text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in"
+                style={{ animationDelay: "0.1s" }}
+              >
                 Transform your media files with our intelligent conversion
                 system. From video to audio, PDF merging to QR generation,
                 manage everything in one place.
@@ -72,18 +88,17 @@ export default function LandingPage() {
             </div>
 
             {/* Stacked Cards */}
-            <div className="max-w-2xl mx-auto px-4 sm:px-0">
+            <div
+              className="max-w-2xl mx-auto px-4 sm:px-0 animate-fade-in"
+              style={{ animationDelay: "0.2s" }}
+            >
               <div className="relative h-80 flex flex-col items-center">
                 {cardOrder.map((card, index) => {
                   const IconComponent = card.icon;
                   return (
                     <motion.div
                       key={card.text}
-                      initial={
-                        isInitialMount
-                          ? { opacity: 0.9, y: 10 }
-                          : { opacity: 1, y: 0 }
-                      }
+                      initial={isInitialMount ? { opacity: 0, y: 20 } : false}
                       animate={{
                         opacity: 1,
                         y: 0,
@@ -92,8 +107,8 @@ export default function LandingPage() {
                         top: `${index * 8}%`,
                       }}
                       transition={{
-                        duration: isInitialMount ? 0.2 : 0.4,
-                        delay: isInitialMount ? 0.05 + index * 0.03 : 0,
+                        duration: isInitialMount ? 0.6 : 0.4,
+                        delay: isInitialMount ? 1 + index * 0.1 : 0,
                         ease: "easeInOut",
                       }}
                       whileHover={{
@@ -120,7 +135,10 @@ export default function LandingPage() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="mt-[-120px] flex flex-row items-center justify-center space-x-2 sm:space-x-6 relative z-50">
+            <div
+              className="mt-[-120px] flex flex-row items-center justify-center space-x-2 sm:space-x-6 relative z-50 animate-fade-in"
+              style={{ animationDelay: "0.3s" }}
+            >
               {/* Primary Button */}
               <Link
                 href="/tools"
@@ -222,7 +240,7 @@ export default function LandingPage() {
                   title: "Image Conversion",
                   description:
                     "Convert images between different formats with quality preservation.",
-                  color: "white",
+                  color: "from-purple-500 to-pink-500",
                   href: "/tools/image-converter",
                 },
               ].map((feature, index) => (
@@ -450,7 +468,9 @@ export default function LandingPage() {
         {/* Developer APIs CTA Section */}
         <section className="py-24 relative overflow-hidden">
           {/* Background Elements */}
-          <div className="absolute inset-0 bg-black"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"></div>
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div
@@ -474,7 +494,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
-                className="bg-gray-900 border border-gray-700 rounded-2xl p-8 text-center md:text-left"
+                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 text-center md:text-left"
               >
                 <h3 className="text-2xl font-bold text-white mb-4">
                   PDF Processing APIs
@@ -496,7 +516,7 @@ export default function LandingPage() {
                       key={`pdf-feature-${idx}`}
                       className="flex items-center text-gray-400 justify-center md:justify-start"
                     >
-                      <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
+                      <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
                       {feature}
                     </li>
                   ))}
@@ -515,7 +535,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
-                className="bg-gray-900 border border-gray-700 rounded-2xl p-8 text-center md:text-left"
+                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 text-center md:text-left"
               >
                 <h3 className="text-2xl font-bold text-white mb-4">
                   Media Conversion APIs

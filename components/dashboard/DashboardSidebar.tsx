@@ -269,7 +269,7 @@ export function DashboardSidebar({
       {user && (
         <div className="p-4 border-t border-[#2a2a2a]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center border border-white">
+            <div className="w-10 h-10 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full flex items-center justify-center">
               <span className="text-white font-semibold text-sm">
                 {user.name?.[0] || user.email?.[0] || "U"}
               </span>

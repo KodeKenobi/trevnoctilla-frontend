@@ -126,7 +126,7 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
                 </p>
                 <button
                   onClick={downloadAllImages}
-                  className="bg-black text-white py-1.5 px-3 sm:py-2 sm:px-4 rounded-lg font-medium hover:bg-gray-800 transition-all duration-200 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 border border-white"
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 text-white py-1.5 px-3 sm:py-2 sm:px-4 rounded-lg font-medium hover:from-green-600 hover:to-emerald-600 transition-all duration-200 text-xs sm:text-sm flex items-center gap-1 sm:gap-2"
                 >
                   <svg
                     className="w-3 h-3 sm:w-4 sm:h-4"
@@ -165,7 +165,7 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover/image:bg-opacity-30 transition-all rounded flex items-center justify-center">
                         <button
                           onClick={() => openImageModal(img, index)}
-                          className="opacity-0 group-hover/image:opacity-100 bg-black text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-800 transition-all duration-200 flex items-center gap-1 border border-white"
+                          className="opacity-0 group-hover/image:opacity-100 bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 flex items-center gap-1"
                         >
                           <svg
                             className="w-3 h-3"
@@ -201,7 +201,7 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
                       </div>
                       <button
                         onClick={() => downloadSingleImage(img, index)}
-                        className="w-full bg-black text-white py-1 px-2 rounded text-xs font-medium hover:bg-gray-800 transition-all duration-200 flex items-center justify-center gap-1 border border-white"
+                        className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white py-1 px-2 rounded text-xs font-medium hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 flex items-center justify-center gap-1"
                       >
                         <svg
                           className="w-3 h-3"
@@ -254,7 +254,7 @@ export const ExtractImagesTool: React.FC<ExtractImagesToolProps> = ({
                     onClick={() =>
                       downloadSingleImage(selectedImage, selectedImage.index)
                     }
-                    className="bg-black text-white py-1.5 px-3 sm:py-2 sm:px-4 rounded-lg font-medium hover:bg-gray-800 transition-all duration-200 text-xs sm:text-sm flex items-center gap-1 sm:gap-2 border border-white"
+                    className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white py-1.5 px-3 sm:py-2 sm:px-4 rounded-lg font-medium hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 text-xs sm:text-sm flex items-center gap-1 sm:gap-2"
                   >
                     <svg
                       className="w-3 h-3 sm:w-4 sm:h-4"

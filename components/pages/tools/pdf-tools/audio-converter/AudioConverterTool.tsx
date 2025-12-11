@@ -347,7 +347,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
             <select
               value={outputFormat}
               onChange={(e) => setOutputFormat(e.target.value)}
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-white bg-gray-700 text-white"
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
             >
               <option value="mp3">MP3 (Most Compatible)</option>
               <option value="wav">WAV (Uncompressed)</option>
@@ -367,7 +367,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
             <select
               value={bitrate}
               onChange={(e) => setBitrate(Number(e.target.value))}
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-white bg-gray-700 text-white"
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
             >
               <option value={64}>64 kbps (Low)</option>
               <option value={128}>128 kbps (Standard)</option>
@@ -384,7 +384,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
             <select
               value={sampleRate}
               onChange={(e) => setSampleRate(Number(e.target.value))}
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-white bg-gray-700 text-white"
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
             >
               <option value={22050}>22050 Hz (Low)</option>
               <option value={44100}>44100 Hz (CD Quality)</option>
@@ -401,7 +401,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
             <select
               value={channels}
               onChange={(e) => setChannels(e.target.value)}
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-white bg-gray-700 text-white"
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
             >
               <option value="mono">Mono (1 channel)</option>
               <option value="stereo">Stereo (2 channels)</option>
@@ -416,7 +416,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
             <select
               value={quality}
               onChange={(e) => setQuality(Number(e.target.value))}
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-white bg-gray-700 text-white"
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
             >
               <option value={50}>50% (Low Quality)</option>
               <option value={70}>70% (Medium Quality)</option>
@@ -430,7 +430,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
               Processing
             </label>
             <select
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-white bg-gray-700 text-white"
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
               disabled
             >
               <option value="normal">Normal Processing</option>
@@ -454,7 +454,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
           <div className="mb-4">
             <div className="w-full bg-gray-700 rounded-full h-2.5 mb-2">
               <div
-                className={`bg-white h-2.5 rounded-full transition-all duration-300 ease-in-out ${
+                className={`bg-purple-500 h-2.5 rounded-full transition-all duration-300 ease-in-out ${
                   progress >= 85 && !conversionResult ? "animate-pulse" : ""
                 }`}
                 style={{ width: `${progress}%` }}
@@ -498,7 +498,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
                   </div>
                   <div className="text-center">
                     <p className="text-gray-400">Savings</p>
-                    <p className="text-white font-medium">
+                    <p className="text-purple-300 font-medium">
                       {(
                         (originalFileSize - convertedFileSize) /
                         1024 /

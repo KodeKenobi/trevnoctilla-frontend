@@ -409,7 +409,7 @@ export function BillingSection({ user }: BillingSectionProps) {
                 {!isActive && plan.price > 0 && !isGreyedOut && (
                   <button
                     onClick={() => handleSubscribe(plan)}
-                    className="w-full px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all mt-auto border border-white"
+                    className="w-full px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all mt-auto"
                   >
                     Subscribe
                   </button>

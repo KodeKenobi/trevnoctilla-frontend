@@ -283,7 +283,7 @@ export default function PDFTools() {
   };
 
   return (
-    <div className="min-h-screen bg-black page-content">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 page-content">
       {/* Progress Modal for ALL tools */}
       <PDFProcessingModal
         isOpen={isProcessing}

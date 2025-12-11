@@ -579,7 +579,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
                     )}
                   </div>
                   <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-black text-white text-xs px-2 py-1 rounded-full border border-white">
+                    <div className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
                       {page.pageNumber}
                     </div>
                   </div>
@@ -686,7 +686,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
                     )}
                   </div>
                   <div className="absolute bottom-1 left-1">
-                    <span className="bg-black text-white text-[10px] px-1.5 py-0.5 rounded-full border border-white">
+                    <span className="bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">
                       {page.pageNumber}
                     </span>
                   </div>
@@ -739,7 +739,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
               {hasViewedPdf && !isInPreviewMode && onDownloadPdf && (
                 <Button
                   onClick={onDownloadPdf}
-                  className="bg-black hover:bg-gray-800 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex-1 sm:flex-none border border-white"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex-1 sm:flex-none"
                 >
                   Download
                 </Button>

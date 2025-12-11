@@ -76,10 +76,7 @@ export default withAuth(
           req.nextUrl.pathname.startsWith(route)
         );
 
-        // Allow all API routes (including analytics)
-        const isApiRoute = req.nextUrl.pathname.startsWith("/api/");
-
-        if (isPublicRoute || isApiRoute) {
+        if (isPublicRoute) {
           return true;
         }
 

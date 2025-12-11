@@ -49,7 +49,7 @@ export default function AdminLayout({
   const isSuperAdmin = user?.role === "super_admin";
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Mobile sidebar */}
       <div
         className={`fixed inset-0 z-50 lg:hidden ${
@@ -64,7 +64,7 @@ export default function AdminLayout({
           <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
             <div className="flex items-center justify-between flex-shrink-0 px-4">
               <div className="flex items-center space-x-2">
-                <Shield className="h-6 w-6 text-white" />
+                <Shield className="h-6 w-6 text-purple-400" />
                 <h1 className="text-xl font-bold text-white">Admin Panel</h1>
               </div>
               <button
@@ -101,7 +101,7 @@ export default function AdminLayout({
                       <LayoutDashboard className="h-3 w-3 mr-2" />
                       Client Dashboard
                     </Link>
-                    <div className="flex items-center px-2 py-1.5 text-xs text-white bg-gray-800 rounded">
+                    <div className="flex items-center px-2 py-1.5 text-xs text-purple-400 bg-purple-600/20 rounded">
                       <Shield className="h-3 w-3 mr-2" />
                       Admin Dashboard
                     </div>
@@ -117,7 +117,7 @@ export default function AdminLayout({
                     href={item.href}
                     className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                       isActive
-                        ? "bg-black text-white"
+                        ? "bg-purple-600 text-white"
                         : "text-gray-300 hover:bg-gray-700 hover:text-white"
                     }`}
                     onClick={() => setSidebarOpen(false)}
@@ -130,7 +130,7 @@ export default function AdminLayout({
             </nav>
             <div className="flex-shrink-0 border-t border-gray-700 p-4">
               <div className="flex items-center space-x-3">
-                <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center border border-white">
+                <div className="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center">
                   <Shield className="h-5 w-5 text-white" />
                 </div>
                 <div>
@@ -153,7 +153,7 @@ export default function AdminLayout({
           <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
             <div className="flex items-center flex-shrink-0 px-4">
               <div className="flex items-center space-x-2">
-                <Shield className="h-6 w-6 text-white" />
+                <Shield className="h-6 w-6 text-purple-400" />
                 <h1 className="text-xl font-bold text-white">Admin Panel</h1>
               </div>
             </div>
@@ -182,7 +182,7 @@ export default function AdminLayout({
                       <LayoutDashboard className="h-3 w-3 mr-2" />
                       Client Dashboard
                     </Link>
-                    <div className="flex items-center px-2 py-1.5 text-xs text-white bg-gray-800 rounded">
+                    <div className="flex items-center px-2 py-1.5 text-xs text-purple-400 bg-purple-600/20 rounded">
                       <Shield className="h-3 w-3 mr-2" />
                       Admin Dashboard
                     </div>
@@ -198,7 +198,7 @@ export default function AdminLayout({
                     href={item.href}
                     className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                       isActive
-                        ? "bg-black text-white"
+                        ? "bg-purple-600 text-white"
                         : "text-gray-300 hover:bg-gray-700 hover:text-white"
                     }`}
                   >
@@ -233,7 +233,7 @@ export default function AdminLayout({
         <div className="sticky top-0 z-10 flex-shrink-0 flex h-16 bg-gray-800 border-b border-gray-700 lg:hidden">
           <button
             type="button"
-            className="px-4 border-r border-gray-700 text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white lg:hidden"
+            className="px-4 border-r border-gray-700 text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500 lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-6 w-6" />
@@ -262,14 +262,14 @@ export default function AdminLayout({
                     <LayoutDashboard className="h-4 w-4" />
                   </Link>
                   <div
-                    className="p-1.5 text-white bg-gray-800 rounded"
+                    className="p-1.5 text-purple-400 bg-purple-600/20 rounded"
                     title="Admin Dashboard"
                   >
                     <Shield className="h-4 w-4" />
                   </div>
                 </div>
               )}
-              <button className="bg-gray-700 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white">
+              <button className="bg-gray-700 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
                 <LogOut className="h-6 w-6" />
               </button>
             </div>
