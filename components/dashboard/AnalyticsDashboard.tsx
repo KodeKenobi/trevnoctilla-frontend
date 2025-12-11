@@ -180,6 +180,11 @@ export default function AnalyticsDashboard() {
   const [eventsPage, setEventsPage] = useState(1);
   const [eventTypeFilter, setEventTypeFilter] = useState("");
 
+  // Activity stream state
+  const [activityStreamPage, setActivityStreamPage] = useState(1);
+  const [activityStreamFilter, setActivityStreamFilter] = useState("");
+  const activityStreamPerPage = 20;
+
   // Detailed metrics modal state
   const [detailedMetrics, setDetailedMetrics] =
     useState<DetailedMetrics | null>(null);
@@ -1468,7 +1473,7 @@ export default function AnalyticsDashboard() {
 
           {/* Activity Stream */}
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 shadow-lg overflow-hidden">
-            <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+            <div className="p-4 border-b border-gray-700 flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center space-x-2">
                 <Eye className="w-5 h-5 text-white" />
                 <h3 className="text-lg font-semibold text-white">
@@ -1478,117 +1483,210 @@ export default function AnalyticsDashboard() {
                   {timeRangeLabels[timeRange]}
                 </span>
               </div>
-              <button
-                onClick={() => fetchAnalyticsData()}
-                className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1"
-              >
-                <Clock className="w-4 h-4" />
-                Refresh
-              </button>
+              <div className="flex items-center gap-3">
+                {/* Filter dropdown */}
+                <select
+                  value={activityStreamFilter}
+                  onChange={(e) => {
+                    setActivityStreamFilter(e.target.value);
+                    setActivityStreamPage(1);
+                  }}
+                  className="px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                >
+                  <option value="">All Events</option>
+                  <option value="api_call">API Calls</option>
+                  <option value="api_error">API Errors</option>
+                  <option value="pageview">Page Views</option>
+                  <option value="page_load">Page Loads</option>
+                  <option value="click">Clicks</option>
+                  <option value="navigation_click">Navigation</option>
+                  <option value="user_interaction">User Interactions</option>
+                  <option value="session_update">Session Updates</option>
+                  <option value="ad_click">Ad Clicks</option>
+                  <option value="payment_success">Payments</option>
+                </select>
+                <button
+                  onClick={() => fetchAnalyticsData()}
+                  className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1"
+                >
+                  <Clock className="w-4 h-4" />
+                  Refresh
+                </button>
+              </div>
             </div>
             <div className="divide-y divide-gray-700/50 max-h-[500px] overflow-y-auto">
-              {data.recentActivity.length > 0 ? (
-                data.recentActivity.map((activity) => {
-                  const date = new Date(activity.timestamp);
-                  const timeAgo = Math.floor(
-                    (Date.now() - date.getTime()) / 1000
-                  );
-                  let timeLabel = "";
-                  if (timeAgo < 60) {
-                    timeLabel = `${timeAgo}s ago`;
-                  } else if (timeAgo < 3600) {
-                    timeLabel = `${Math.floor(timeAgo / 60)}m ago`;
-                  } else if (timeAgo < 86400) {
-                    timeLabel = `${Math.floor(timeAgo / 3600)}h ago`;
-                  } else {
-                    timeLabel = `${Math.floor(timeAgo / 86400)}d ago`;
-                  }
-
-                  const getEventIcon = () => {
-                    const eventName = activity.event_name || "";
-                    if (eventName.includes("api_call")) return "🌐";
-                    if (eventName.includes("api_error")) return "❌";
-                    if (
-                      eventName.includes("page_load") ||
-                      eventName.includes("pageview")
+              {(() => {
+                // Filter activities
+                const filteredActivities = activityStreamFilter
+                  ? data.recentActivity.filter(
+                      (activity) =>
+                        activity.event_name
+                          ?.toLowerCase()
+                          .includes(activityStreamFilter.toLowerCase()) ||
+                        activity.event_name === activityStreamFilter
                     )
-                      return "📄";
-                    if (
-                      eventName.includes("navigation") ||
-                      eventName.includes("click")
-                    )
-                      return "🔗";
-                    if (eventName.includes("user_interaction")) return "👆";
-                    return "📊";
-                  };
+                  : data.recentActivity;
 
-                  const getEventColor = () => {
-                    const eventName = activity.event_name || "";
-                    if (eventName.includes("error")) return "border-l-red-500";
-                    if (eventName.includes("api_call"))
-                      return "border-l-blue-500";
-                    if (
-                      eventName.includes("page_load") ||
-                      eventName.includes("pageview")
-                    )
-                      return "border-l-green-500";
-                    if (eventName.includes("navigation"))
-                      return "border-l-purple-500";
-                    return "border-l-gray-500";
-                  };
+                // Paginate activities
+                const totalPages = Math.ceil(
+                  filteredActivities.length / activityStreamPerPage
+                );
+                const startIndex = (activityStreamPage - 1) * activityStreamPerPage;
+                const endIndex = startIndex + activityStreamPerPage;
+                const paginatedActivities = filteredActivities.slice(
+                  startIndex,
+                  endIndex
+                );
 
-                  // Extract page path from URL
-                  let pagePath = "/";
-                  if (activity.page_url) {
-                    try {
-                      const url = new URL(activity.page_url);
-                      pagePath = url.pathname;
-                    } catch {
-                      pagePath = activity.page_url.substring(0, 50);
-                    }
-                  }
+                return filteredActivities.length > 0 ? (
+                  <>
+                    {paginatedActivities.map((activity) => {
+                      const date = new Date(activity.timestamp);
+                      const timeAgo = Math.floor(
+                        (Date.now() - date.getTime()) / 1000
+                      );
+                      let timeLabel = "";
+                      if (timeAgo < 60) {
+                        timeLabel = `${timeAgo}s ago`;
+                      } else if (timeAgo < 3600) {
+                        timeLabel = `${Math.floor(timeAgo / 60)}m ago`;
+                      } else if (timeAgo < 86400) {
+                        timeLabel = `${Math.floor(timeAgo / 3600)}h ago`;
+                      } else {
+                        timeLabel = `${Math.floor(timeAgo / 86400)}d ago`;
+                      }
 
-                  return (
-                    <div
-                      key={activity.id}
-                      className={`flex items-start gap-3 p-4 border-l-4 ${getEventColor()} hover:bg-gray-700/30 transition-colors`}
-                    >
-                      <div className="flex-shrink-0 mt-0.5 text-lg">
-                        {getEventIcon()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-white">
-                            {activity.event_name || "Event"}
-                          </span>
-                          <span className="text-xs text-white font-mono">
-                            {pagePath}
-                          </span>
+                      const getEventIcon = () => {
+                        const eventName = activity.event_name || "";
+                        if (eventName.includes("api_call")) return "🌐";
+                        if (eventName.includes("api_error")) return "❌";
+                        if (
+                          eventName.includes("page_load") ||
+                          eventName.includes("pageview")
+                        )
+                          return "📄";
+                        if (
+                          eventName.includes("navigation") ||
+                          eventName.includes("click")
+                        )
+                          return "🔗";
+                        if (eventName.includes("user_interaction")) return "👆";
+                        return "📊";
+                      };
+
+                      const getEventColor = () => {
+                        const eventName = activity.event_name || "";
+                        if (eventName.includes("error")) return "border-l-red-500";
+                        if (eventName.includes("api_call"))
+                          return "border-l-blue-500";
+                        if (
+                          eventName.includes("page_load") ||
+                          eventName.includes("pageview")
+                        )
+                          return "border-l-green-500";
+                        if (eventName.includes("navigation"))
+                          return "border-l-purple-500";
+                        return "border-l-gray-500";
+                      };
+
+                      // Extract page path from URL
+                      let pagePath = "/";
+                      if (activity.page_url) {
+                        try {
+                          const url = new URL(activity.page_url);
+                          pagePath = url.pathname;
+                        } catch {
+                          pagePath = activity.page_url.substring(0, 50);
+                        }
+                      }
+
+                      return (
+                        <div
+                          key={activity.id}
+                          className={`flex items-start gap-3 p-4 border-l-4 ${getEventColor()} hover:bg-gray-700/30 transition-colors`}
+                        >
+                          <div className="flex-shrink-0 mt-0.5 text-lg">
+                            {getEventIcon()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-medium text-white">
+                                {activity.event_name || "Event"}
+                              </span>
+                              <span className="text-xs text-white font-mono">
+                                {pagePath}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-400 truncate">
+                              {activity.description}
+                            </p>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-sm text-gray-300">{timeLabel}</p>
+                            <p className="text-xs text-gray-500">
+                              {date.toLocaleTimeString()}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-400 truncate">
-                          {activity.description}
-                        </p>
+                      );
+                    })}
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="p-4 border-t border-gray-700 flex items-center justify-between">
+                        <div className="text-sm text-gray-400">
+                          Showing {startIndex + 1}-
+                          {Math.min(endIndex, filteredActivities.length)} of{" "}
+                          {filteredActivities.length} events
+                          {activityStreamFilter && (
+                            <span className="ml-2">
+                              (filtered by: {activityStreamFilter})
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() =>
+                              setActivityStreamPage((p) => Math.max(1, p - 1))
+                            }
+                            disabled={activityStreamPage === 1}
+                            className="px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
+                          >
+                            Previous
+                          </button>
+                          <span className="text-sm text-gray-400">
+                            Page {activityStreamPage} of {totalPages}
+                          </span>
+                          <button
+                            onClick={() =>
+                              setActivityStreamPage((p) =>
+                                Math.min(totalPages, p + 1)
+                              )
+                            }
+                            disabled={activityStreamPage === totalPages}
+                            className="px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
+                          >
+                            Next
+                          </button>
+                        </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-sm text-gray-300">{timeLabel}</p>
-                        <p className="text-xs text-gray-500">
-                          {date.toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-12">
-                  <Eye className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400">
-                    No activity in {timeRangeLabels[timeRange].toLowerCase()}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Events will appear here as users interact with your site
-                  </p>
-                </div>
-              )}
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-12">
+                    <Eye className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400">
+                      {activityStreamFilter
+                        ? `No ${activityStreamFilter} events in ${timeRangeLabels[timeRange].toLowerCase()}`
+                        : `No activity in ${timeRangeLabels[timeRange].toLowerCase()}`}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {activityStreamFilter
+                        ? "Try selecting a different event type"
+                        : "Events will appear here as users interact with your site"}
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
