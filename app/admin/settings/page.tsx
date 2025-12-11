@@ -64,9 +64,9 @@ export default function AdminSettingsPage() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-black pt-20 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-400">Loading...</p>
         </div>
       </div>
@@ -75,7 +75,7 @@ export default function AdminSettingsPage() {
 
   if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-black pt-20 flex items-center justify-center">
         <div className="text-center p-8 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg">
           <Shield className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
@@ -84,7 +84,7 @@ export default function AdminSettingsPage() {
           </p>
           <Link
             href="/auth/login"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            className="inline-flex items-center px-4 py-2 border border-white text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800"
           >
             Login as Admin
           </Link>
@@ -94,7 +94,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20">
+    <div className="min-h-screen bg-black pt-20">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
@@ -109,7 +109,7 @@ export default function AdminSettingsPage() {
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors border border-white"
               >
                 {loading ? (
                   <RefreshCw className="h-5 w-5 animate-spin" />
@@ -126,8 +126,10 @@ export default function AdminSettingsPage() {
           {/* General Settings */}
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
             <div className="flex items-center gap-3 mb-6">
-              <Globe className="h-6 w-6 text-purple-400" />
-              <h2 className="text-2xl font-bold text-white">General Settings</h2>
+              <Globe className="h-6 w-6 text-white" />
+              <h2 className="text-2xl font-bold text-white">
+                General Settings
+              </h2>
             </div>
             <div className="space-y-4">
               <div>
@@ -140,7 +142,7 @@ export default function AdminSettingsPage() {
                   onChange={(e) =>
                     setSettings({ ...settings, siteName: e.target.value })
                   }
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white"
                 />
               </div>
               <div>
@@ -153,7 +155,7 @@ export default function AdminSettingsPage() {
                   onChange={(e) =>
                     setSettings({ ...settings, siteUrl: e.target.value })
                   }
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white"
                 />
               </div>
               <div>
@@ -166,7 +168,7 @@ export default function AdminSettingsPage() {
                   onChange={(e) =>
                     setSettings({ ...settings, apiBaseUrl: e.target.value })
                   }
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white"
                 />
               </div>
             </div>
@@ -176,7 +178,9 @@ export default function AdminSettingsPage() {
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
             <div className="flex items-center gap-3 mb-6">
               <Shield className="h-6 w-6 text-blue-400" />
-              <h2 className="text-2xl font-bold text-white">Security Settings</h2>
+              <h2 className="text-2xl font-bold text-white">
+                Security Settings
+              </h2>
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -196,9 +200,7 @@ export default function AdminSettingsPage() {
                     })
                   }
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.enableRegistration
-                      ? "bg-purple-600"
-                      : "bg-gray-600"
+                    settings.enableRegistration ? "bg-black" : "bg-gray-600"
                   }`}
                 >
                   <span
@@ -232,7 +234,9 @@ export default function AdminSettingsPage() {
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      settings.maintenanceMode ? "translate-x-6" : "translate-x-1"
+                      settings.maintenanceMode
+                        ? "translate-x-6"
+                        : "translate-x-1"
                     }`}
                   />
                 </button>
@@ -260,7 +264,7 @@ export default function AdminSettingsPage() {
                       defaultRateLimit: parseInt(e.target.value) || 1000,
                     })
                   }
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white"
                 />
               </div>
             </div>
@@ -336,4 +340,3 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
-

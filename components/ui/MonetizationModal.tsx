@@ -82,7 +82,6 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
   }, [isOpen, onClose, onComplete]);
   const handleViewAd = () => {
     const monetagUrl = "https://otieu.com/4/10115019";
-    
 
     // Store download info in localStorage for success page
     if (typeof window !== "undefined" && downloadUrl) {
@@ -106,7 +105,6 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       // Redirect to success page
       window.location.href = "/ad-success";
     } catch (error) {
-      
       // If we error, prompt manual open
       waitingReturnRef.current = true;
       setAdOpened(true);
@@ -149,7 +147,6 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
           setIsLoadingRate(false);
         })
         .catch((error) => {
-          
           setRateError(
             error instanceof Error
               ? error.message
@@ -189,7 +186,6 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
           finalZarAmount = zar.toFixed(2);
           setZarAmount(finalZarAmount);
         } catch (error) {
-          
           // If API fails and no cache, try expired cache as last resort
           if (typeof window !== "undefined") {
             const cached = localStorage.getItem("usd_to_zar_rate");
@@ -236,7 +232,6 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
       // Close modal immediately
       onClose();
     } else {
-      
       setPaymentError("Payment form not found. Please refresh and try again.");
       setIsProcessingPayment(false);
     }
@@ -255,8 +250,6 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
     e.preventDefault();
 
     // Log the download URL from prop (same source View Ad uses)
-    
-    
 
     // Just call onComplete() like View Ad does - this triggers the download in the parent component
     // The parent component (tool) handles the actual download with window.open(downloadUrl)
@@ -315,7 +308,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                 {/* View Ad Option */}
                 <button
                   onClick={handleViewAd}
-                  className="group relative p-4 bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] rounded-lg border border-[#8b5cf6]/30 hover:border-[#8b5cf6] transition-all hover:shadow-lg hover:shadow-[#8b5cf6]/20 h-full"
+                  className="group relative p-4 bg-black rounded-lg border border-white hover:border-gray-600 transition-all h-full"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0">
@@ -381,7 +374,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                   <button
                     onClick={handlePay}
                     disabled={isProcessingPayment}
-                    className="w-full group relative p-4 bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-lg border border-[#22c55e]/30 hover:border-[#22c55e] transition-all hover:shadow-lg hover:shadow-[#22c55e]/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none flex-1"
+                    className="w-full group relative p-4 bg-black rounded-lg border border-white hover:border-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-1"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0">
@@ -426,7 +419,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                   </p>
                   <button
                     onClick={handleManualOpenClick}
-                    className="inline-block px-5 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
+                    className="inline-block px-5 py-2.5 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all border border-white"
                   >
                     Open Ad in New Tab
                   </button>

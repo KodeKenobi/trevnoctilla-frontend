@@ -23,7 +23,7 @@ export default function ToolsPage() {
         "Convert videos between all formats with compression and quality control. MP4, AVI, MOV, MKV, WEBM, and more.",
       page: "video-converter" as const,
       icon: Play,
-      gradient: "from-red-500 to-pink-500",
+      gradient: "",
       features: ["All Formats", "Compression", "Quality Control"],
     },
     {
@@ -32,7 +32,7 @@ export default function ToolsPage() {
         "Convert audio between all formats with bitrate and quality control. MP3, WAV, AAC, FLAC, OGG, and more.",
       page: "audio-converter" as const,
       icon: Zap,
-      gradient: "from-green-500 to-cyan-500",
+      gradient: "",
       features: ["All Formats", "Bitrate Control", "High Quality"],
     },
     {
@@ -41,7 +41,7 @@ export default function ToolsPage() {
         "Convert images between all formats with resize and quality control. JPG, PNG, WEBP, GIF, and more.",
       page: "image-converter" as const,
       icon: Image,
-      gradient: "from-blue-500 to-purple-500",
+      gradient: "",
       features: ["All Formats", "Resize", "Quality Control"],
     },
     {
@@ -50,7 +50,7 @@ export default function ToolsPage() {
         "Comprehensive PDF processing: extract text/images, merge, split, edit, sign, watermark, and compress PDFs.",
       page: "pdf-tools" as const,
       icon: FileText,
-      gradient: "from-yellow-500 to-orange-500",
+      gradient: "",
       features: [
         "Text Extraction",
         "Image Extraction",
@@ -66,7 +66,7 @@ export default function ToolsPage() {
         "Generate custom QR codes for any text, URL, or contact information.",
       page: "qr-generator" as const,
       icon: QrCode,
-      gradient: "from-purple-500 to-pink-500",
+      gradient: "",
       features: ["Custom Design", "High Resolution", "Multiple Formats"],
     },
   ];
@@ -76,7 +76,6 @@ export default function ToolsPage() {
       {/* Header Section */}
       <section className="pt-24 pb-16 relative overflow-hidden">
         {/* Background Elements */}
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-blue-500/5 to-purple-500/5"></div>
         <div className="absolute top-0 left-1/3 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 right-1/3 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
 
@@ -124,7 +123,7 @@ export default function ToolsPage() {
                 <span>No Registration</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                <div className="w-2 h-2 bg-white rounded-full"></div>
                 <span>Secure & Private</span>
               </div>
               <div className="flex items-center gap-2">
@@ -139,7 +138,6 @@ export default function ToolsPage() {
       {/* Tools Grid */}
       <section className="pb-16 relative">
         {/* Background transition */}
-        <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-blue-500/5 to-transparent"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center md:justify-items-stretch">
@@ -197,9 +195,7 @@ export default function ToolsPage() {
       {/* Powerful Tools CTA Section */}
       <section className="py-24 relative overflow-hidden">
         {/* Background Elements */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"></div>
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-black"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
@@ -229,7 +225,7 @@ export default function ToolsPage() {
                   "No Queues",
                   "Real-time Updates",
                 ],
-                gradient: "from-yellow-500 to-orange-500",
+                gradient: "",
               },
               {
                 title: "100% Secure",
@@ -241,7 +237,7 @@ export default function ToolsPage() {
                   "GDPR Compliant",
                   "Privacy First",
                 ],
-                gradient: "from-green-500 to-emerald-500",
+                gradient: "",
               },
               {
                 title: "Professional Quality",
@@ -253,7 +249,7 @@ export default function ToolsPage() {
                   "Advanced Algorithms",
                   "Batch Processing",
                 ],
-                gradient: "from-purple-500 to-pink-500",
+                gradient: "",
               },
             ].map((feature, index) => (
               <motion.div
@@ -261,7 +257,7 @@ export default function ToolsPage() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.2 }}
-                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-cyan-500/50 transition-all duration-300 text-center md:text-left"
+                className="bg-gray-900 border border-gray-700 rounded-2xl p-8 hover:border-gray-600 transition-all duration-300 text-center md:text-left"
               >
                 <h3 className="text-2xl font-bold text-white mb-4">
                   {feature.title}
@@ -289,9 +285,7 @@ export default function ToolsPage() {
       {/* Developer APIs CTA Section */}
       <section className="py-24 relative overflow-hidden">
         {/* Background Elements */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"></div>
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-black"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
@@ -337,7 +331,7 @@ export default function ToolsPage() {
                     key={`pdf-feature-${idx}`}
                     className="flex items-center text-gray-400 justify-center md:justify-start"
                   >
-                    <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
+                    <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
                     {feature}
                   </li>
                 ))}

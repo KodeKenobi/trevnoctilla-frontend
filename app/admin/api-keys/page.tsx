@@ -151,13 +151,10 @@ export default function AdminApiKeysPage() {
       const token = localStorage.getItem("auth_token");
       if (!token) return;
 
-      const response = await fetch(
-        getApiUrl(`/api/admin/api-keys/${keyId}`),
-        {
-          method: "DELETE",
-          headers: getAuthHeaders(token),
-        }
-      );
+      const response = await fetch(getApiUrl(`/api/admin/api-keys/${keyId}`), {
+        method: "DELETE",
+        headers: getAuthHeaders(token),
+      });
 
       if (response.ok) {
         fetchKeys();
@@ -175,7 +172,7 @@ export default function AdminApiKeysPage() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-black pt-20 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-400">Loading...</p>
@@ -186,7 +183,7 @@ export default function AdminApiKeysPage() {
 
   if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-black pt-20 flex items-center justify-center">
         <div className="text-center p-8 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg">
           <Shield className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
@@ -195,7 +192,7 @@ export default function AdminApiKeysPage() {
           </p>
           <Link
             href="/auth/login"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            className="inline-flex items-center px-4 py-2 border border-white text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800"
           >
             Login as Admin
           </Link>
@@ -205,7 +202,7 @@ export default function AdminApiKeysPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20">
+    <div className="min-h-screen bg-black pt-20">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
@@ -237,14 +234,14 @@ export default function AdminApiKeysPage() {
                   placeholder="Search by name, email, or key..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
                 />
               </div>
               <div>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white"
                 >
                   <option value="">All Status</option>
                   <option value="active">Active</option>
@@ -277,7 +274,7 @@ export default function AdminApiKeysPage() {
           {/* Keys Table */}
           {loading ? (
             <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-8 text-center">
-              <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-gray-400">Loading API keys...</p>
             </div>
           ) : keys.length === 0 ? (
@@ -335,7 +332,9 @@ export default function AdminApiKeysPage() {
                             </code>
                             {key.key && (
                               <button
-                                onClick={() => copyToClipboard(key.key!, key.id)}
+                                onClick={() =>
+                                  copyToClipboard(key.key!, key.id)
+                                }
                                 className="p-1 hover:bg-gray-600 rounded"
                               >
                                 {copiedKeyId === key.id ? (
@@ -365,7 +364,7 @@ export default function AdminApiKeysPage() {
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">
                           {key.is_free_tier ? (
-                            <span className="px-2 py-1 bg-purple-900/30 text-purple-300 rounded text-xs">
+                            <span className="px-2 py-1 bg-gray-800 text-white rounded text-xs">
                               Free Tier
                             </span>
                           ) : (

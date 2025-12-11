@@ -684,7 +684,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
                 {originalFileSize && convertedFileSize && (
                   <p className="text-xs text-gray-400">
                     Compression:{" "}
-                    <span className="text-purple-300 font-medium">
+                    <span className="text-white font-medium">
                       {(
                         ((originalFileSize - convertedFileSize) /
                           originalFileSize) *
@@ -730,7 +730,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
             <select
               value={outputFormat}
               onChange={(e) => setOutputFormat(e.target.value)}
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-white bg-gray-700 text-white"
             >
               <option value="mp4">MP4 (H.264)</option>
               <option value="webm">WebM (VP9)</option>
@@ -752,7 +752,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
             <select
               value={quality}
               onChange={(e) => setQuality(Number(e.target.value))}
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-white bg-gray-700 text-white"
             >
               <option value={95}>Ultra High (95%)</option>
               <option value={85}>High (85%)</option>
@@ -768,7 +768,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
             <select
               value={compression}
               onChange={(e) => setCompression(e.target.value)}
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-700 text-white"
+              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-white bg-gray-700 text-white"
             >
               <option value="none">No Compression</option>
               <option value="light">Light Compression</option>
@@ -826,7 +826,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
           <div className="mb-4">
             <div className="w-full bg-gray-700 rounded-full h-2.5 mb-2">
               <div
-                className="bg-purple-500 h-2.5 rounded-full transition-all duration-300 ease-in-out"
+                className="bg-white h-2.5 rounded-full transition-all duration-300 ease-in-out"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -891,7 +891,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
                   </div>
                   <div className="text-center">
                     <p className="text-gray-400">Savings</p>
-                    <p className="text-purple-300 font-medium">
+                    <p className="text-white font-medium">
                       {(
                         (originalFileSize - convertedFileSize) /
                         1024 /

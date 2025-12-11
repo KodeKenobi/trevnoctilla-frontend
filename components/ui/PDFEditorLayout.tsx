@@ -466,11 +466,10 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 if (onZoomOut) {
                   onZoomOut();
                 } else {
-                  
                 }
               }}
               className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-md hover:bg-gray-700 active:bg-gray-600 transition-all duration-150"
@@ -495,11 +494,10 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 if (onZoomReset) {
                   onZoomReset();
                 } else {
-                  
                 }
               }}
               className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-md transition-all duration-150 min-w-[3.5rem] sm:min-w-[4rem]"
@@ -512,11 +510,10 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 if (onZoomIn) {
                   onZoomIn();
                 } else {
-                  
                 }
               }}
               className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-md hover:bg-gray-700 active:bg-gray-600 transition-all duration-150"
@@ -582,7 +579,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
                     )}
                   </div>
                   <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
+                    <div className="bg-black text-white text-xs px-2 py-1 rounded-full border border-white">
                       {page.pageNumber}
                     </div>
                   </div>
@@ -689,7 +686,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
                     )}
                   </div>
                   <div className="absolute bottom-1 left-1">
-                    <span className="bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                    <span className="bg-black text-white text-[10px] px-1.5 py-0.5 rounded-full border border-white">
                       {page.pageNumber}
                     </span>
                   </div>
@@ -742,7 +739,7 @@ export const PDFEditorLayout: React.FC<PDFEditorLayoutProps> = ({
               {hasViewedPdf && !isInPreviewMode && onDownloadPdf && (
                 <Button
                   onClick={onDownloadPdf}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex-1 sm:flex-none"
+                  className="bg-black hover:bg-gray-800 text-white px-3 sm:px-4 py-2 rounded-lg text-sm flex-1 sm:flex-none border border-white"
                 >
                   Download
                 </Button>

@@ -1329,7 +1329,7 @@ function DashboardContent() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#8b5cf6] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-400">Loading dashboard...</p>
@@ -1341,14 +1341,14 @@ function DashboardContent() {
   // Show error if authentication failed
   if (authError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold mb-2">Authentication Error</h2>
           <p className="text-gray-400 mb-6">{authError}</p>
           <button
             onClick={() => router.push("/auth/login")}
-            className="px-6 py-3 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg font-medium transition-all"
+            className="px-6 py-3 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all border border-white"
           >
             Go to Login
           </button>
@@ -1360,7 +1360,7 @@ function DashboardContent() {
   // Show message if no user
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#8b5cf6] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-400">Redirecting to login...</p>
@@ -1370,12 +1370,11 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background dark:from-[#0a0a0a] dark:via-[#111111] dark:to-[#0a0a0a] text-foreground relative overflow-hidden page-content flex">
+    <div className="min-h-screen bg-black text-white relative overflow-hidden page-content flex">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-[#8b5cf6]/5 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#3b82f6]/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-[#8b5cf6]/3 to-[#3b82f6]/3 rounded-full blur-3xl"></div>
       </div>
 
       {/* Sidebar */}
@@ -1398,7 +1397,7 @@ function DashboardContent() {
           <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
             <div className="flex items-center justify-between">
               <div className="space-y-2">
-                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-foreground via-[#8b5cf6] to-[#3b82f6] dark:from-white bg-clip-text text-transparent">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white">
                   User Dashboard
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
@@ -1488,7 +1487,7 @@ function DashboardContent() {
 
                 {/* No API Key Warning */}
                 {apiKeys.length === 0 && (
-                  <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-lg p-6 mb-8">
+                  <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 mb-8">
                     <div className="flex items-start gap-4">
                       <div className="flex-shrink-0">
                         <div className="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center">
@@ -1521,7 +1520,7 @@ function DashboardContent() {
                             setActiveTab("settings");
                             setSettingsSection("keys");
                           }}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white text-sm font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-[#8b5cf6]/25"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-all duration-300 border border-white"
                         >
                           <Plus className="w-4 h-4" />
                           Generate API Key
@@ -1658,11 +1657,11 @@ function DashboardContent() {
                 {/* Header with Circle */}
                 <div className="flex items-center gap-4 mb-8">
                   <div className="relative">
-                    <div className="w-6 h-6 bg-gradient-to-r from-[#f59e0b] to-[#d97706] rounded-full animate-pulse"></div>
-                    <div className="absolute inset-0 w-6 h-6 bg-gradient-to-r from-[#f59e0b] to-[#d97706] rounded-full blur-sm opacity-50"></div>
+                    <div className="w-6 h-6 bg-white rounded-full animate-pulse"></div>
+                    <div className="absolute inset-0 w-6 h-6 bg-white rounded-full blur-sm opacity-50"></div>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-white via-[#f59e0b] to-[#d97706] bg-clip-text text-transparent">
+                    <h2 className="text-2xl font-bold text-white">
                       Analytics Dashboard
                     </h2>
                     <p className="text-gray-400 mt-2">
@@ -1681,8 +1680,8 @@ function DashboardContent() {
                 <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 mb-8">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="relative">
-                      <div className="w-4 h-4 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] rounded-full animate-pulse"></div>
-                      <div className="absolute inset-0 w-4 h-4 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] rounded-full blur-sm opacity-50"></div>
+                      <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
+                      <div className="absolute inset-0 w-4 h-4 bg-white rounded-full blur-sm opacity-50"></div>
                     </div>
                     <h3 className="text-lg font-semibold text-white">
                       Performance Trends
@@ -1746,11 +1745,11 @@ function DashboardContent() {
                 {/* Header with Circle */}
                 <div className="flex items-center gap-4 mb-8">
                   <div className="relative">
-                    <div className="w-6 h-6 bg-gradient-to-r from-[#10b981] to-[#059669] rounded-full animate-pulse"></div>
-                    <div className="absolute inset-0 w-6 h-6 bg-gradient-to-r from-[#10b981] to-[#059669] rounded-full blur-sm opacity-50"></div>
+                    <div className="w-6 h-6 bg-white rounded-full animate-pulse"></div>
+                    <div className="absolute inset-0 w-6 h-6 bg-white rounded-full blur-sm opacity-50"></div>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-white via-[#10b981] to-[#059669] bg-clip-text text-transparent">
+                    <h2 className="text-2xl font-bold text-white">
                       Reset History
                     </h2>
                     <p className="text-gray-400 mt-2">
@@ -1779,11 +1778,11 @@ function DashboardContent() {
                     {/* Header with Circle */}
                     <div className="flex items-center gap-4 mb-8">
                       <div className="relative">
-                        <div className="w-6 h-6 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full animate-pulse"></div>
-                        <div className="absolute inset-0 w-6 h-6 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full blur-sm opacity-50"></div>
+                        <div className="w-6 h-6 bg-white rounded-full animate-pulse"></div>
+                        <div className="absolute inset-0 w-6 h-6 bg-white rounded-full blur-sm opacity-50"></div>
                       </div>
                       <div>
-                        <h2 className="text-2xl font-bold bg-gradient-to-r from-white via-[#8b5cf6] to-[#3b82f6] bg-clip-text text-transparent">
+                        <h2 className="text-2xl font-bold text-white">
                           API Keys
                         </h2>
                         <p className="text-gray-400 mt-2">
@@ -1806,7 +1805,7 @@ function DashboardContent() {
                           </div>
                           <button
                             onClick={() => setShowCreateKeyModal(true)}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white text-sm font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-[#8b5cf6]/25"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-all duration-300 border border-white"
                           >
                             <Plus className="w-4 h-4" />
                             Create Key
@@ -1952,7 +1951,7 @@ function DashboardContent() {
                       }
                     }}
                     disabled={!newKeyName.trim()}
-                    className="px-4 py-2 bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] hover:from-[#7c3aed] hover:to-[#2563eb] text-white rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-lg text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-white"
                   >
                     Create Key
                   </button>
