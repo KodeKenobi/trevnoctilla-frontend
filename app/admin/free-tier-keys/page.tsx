@@ -351,14 +351,14 @@ export default function FreeTierKeysPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20">
+    <div className="min-h-screen bg-black pt-20">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -366,7 +366,7 @@ export default function FreeTierKeysPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-2">
-                  <Key className="h-8 w-8 text-purple-400" />
+                  <Key className="h-8 w-8 text-white" />
                   Free Tier API Keys
                 </h1>
                 <p className="text-gray-400">
@@ -385,7 +385,7 @@ export default function FreeTierKeysPage() {
                   });
                   setShowCreateModal(true);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-lg transition-colors border border-white"
               >
                 <Plus className="h-5 w-5" />
                 Create Free Tier Key
@@ -404,7 +404,7 @@ export default function FreeTierKeysPage() {
                       {stats.total_keys}
                     </p>
                   </div>
-                  <Key className="h-8 w-8 text-purple-400" />
+                  <Key className="h-8 w-8 text-white" />
                 </div>
               </div>
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
@@ -453,13 +453,13 @@ export default function FreeTierKeysPage() {
                   placeholder="Search keys..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
                 />
               </div>
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
               >
                 <option value="">All Types</option>
                 <option value="educational">Educational</option>
@@ -470,7 +470,7 @@ export default function FreeTierKeysPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
               >
                 <option value="">All Status</option>
                 <option value="active">Active</option>
@@ -630,7 +630,7 @@ export default function FreeTierKeysPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, name: e.target.value })
                         }
-                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
                         placeholder="e.g., MIT Computer Science Department"
                       />
                     </div>
@@ -647,7 +647,7 @@ export default function FreeTierKeysPage() {
                             free_tier_type: e.target.value,
                           })
                         }
-                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
                       >
                         <option value="educational">Educational</option>
                         <option value="nonprofit">Nonprofit</option>
@@ -670,7 +670,7 @@ export default function FreeTierKeysPage() {
                             rate_limit: parseInt(e.target.value),
                           })
                         }
-                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
                       />
                       <p className="text-xs text-gray-400 mt-1">
                         Recommended: 10000 for free tier keys
@@ -689,7 +689,7 @@ export default function FreeTierKeysPage() {
                             expires_at: e.target.value,
                           })
                         }
-                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
                       />
                     </div>
                     <div>
@@ -702,14 +702,14 @@ export default function FreeTierKeysPage() {
                           setFormData({ ...formData, notes: e.target.value })
                         }
                         rows={3}
-                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
                         placeholder="Additional notes about this key..."
                       />
                     </div>
                     <div className="flex gap-4 pt-4">
                       <button
                         type="submit"
-                        className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                        className="flex-1 px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-lg transition-colors border border-white"
                       >
                         Create Key
                       </button>
@@ -886,7 +886,7 @@ export default function FreeTierKeysPage() {
                         onChange={(e) =>
                           setFormData({ ...formData, name: e.target.value })
                         }
-                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
                       />
                     </div>
                     <div>
@@ -902,7 +902,7 @@ export default function FreeTierKeysPage() {
                             free_tier_type: e.target.value,
                           })
                         }
-                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
                       >
                         <option value="educational">Educational</option>
                         <option value="nonprofit">Nonprofit</option>
@@ -925,7 +925,7 @@ export default function FreeTierKeysPage() {
                             rate_limit: parseInt(e.target.value),
                           })
                         }
-                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
                       />
                     </div>
                     <div>
@@ -941,7 +941,7 @@ export default function FreeTierKeysPage() {
                             expires_at: e.target.value,
                           })
                         }
-                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
                       />
                     </div>
                     <div>
@@ -954,7 +954,7 @@ export default function FreeTierKeysPage() {
                           setFormData({ ...formData, notes: e.target.value })
                         }
                         rows={3}
-                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-white focus:outline-none"
                       />
                     </div>
                     <div className="flex gap-4 pt-4">

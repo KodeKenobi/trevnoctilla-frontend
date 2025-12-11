@@ -26,8 +26,6 @@ import {
   X,
   Calendar,
   Link as LinkIcon,
-  CreditCard,
-  DollarSign,
 } from "lucide-react";
 
 interface AnalyticsData {
@@ -55,11 +53,6 @@ interface AnalyticsData {
   }>;
   errorRate: number;
   conversionRate: number;
-  adClicks?: number;
-  payments?: number;
-  totalRevenue?: number;
-  subscriptionPayments?: number;
-  oneTimePayments?: number;
 }
 
 interface DetailedEvent {
@@ -109,65 +102,6 @@ const formatDuration = (seconds: number): string => {
       ? `${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`
       : ""
   }`;
-};
-
-// Helper function to format duration from milliseconds
-const formatDurationFromMs = (milliseconds: number): string => {
-  const seconds = Math.floor(milliseconds / 1000);
-  return formatDuration(seconds);
-};
-
-// Helper function to format property values for display
-const formatPropertyValue = (key: string, value: any): string => {
-  // Handle session_duration and time_since_last_activity (milliseconds)
-  if (
-    (key === "session_duration" || key === "time_since_last_activity") &&
-    typeof value === "number"
-  ) {
-    return formatDurationFromMs(value);
-  }
-
-  // Handle timestamp (milliseconds)
-  if (key === "timestamp" && typeof value === "number") {
-    const date = new Date(value);
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  }
-
-  // Handle page URL
-  if (key === "page" || key === "page_url") {
-    return String(value);
-  }
-
-  // Default: format as string or JSON
-  if (typeof value === "string") {
-    return value.length > 50 ? value.substring(0, 50) + "..." : value;
-  }
-  return JSON.stringify(value);
-};
-
-// Helper function to format property key for display
-const formatPropertyKey = (key: string): string => {
-  const keyMap: Record<string, string> = {
-    session_duration: "Session Duration",
-    time_since_last_activity: "Time Since Last Activity",
-    timestamp: "Timestamp",
-    page: "Page",
-    page_url: "Page URL",
-  };
-  return (
-    keyMap[key] ||
-    key
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ")
-  );
 };
 
 // Helper function to format numbers with proper labels
@@ -238,11 +172,6 @@ export default function AnalyticsDashboard() {
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsPage, setEventsPage] = useState(1);
   const [eventTypeFilter, setEventTypeFilter] = useState("");
-
-  // Activity stream state
-  const [activityStreamPage, setActivityStreamPage] = useState(1);
-  const [activityStreamFilter, setActivityStreamFilter] = useState("");
-  const activityStreamPerPage = 20;
 
   // Detailed metrics modal state
   const [detailedMetrics, setDetailedMetrics] =
@@ -325,11 +254,6 @@ export default function AnalyticsDashboard() {
         recentActivity: [],
         errorRate: 0,
         conversionRate: 0,
-        adClicks: 0,
-        payments: 0,
-        totalRevenue: 0,
-        subscriptionPayments: 0,
-        oneTimePayments: 0,
       });
     } finally {
       setLoading(false);
@@ -405,7 +329,7 @@ export default function AnalyticsDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
       </div>
     );
   }
@@ -439,7 +363,7 @@ export default function AnalyticsDashboard() {
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-white focus:border-white"
           >
             <option value="1h">Last Hour</option>
             <option value="24h">Last 24 Hours</option>
@@ -461,7 +385,7 @@ export default function AnalyticsDashboard() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "border-purple-500 text-purple-400"
+                    ? "border-white text-white"
                     : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600"
                 }`}
               >
@@ -544,8 +468,8 @@ export default function AnalyticsDashboard() {
                     Total pages viewed
                   </p>
                 </div>
-                <div className="p-3 bg-purple-500/20 rounded-lg">
-                  <Eye className="w-6 h-6 text-purple-400" />
+                <div className="p-3 bg-gray-800 rounded-lg">
+                  <Eye className="w-6 h-6 text-white" />
                 </div>
               </div>
             </motion.div>
@@ -570,107 +494,6 @@ export default function AnalyticsDashboard() {
                 </div>
                 <div className="p-3 bg-orange-500/20 rounded-lg">
                   <MousePointer className="w-6 h-6 text-orange-400" />
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Monetization Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-400 mb-1">
-                    Ad Clicks
-                  </p>
-                  <p className="text-3xl font-bold text-white">
-                    {(data.adClicks || 0).toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">Total ad clicks</p>
-                </div>
-                <div className="p-3 bg-yellow-500/20 rounded-lg">
-                  <MousePointer className="w-6 h-6 text-yellow-400" />
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-400 mb-1">
-                    Payments
-                  </p>
-                  <p className="text-3xl font-bold text-white">
-                    {(data.payments || 0).toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Successful payments
-                  </p>
-                </div>
-                <div className="p-3 bg-green-500/20 rounded-lg">
-                  <CreditCard className="w-6 h-6 text-green-400" />
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-400 mb-1">
-                    Total Revenue
-                  </p>
-                  <p className="text-3xl font-bold text-white">
-                    $
-                    {(data.totalRevenue || 0).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Revenue from payments
-                  </p>
-                </div>
-                <div className="p-3 bg-emerald-500/20 rounded-lg">
-                  <DollarSign className="w-6 h-6 text-emerald-400" />
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-400 mb-1">
-                    Payment Breakdown
-                  </p>
-                  <p className="text-lg font-bold text-white">
-                    {data.subscriptionPayments || 0} Subscriptions
-                  </p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    {data.oneTimePayments || 0} One-time
-                  </p>
-                </div>
-                <div className="p-3 bg-blue-500/20 rounded-lg">
-                  <TrendingUp className="w-6 h-6 text-blue-400" />
                 </div>
               </div>
             </motion.div>
@@ -759,7 +582,7 @@ export default function AnalyticsDashboard() {
 
             <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
               <div className="flex items-center space-x-2 mb-4">
-                <Activity className="w-5 h-5 text-purple-400" />
+                <Activity className="w-5 h-5 text-white" />
                 <h3 className="text-lg font-semibold text-white">Top Events</h3>
               </div>
               <div className="space-y-3">
@@ -904,7 +727,7 @@ export default function AnalyticsDashboard() {
                       </div>
                       <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
                         <div
-                          className="bg-purple-500 h-2 rounded-full"
+                          className="bg-white h-2 rounded-full"
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
@@ -934,7 +757,7 @@ export default function AnalyticsDashboard() {
                   setEventTypeFilter(e.target.value);
                   setEventsPage(1);
                 }}
-                className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-purple-500"
+                className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-white"
               >
                 <option value="">All Event Types</option>
                 {eventsData?.event_types.map((type) => (
@@ -960,7 +783,7 @@ export default function AnalyticsDashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 shadow-lg overflow-hidden">
             <div className="p-4 border-b border-gray-700">
               <div className="flex items-center space-x-2">
-                <Activity className="w-5 h-5 text-purple-400" />
+                <Activity className="w-5 h-5 text-white" />
                 <h3 className="text-lg font-semibold text-white">Event Log</h3>
                 <span className="text-xs text-gray-500">
                   ({timeRangeLabels[timeRange]})
@@ -986,7 +809,7 @@ export default function AnalyticsDashboard() {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-xs font-medium rounded">
+                            <span className="px-2 py-0.5 bg-gray-800 text-white text-xs font-medium rounded">
                               {event.event_name}
                             </span>
                             {event.device_type && (
@@ -1019,12 +842,13 @@ export default function AnalyticsDashboard() {
                                       key={key}
                                       className="text-xs bg-gray-700/50 px-2 py-1 rounded text-gray-400"
                                     >
-                                      <span className="font-medium text-gray-300">
-                                        {formatPropertyKey(key)}:
-                                      </span>{" "}
-                                      <span className="text-gray-400">
-                                        {formatPropertyValue(key, value)}
-                                      </span>
+                                      {key}:{" "}
+                                      {typeof value === "string"
+                                        ? value.substring(0, 30)
+                                        : JSON.stringify(value).substring(
+                                            0,
+                                            30
+                                          )}
                                     </span>
                                   ))}
                               </div>
@@ -1165,7 +989,7 @@ export default function AnalyticsDashboard() {
                             <Smartphone className="w-4 h-4 text-green-400" />
                           )}
                           {device.device === "tablet" && (
-                            <Tablet className="w-4 h-4 text-purple-400" />
+                            <Tablet className="w-4 h-4 text-white" />
                           )}
                           <span className="text-sm text-gray-300 capitalize">
                             {device.device || "Unknown"}
@@ -1182,7 +1006,7 @@ export default function AnalyticsDashboard() {
                               ? "bg-blue-500"
                               : device.device === "mobile"
                               ? "bg-green-500"
-                              : "bg-purple-500"
+                              : "bg-white"
                           }`}
                           style={{ width: `${percentage}%` }}
                         ></div>
@@ -1253,7 +1077,7 @@ export default function AnalyticsDashboard() {
 
           <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
             <div className="flex items-center space-x-2 mb-4">
-              <Monitor className="w-5 h-5 text-purple-400" />
+              <Monitor className="w-5 h-5 text-white" />
               <h3 className="text-lg font-semibold text-white">
                 Operating Systems
               </h3>
@@ -1375,7 +1199,7 @@ export default function AnalyticsDashboard() {
 
             <div className="bg-gray-800/50 backdrop-blur-sm p-6 rounded-xl border border-gray-700/50 shadow-lg">
               <div className="flex items-center space-x-2 mb-6">
-                <MapPin className="w-5 h-5 text-purple-400" />
+                <MapPin className="w-5 h-5 text-white" />
                 <h3 className="text-lg font-semibold text-white">Top Cities</h3>
               </div>
               <div className="space-y-3">
@@ -1531,7 +1355,7 @@ export default function AnalyticsDashboard() {
 
           {/* Activity Stream */}
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 shadow-lg overflow-hidden">
-            <div className="p-4 border-b border-gray-700 flex items-center justify-between flex-wrap gap-4">
+            <div className="p-4 border-b border-gray-700 flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Eye className="w-5 h-5 text-white" />
                 <h3 className="text-lg font-semibold text-white">
@@ -1541,216 +1365,117 @@ export default function AnalyticsDashboard() {
                   {timeRangeLabels[timeRange]}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
-                {/* Filter dropdown */}
-                <select
-                  value={activityStreamFilter}
-                  onChange={(e) => {
-                    setActivityStreamFilter(e.target.value);
-                    setActivityStreamPage(1);
-                  }}
-                  className="px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                >
-                  <option value="">All Events</option>
-                  <option value="api_call">API Calls</option>
-                  <option value="api_error">API Errors</option>
-                  <option value="pageview">Page Views</option>
-                  <option value="page_load">Page Loads</option>
-                  <option value="click">Clicks</option>
-                  <option value="navigation_click">Navigation</option>
-                  <option value="user_interaction">User Interactions</option>
-                  <option value="session_update">Session Updates</option>
-                  <option value="ad_click">Ad Clicks</option>
-                  <option value="payment_success">Payments</option>
-                </select>
-                <button
-                  onClick={() => fetchAnalyticsData()}
-                  className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1"
-                >
-                  <Clock className="w-4 h-4" />
-                  Refresh
-                </button>
-              </div>
+              <button
+                onClick={() => fetchAnalyticsData()}
+                className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-1"
+              >
+                <Clock className="w-4 h-4" />
+                Refresh
+              </button>
             </div>
             <div className="divide-y divide-gray-700/50 max-h-[500px] overflow-y-auto">
-              {(() => {
-                // Filter activities
-                const filteredActivities = activityStreamFilter
-                  ? data.recentActivity.filter(
-                      (activity) =>
-                        activity.event_name
-                          ?.toLowerCase()
-                          .includes(activityStreamFilter.toLowerCase()) ||
-                        activity.event_name === activityStreamFilter
+              {data.recentActivity.length > 0 ? (
+                data.recentActivity.map((activity) => {
+                  const date = new Date(activity.timestamp);
+                  const timeAgo = Math.floor(
+                    (Date.now() - date.getTime()) / 1000
+                  );
+                  let timeLabel = "";
+                  if (timeAgo < 60) {
+                    timeLabel = `${timeAgo}s ago`;
+                  } else if (timeAgo < 3600) {
+                    timeLabel = `${Math.floor(timeAgo / 60)}m ago`;
+                  } else if (timeAgo < 86400) {
+                    timeLabel = `${Math.floor(timeAgo / 3600)}h ago`;
+                  } else {
+                    timeLabel = `${Math.floor(timeAgo / 86400)}d ago`;
+                  }
+
+                  const getEventIcon = () => {
+                    const eventName = activity.event_name || "";
+                    if (eventName.includes("api_call")) return "🌐";
+                    if (eventName.includes("api_error")) return "❌";
+                    if (
+                      eventName.includes("page_load") ||
+                      eventName.includes("pageview")
                     )
-                  : data.recentActivity;
+                      return "📄";
+                    if (
+                      eventName.includes("navigation") ||
+                      eventName.includes("click")
+                    )
+                      return "🔗";
+                    if (eventName.includes("user_interaction")) return "👆";
+                    return "📊";
+                  };
 
-                // Paginate activities
-                const totalPages = Math.ceil(
-                  filteredActivities.length / activityStreamPerPage
-                );
-                const startIndex =
-                  (activityStreamPage - 1) * activityStreamPerPage;
-                const endIndex = startIndex + activityStreamPerPage;
-                const paginatedActivities = filteredActivities.slice(
-                  startIndex,
-                  endIndex
-                );
+                  const getEventColor = () => {
+                    const eventName = activity.event_name || "";
+                    if (eventName.includes("error")) return "border-l-red-500";
+                    if (eventName.includes("api_call"))
+                      return "border-l-blue-500";
+                    if (
+                      eventName.includes("page_load") ||
+                      eventName.includes("pageview")
+                    )
+                      return "border-l-green-500";
+                    if (eventName.includes("navigation"))
+                      return "border-l-purple-500";
+                    return "border-l-gray-500";
+                  };
 
-                return filteredActivities.length > 0 ? (
-                  <>
-                    {paginatedActivities.map((activity) => {
-                      const date = new Date(activity.timestamp);
-                      const timeAgo = Math.floor(
-                        (Date.now() - date.getTime()) / 1000
-                      );
-                      let timeLabel = "";
-                      if (timeAgo < 60) {
-                        timeLabel = `${timeAgo}s ago`;
-                      } else if (timeAgo < 3600) {
-                        timeLabel = `${Math.floor(timeAgo / 60)}m ago`;
-                      } else if (timeAgo < 86400) {
-                        timeLabel = `${Math.floor(timeAgo / 3600)}h ago`;
-                      } else {
-                        timeLabel = `${Math.floor(timeAgo / 86400)}d ago`;
-                      }
+                  // Extract page path from URL
+                  let pagePath = "/";
+                  if (activity.page_url) {
+                    try {
+                      const url = new URL(activity.page_url);
+                      pagePath = url.pathname;
+                    } catch {
+                      pagePath = activity.page_url.substring(0, 50);
+                    }
+                  }
 
-                      const getEventIcon = () => {
-                        const eventName = activity.event_name || "";
-                        if (eventName.includes("api_call")) return "🌐";
-                        if (eventName.includes("api_error")) return "❌";
-                        if (
-                          eventName.includes("page_load") ||
-                          eventName.includes("pageview")
-                        )
-                          return "📄";
-                        if (
-                          eventName.includes("navigation") ||
-                          eventName.includes("click")
-                        )
-                          return "🔗";
-                        if (eventName.includes("user_interaction")) return "👆";
-                        return "📊";
-                      };
-
-                      const getEventColor = () => {
-                        const eventName = activity.event_name || "";
-                        if (eventName.includes("error"))
-                          return "border-l-red-500";
-                        if (eventName.includes("api_call"))
-                          return "border-l-blue-500";
-                        if (
-                          eventName.includes("page_load") ||
-                          eventName.includes("pageview")
-                        )
-                          return "border-l-green-500";
-                        if (eventName.includes("navigation"))
-                          return "border-l-purple-500";
-                        return "border-l-gray-500";
-                      };
-
-                      // Extract page path from URL
-                      let pagePath = "/";
-                      if (activity.page_url) {
-                        try {
-                          const url = new URL(activity.page_url);
-                          pagePath = url.pathname;
-                        } catch {
-                          pagePath = activity.page_url.substring(0, 50);
-                        }
-                      }
-
-                      return (
-                        <div
-                          key={activity.id}
-                          className={`flex items-start gap-3 p-4 border-l-4 ${getEventColor()} hover:bg-gray-700/30 transition-colors`}
-                        >
-                          <div className="flex-shrink-0 mt-0.5 text-lg">
-                            {getEventIcon()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-medium text-white">
-                                {activity.event_name || "Event"}
-                              </span>
-                              <span className="text-xs text-white font-mono">
-                                {pagePath}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-400 truncate">
-                              {activity.description}
-                            </p>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-sm text-gray-300">{timeLabel}</p>
-                            <p className="text-xs text-gray-500">
-                              {date.toLocaleTimeString()}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className="p-4 border-t border-gray-700 flex items-center justify-between">
-                        <div className="text-sm text-gray-400">
-                          Showing {startIndex + 1}-
-                          {Math.min(endIndex, filteredActivities.length)} of{" "}
-                          {filteredActivities.length} events
-                          {activityStreamFilter && (
-                            <span className="ml-2">
-                              (filtered by: {activityStreamFilter})
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              setActivityStreamPage((p) => Math.max(1, p - 1))
-                            }
-                            disabled={activityStreamPage === 1}
-                            className="px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
-                          >
-                            Previous
-                          </button>
-                          <span className="text-sm text-gray-400">
-                            Page {activityStreamPage} of {totalPages}
-                          </span>
-                          <button
-                            onClick={() =>
-                              setActivityStreamPage((p) =>
-                                Math.min(totalPages, p + 1)
-                              )
-                            }
-                            disabled={activityStreamPage === totalPages}
-                            className="px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
-                          >
-                            Next
-                          </button>
-                        </div>
+                  return (
+                    <div
+                      key={activity.id}
+                      className={`flex items-start gap-3 p-4 border-l-4 ${getEventColor()} hover:bg-gray-700/30 transition-colors`}
+                    >
+                      <div className="flex-shrink-0 mt-0.5 text-lg">
+                        {getEventIcon()}
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-center py-12">
-                    <Eye className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400">
-                      {activityStreamFilter
-                        ? `No ${activityStreamFilter} events in ${timeRangeLabels[
-                            timeRange
-                          ].toLowerCase()}`
-                        : `No activity in ${timeRangeLabels[
-                            timeRange
-                          ].toLowerCase()}`}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {activityStreamFilter
-                        ? "Try selecting a different event type"
-                        : "Events will appear here as users interact with your site"}
-                    </p>
-                  </div>
-                );
-              })()}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium text-white">
+                            {activity.event_name || "Event"}
+                          </span>
+                          <span className="text-xs text-white font-mono">
+                            {pagePath}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-400 truncate">
+                          {activity.description}
+                        </p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm text-gray-300">{timeLabel}</p>
+                        <p className="text-xs text-gray-500">
+                          {date.toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-12">
+                  <Eye className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">
+                    No activity in {timeRangeLabels[timeRange].toLowerCase()}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Events will appear here as users interact with your site
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1796,7 +1521,7 @@ export default function AnalyticsDashboard() {
             <div className="flex-1 overflow-y-auto p-6">
               {detailedLoading ? (
                 <div className="flex items-center justify-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
                 </div>
               ) : detailedMetrics ? (
                 <div className="space-y-6">
