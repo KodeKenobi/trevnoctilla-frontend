@@ -103,14 +103,12 @@ export default function AdminDashboard() {
   const fetchAdminData = async () => {
     try {
       if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
-        
         setLoading(false);
         return;
       }
 
       const token = localStorage.getItem("auth_token");
       if (!token) {
-        
         setLoading(false);
         return;
       }
@@ -173,16 +171,13 @@ export default function AdminDashboard() {
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         if (fetchError.name === "AbortError") {
-          
         } else {
-          
         }
         // Continue anyway - show dashboard with empty/default data
       }
 
       setLoading(false);
     } catch (error) {
-      
       setLoading(false);
     }
   };
@@ -294,7 +289,6 @@ export default function AdminDashboard() {
     // Safety timeout: if loading takes more than 10 seconds, stop loading
     if (loading) {
       const timeout = setTimeout(() => {
-        
         setLoading(false);
       }, 10000);
       return () => clearTimeout(timeout);
