@@ -115,13 +115,24 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
       const completed = await showMonetizationModal({
         title: "Download QR Code",
         message: "Choose how you'd like to download your QR code",
-        fileName: "qr-code.png",
+        fileName: "qr-code.jpg",
         fileType: "image",
         downloadUrl: generatedQR,
       });
 
       if (completed) {
-        window.open(generatedQR, "_blank");
+        try {
+          // Create download link for data URL
+          const link = document.createElement("a");
+          link.href = generatedQR;
+          link.download = "qr-code.jpg";
+          link.style.display = "none";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } catch (error) {
+          window.open(generatedQR, "_blank");
+        }
       }
     }
   };
@@ -188,61 +199,49 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
     setResult(null);
 
     try {
-      // Format data according to backend expectations - only send relevant fields
-      let requestData: any = {
-        type: qrData.type,
-        data: {},
-      };
+      // Format the QR data content based on type
+      let qrText = "";
 
-      // Send only the relevant fields based on QR type
       switch (qrData.type) {
         case "text":
-          requestData.data.text = qrData.content;
+          qrText = qrData.content;
           break;
         case "url":
-          requestData.data.url = qrData.content;
+          qrText = qrData.content;
           break;
         case "wifi":
-          requestData.data.ssid = qrData.ssid || "";
-          requestData.data.password = qrData.password || "";
-          requestData.data.encryption = qrData.security || "WPA";
-          requestData.data.hidden = qrData.hidden || false;
+          qrText = `WIFI:S:${qrData.ssid || ""};T:${qrData.security || "WPA"};P:${qrData.password || ""};${qrData.hidden ? "H:true;" : ""};`;
           break;
         case "email":
-          requestData.data.email = qrData.content; // This should be the email address
-          requestData.data.subject = qrData.subject || "";
-          requestData.data.body = qrData.body || "";
+          qrText = qrData.subject || qrData.body
+            ? `mailto:${qrData.content}?subject=${encodeURIComponent(qrData.subject || "")}&body=${encodeURIComponent(qrData.body || "")}`
+            : qrData.content;
           break;
         case "sms":
-          requestData.data.phoneNumber = qrData.phoneNumber || "";
-          requestData.data.message = qrData.message || "";
+          qrText = `sms:${qrData.phoneNumber || ""}${qrData.message ? `:${qrData.message}` : ""}`;
           break;
         case "phone":
-          requestData.data.phone = qrData.phone || "";
+          qrText = `tel:${qrData.content}`;
           break;
         case "vcard":
-          requestData.data.name = qrData.name || "";
-          requestData.data.organization = qrData.organization || "";
-          requestData.data.vcardTitle = qrData.vcardTitle || "";
-          requestData.data.vcardPhone = qrData.vcardPhone || "";
-          requestData.data.email = qrData.email || "";
-          requestData.data.website = qrData.website || "";
-          requestData.data.address = qrData.address || "";
+          qrText = `BEGIN:VCARD\nVERSION:3.0\nN:${qrData.name || ""}\nORG:${qrData.organization || ""}\nTITLE:${qrData.vcardTitle || ""}\nTEL:${qrData.vcardPhone || ""}\nEMAIL:${qrData.email || ""}\nURL:${qrData.website || ""}\nADR:${qrData.address || ""}\nEND:VCARD`;
           break;
         case "location":
-          requestData.data.latitude = qrData.latitude || 0;
-          requestData.data.longitude = qrData.longitude || 0;
+          qrText = `geo:${qrData.latitude || 0},${qrData.longitude || 0}`;
           break;
         case "calendar":
-          requestData.data.calendarTitle = qrData.calendarTitle || "";
-          requestData.data.description = qrData.description || "";
-          requestData.data.startDate = qrData.startDate || "";
-          requestData.data.endDate = qrData.endDate || "";
-          requestData.data.location = qrData.location || "";
+          qrText = `BEGIN:VEVENT\nSUMMARY:${qrData.calendarTitle || ""}\nDESCRIPTION:${qrData.description || ""}\nDTSTART:${qrData.startDate || ""}\nDTEND:${qrData.endDate || ""}\nLOCATION:${qrData.location || ""}\nEND:VEVENT`;
           break;
         default:
-          requestData.data.text = qrData.content;
+          qrText = qrData.content;
       }
+
+      // Send simple format that backend expects
+      const requestData = {
+        text: qrText,
+        size: "medium",
+        format: "jpg"
+      };
 
       const response = await fetch(getApiUrl("/generate-qr"), {
         method: "POST",
@@ -254,7 +253,13 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
 
       if (response.ok) {
         const result = await response.json();
-        setGeneratedQR(result.qr_code);
+
+        // Handle base64 response from backend
+        if (result.image_base64 && result.mime_type) {
+          const dataUrl = `data:${result.mime_type};base64,${result.image_base64}`;
+          setGeneratedQR(dataUrl);
+        }
+
         setResult({
           type: "success",
           message: "QR code generated successfully!",
