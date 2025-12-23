@@ -163,7 +163,7 @@ export default function TestingPage() {
       results.tests.push({
         name: 'Error',
         status: 'FAIL',
-        message: `Test failed: ${error.message}`
+        message: `Test failed: ${error instanceof Error ? error.message : String(error)}`
       });
     }
 
@@ -218,7 +218,7 @@ export default function TestingPage() {
       results.tests.push({
         name: 'Error',
         status: 'FAIL',
-        message: `Test failed: ${error.message}`
+        message: `Test failed: ${error instanceof Error ? error.message : String(error)}`
       });
     }
 
@@ -280,7 +280,7 @@ export default function TestingPage() {
       results.tests.push({
         name: 'Error',
         status: 'FAIL',
-        message: `Test failed: ${error.message}`
+        message: `Test failed: ${error instanceof Error ? error.message : String(error)}`
       });
     }
 
@@ -348,7 +348,7 @@ export default function TestingPage() {
       results.tests.push({
         name: 'Error',
         status: 'FAIL',
-        message: `Test failed: ${error.message}`
+        message: `Test failed: ${error instanceof Error ? error.message : String(error)}`
       });
     }
 
@@ -418,7 +418,7 @@ export default function TestingPage() {
       results.tests.push({
         name: 'Error',
         status: 'FAIL',
-        message: `Test failed: ${error.message}`
+        message: `Test failed: ${error instanceof Error ? error.message : String(error)}`
       });
     }
 
