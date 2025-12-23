@@ -371,7 +371,9 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
           const conversionCompleteTime = Date.now();
           const totalConversionTime =
             conversionCompleteTime - conversionStartTime; // Set the conversion result for download
-          const downloadUrl = `${getDirectBackendUrl("/download_converted_video")}/${
+          const downloadUrl = `${getDirectBackendUrl(
+            "/download_converted_video"
+          )}/${
             progressData.converted_filename ||
             uniqueFilename.replace(/\.[^/.]+$/, "_converted.mp4")
           }`;

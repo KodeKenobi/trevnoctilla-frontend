@@ -18,7 +18,7 @@ export default withAuth(
       "frame-src 'self' https://www.payfast.co.za https://sandbox.payfast.co.za",
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za",
+      // "form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za",
       "frame-ancestors 'self'",
       "upgrade-insecure-requests",
     ].join("; ");
