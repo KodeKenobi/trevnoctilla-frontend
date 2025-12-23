@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { useMonetization } from "@/contexts/MonetizationProvider";
-import { getApiUrl } from "@/lib/config";
+import { getApiUrl, getDirectBackendUrl } from "@/lib/config";
 
 interface VideoConverterToolProps {
   uploadedFile: File | null;
@@ -268,7 +268,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
 
     try {
       const response = await fetch(
-        `${getApiUrl("/cancel_conversion")}/${encodeURIComponent(
+        `${getDirectBackendUrl("/cancel_conversion")}/${encodeURIComponent(
           currentConversionId
         )}`,
         {
@@ -354,7 +354,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         }
 
         const response = await fetch(
-          `${getApiUrl("/conversion_progress")}/${encodeURIComponent(
+          `${getDirectBackendUrl("/conversion_progress")}/${encodeURIComponent(
             uniqueFilename
           )}`
         );
@@ -371,7 +371,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
           const conversionCompleteTime = Date.now();
           const totalConversionTime =
             conversionCompleteTime - conversionStartTime; // Set the conversion result for download
-          const downloadUrl = `${getApiUrl("/download_converted_video")}/${
+          const downloadUrl = `${getDirectBackendUrl("/download_converted_video")}/${
             progressData.converted_filename ||
             uniqueFilename.replace(/\.[^/.]+$/, "_converted.mp4")
           }`;
@@ -481,7 +481,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
           reject(new Error("Request cancelled"));
         });
 
-        xhr.open("POST", getApiUrl("/convert-video"));
+        xhr.open("POST", getDirectBackendUrl("/convert-video"));
         xhr.send(formData);
       });
 
