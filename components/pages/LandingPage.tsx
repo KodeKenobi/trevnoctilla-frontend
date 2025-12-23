@@ -173,87 +173,63 @@ export default function LandingPage() {
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-3 gap-8 pt-8">
+            <div className="grid md:grid-cols-3 gap-6 pt-8">
               {[
                 {
-                  icon: Play,
                   title: "Video Processing",
                   description:
-                    "Convert videos to MP3 audio and create animated GIFs with high quality output.",
-                  color: "#ec4899",
+                    "Convert videos to MP3 audio and generate GIFs with precise control over quality and output.",
                   href: "/tools/video-converter",
                 },
                 {
-                  icon: FileText,
                   title: "Document Management",
                   description:
-                    "Merge PDF files seamlessly and generate custom QR codes for any content.",
-                  // color: "from-blue-500 to-cyan-500",
+                    "Merge, split, and prepare PDFs for real-world use cases like sharing, printing, and archiving.",
                   href: "/tools/pdf-tools",
                 },
                 {
-                  icon: Image,
                   title: "Image Conversion",
                   description:
-                    "Convert images between different formats with quality preservation.",
-                  color: "white",
+                    "Convert images across formats while preserving sharpness, metadata, and color accuracy.",
                   href: "/tools/image-converter",
                 },
               ].map((feature, index) => (
-                <Link
-                  key={`feature-${index}`}
-                  href={feature.href}
-                  className="block"
-                >
-                  <motion.div
-                    initial={{ opacity: 0, y: 40, scale: 0.9, rotateY: -15 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1, rotateY: 0 }}
+                <Link key={feature.title} href={feature.href}>
+                  <motion.article
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     transition={{
-                      duration: 0.8,
-                      delay: index * 0.2,
-                      type: "spring",
-                      stiffness: 100,
+                      duration: 0.5,
+                      delay: index * 0.12,
+                      ease: "easeOut",
                     }}
                     viewport={{ once: true }}
-                    whileHover={{
-                      y: -10,
-                      scale: 1.02,
-                      rotateY: 5,
-                      transition: { duration: 0.3 },
-                    }}
-                    className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 text-center md:text-left cursor-pointer"
+                    whileHover={{ y: -4 }}
+                    className="
+          group relative h-full
+          rounded-xl border border-white/10
+          bg-neutral-900
+          p-6
+          transition-all duration-200
+          hover:border-white/25
+        "
                   >
-                    <motion.div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 mx-auto md:mx-0`}
-                      initial={{ scale: 0, rotate: -180 }}
-                      whileInView={{ scale: 1, rotate: 0 }}
-                      transition={{
-                        duration: 0.6,
-                        delay: index * 0.2 + 0.3,
-                        type: "spring",
-                        stiffness: 200,
-                      }}
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                    >
-                      <feature.icon className="w-6 h-6 text-white" />
-                    </motion.div>
-                    <motion.h3
-                      className="text-xl font-semibold text-white mb-4"
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.6, delay: index * 0.2 + 0.4 }}
-                    >
+                    {/* subtle top rule */}
+                    <div className="mb-4 h-px w-10 bg-white/20 group-hover:bg-white/40 transition-colors" />
+
+                    <h3 className="text-lg font-medium text-white tracking-tight">
                       {feature.title}
-                    </motion.h3>
-                    <motion.p
-                      className="text-gray-400 leading-relaxed"
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: index * 0.2 + 0.5 }}
-                    >
+                    </h3>
+
+                    <p className="mt-3 text-sm leading-relaxed text-neutral-400">
                       {feature.description}
-                    </motion.p>
-                  </motion.div>
+                    </p>
+
+                    {/* affordance */}
+                    <div className="mt-6 text-xs text-neutral-500 group-hover:text-neutral-300 transition-colors">
+                      Open tool →
+                    </div>
+                  </motion.article>
                 </Link>
               ))}
             </div>
@@ -275,7 +251,7 @@ export default function LandingPage() {
         </section>
 
         {/* Stats Section */}
-        <section className="relative z-10 px-6 lg:px-12 py-20"></section>
+        {/* <section className="relative z-10 px-6 lg:px-12 py-20"></section> */}
 
         {/* Powerful Tools CTA Section */}
         <section className="py-24 relative overflow-hidden">
@@ -302,7 +278,7 @@ export default function LandingPage() {
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
               {[
                 {
                   title: "PDF Powerhouse",
@@ -319,7 +295,7 @@ export default function LandingPage() {
                 {
                   title: "Media Converter",
                   description:
-                    "Convert videos, audio, and images between any format with advanced quality control.",
+                    "Convert videos, audio, and images between formats with precise quality control.",
                   features: [
                     "All Video Formats",
                     "Audio Conversion",
@@ -331,7 +307,7 @@ export default function LandingPage() {
                 {
                   title: "Smart Tools",
                   description:
-                    "Generate QR codes, extract text with OCR, and automate your workflow.",
+                    "Generate QR codes, extract text with OCR, and automate workflows.",
                   features: [
                     "QR Generator",
                     "OCR Text Extraction",
@@ -341,55 +317,55 @@ export default function LandingPage() {
                   href: "/tools/qr-generator",
                 },
               ].map((tool, index) => (
-                <Link key={tool.title} href={tool.href} className="block">
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
+                <Link key={tool.title} href={tool.href}>
+                  <motion.article
+                    initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.2 }}
-                    className="bg-gray-800/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-gray-500/50 transition-all duration-300 text-center md:text-left cursor-pointer"
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    whileHover={{ y: -3 }}
+                    className="
+          group h-full
+          rounded-xl
+          border border-neutral-800
+          bg-neutral-900
+          p-6
+          transition-colors duration-200
+          hover:border-neutral-600
+        "
                   >
-                    <h3 className="text-2xl font-bold text-white mb-4">
+                    {/* top rule */}
+                    <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors" />
+
+                    <h3 className="text-lg font-medium text-white tracking-tight">
                       {tool.title}
                     </h3>
-                    <p className="text-gray-300 mb-6 leading-relaxed">
+
+                    <p className="mt-3 text-sm leading-relaxed text-neutral-400">
                       {tool.description}
                     </p>
-                    <ul className="space-y-2">
-                      {tool.features.map((feature, idx) => (
-                        <li
-                          key={`${tool.title}-feature-${idx}`}
-                          className="flex items-center text-gray-400 justify-center md:justify-start italic"
-                        >
-                          <div className="w-2 h-2 bg-gray-400 rounded-full mr-3"></div>
-                          {feature}
+
+                    <ul className="mt-6 space-y-2 text-sm text-neutral-500">
+                      {tool.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-2">
+                          <span className="mt-[6px] block h-1.5 w-1.5 rounded-full bg-neutral-600" />
+                          <span>{feature}</span>
                         </li>
                       ))}
                     </ul>
-                  </motion.div>
+
+                    <div className="mt-6 text-xs text-neutral-500 group-hover:text-neutral-300 transition-colors">
+                      Open tool →
+                    </div>
+                  </motion.article>
                 </Link>
               ))}
             </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-center"
-            >
-              <motion.button
-                onClick={() => navigateTo("tools")}
-                className="bg-gray-700 text-white font-bold text-lg px-10 py-3 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 italic"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Explore All Tools
-              </motion.button>
-            </motion.div>
           </div>
         </section>
 
         {/* Developer APIs CTA Section */}
-        <section className="py-24 relative overflow-hidden">
+        <section className="relative overflow-hidden">
           {/* Background Elements */}
           <div className="absolute inset-0 bg-black"></div>
 
@@ -410,88 +386,97 @@ export default function LandingPage() {
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-8 mb-16">
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
-                className="bg-gray-900 border border-gray-700 rounded-2xl p-8 text-center md:text-left"
-              >
-                <h3 className="text-2xl font-bold text-white mb-4">
-                  PDF Processing APIs
-                </h3>
-                <p className="text-gray-300 mb-6 leading-relaxed">
-                  Advanced PDF manipulation with OCR, text extraction, form
-                  filling, and document analysis capabilities.
-                </p>
-                <ul className="space-y-3 mb-8">
-                  {[
+            <div className="grid md:grid-cols-2 gap-6 mb-16">
+              {[
+                {
+                  title: "PDF Processing APIs",
+                  description:
+                    "Programmatic PDF manipulation including OCR, text extraction, form handling, and document analysis.",
+                  features: [
                     "PDF to Text with OCR",
-                    "Form Field Detection & Filling",
+                    "Form Field Detection and Filling",
                     "Document Structure Analysis",
                     "Batch PDF Processing",
                     "Advanced Text Extraction",
                     "Metadata Extraction",
-                  ].map((feature, idx) => (
-                    <li
-                      key={`pdf-feature-${idx}`}
-                      className="flex items-center text-gray-400 justify-center md:justify-start"
-                    >
-                      <div className="w-2 h-2 bg-white rounded-full mr-3"></div>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <motion.button
-                  onClick={() => window.open("/api-docs", "_blank")}
-                  className="w-full bg-white text-gray-900 font-bold py-3 px-6 rounded-xl transition-all duration-300"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  View API Documentation
-                </motion.button>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6 }}
-                className="bg-gray-900 border border-gray-700 rounded-2xl p-8 text-center md:text-left"
-              >
-                <h3 className="text-2xl font-bold text-white mb-4">
-                  Media Conversion APIs
-                </h3>
-                <p className="text-gray-300 mb-6 leading-relaxed">
-                  High-performance media processing with support for all major
-                  formats and advanced compression algorithms.
-                </p>
-                <ul className="space-y-3 mb-8">
-                  {[
+                  ],
+                  action: {
+                    label: "View API documentation",
+                    onClick: () => window.open("/api-docs", "_blank"),
+                  },
+                  motion: { x: -20 },
+                },
+                {
+                  title: "Media Conversion APIs",
+                  description:
+                    "High-performance media processing with support for modern formats and configurable compression.",
+                  features: [
                     "Video Format Conversion",
-                    "Audio Processing & Compression",
-                    "Image Optimization & Resizing",
+                    "Audio Processing and Compression",
+                    "Image Optimization and Resizing",
                     "Real-time Processing",
                     "Custom Quality Settings",
                     "Batch Media Processing",
-                  ].map((feature, idx) => (
-                    <li
-                      key={`media-feature-${idx}`}
-                      className="flex items-center text-gray-400 justify-center md:justify-start"
-                    >
-                      <div className="w-2 h-2 bg-orange-400 rounded-full mr-3"></div>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <motion.button
-                  onClick={() => window.open("/auth/register", "_self")}
-                  className="w-full bg-white text-gray-900 font-bold py-3 px-6 rounded-xl transition-all duration-300"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  ],
+                  action: {
+                    label: "Request API access",
+                    onClick: () => window.open("/auth/register", "_self"),
+                  },
+                  motion: { x: 20 },
+                },
+              ].map((api, index) => (
+                <motion.article
+                  key={api.title}
+                  initial={{ opacity: 0, ...api.motion }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="
+        group h-full
+        rounded-xl
+        border border-neutral-800
+        bg-neutral-900
+        p-6
+        transition-colors
+        hover:border-neutral-600
+      "
                 >
-                  Get API Access
-                </motion.button>
-              </motion.div>
+                  {/* top rule */}
+                  <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors" />
+
+                  <h3 className="text-lg font-medium text-white tracking-tight">
+                    {api.title}
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-relaxed text-neutral-400">
+                    {api.description}
+                  </p>
+
+                  <ul className="mt-6 space-y-2 text-sm text-neutral-500">
+                    {api.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2">
+                        <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* footer action */}
+                  <button
+                    onClick={api.action.onClick}
+                    className="
+          mt-6 flex w-full items-center justify-between
+          border-t border-neutral-800 pt-4
+          text-sm text-neutral-400
+          transition-colors
+          hover:text-neutral-200
+        "
+                  >
+                    <span>{api.action.label}</span>
+                    <span className="text-neutral-500">→</span>
+                  </button>
+                </motion.article>
+              ))}
             </div>
           </div>
         </section>
