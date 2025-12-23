@@ -186,13 +186,13 @@ export default function TestingPage() {
         });
       }
 
-      // Test 5: Test actual video conversion with small test file (backend testing)
+      // Test 5: Test actual video conversion with test file (backend testing)
       try {
-        const testVideoFile = await fetch('/test-files/small-test.mp4');
+        const testVideoFile = await fetch('/test-files/test-video.mp4');
         if (testVideoFile.ok) {
           const blob = await testVideoFile.blob();
           const formData = new FormData();
-          formData.append('file', blob, 'small-test.mp4');
+          formData.append('file', blob, 'test-video.mp4');
           formData.append('outputFormat', 'mp4');
           formData.append('compression', 'medium');
 
