@@ -137,13 +137,59 @@ export default function TestingPage() {
         message: `Supports ${compressionLevels.length} compression levels: ${compressionLevels.join(', ')}`
       });
 
-      // Test 4: Check API endpoint availability
-      const apiResponse = await fetch('/convert-video', { method: 'POST', body: new FormData() });
-      results.tests.push({
-        name: 'API Endpoint',
-        status: apiResponse.status === 400 ? 'PASS' : 'WARN', // 400 is expected for empty form data
-        message: 'Video conversion API endpoint is accessible'
-      });
+      // Test 4: Test actual video conversion with small test file
+      try {
+        const testVideoFile = await fetch('/test-files/small-test.mp4');
+        if (testVideoFile.ok) {
+          const blob = await testVideoFile.blob();
+          const formData = new FormData();
+          formData.append('file', blob, 'small-test.mp4');
+          formData.append('outputFormat', 'mp4');
+          formData.append('compression', 'medium');
+
+          const convertResponse = await fetch('/convert-video', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (convertResponse.ok) {
+            const result = await convertResponse.json();
+            results.tests.push({
+              name: 'Video Conversion',
+              status: result.success ? 'PASS' : 'FAIL',
+              message: result.success ? 'Successfully converted test video file' : `Conversion failed: ${result.error || 'Unknown error'}`
+            });
+
+            // Test download if conversion was successful
+            if (result.success && result.downloadUrl) {
+              const downloadTest = await fetch(result.downloadUrl, { method: 'HEAD' });
+              results.tests.push({
+                name: 'Download Link',
+                status: downloadTest.ok ? 'PASS' : 'WARN',
+                message: downloadTest.ok ? 'Download link is accessible' : 'Download link may not be accessible'
+              });
+            }
+          } else {
+            results.tests.push({
+              name: 'Video Conversion',
+              status: 'FAIL',
+              message: `API call failed with status ${convertResponse.status}`
+            });
+          }
+        } else {
+          results.tests.push({
+            name: 'Video Conversion',
+            status: 'SKIP',
+            message: 'Test video file not available for testing'
+          });
+        }
+      } catch (conversionError) {
+        results.tests.push({
+          name: 'Video Conversion',
+          status: 'FAIL',
+          message: `Conversion test failed: ${conversionError instanceof Error ? conversionError.message : String(conversionError)}`
+        });
+      }
 
       // Test 5: Check progress tracking
       results.tests.push({
@@ -199,13 +245,59 @@ export default function TestingPage() {
         message: 'Quality control slider (0-100%) implemented'
       });
 
-      // Test 4: Check API endpoint availability
-      const apiResponse = await fetch('/convert-audio', { method: 'POST', body: new FormData() });
-      results.tests.push({
-        name: 'API Endpoint',
-        status: apiResponse.status === 400 ? 'PASS' : 'WARN',
-        message: 'Audio conversion API endpoint is accessible'
-      });
+      // Test 4: Test actual audio conversion with test file
+      try {
+        const testAudioFile = await fetch('/test-files/test-audio.wav');
+        if (testAudioFile.ok) {
+          const blob = await testAudioFile.blob();
+          const formData = new FormData();
+          formData.append('file', blob, 'test-audio.wav');
+          formData.append('outputFormat', 'mp3');
+          formData.append('quality', '80');
+
+          const convertResponse = await fetch('/convert-audio', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (convertResponse.ok) {
+            const result = await convertResponse.json();
+            results.tests.push({
+              name: 'Audio Conversion',
+              status: result.success ? 'PASS' : 'FAIL',
+              message: result.success ? 'Successfully converted test audio file' : `Conversion failed: ${result.error || 'Unknown error'}`
+            });
+
+            // Test download if conversion was successful
+            if (result.success && result.downloadUrl) {
+              const downloadTest = await fetch(result.downloadUrl, { method: 'HEAD' });
+              results.tests.push({
+                name: 'Download Link',
+                status: downloadTest.ok ? 'PASS' : 'WARN',
+                message: downloadTest.ok ? 'Download link is accessible' : 'Download link may not be accessible'
+              });
+            }
+          } else {
+            results.tests.push({
+              name: 'Audio Conversion',
+              status: 'FAIL',
+              message: `API call failed with status ${convertResponse.status}`
+            });
+          }
+        } else {
+          results.tests.push({
+            name: 'Audio Conversion',
+            status: 'SKIP',
+            message: 'Test audio file not available for testing'
+          });
+        }
+      } catch (conversionError) {
+        results.tests.push({
+          name: 'Audio Conversion',
+          status: 'FAIL',
+          message: `Conversion test failed: ${conversionError instanceof Error ? conversionError.message : String(conversionError)}`
+        });
+      }
 
       // Test 5: Check progress tracking
       results.tests.push({
@@ -261,13 +353,61 @@ export default function TestingPage() {
         message: 'Width/height controls with aspect ratio maintenance'
       });
 
-      // Test 5: Check API endpoint availability
-      const apiResponse = await fetch('/convert-image', { method: 'POST', body: new FormData() });
-      results.tests.push({
-        name: 'API Endpoint',
-        status: apiResponse.status === 400 ? 'PASS' : 'WARN',
-        message: 'Image conversion API endpoint is accessible'
-      });
+      // Test 5: Test actual image conversion with test file
+      try {
+        const testImageFile = await fetch('/test-files/test-image.jpeg');
+        if (testImageFile.ok) {
+          const blob = await testImageFile.blob();
+          const formData = new FormData();
+          formData.append('file', blob, 'test-image.jpeg');
+          formData.append('outputFormat', 'png');
+          formData.append('quality', '85');
+          formData.append('resize', 'false');
+          formData.append('compression', 'medium');
+
+          const convertResponse = await fetch('/convert-image', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (convertResponse.ok) {
+            const result = await convertResponse.json();
+            results.tests.push({
+              name: 'Image Conversion',
+              status: result.success ? 'PASS' : 'FAIL',
+              message: result.success ? 'Successfully converted test image file' : `Conversion failed: ${result.error || 'Unknown error'}`
+            });
+
+            // Test download if conversion was successful
+            if (result.success && result.downloadUrl) {
+              const downloadTest = await fetch(result.downloadUrl, { method: 'HEAD' });
+              results.tests.push({
+                name: 'Download Link',
+                status: downloadTest.ok ? 'PASS' : 'WARN',
+                message: downloadTest.ok ? 'Download link is accessible' : 'Download link may not be accessible'
+              });
+            }
+          } else {
+            results.tests.push({
+              name: 'Image Conversion',
+              status: 'FAIL',
+              message: `API call failed with status ${convertResponse.status}`
+            });
+          }
+        } else {
+          results.tests.push({
+            name: 'Image Conversion',
+            status: 'SKIP',
+            message: 'Test image file not available for testing'
+          });
+        }
+      } catch (conversionError) {
+        results.tests.push({
+          name: 'Image Conversion',
+          status: 'FAIL',
+          message: `Conversion test failed: ${conversionError instanceof Error ? conversionError.message : String(conversionError)}`
+        });
+      }
 
       // Test 6: Check file size comparison
       results.tests.push({
@@ -312,37 +452,132 @@ export default function TestingPage() {
         message: `${tools.length} PDF tools available: ${tools.join(', ')}`
       });
 
-      // Test 3: Check split PDF functionality
-      const splitResponse = await fetch('/split_pdf', { method: 'POST', body: new FormData() });
-      results.tests.push({
-        name: 'Split PDF API',
-        status: splitResponse.status === 400 ? 'PASS' : 'WARN',
-        message: 'Split PDF API endpoint accessible'
-      });
+      // Test 3: Test actual split PDF with test file
+      try {
+        const testPdfFile = await fetch('/test-files/test-pdf.pdf');
+        if (testPdfFile.ok) {
+          const blob = await testPdfFile.blob();
+          const formData = new FormData();
+          formData.append('file', blob, 'test-pdf.pdf');
+          formData.append('pages', '1'); // Split first page
 
-      // Test 4: Check merge PDFs functionality
-      const mergeResponse = await fetch('/merge_pdfs', { method: 'POST', body: new FormData() });
-      results.tests.push({
-        name: 'Merge PDFs API',
-        status: mergeResponse.status === 400 ? 'PASS' : 'WARN',
-        message: 'Merge PDFs API endpoint accessible'
-      });
+          const splitResponse = await fetch('/split_pdf', {
+            method: 'POST',
+            body: formData
+          });
 
-      // Test 5: Check extract text functionality
-      const extractTextResponse = await fetch('/extract_text', { method: 'POST', body: new FormData() });
-      results.tests.push({
-        name: 'Extract Text API',
-        status: extractTextResponse.status === 400 ? 'PASS' : 'WARN',
-        message: 'Extract text API endpoint accessible'
-      });
+          if (splitResponse.ok) {
+            const result = await splitResponse.json();
+            results.tests.push({
+              name: 'Split PDF',
+              status: result.success ? 'PASS' : 'FAIL',
+              message: result.success ? 'Successfully split test PDF file' : `Split failed: ${result.error || 'Unknown error'}`
+            });
+          } else {
+            results.tests.push({
+              name: 'Split PDF',
+              status: 'FAIL',
+              message: `API call failed with status ${splitResponse.status}`
+            });
+          }
+        } else {
+          results.tests.push({
+            name: 'Split PDF',
+            status: 'SKIP',
+            message: 'Test PDF file not available for testing'
+          });
+        }
+      } catch (splitError) {
+        results.tests.push({
+          name: 'Split PDF',
+          status: 'FAIL',
+          message: `Split test failed: ${splitError instanceof Error ? splitError.message : String(splitError)}`
+        });
+      }
 
-      // Test 6: Check extract images functionality
-      const extractImagesResponse = await fetch('/extract_images', { method: 'POST', body: new FormData() });
-      results.tests.push({
-        name: 'Extract Images API',
-        status: extractImagesResponse.status === 400 ? 'PASS' : 'WARN',
-        message: 'Extract images API endpoint accessible'
-      });
+      // Test 4: Test extract text with test PDF
+      try {
+        const testPdfFile = await fetch('/test-files/test-pdf.pdf');
+        if (testPdfFile.ok) {
+          const blob = await testPdfFile.blob();
+          const formData = new FormData();
+          formData.append('file', blob, 'test-pdf.pdf');
+
+          const extractTextResponse = await fetch('/extract_text', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (extractTextResponse.ok) {
+            const result = await extractTextResponse.json();
+            results.tests.push({
+              name: 'Extract Text',
+              status: result.success ? 'PASS' : 'FAIL',
+              message: result.success ? 'Successfully extracted text from test PDF' : `Text extraction failed: ${result.error || 'Unknown error'}`
+            });
+          } else {
+            results.tests.push({
+              name: 'Extract Text',
+              status: 'FAIL',
+              message: `API call failed with status ${extractTextResponse.status}`
+            });
+          }
+        } else {
+          results.tests.push({
+            name: 'Extract Text',
+            status: 'SKIP',
+            message: 'Test PDF file not available for testing'
+          });
+        }
+      } catch (extractError) {
+        results.tests.push({
+          name: 'Extract Text',
+          status: 'FAIL',
+          message: `Extract text test failed: ${extractError instanceof Error ? extractError.message : String(extractError)}`
+        });
+      }
+
+      // Test 5: Test extract images with test PDF
+      try {
+        const testPdfFile = await fetch('/test-files/test-pdf.pdf');
+        if (testPdfFile.ok) {
+          const blob = await testPdfFile.blob();
+          const formData = new FormData();
+          formData.append('file', blob, 'test-pdf.pdf');
+
+          const extractImagesResponse = await fetch('/extract_images', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (extractImagesResponse.ok) {
+            const result = await extractImagesResponse.json();
+            results.tests.push({
+              name: 'Extract Images',
+              status: result.success ? 'PASS' : 'FAIL',
+              message: result.success ? 'Successfully extracted images from test PDF' : `Image extraction failed: ${result.error || 'Unknown error'}`
+            });
+          } else {
+            results.tests.push({
+              name: 'Extract Images',
+              status: 'FAIL',
+              message: `API call failed with status ${extractImagesResponse.status}`
+            });
+          }
+        } else {
+          results.tests.push({
+            name: 'Extract Images',
+            status: 'SKIP',
+            message: 'Test PDF file not available for testing'
+          });
+        }
+      } catch (extractImagesError) {
+        results.tests.push({
+          name: 'Extract Images',
+          status: 'FAIL',
+          message: `Extract images test failed: ${extractImagesError instanceof Error ? extractImagesError.message : String(extractImagesError)}`
+        });
+      }
 
     } catch (error) {
       results.tests.push({
@@ -399,20 +634,95 @@ export default function TestingPage() {
         message: 'Margin control (1-10px) implemented'
       });
 
-      // Test 6: Check API endpoint availability
-      const apiResponse = await fetch('/generate-qr', { method: 'POST', body: JSON.stringify({}) });
-      results.tests.push({
-        name: 'API Endpoint',
-        status: apiResponse.status === 400 ? 'PASS' : 'WARN',
-        message: 'QR generation API endpoint is accessible'
-      });
+      // Test 6: Test actual QR generation for URL type
+      try {
+        const qrData = {
+          type: 'url',
+          data: {
+            url: 'https://www.trevnoctilla.com'
+          }
+        };
 
-      // Test 7: Check download functionality
-      results.tests.push({
-        name: 'Download Function',
-        status: 'PASS',
-        message: 'Download functionality implemented with JPG output'
-      });
+        const qrResponse = await fetch('/generate-qr', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(qrData)
+        });
+
+        if (qrResponse.ok) {
+          const result = await qrResponse.json();
+          results.tests.push({
+            name: 'QR Generation',
+            status: result.success ? 'PASS' : 'FAIL',
+            message: result.success ? 'Successfully generated QR code for URL' : `QR generation failed: ${result.error || 'Unknown error'}`
+          });
+
+          // Test download if QR was generated successfully
+          if (result.success && result.qr_code) {
+            results.tests.push({
+              name: 'QR Download',
+              status: 'PASS',
+              message: 'QR code data URL generated successfully for download'
+            });
+          }
+        } else {
+          results.tests.push({
+            name: 'QR Generation',
+            status: 'FAIL',
+            message: `API call failed with status ${qrResponse.status}`
+          });
+        }
+      } catch (qrError) {
+        results.tests.push({
+          name: 'QR Generation',
+          status: 'FAIL',
+          message: `QR generation test failed: ${qrError instanceof Error ? qrError.message : String(qrError)}`
+        });
+      }
+
+      // Test 7: Test different QR types
+      const qrTypesToTest = ['text', 'email', 'phone'];
+      for (const qrType of qrTypesToTest) {
+        try {
+          let testData: any = { type: qrType, data: {} };
+
+          switch (qrType) {
+            case 'text':
+              testData.data.text = 'Hello World';
+              break;
+            case 'email':
+              testData.data.email = 'test@example.com';
+              testData.data.subject = 'Test';
+              testData.data.body = 'Test message';
+              break;
+            case 'phone':
+              testData.data.phone = '+1234567890';
+              break;
+          }
+
+          const typeResponse = await fetch('/generate-qr', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(testData)
+          });
+
+          results.tests.push({
+            name: `${qrType.charAt(0).toUpperCase() + qrType.slice(1)} QR`,
+            status: typeResponse.ok ? 'PASS' : 'FAIL',
+            message: typeResponse.ok ? `${qrType} QR code generated successfully` : `${qrType} QR generation failed`
+          });
+        } catch (typeError) {
+          results.tests.push({
+            name: `${qrType.charAt(0).toUpperCase() + qrType.slice(1)} QR`,
+            status: 'FAIL',
+            message: `${qrType} QR test failed: ${typeError instanceof Error ? typeError.message : String(typeError)}`
+          });
+        }
+      }
 
     } catch (error) {
       results.tests.push({
