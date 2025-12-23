@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { useMonetization } from "@/contexts/MonetizationProvider";
-import { getApiUrl } from "@/lib/config";
+import { getApiUrl, getDirectBackendUrl } from "@/lib/config";
 
 interface AudioConverterToolProps {
   uploadedFile: File | null;
@@ -191,7 +191,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
       formData.append("channels", channels);
       formData.append("quality", quality.toString());
 
-      const response = await fetch(getApiUrl("/convert-audio"), {
+      const response = await fetch(getDirectBackendUrl("/convert-audio"), {
         method: "POST",
         body: formData,
       });
