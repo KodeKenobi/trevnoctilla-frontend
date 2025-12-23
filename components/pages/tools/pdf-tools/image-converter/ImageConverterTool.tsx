@@ -164,17 +164,6 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
     }
   };
 
-  // Direct download - monetization removed
-  const handleDirectDownload2 = () => {
-    if (conversionResult) {
-      try {
-        window.open(conversionResult, "_blank");
-      } catch (error) {
-        window.open(conversionResult, "_blank");
-      }
-    }
-  };
-
   const downloadResult = async () => {
     if (conversionResult) {
       // Verify the download URL is accessible before showing monetization modal
@@ -202,9 +191,8 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
       });
 
       if (completed) {
-        // Try to download the file using fetch and blob download
+        // Try to download the file using download link
         try {
-          // First, try direct download link (works for same-origin)
           const link = document.createElement("a");
           link.href = conversionResult;
           const downloadName = file?.name
@@ -219,20 +207,8 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
           setTimeout(() => {
             document.body.removeChild(link);
           }, 100);
-
-          // Also open in new tab as fallback for browsers that don't support download attribute
-          setTimeout(() => {
-            const newWindow = window.open(conversionResult, "_blank");
-            if (!newWindow) {
-              setResult({
-                type: "error",
-                message:
-                  "Download blocked. Please allow popups and try again, or right-click the download button and select 'Save link as'.",
-              });
-            }
-          }, 200);
         } catch (error) {
-          // Fallback: just open the URL
+          // Fallback: open in new tab if download fails
           window.open(conversionResult, "_blank");
         }
       }
