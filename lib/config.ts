@@ -48,48 +48,21 @@ export const API_CONFIG = {
     //           2. Explicit NEXT_PUBLIC_PAYFAST_URL env var
     //           3. Auto-detect: production if NODE_ENV=production, else sandbox
     get PAYFAST_URL() {
-      // Client-side: check window.location.hostname
-      if (typeof window !== "undefined") {
-        const hostname = window.location.hostname;
-        const isProductionDomain =
-          hostname.includes("trevnoctilla.com") ||
-          (hostname.includes("www.") &&
-            !hostname.includes("localhost") &&
-            !hostname.includes("127.0.0.1"));
+      const isProduction =
+        (typeof window !== "undefined" &&
+          /trevnoctilla\.com|www\./.test(window.location.hostname)) ||
+        (process.env.NEXT_PUBLIC_BASE_URL &&
+          /trevnoctilla\.com|www\./.test(process.env.NEXT_PUBLIC_BASE_URL)) ||
+        process.env.NODE_ENV === "production";
 
-        // If on production domain, force production PayFast URL
-        if (isProductionDomain) {
-          return "https://www.payfast.co.za/eng/process";
-        }
-
-        // If on localhost, use sandbox
-        if (hostname === "localhost" || hostname === "127.0.0.1") {
-          return "https://sandbox.payfast.co.za/eng/process";
-        }
-      }
-
-      // Server-side: check env var
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
-      const isProductionDomain =
-        baseUrl.includes("trevnoctilla.com") ||
-        baseUrl.includes("www.") ||
-        (!baseUrl.includes("localhost") && !baseUrl.includes("127.0.0.1"));
-
-      // If on production domain, force production PayFast URL (even if env var says sandbox)
-      if (isProductionDomain && baseUrl.startsWith("https://")) {
+      if (isProduction) {
+        // ignore env override in prod
         return "https://www.payfast.co.za/eng/process";
       }
-
-      // If explicitly set and not on production domain, use it
       if (process.env.NEXT_PUBLIC_PAYFAST_URL) {
         return process.env.NEXT_PUBLIC_PAYFAST_URL;
       }
-
-      // Auto-detect: production if NODE_ENV is production, else sandbox
-      const isProduction = process.env.NODE_ENV === "production";
-      return isProduction
-        ? "https://www.payfast.co.za/eng/process"
-        : "https://sandbox.payfast.co.za/eng/process";
+      return "https://sandbox.payfast.co.za/eng/process";
     },
     RETURN_URL:
       process.env.NEXT_PUBLIC_PAYFAST_RETURN_URL ||
@@ -155,6 +128,22 @@ export const getApiUrl = (endpoint: string): string => {
   // Ensure endpoint starts with / if baseUrl is provided
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
   return `${baseUrl}${cleanEndpoint}`;
+};
+
+// Direct backend URL helper for large file uploads (bypasses Next.js middleware limits)
+export const getDirectBackendUrl = (endpoint: string): string => {
+  // Check if we're on production domain or if NODE_ENV is production
+  const isProduction =
+    (typeof window !== "undefined" &&
+      (window.location.hostname === "www.trevnoctilla.com" ||
+        window.location.hostname === "trevnoctilla.com")) ||
+    process.env.NODE_ENV === "production";
+
+  const backendUrl = isProduction
+    ? "https://web-production-737b.up.railway.app"
+    : "http://localhost:5000";
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  return `${backendUrl}${cleanEndpoint}`;
 };
 
 // Helper function to get auth headers
