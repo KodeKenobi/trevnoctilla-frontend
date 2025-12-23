@@ -199,49 +199,61 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
     setResult(null);
 
     try {
-      // Format the QR data content based on type
-      let qrText = "";
+      // Format data for the /generate-qr endpoint
+      let requestData: any = {
+        type: qrData.type,
+        data: {},
+      };
 
+      // Format data based on QR type for the backend
       switch (qrData.type) {
         case "text":
-          qrText = qrData.content;
+          requestData.data.text = qrData.content;
           break;
         case "url":
-          qrText = qrData.content;
+          requestData.data.url = qrData.content;
           break;
         case "wifi":
-          qrText = `WIFI:S:${qrData.ssid || ""};T:${qrData.security || "WPA"};P:${qrData.password || ""};${qrData.hidden ? "H:true;" : ""};`;
+          requestData.data.ssid = qrData.ssid || "";
+          requestData.data.password = qrData.password || "";
+          requestData.data.encryption = qrData.security || "WPA";
+          requestData.data.hidden = qrData.hidden || false;
           break;
         case "email":
-          qrText = qrData.subject || qrData.body
-            ? `mailto:${qrData.content}?subject=${encodeURIComponent(qrData.subject || "")}&body=${encodeURIComponent(qrData.body || "")}`
-            : qrData.content;
+          requestData.data.email = qrData.content;
+          requestData.data.subject = qrData.subject || "";
+          requestData.data.body = qrData.body || "";
           break;
         case "sms":
-          qrText = `sms:${qrData.phoneNumber || ""}${qrData.message ? `:${qrData.message}` : ""}`;
+          requestData.data.phoneNumber = qrData.phoneNumber || "";
+          requestData.data.message = qrData.message || "";
           break;
         case "phone":
-          qrText = `tel:${qrData.content}`;
+          requestData.data.phone = qrData.content;
           break;
         case "vcard":
-          qrText = `BEGIN:VCARD\nVERSION:3.0\nN:${qrData.name || ""}\nORG:${qrData.organization || ""}\nTITLE:${qrData.vcardTitle || ""}\nTEL:${qrData.vcardPhone || ""}\nEMAIL:${qrData.email || ""}\nURL:${qrData.website || ""}\nADR:${qrData.address || ""}\nEND:VCARD`;
+          requestData.data.name = qrData.name || "";
+          requestData.data.organization = qrData.organization || "";
+          requestData.data.vcardTitle = qrData.vcardTitle || "";
+          requestData.data.vcardPhone = qrData.vcardPhone || "";
+          requestData.data.email = qrData.email || "";
+          requestData.data.website = qrData.website || "";
+          requestData.data.address = qrData.address || "";
           break;
         case "location":
-          qrText = `geo:${qrData.latitude || 0},${qrData.longitude || 0}`;
+          requestData.data.latitude = qrData.latitude || 0;
+          requestData.data.longitude = qrData.longitude || 0;
           break;
         case "calendar":
-          qrText = `BEGIN:VEVENT\nSUMMARY:${qrData.calendarTitle || ""}\nDESCRIPTION:${qrData.description || ""}\nDTSTART:${qrData.startDate || ""}\nDTEND:${qrData.endDate || ""}\nLOCATION:${qrData.location || ""}\nEND:VEVENT`;
+          requestData.data.calendarTitle = qrData.calendarTitle || "";
+          requestData.data.description = qrData.description || "";
+          requestData.data.startDate = qrData.startDate || "";
+          requestData.data.endDate = qrData.endDate || "";
+          requestData.data.location = qrData.location || "";
           break;
         default:
-          qrText = qrData.content;
+          requestData.data.text = qrData.content;
       }
-
-      // Send simple format that backend expects
-      const requestData = {
-        text: qrText,
-        size: "medium",
-        format: "jpg"
-      };
 
       const response = await fetch(getApiUrl("/generate-qr"), {
         method: "POST",
@@ -254,17 +266,19 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
       if (response.ok) {
         const result = await response.json();
 
-        // Handle base64 response from backend
-        if (result.image_base64 && result.mime_type) {
-          const dataUrl = `data:${result.mime_type};base64,${result.image_base64}`;
-          setGeneratedQR(dataUrl);
+        if (result.success && result.qr_code) {
+          setGeneratedQR(result.qr_code);
+          setResult({
+            type: "success",
+            message: "QR code generated successfully!",
+            data: result,
+          });
+        } else {
+          setResult({
+            type: "error",
+            message: result.error || "Failed to generate QR code",
+          });
         }
-
-        setResult({
-          type: "success",
-          message: "QR code generated successfully!",
-          data: result,
-        });
       } else {
         const error = await response.json();
         setResult({
