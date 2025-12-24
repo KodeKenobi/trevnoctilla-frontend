@@ -42,14 +42,14 @@ export default function LandingPage() {
     <>
       <div className="min-h-screen relative overflow-hidden bg-gray-900 dark:bg-gray-900 page-content">
         {/* Background Image Layer - Temporarily disabled */}
-        {/* <div
+        <div
           className="absolute inset-0 opacity-30"
           style={{
             background: 'url("/platform-hero-bg.png") no-repeat center top',
             backgroundSize: "contain",
             backgroundPosition: "center -50px",
           }}
-        ></div> */}
+        ></div>
         {/* Background elements removed - no gradients */}
 
         {/* Hero Section */}
@@ -152,7 +152,7 @@ export default function LandingPage() {
         {/* Features Section */}
         <section
           id="features"
-          className="relative z-10 px-6 lg:px-12 py-20 mt-[-100px]"
+          className="relative z-10 px-6 lg:px-12 py-20 mt-[-100px] bg-gray-900"
         >
           <div className="max-w-6xl mx-auto">
             <motion.div
