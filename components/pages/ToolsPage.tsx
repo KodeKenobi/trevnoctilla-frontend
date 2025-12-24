@@ -217,70 +217,77 @@ export default function ToolsPage() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
             {[
               {
-                title: "Lightning Fast",
+                title: "Lightning fast",
                 description:
-                  "Process files in seconds. Our optimized algorithms ensure maximum speed.",
+                  "Files are processed in seconds using optimized pipelines designed for low latency.",
                 features: [
-                  "Instant Processing",
-                  "Cloud-Powered",
-                  "No Queues",
-                  "Real-time Updates",
+                  "Instant processing",
+                  "Cloud execution",
+                  "No queueing",
+                  "Live status updates",
                 ],
-                gradient: "from-yellow-500 to-orange-500",
               },
               {
-                title: "100% Secure",
+                title: "Secure by default",
                 description:
-                  "Your files are processed securely and never stored permanently on our servers.",
+                  "Files are handled ephemerally and never stored longer than required for processing.",
                 features: [
-                  "End-to-End Encryption",
-                  "No Data Storage",
-                  "GDPR Compliant",
-                  "Privacy First",
+                  "End-to-end encryption",
+                  "No persistent storage",
+                  "GDPR-aligned handling",
+                  "Privacy-first design",
                 ],
-                gradient: "from-green-500 to-emerald-500",
               },
               {
-                title: "Professional Quality",
+                title: "Professional output",
                 description:
-                  "Get results that match or exceed professional software standards.",
+                  "Results match professional desktop software with consistent, repeatable quality.",
                 features: [
-                  "High-Quality Output",
-                  "Lossless Conversion",
-                  "Advanced Algorithms",
-                  "Batch Processing",
+                  "High-quality output",
+                  "Lossless conversion",
+                  "Advanced algorithms",
+                  "Batch processing",
                 ],
-                gradient: "from-purple-500 to-pink-500",
               },
             ].map((feature, index) => (
-              <motion.div
+              <motion.article
                 key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 hover:border-cyan-500/50 transition-all duration-300 text-center md:text-left"
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="
+        group h-full
+        rounded-xl
+        border border-neutral-800
+        p-6
+        transition-colors
+        hover:border-neutral-600
+      "
               >
-                <h3 className="text-2xl font-bold text-white mb-4">
+                {/* top rule */}
+                <div className="mb-4 h-px w-10 bg-neutral-700 group-hover:bg-neutral-500 transition-colors" />
+
+                <h3 className="text-lg font-medium text-white tracking-tight">
                   {feature.title}
                 </h3>
-                <p className="text-gray-300 mb-6 leading-relaxed">
+
+                <p className="mt-3 text-sm leading-relaxed text-white">
                   {feature.description}
                 </p>
-                <ul className="space-y-2">
-                  {feature.features.map((item, idx) => (
-                    <li
-                      key={`${feature.title}-item-${idx}`}
-                      className="flex items-center text-gray-400 justify-center md:justify-start"
-                    >
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full mr-3"></div>
-                      {item}
+
+                <ul className="mt-6 space-y-2 text-sm text-white">
+                  {feature.features.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600" />
+                      <span>{item}</span>
                     </li>
                   ))}
                 </ul>
-              </motion.div>
+              </motion.article>
             ))}
           </div>
         </div>
@@ -309,89 +316,96 @@ export default function ToolsPage() {
               developers, by developers.
             </p>
           </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-8 mb-16">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 text-center md:text-left"
-            >
-              <h3 className="text-2xl font-bold text-white mb-4">
-                PDF Processing APIs
-              </h3>
-              <p className="text-gray-300 mb-6 leading-relaxed">
-                Advanced PDF manipulation with OCR, text extraction, form
-                filling, and document analysis capabilities.
-              </p>
-              <ul className="space-y-3 mb-8">
-                {[
-                  "PDF to Text with OCR",
-                  "Form Field Detection & Filling",
-                  "Document Structure Analysis",
-                  "Batch PDF Processing",
-                  "Advanced Text Extraction",
-                  "Metadata Extraction",
-                ].map((feature, idx) => (
-                  <li
-                    key={`pdf-feature-${idx}`}
-                    className="flex items-center text-gray-400 justify-center md:justify-start"
-                  >
-                    <div className="w-2 h-2 bg-purple-400 rounded-full mr-3"></div>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <motion.button
-                onClick={() => window.open("/api-docs", "_blank")}
-                className="w-full bg-white text-gray-900 font-bold py-3 px-6 rounded-xl transition-all duration-300"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+          <div className="grid md:grid-cols-2 gap-6 mb-16">
+            {[
+              {
+                title: "PDF Processing APIs",
+                description:
+                  "Programmatic PDF manipulation including OCR, text extraction, form handling, and document analysis.",
+                features: [
+                  "PDF to text with OCR",
+                  "Form field detection and filling",
+                  "Document structure analysis",
+                  "Batch PDF processing",
+                  "Advanced text extraction",
+                  "Metadata extraction",
+                ],
+                action: {
+                  label: "View API documentation",
+                  onClick: () => window.open("/api-docs", "_blank"),
+                },
+                motion: { x: -20 },
+              },
+              {
+                title: "Media Conversion APIs",
+                description:
+                  "High-performance media processing with support for modern formats and configurable compression.",
+                features: [
+                  "Video format conversion",
+                  "Audio processing and compression",
+                  "Image optimization and resizing",
+                  "Real-time processing",
+                  "Custom quality settings",
+                  "Batch media processing",
+                ],
+                action: {
+                  label: "Request API access",
+                  onClick: () => window.open("/auth/register", "_self"),
+                },
+                motion: { x: 20 },
+              },
+            ].map((api, index) => (
+              <motion.article
+                key={api.title}
+                initial={{ opacity: 0, ...api.motion }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="
+        group h-full
+        rounded-xl
+        border border-neutral-800
+        p-6
+        transition-colors
+        hover:border-neutral-600
+      "
               >
-                View API Documentation
-              </motion.button>
-            </motion.div>
+                {/* top rule */}
+                <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors" />
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-8 text-center md:text-left"
-            >
-              <h3 className="text-2xl font-bold text-white mb-4">
-                Media Conversion APIs
-              </h3>
-              <p className="text-gray-300 mb-6 leading-relaxed">
-                High-performance media processing with support for all major
-                formats and advanced compression algorithms.
-              </p>
-              <ul className="space-y-3 mb-8">
-                {[
-                  "Video Format Conversion",
-                  "Audio Processing & Compression",
-                  "Image Optimization & Resizing",
-                  "Real-time Processing",
-                  "Custom Quality Settings",
-                  "Batch Media Processing",
-                ].map((feature, idx) => (
-                  <li
-                    key={`media-feature-${idx}`}
-                    className="flex items-center text-gray-400 justify-center md:justify-start"
-                  >
-                    <div className="w-2 h-2 bg-orange-400 rounded-full mr-3"></div>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <motion.button
-                onClick={() => window.open("/auth/register", "_self")}
-                className="w-full bg-white text-gray-900 font-bold py-3 px-6 rounded-xl transition-all duration-300"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Get API Access
-              </motion.button>
-            </motion.div>
+                <h3 className="text-lg font-medium text-white tracking-tight">
+                  {api.title}
+                </h3>
+
+                <p className="mt-3 text-sm leading-relaxed text-white">
+                  {api.description}
+                </p>
+
+                <ul className="mt-6 space-y-2 text-sm text-white">
+                  {api.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2">
+                      <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* footer action */}
+                <button
+                  onClick={api.action.onClick}
+                  className="
+          mt-6 flex w-full items-center justify-between
+          border-t border-neutral-800 pt-4
+          text-sm text-white
+          transition-colors
+          hover:text-neutral-200
+        "
+                >
+                  <span>{api.action.label}</span>
+                  <span className="text-white">→</span>
+                </button>
+              </motion.article>
+            ))}
           </div>
         </div>
       </section>

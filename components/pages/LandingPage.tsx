@@ -220,12 +220,12 @@ export default function LandingPage() {
                       {feature.title}
                     </h3>
 
-                    <p className="mt-3 text-sm leading-relaxed text-neutral-400">
+                    <p className="mt-3 text-sm leading-relaxed text-white">
                       {feature.description}
                     </p>
 
                     {/* affordance */}
-                    <div className="mt-6 text-xs text-neutral-500 group-hover:text-neutral-300 transition-colors">
+                    <div className="mt-6 text-xs text-white group-hover:text-neutral-300 transition-colors">
                       Open tool →
                     </div>
                   </motion.article>
@@ -339,11 +339,11 @@ export default function LandingPage() {
                       {tool.title}
                     </h3>
 
-                    <p className="mt-3 text-sm leading-relaxed text-neutral-400">
+                    <p className="mt-3 text-sm leading-relaxed text-white">
                       {tool.description}
                     </p>
 
-                    <ul className="mt-6 space-y-2 text-sm text-neutral-500">
+                    <ul className="mt-6 space-y-2 text-sm text-white">
                       {tool.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-2">
                           <span className="mt-[6px] block h-1.5 w-1.5 rounded-full bg-neutral-600" />
@@ -352,7 +352,7 @@ export default function LandingPage() {
                       ))}
                     </ul>
 
-                    <div className="mt-6 text-xs text-neutral-500 group-hover:text-neutral-300 transition-colors">
+                    <div className="mt-6 text-xs text-white group-hover:text-neutral-300 transition-colors">
                       Open tool →
                     </div>
                   </motion.article>
@@ -442,11 +442,11 @@ export default function LandingPage() {
                     {api.title}
                   </h3>
 
-                  <p className="mt-3 text-sm leading-relaxed text-neutral-400">
+                  <p className="mt-3 text-sm leading-relaxed text-white">
                     {api.description}
                   </p>
 
-                  <ul className="mt-6 space-y-2 text-sm text-neutral-500">
+                  <ul className="mt-6 space-y-2 text-sm text-white">
                     {api.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-2">
                         <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600" />
@@ -461,13 +461,13 @@ export default function LandingPage() {
                     className="
           mt-6 flex w-full items-center justify-between
           border-t border-neutral-800 pt-4
-          text-sm text-neutral-400
+          text-sm text-white
           transition-colors
           hover:text-neutral-200
         "
                   >
                     <span>{api.action.label}</span>
-                    <span className="text-neutral-500">→</span>
+                    <span className="text-white">→</span>
                   </button>
                 </motion.article>
               ))}
