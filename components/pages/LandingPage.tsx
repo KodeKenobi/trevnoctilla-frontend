@@ -184,7 +184,7 @@ export default function LandingPage() {
                 {
                   title: "Document Management",
                   description:
-                    "Merge, split, and prepare PDFs for real-world use cases like sharing, printing, and archiving.",
+                    "Merge, split, sign, and prepare PDFs for real-world use cases like sharing, printing, and archiving.",
                   href: "/tools/pdf-tools",
                 },
                 {
@@ -216,16 +216,16 @@ export default function LandingPage() {
                     {/* subtle top rule */}
                     <div className="mb-4 h-px w-10 bg-white/20 group-hover:bg-white/40 transition-colors" />
 
-                    <h3 className="text-lg font-medium text-white tracking-tight">
+                    <h3 className="text-xl font-medium text-white tracking-tight">
                       {feature.title}
                     </h3>
 
-                    <p className="mt-3 text-sm leading-relaxed text-white">
+                    <p className="mt-3 text-md leading-relaxed text-white">
                       {feature.description}
                     </p>
 
                     {/* affordance */}
-                    <div className="mt-6 text-xs text-white group-hover:text-neutral-300 transition-colors">
+                    <div className="mt-6 text-sm text-white group-hover:text-neutral-300 transition-colors">
                       Open tool →
                     </div>
                   </motion.article>
@@ -335,11 +335,11 @@ export default function LandingPage() {
                     {/* top rule */}
                     <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors" />
 
-                    <h3 className="text-lg font-medium text-white tracking-tight">
+                    <h3 className="text-xl font-medium text-white tracking-tight">
                       {tool.title}
                     </h3>
 
-                    <p className="mt-3 text-sm leading-relaxed text-white">
+                    <p className="mt-3 text-md leading-relaxed text-white">
                       {tool.description}
                     </p>
 
@@ -438,11 +438,11 @@ export default function LandingPage() {
                   {/* top rule */}
                   <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors" />
 
-                  <h3 className="text-lg font-medium text-white tracking-tight">
+                  <h3 className="text-xl font-medium text-white tracking-tight">
                     {api.title}
                   </h3>
 
-                  <p className="mt-3 text-sm leading-relaxed text-white">
+                  <p className="mt-3 text-md leading-relaxed text-white">
                     {api.description}
                   </p>
 
