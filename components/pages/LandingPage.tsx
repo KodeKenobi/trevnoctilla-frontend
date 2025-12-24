@@ -40,9 +40,8 @@ export default function LandingPage() {
 
   return (
     <>
-      <div className="min-h-screen relative overflow-hidden bg-gray-900 dark:bg-gray-900 page-content">
+      <div className="min-h-screen relative overflow-hidden page-content">
         {/* Background Image Layer - Temporarily disabled */}
-        {/*
         <div
           className="absolute inset-0 opacity-30"
           style={{
@@ -51,7 +50,6 @@ export default function LandingPage() {
             backgroundPosition: "center -50px",
           }}
         ></div>
-        */}
         {/* Background elements removed - no gradients */}
 
         {/* Hero Section */}
@@ -210,7 +208,6 @@ export default function LandingPage() {
                     className="
           group relative h-full
           rounded-xl border border-white/10
-          bg-neutral-900
           p-6
           transition-all duration-200
           hover:border-white/25
@@ -330,7 +327,6 @@ export default function LandingPage() {
           group h-full
           rounded-xl
           border border-neutral-800
-          bg-neutral-900
           p-6
           transition-colors duration-200
           hover:border-neutral-600
@@ -367,10 +363,7 @@ export default function LandingPage() {
         </section>
 
         {/* Developer APIs CTA Section */}
-        <section className="relative overflow-hidden">
-          {/* Background Elements */}
-          <div className="absolute inset-0 bg-black"></div>
-
+        <section className="relative overflow-hidden bg-[#111827]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -437,7 +430,6 @@ export default function LandingPage() {
         group h-full
         rounded-xl
         border border-neutral-800
-        bg-neutral-900
         p-6
         transition-colors
         hover:border-neutral-600
