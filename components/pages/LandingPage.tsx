@@ -42,6 +42,7 @@ export default function LandingPage() {
     <>
       <div className="min-h-screen relative overflow-hidden bg-gray-900 dark:bg-gray-900 page-content">
         {/* Background Image Layer - Temporarily disabled */}
+        {/*
         <div
           className="absolute inset-0 opacity-30"
           style={{
@@ -50,6 +51,7 @@ export default function LandingPage() {
             backgroundPosition: "center -50px",
           }}
         ></div>
+        */}
         {/* Background elements removed - no gradients */}
 
         {/* Hero Section */}
