@@ -31,19 +31,19 @@ const structuredData = {
     name: "Trevnoctilla",
     url: "https://www.trevnoctilla.com",
     logo: "https://www.trevnoctilla.com/logo.png",
-    email: "support@trevnoctilla.com",
+    email: "info@trevoctilla.com",
     contactPoint: [
       {
         "@type": "ContactPoint",
         contactType: "customer support",
-        email: "support@trevnoctilla.com",
+        email: "info@trevoctilla.com",
         url: "https://www.trevnoctilla.com/contact",
         availableLanguage: ["English"],
       },
       {
         "@type": "ContactPoint",
         contactType: "technical support",
-        email: "support@trevnoctilla.com",
+        email: "info@trevoctilla.com",
         url: "https://www.trevnoctilla.com/support",
       },
     ],

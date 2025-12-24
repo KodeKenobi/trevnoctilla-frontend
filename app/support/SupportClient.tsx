@@ -629,11 +629,11 @@ export default function SupportClient() {
                 Contact Support
               </Link>
               <a
-                href="mailto:support@trevnoctilla.com"
+                href="mailto:info@trevoctilla.com"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-xl border border-gray-700 transition-all duration-300"
               >
                 <Mail className="w-5 h-5" />
-                support@trevnoctilla.com
+                info@trevoctilla.com
               </a>
             </div>
           </motion.div>

@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
                 </p>
               </div>
               <p style="color: #666; margin-top: 30px;">
-                If you have any questions, please contact us at support@trevnoctilla.com
+                If you have any questions, please contact us at info@trevoctilla.com
               </p>
               <p style="color: #999; margin-top: 40px; font-size: 14px; text-align: center;">
                 Best regards,<br />

@@ -242,15 +242,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
     return (
       <div className="w-full max-w-4xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
         <div className="p-6">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">
-              Universal Audio Converter
-            </h2>
-            <p className="text-gray-400">
-              Convert audio between all formats with quality control and
-              advanced processing
-            </p>
-          </div>
+          <div className="text-center mb-6"></div>
 
           <div
             {...getRootProps()}
@@ -298,15 +290,7 @@ export const AudioConverterTool: React.FC<AudioConverterToolProps> = ({
   return (
     <div className="w-full max-w-4xl mx-auto min-h-96 bg-gray-800/40 rounded-lg overflow-hidden">
       <div className="p-6">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-white mb-2">
-            Universal Audio Converter
-          </h2>
-          <p className="text-gray-400">
-            Convert audio between all formats with quality control and advanced
-            processing
-          </p>
-        </div>
+        <div className="text-center mb-6"></div>
 
         {file && (
           <div className="mb-4 p-3 bg-gray-700 rounded-lg border border-gray-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">

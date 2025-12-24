@@ -212,10 +212,10 @@ export default function Footer() {
                   <div className="flex items-center justify-center md:justify-start space-x-3 text-muted-foreground dark:text-gray-400">
                     <Mail className="w-5 h-5 text-white" />
                     <a
-                      href="mailto:support@trevnoctilla.com"
+                      href="mailto:info@trevoctilla.com"
                       className="hover:text-white transition-colors"
                     >
-                      support@trevnoctilla.com
+                      info@trevoctilla.com
                     </a>
                   </div>
                 </div>

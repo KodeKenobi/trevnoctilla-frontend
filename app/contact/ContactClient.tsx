@@ -77,7 +77,7 @@ export default function ContactClient() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          to: "support@trevnoctilla.com",
+          to: "info@trevoctilla.com",
           subject: `[${categoryLabel}] ${formData.subject}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -196,10 +196,10 @@ This email was sent from the Trevnoctilla contact form.
                   For general inquiries and support
                 </p>
                 <a
-                  href="mailto:support@trevnoctilla.com"
+                  href="mailto:info@trevoctilla.com"
                   className="text-white hover:text-cyan-300 font-medium transition-colors"
                 >
-                  support@trevnoctilla.com
+                  info@trevoctilla.com
                 </a>
               </motion.div>
 

@@ -55,7 +55,7 @@ const structuredData = {
       contactPoint: {
         "@type": "ContactPoint",
         contactType: "customer support",
-        email: "support@trevnoctilla.com",
+        email: "info@trevoctilla.com",
         url: "https://www.trevnoctilla.com/contact",
       },
     },
