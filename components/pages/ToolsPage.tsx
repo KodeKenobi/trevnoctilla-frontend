@@ -158,20 +158,20 @@ export default function ToolsPage() {
                   <motion.div
                     whileHover={{ scale: 1.02, y: -5 }}
                     whileTap={{ scale: 0.98 }}
-                    className="card card-hover p-8 group animate-fade-in-up text-center md:text-left w-full max-w-md md:max-w-none mx-auto relative"
+                    className="card card-hover p-8 group animate-fade-in-up text-center w-full max-w-md md:max-w-none mx-auto relative"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <div className="flex flex-col md:flex-row items-center mb-6">
-                      <h3 className="text-2xl font-bold text-white group-hover:text-white transition-colors">
+                    <div className="flex flex-col items-center mb-6">
+                      <h3 className="text-2xl font-bold text-white group-hover:text-white transition-colors text-center">
                         {tool.title}
                       </h3>
                     </div>
 
-                    <p className="text-gray-300 mb-6 leading-relaxed text-center md:text-left">
+                    <p className="text-gray-300 mb-6 leading-relaxed text-center">
                       {tool.description}
                     </p>
 
-                    <div className="flex flex-wrap gap-2 mb-6 justify-center md:justify-start">
+                    <div className="flex flex-wrap gap-2 mb-6 justify-center">
                       {tool.features.map((feature, featureIndex) => (
                         <span
                           key={`${tool.page}-feature-${featureIndex}`}
@@ -182,7 +182,7 @@ export default function ToolsPage() {
                       ))}
                     </div>
 
-                    <div className="flex items-center text-white group-hover:text-cyan-300 justify-center md:justify-start">
+                    <div className="flex items-center text-white group-hover:text-cyan-300 justify-center">
                       <span className="font-medium">Try it now</span>
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </div>
@@ -269,21 +269,21 @@ export default function ToolsPage() {
       "
               >
                 {/* top rule */}
-                <div className="mb-4 h-px w-10 bg-neutral-700 group-hover:bg-neutral-500 transition-colors" />
+                <div className="mb-4 h-px w-10 bg-neutral-700 group-hover:bg-neutral-500 transition-colors mx-auto md:mx-0" />
 
-                <h3 className="text-lg font-medium text-white tracking-tight">
+                <h3 className="text-lg font-medium text-white tracking-tight text-center md:text-left">
                   {feature.title}
                 </h3>
 
-                <p className="mt-3 text-sm leading-relaxed text-white">
+                <p className="mt-3 text-sm leading-relaxed text-white text-center md:text-left">
                   {feature.description}
                 </p>
 
                 <ul className="mt-6 space-y-2 text-sm text-white">
                   {feature.features.map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600" />
-                      <span>{item}</span>
+                    <li key={item} className="flex items-center justify-center md:justify-start gap-2">
+                      <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600 flex-shrink-0" />
+                      <span className="text-center md:text-left">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -371,21 +371,21 @@ export default function ToolsPage() {
       "
               >
                 {/* top rule */}
-                <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors" />
+                <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors mx-auto md:mx-0" />
 
-                <h3 className="text-lg font-medium text-white tracking-tight">
+                <h3 className="text-lg font-medium text-white tracking-tight text-center md:text-left">
                   {api.title}
                 </h3>
 
-                <p className="mt-3 text-sm leading-relaxed text-white">
+                <p className="mt-3 text-sm leading-relaxed text-white text-center md:text-left">
                   {api.description}
                 </p>
 
                 <ul className="mt-6 space-y-2 text-sm text-white">
                   {api.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600" />
-                      <span>{feature}</span>
+                    <li key={feature} className="flex items-center justify-center md:justify-start gap-2">
+                      <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600 flex-shrink-0" />
+                      <span className="text-center md:text-left">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -394,7 +394,7 @@ export default function ToolsPage() {
                 <button
                   onClick={api.action.onClick}
                   className="
-          mt-6 flex w-full items-center justify-between
+          mt-6 flex w-full items-center justify-center md:justify-between
           border-t border-neutral-800 pt-4
           text-sm text-white
           transition-colors
