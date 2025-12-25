@@ -3,20 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import {
-  Mail,
-  Send,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Loader2,
-  MessageSquare,
-  HelpCircle,
-  CreditCard,
-  Bug,
-  Users,
-  Sparkles,
-} from "lucide-react";
+// No icons needed
 
 interface ContactFormData {
   name: string;
@@ -149,20 +136,12 @@ This email was sent from the Trevnoctilla contact form.
     <div className="min-h-screen bg-gray-900 page-content">
       {/* Hero Section */}
       <section className="pt-24 pb-16 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-blue-500/5 to-purple-500/5"></div>
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-8">
-              <Mail className="w-10 h-10 text-white" />
-            </div>
-
             <h1 className="text-3xl lg:text-4xl font-bold text-white mb-6">
               Get in Touch
             </h1>
@@ -188,9 +167,6 @@ This email was sent from the Trevnoctilla contact form.
                 transition={{ delay: 0.2 }}
                 className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center mb-4">
-                  <Mail className="w-6 h-6 text-white" />
-                </div>
                 <h3 className="text-lg font-bold text-white mb-2">Email Us</h3>
                 <p className="text-gray-400 mb-3">
                   For general inquiries and support
@@ -209,9 +185,6 @@ This email was sent from the Trevnoctilla contact form.
                 transition={{ delay: 0.3 }}
                 className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center mb-4">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
                 <h3 className="text-lg font-bold text-white mb-2">
                   Response Time
                 </h3>
@@ -227,9 +200,6 @@ This email was sent from the Trevnoctilla contact form.
                 transition={{ delay: 0.4 }}
                 className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
               >
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-4">
-                  <HelpCircle className="w-6 h-6 text-white" />
-                </div>
                 <h3 className="text-lg font-bold text-white mb-2">FAQs</h3>
                 <p className="text-gray-400 mb-3">
                   Find quick answers to common questions
@@ -260,9 +230,8 @@ This email was sent from the Trevnoctilla contact form.
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-start gap-3"
+                    className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl"
                   >
-                    <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-emerald-400 font-medium">
                         Message sent successfully!
@@ -280,9 +249,8 @@ This email was sent from the Trevnoctilla contact form.
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start gap-3"
+                    className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl"
                   >
-                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-red-400 font-medium">
                         Failed to send message
@@ -403,18 +371,16 @@ This email was sent from the Trevnoctilla contact form.
                   <motion.button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:from-gray-600 disabled:to-gray-600 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-cyan-500/25 disabled:shadow-none flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto px-8 py-4 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
                     whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
                     whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
                   >
                     {isSubmitting ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
                         Sending...
                       </>
                     ) : (
                       <>
-                        <Send className="w-5 h-5" />
                         Send Message
                       </>
                     )}
