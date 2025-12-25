@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-// No icons needed
+import { HelpCircle, CreditCard, MessageSquare, Bug, Users, Sparkles } from "lucide-react";
 
 interface ContactFormData {
   name: string;
