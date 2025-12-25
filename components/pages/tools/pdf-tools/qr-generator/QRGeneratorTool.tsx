@@ -752,7 +752,7 @@ export const QRGeneratorTool: React.FC<QRGeneratorToolProps> = ({
         <button
           onClick={generateQR}
           disabled={isProcessing}
-          className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
+          className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm sm:text-base"
         >
           {isProcessing ? "Generating..." : "Generate QR Code"}
         </button>

@@ -281,7 +281,10 @@ export default function ToolsPage() {
 
                 <ul className="mt-6 space-y-2 text-sm text-white">
                   {feature.features.map((item) => (
-                    <li key={item} className="flex items-center justify-center md:justify-start gap-2">
+                    <li
+                      key={item}
+                      className="flex items-center justify-center md:justify-start gap-2"
+                    >
                       <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600 flex-shrink-0" />
                       <span className="text-center md:text-left">{item}</span>
                     </li>
@@ -383,9 +386,14 @@ export default function ToolsPage() {
 
                 <ul className="mt-6 space-y-2 text-sm text-white">
                   {api.features.map((feature) => (
-                    <li key={feature} className="flex items-center justify-center md:justify-start gap-2">
+                    <li
+                      key={feature}
+                      className="flex items-center justify-center md:justify-start gap-2"
+                    >
                       <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600 flex-shrink-0" />
-                      <span className="text-center md:text-left">{feature}</span>
+                      <span className="text-center md:text-left">
+                        {feature}
+                      </span>
                     </li>
                   ))}
                 </ul>
