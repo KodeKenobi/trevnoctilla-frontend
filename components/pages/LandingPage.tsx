@@ -40,7 +40,7 @@ export default function LandingPage() {
 
   return (
     <>
-      <div className="min-h-screen relative overflow-hidden page-content">
+      <div className="min-h-screen relative overflow-hidden page-content bg-[#111827]">
         {/* Background Image Layer - Hidden on mobile */}
         <div
           className="absolute inset-0 opacity-30 hidden md:block"
@@ -214,18 +214,18 @@ export default function LandingPage() {
         "
                   >
                     {/* subtle top rule */}
-                    <div className="mb-4 h-px w-10 bg-white/20 group-hover:bg-white/40 transition-colors" />
+                    <div className="mb-4 h-px w-10 bg-white/20 group-hover:bg-white/40 transition-colors mx-auto md:mx-0" />
 
-                    <h3 className="text-xl font-medium text-white tracking-tight">
+                    <h3 className="text-xl font-medium text-white tracking-tight text-center md:text-left">
                       {feature.title}
                     </h3>
 
-                    <p className="mt-3 text-md leading-relaxed text-white">
+                    <p className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
                       {feature.description}
                     </p>
 
                     {/* affordance */}
-                    <div className="mt-6 text-sm text-white group-hover:text-neutral-300 transition-colors">
+                    <div className="mt-6 text-sm text-white group-hover:text-neutral-300 transition-colors text-center md:text-left">
                       Open tool →
                     </div>
                   </motion.article>
@@ -333,26 +333,31 @@ export default function LandingPage() {
         "
                   >
                     {/* top rule */}
-                    <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors" />
+                    <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors mx-auto md:mx-0" />
 
-                    <h3 className="text-xl font-medium text-white tracking-tight">
+                    <h3 className="text-xl font-medium text-white tracking-tight text-center md:text-left">
                       {tool.title}
                     </h3>
 
-                    <p className="mt-3 text-md leading-relaxed text-white">
+                    <p className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
                       {tool.description}
                     </p>
 
                     <ul className="mt-6 space-y-2 text-sm text-white">
                       {tool.features.map((feature) => (
-                        <li key={feature} className="flex items-start gap-2">
-                          <span className="mt-[6px] block h-1.5 w-1.5 rounded-full bg-neutral-600" />
-                          <span>{feature}</span>
+                        <li
+                          key={feature}
+                          className="flex items-center justify-center md:justify-start gap-2"
+                        >
+                          <span className="mt-[6px] block h-1.5 w-1.5 rounded-full bg-neutral-600 flex-shrink-0" />
+                          <span className="text-center md:text-left">
+                            {feature}
+                          </span>
                         </li>
                       ))}
                     </ul>
 
-                    <div className="mt-6 text-xs text-white group-hover:text-neutral-300 transition-colors">
+                    <div className="mt-6 text-xs text-white group-hover:text-neutral-300 transition-colors text-center md:text-left">
                       Open tool →
                     </div>
                   </motion.article>
@@ -436,21 +441,26 @@ export default function LandingPage() {
       "
                 >
                   {/* top rule */}
-                  <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors" />
+                  <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors mx-auto md:mx-0" />
 
-                  <h3 className="text-xl font-medium text-white tracking-tight">
+                  <h3 className="text-xl font-medium text-white tracking-tight text-center md:text-left">
                     {api.title}
                   </h3>
 
-                  <p className="mt-3 text-md leading-relaxed text-white">
+                  <p className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
                     {api.description}
                   </p>
 
                   <ul className="mt-6 space-y-2 text-sm text-white">
                     {api.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2">
-                        <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600" />
-                        <span>{feature}</span>
+                      <li
+                        key={feature}
+                        className="flex items-center justify-center md:justify-start gap-2"
+                      >
+                        <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600 flex-shrink-0" />
+                        <span className="text-center md:text-left">
+                          {feature}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -459,7 +469,7 @@ export default function LandingPage() {
                   <button
                     onClick={api.action.onClick}
                     className="
-          mt-6 flex w-full items-center justify-between
+          mt-6 flex w-full items-center justify-center md:justify-between
           border-t border-neutral-800 pt-4
           text-sm text-white
           transition-colors
