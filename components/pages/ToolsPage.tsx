@@ -14,6 +14,7 @@ import {
   Shield,
   Zap as Lightning,
 } from "lucide-react";
+import TextType from "@/components/TextType";
 
 export default function ToolsPage() {
   const tools = [
@@ -162,14 +163,27 @@ export default function ToolsPage() {
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <div className="flex flex-col items-center mb-6">
-                      <h3 className="text-2xl font-bold text-white group-hover:text-white transition-colors text-center">
-                        {tool.title}
-                      </h3>
+                      <div className="text-2xl font-bold text-white group-hover:text-white transition-colors text-center">
+                        <TextType
+                          text={tool.title}
+                          typingSpeed={75}
+                          showCursor={false}
+                          startOnVisible={true}
+                          loop={false}
+                        />
+                      </div>
                     </div>
 
-                    <p className="text-gray-300 mb-6 leading-relaxed text-center">
-                      {tool.description}
-                    </p>
+                    <div className="text-gray-300 mb-6 leading-relaxed text-center">
+                      <TextType
+                        text={tool.description}
+                        typingSpeed={50}
+                        showCursor={false}
+                        startOnVisible={true}
+                        loop={false}
+                        initialDelay={300}
+                      />
+                    </div>
 
                     <div className="flex flex-wrap gap-2 mb-6 justify-center">
                       {tool.features.map((feature, featureIndex) => (
@@ -271,13 +285,26 @@ export default function ToolsPage() {
                 {/* top rule */}
                 <div className="mb-4 h-px w-10 bg-neutral-700 group-hover:bg-neutral-500 transition-colors mx-auto md:mx-0" />
 
-                <h3 className="text-lg font-medium text-white tracking-tight text-center md:text-left">
-                  {feature.title}
-                </h3>
+                <div className="text-lg font-medium text-white tracking-tight text-center md:text-left">
+                  <TextType
+                    text={feature.title}
+                    typingSpeed={75}
+                    showCursor={false}
+                    startOnVisible={true}
+                    loop={false}
+                  />
+                </div>
 
-                <p className="mt-3 text-sm leading-relaxed text-white text-center md:text-left">
-                  {feature.description}
-                </p>
+                <div className="mt-3 text-sm leading-relaxed text-white text-center md:text-left">
+                  <TextType
+                    text={feature.description}
+                    typingSpeed={50}
+                    showCursor={false}
+                    startOnVisible={true}
+                    loop={false}
+                    initialDelay={200}
+                  />
+                </div>
 
                 <ul className="mt-6 space-y-2 text-sm text-white">
                   {feature.features.map((item) => (

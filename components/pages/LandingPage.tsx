@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Play, FileText, QrCode, Image, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigation } from "@/contexts/NavigationContext";
-import SplitText from "../SplitText";
+import SplitText from "@/components/SplitText";
+import DecryptedText from "@/components/DecryptedText";
+import TextType from "@/components/TextType";
 
 export default function LandingPage() {
   const { navigateTo } = useNavigation();
@@ -59,21 +61,30 @@ export default function LandingPage() {
             {/* Hero Text Container - CSS animations for faster initial paint */}
             <div className="relative mb-12">
               {/* Main Headline */}
-              <SplitText
-                tag="h1"
-                className="text-4xl lg:text-6xl font-bold mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14 text-white"
-                delay={150}
-                duration={0.8}
-              >
-                The only file conversion that{" "}
-                <span className="text-white">works where you work</span>
-              </SplitText>
+              <h1 className="text-4xl lg:text-6xl font-bold mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14">
+                <DecryptedText
+                  text="The only file conversion that works where you work"
+                  animateOn="view"
+                  revealDirection="center"
+                  speed={30}
+                  maxIterations={15}
+                  className="text-white"
+                  encryptedClassName="text-gray-400"
+                />
+              </h1>
 
               {/* Subtitle */}
               <p className="text-xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
-                Transform your media files with our intelligent conversion
-                system. From video to audio, PDF merging to QR generation,
-                manage everything in one place.
+                <DecryptedText
+                  text="Transform your media files with our intelligent conversion system. From video to audio, PDF merging to QR generation, manage everything in one place."
+                  animateOn="view"
+                  revealDirection="start"
+                  speed={60}
+                  maxIterations={12}
+                  viewDelay={600}
+                  className="text-gray-400"
+                  encryptedClassName="text-gray-600"
+                />
               </p>
             </div>
 
@@ -115,9 +126,15 @@ export default function LandingPage() {
                     >
                       <div className="flex items-center justify-center h-full text-center px-2">
                         <IconComponent className="text-gray-400 w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 flex-shrink-0" />
-                        <span className="text-xs sm:text-sm opacity-90 leading-tight break-words">
-                          {card.text}
-                        </span>
+                        <DecryptedText
+                          text={card.text}
+                          animateOn="view"
+                          revealDirection="center"
+                          speed={25}
+                          maxIterations={8}
+                          className="text-xs sm:text-sm opacity-90 leading-tight break-words"
+                          encryptedClassName="text-gray-500 opacity-60"
+                        />
                       </div>
                     </motion.div>
                   );
@@ -168,14 +185,19 @@ export default function LandingPage() {
               viewport={{ once: true }}
               className="text-center mb-16"
             >
-              <h2 className="text-4xl font-bold text-white mb-4">
-                Everything you need to convert files
-              </h2>
+              <SplitText
+                text="Everything you need to convert files"
+                tag="h2"
+                className="text-4xl font-bold text-white mb-4"
+                delay={30}
+                duration={0.1}
+              />
               <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                Edit PDFs, merge documents, convert videos to MP3, transform
-                images, generate QR codes, and more. All processing happens
-                instantly in your browser with no software installation
-                required.
+                <SplitText
+                  text="Edit PDFs, merge documents, convert videos to MP3, transform images, generate QR codes, and more. All processing happens instantly in your browser with no software installation required."
+                  delay={10}
+                  duration={0.1}
+                />
               </p>
             </motion.div>
 
@@ -184,19 +206,19 @@ export default function LandingPage() {
                 {
                   title: "Video Processing",
                   description:
-                    "Convert videos to MP3 audio and generate GIFs with precise control over quality and output.",
+                    "Convert videos to MP3 audio and generate animated GIFs with precise control over quality, compression, and output formats for optimal results.",
                   href: "/tools/video-converter",
                 },
                 {
                   title: "Document Management",
                   description:
-                    "Merge, split, sign, and prepare PDFs for real-world use cases like sharing, printing, and archiving.",
+                    "Merge, split, sign, and prepare PDFs for real-world use cases including sharing, printing, archiving, and professional document workflows.",
                   href: "/tools/pdf-tools",
                 },
                 {
                   title: "Image Conversion",
                   description:
-                    "Convert images across formats while preserving sharpness, metadata, and color accuracy.",
+                    "Convert images across all popular formats while preserving sharpness, color accuracy, metadata, and image quality throughout the process.",
                   href: "/tools/image-converter",
                 },
               ].map((feature, index) => (
@@ -222,13 +244,26 @@ export default function LandingPage() {
                     {/* subtle top rule */}
                     <div className="mb-4 h-px w-10 bg-white/20 group-hover:bg-white/40 transition-colors mx-auto md:mx-0" />
 
-                    <h3 className="text-xl font-medium text-white tracking-tight text-center md:text-left">
-                      {feature.title}
-                    </h3>
+                    <div className="text-xl font-medium text-white tracking-tight text-center md:text-left">
+                      <TextType
+                        text={feature.title}
+                        typingSpeed={75}
+                        showCursor={false}
+                        startOnVisible={true}
+                        loop={false}
+                      />
+                    </div>
 
-                    <p className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
-                      {feature.description}
-                    </p>
+                    <div className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
+                      <TextType
+                        text={feature.description}
+                        typingSpeed={10}
+                        showCursor={false}
+                        startOnVisible={true}
+                        loop={false}
+                        initialDelay={200}
+                      />
+                    </div>
 
                     {/* affordance */}
                     <div className="mt-6 text-sm text-white group-hover:text-neutral-300 transition-colors text-center md:text-left">
@@ -272,14 +307,19 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="text-center mb-16"
             >
-              <h2 className="text-2xl lg:text-3xl font-bold text-white mb-6">
-                Powerful Tools for Every Need
-              </h2>
+              <SplitText
+                text="Powerful Tools for Every Need"
+                tag="h2"
+                className="text-2xl lg:text-3xl font-bold text-white mb-6"
+                delay={50}
+                duration={0.1}
+              />
               <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-                From PDF editing to video conversion, our comprehensive toolkit
-                handles all your file processing needs with professional-grade
-                quality. Edit PDFs online for free, merge PDF files, and convert
-                videos - all in your browser.
+                <SplitText
+                  text="From PDF editing to video conversion, our comprehensive toolkit handles all your file processing needs with professional-grade quality. Edit PDFs online for free, merge PDF files, and convert videos - all in your browser."
+                  delay={10}
+                  duration={0.1}
+                />
               </p>
             </motion.div>
 
@@ -341,13 +381,26 @@ export default function LandingPage() {
                     {/* top rule */}
                     <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors mx-auto md:mx-0" />
 
-                    <h3 className="text-xl font-medium text-white tracking-tight text-center md:text-left">
-                      {tool.title}
-                    </h3>
+                    <div className="text-xl font-medium text-white tracking-tight text-center md:text-left">
+                      <TextType
+                        text={tool.title}
+                        typingSpeed={75}
+                        showCursor={false}
+                        startOnVisible={true}
+                        loop={false}
+                      />
+                    </div>
 
-                    <p className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
-                      {tool.description}
-                    </p>
+                    <div className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
+                      <TextType
+                        text={tool.description}
+                        typingSpeed={50}
+                        showCursor={false}
+                        startOnVisible={true}
+                        loop={false}
+                        initialDelay={200}
+                      />
+                    </div>
 
                     <ul className="mt-6 space-y-2 text-sm text-white">
                       {tool.features.map((feature) => (
@@ -382,13 +435,19 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="text-center mb-16"
             >
-              <h2 className="text-2xl lg:text-3xl font-bold text-white mb-6">
-                Developer APIs for Powerful Computing
-              </h2>
+              <SplitText
+                text="Developer APIs for Powerful Computing"
+                tag="h2"
+                className="text-2xl lg:text-3xl font-bold text-white mb-6"
+                delay={50}
+                duration={0.1}
+              />
               <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-                Integrate our advanced file processing capabilities into your
-                applications with our comprehensive API suite. Built for
-                developers, by developers.
+                <SplitText
+                  text="Integrate our advanced file processing capabilities into your applications with our comprehensive API suite. Built for developers, by developers."
+                  delay={10}
+                  duration={0.1}
+                />
               </p>
             </motion.div>
 
@@ -449,13 +508,26 @@ export default function LandingPage() {
                   {/* top rule */}
                   <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors mx-auto md:mx-0" />
 
-                  <h3 className="text-xl font-medium text-white tracking-tight text-center md:text-left">
-                    {api.title}
-                  </h3>
+                  <div className="text-xl font-medium text-white tracking-tight text-center md:text-left">
+                    <TextType
+                      text={api.title}
+                      typingSpeed={75}
+                      showCursor={false}
+                      startOnVisible={true}
+                      loop={false}
+                    />
+                  </div>
 
-                  <p className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
-                    {api.description}
-                  </p>
+                  <div className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
+                    <TextType
+                      text={api.description}
+                      typingSpeed={50}
+                      showCursor={false}
+                      startOnVisible={true}
+                      loop={false}
+                      initialDelay={200}
+                    />
+                  </div>
 
                   <ul className="mt-6 space-y-2 text-sm text-white">
                     {api.features.map((feature) => (

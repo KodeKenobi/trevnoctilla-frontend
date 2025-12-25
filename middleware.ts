@@ -15,7 +15,7 @@ export default withAuth(
       "img-src 'self' data: https: blob:",
       "font-src 'self' data: https://fonts.gstatic.com",
       "connect-src 'self' https://*.railway.app https://*.trevnoctilla.com https://www.payfast.co.za https://sandbox.payfast.co.za https://www.googletagmanager.com https://www.google-analytics.com",
-      "frame-src 'self' https://www.payfast.co.za https://sandbox.payfast.co.za",
+      "frame-src 'self' blob: https://www.payfast.co.za https://sandbox.payfast.co.za",
       "object-src 'none'",
       "base-uri 'self'",
       // "form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za",
