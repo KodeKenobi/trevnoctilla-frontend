@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Play, FileText, QrCode, Image, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigation } from "@/contexts/NavigationContext";
+import SplitText from "../SplitText";
 
 export default function LandingPage() {
   const { navigateTo } = useNavigation();
@@ -165,12 +166,18 @@ export default function LandingPage() {
               <h2 className="text-4xl font-bold text-white mb-4">
                 Everything you need to convert files
               </h2>
-              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+              {/* <p className="text-xl text-gray-400 max-w-2xl mx-auto">
                 Edit PDFs, merge documents, convert videos to MP3, transform
                 images, generate QR codes, and more. All processing happens
                 instantly in your browser with no software installation
                 required.
-              </p>
+              </p> */}
+              <SplitText
+                text="Edit PDFs, merge documents, convert videos to MP3, transform images, generate QR codes, and more. All processing happens instantly in your browser with no software installation required."
+                delay={50}
+                duration={0.3}
+                className="text-white"
+              />
             </motion.div>
 
             <div className="grid md:grid-cols-3 gap-6 pt-8">
