@@ -115,6 +115,13 @@ body.scrolling {
   }
 }
 
+/* SplitText Styles */
+.split-char,
+.split-word,
+.split-line {
+  color: white !important;
+}
+
 /* Video Converter Styles */
 .dropzone {
   border: 2px dashed hsl(var(--border));

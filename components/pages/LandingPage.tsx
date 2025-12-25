@@ -61,9 +61,9 @@ export default function LandingPage() {
               {/* Main Headline */}
               <SplitText
                 tag="h1"
-                className="text-4xl lg:text-6xl font-bold mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14"
-                delay={50}
-                duration={0.3}
+                className="text-4xl lg:text-6xl font-bold mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14 text-white"
+                delay={150}
+                duration={0.8}
               >
                 The only file conversion that{" "}
                 <span className="text-white">works where you work</span>
