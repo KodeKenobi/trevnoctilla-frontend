@@ -41,9 +41,9 @@ export default function LandingPage() {
   return (
     <>
       <div className="min-h-screen relative overflow-hidden page-content">
-        {/* Background Image Layer - Temporarily disabled */}
+        {/* Background Image Layer - Hidden on mobile */}
         <div
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-30 hidden md:block"
           style={{
             background: 'url("/platform-hero-bg.png") no-repeat center top',
             backgroundSize: "contain",
