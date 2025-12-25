@@ -9,13 +9,13 @@ export default withAuth(
     // Security Headers
     // Content Security Policy - Allow Ezoic scripts but restrict others
     const csp = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cmp.gatekeeperconsent.com https://the.gatekeeperconsent.com https://www.ezojs.com https://pagead2.googlesyndication.com https://www.googletagmanager.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "default-src 'self' https:",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cmp.gatekeeperconsent.com https://the.gatekeeperconsent.com https://www.ezojs.com https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://*.railway.app https://*.trevnoctilla.com https://www.payfast.co.za https://sandbox.payfast.co.za https://www.googletagmanager.com https://www.google-analytics.com",
-      "frame-src 'self' blob: https://www.payfast.co.za https://sandbox.payfast.co.za",
+      "connect-src 'self' https://*.railway.app https://*.trevnoctilla.com https://www.payfast.co.za https://sandbox.payfast.co.za https://www.googletagmanager.com https://www.google-analytics.com https://fonts.googleapis.com https://fonts.gstatic.com",
+      "frame-src 'self' blob: https://www.payfast.co.za https://sandbox.payfast.co.za https://www.google.com",
       "object-src 'none'",
       "base-uri 'self'",
       // "form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za",
