@@ -59,10 +59,15 @@ export default function LandingPage() {
             {/* Hero Text Container - CSS animations for faster initial paint */}
             <div className="relative mb-12">
               {/* Main Headline */}
-              <h1 className="text-4xl lg:text-6xl font-bold mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14 text-white">
+              <SplitText
+                tag="h1"
+                className="text-4xl lg:text-6xl font-bold mb-8 leading-tight mt-4 sm:mt-8 lg:mt-14"
+                delay={50}
+                duration={0.3}
+              >
                 The only file conversion that{" "}
                 <span className="text-white">works where you work</span>
-              </h1>
+              </SplitText>
 
               {/* Subtitle */}
               <p className="text-xl text-gray-400 mb-12 max-w-3xl mx-auto leading-relaxed">
@@ -166,18 +171,12 @@ export default function LandingPage() {
               <h2 className="text-4xl font-bold text-white mb-4">
                 Everything you need to convert files
               </h2>
-              {/* <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
                 Edit PDFs, merge documents, convert videos to MP3, transform
                 images, generate QR codes, and more. All processing happens
                 instantly in your browser with no software installation
                 required.
-              </p> */}
-              <SplitText
-                text="Edit PDFs, merge documents, convert videos to MP3, transform images, generate QR codes, and more. All processing happens instantly in your browser with no software installation required."
-                delay={50}
-                duration={0.3}
-                className="text-white"
-              />
+              </p>
             </motion.div>
 
             <div className="grid md:grid-cols-3 gap-6 pt-8">
