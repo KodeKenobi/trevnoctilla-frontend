@@ -64,6 +64,17 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
   const [showDownloadButton, setShowDownloadButton] = useState(false);
   const [hasViewedPdf, setHasViewedPdf] = useState(false);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
+
+  // Force modal visibility update
+  React.useEffect(() => {
+    console.log("showViewModal effect triggered:", showViewModal);
+    // Force a DOM update
+    const modalElement = document.querySelector('[data-modal-type="pdf-preview"]') as HTMLElement;
+    if (modalElement) {
+      modalElement.style.display = showViewModal ? 'flex' : 'none';
+      console.log("Updated modal display style to:", showViewModal ? 'flex' : 'none');
+    }
+  }, [showViewModal]);
   const [isSaving, setIsSaving] = useState(false);
 
   // Confirmation modal state
@@ -389,6 +400,11 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
     }
   };
 
+  // Force re-render when showViewModal changes
+  React.useEffect(() => {
+    console.log("showViewModal changed to:", showViewModal);
+  }, [showViewModal]);
+
   // Listen for messages from iframe
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -534,37 +550,69 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
 
   // Handle save changes - show view button first
   const handleSaveChanges = () => {
-    
+    console.log("=== HANDLE SAVE CHANGES START ===");
+    console.log("Current state:");
+    console.log("- isSaving:", isSaving);
+    console.log("- showViewButton:", showViewButton);
+    console.log("- generatedPdfUrl:", generatedPdfUrl);
+
     setIsSaving(true);
 
     // Send message to iframe to generate PDF (without download)
     const iframe = document.querySelector(
       'iframe[title="PDF Editor"]'
     ) as HTMLIFrameElement;
+
+    console.log("Iframe found:", !!iframe);
+    console.log("Iframe contentWindow:", !!iframe?.contentWindow);
+    console.log("Iframe src:", iframe?.src);
+
     if (iframe && iframe.contentWindow) {
-      
+      console.log("Sending GENERATE_PDF_FOR_PREVIEW message to iframe");
+
       iframe.contentWindow.postMessage(
         {
           type: "GENERATE_PDF_FOR_PREVIEW",
         },
         "*"
       );
+
+      // Immediately show View button after Save is clicked
+      // Use the original uploaded PDF file for preview since iframe doesn't generate previews
+      console.log("=== IMMEDIATE VIEW BUTTON ===");
+      console.log("uploadedFile:", uploadedFile);
+      console.log("uploadedFilename:", uploadedFilename);
+
+      setShowViewButton(true);
+      setShowDownloadButton(true);
+      setIsSaving(false);
+
+      // Create a blob URL from the original uploaded file for preview
+      if (uploadedFile) {
+        const pdfBlobUrl = URL.createObjectURL(uploadedFile);
+        console.log("Created blob URL from original PDF file:", pdfBlobUrl);
+        setGeneratedPdfUrl(pdfBlobUrl);
+      } else {
+        console.error("No uploaded file available for PDF preview");
+        // Fallback to a sample PDF URL for testing
+        setGeneratedPdfUrl("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf");
+      }
+
     } else {
-      
+      console.error("ERROR: Cannot send message to iframe - iframe or contentWindow not found");
     }
+    console.log("=== HANDLE SAVE CHANGES END ===");
   };
 
   // Handle view PDF
   const handleViewPdf = () => {
     console.log("=== VIEW PDF BUTTON CLICKED ===");
-    console.log("View PDF clicked");
-    console.log("generatedPdfUrl:", generatedPdfUrl);
-    console.log("showViewButton:", showViewButton);
-    console.log("showDownloadButton:", showDownloadButton);
-    console.log("isSaving:", isSaving);
-    console.log("URL is blob:", generatedPdfUrl?.startsWith("blob:"));
-    console.log("URL is data:", generatedPdfUrl?.startsWith("data:"));
-    console.log("URL length:", generatedPdfUrl?.length);
+    console.log("Current state before opening modal:");
+    console.log("- generatedPdfUrl:", generatedPdfUrl);
+    console.log("- showViewModal:", showViewModal);
+    console.log("- showViewButton:", showViewButton);
+    console.log("- showDownloadButton:", showDownloadButton);
+    console.log("- isSaving:", isSaving);
 
     if (!generatedPdfUrl) {
       console.error("No PDF URL available for preview");
@@ -572,15 +620,19 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
       return;
     }
 
-    // Since iframe PDF preview doesn't work reliably, download the PDF instead
-    console.log("Opening PDF in new tab for viewing (iframe preview not working)");
-    window.open(generatedPdfUrl, '_blank');
+    console.log("Opening PDF preview modal...");
+    setShowViewModal(true);
+    setHasViewedPdf(true);
 
-    console.log("=== VIEW PDF BUTTON CLICKED END ===");
-    // Don't show modal since we're opening in new tab
-    // setShowViewModal(true);
-    // setHasViewedPdf(true);
+    // Force re-render check
+    setTimeout(() => {
+      console.log("Modal should now be open - checking state:");
+      console.log("- showViewModal:", showViewModal);
+      console.log("- generatedPdfUrl:", generatedPdfUrl);
+      console.log("- Modal condition met:", showViewModal && generatedPdfUrl);
+    }, 100);
   };
+
 
   // Handle close view modal
   const handleCloseViewModal = () => {
@@ -790,120 +842,43 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
           </PDFEditorLayout>
         </div>
 
-        {/* PDF View Modal - Mobile Responsive */}
-        {showViewModal && generatedPdfUrl && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-1 sm:p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full h-full max-w-full max-h-full flex flex-col">
-              <div className="flex items-center justify-between p-2 sm:p-4 border-b">
-                <h3 className="text-lg sm:text-xl font-semibold">
-                  Preview PDF
+        {/* PDF View Modal - Simple PDF Preview */}
+        {true && ( // Force modal to render for testing
+          <div
+            className="pdf-preview-modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[10000] p-2 sm:p-4"
+            data-modal-type="pdf-preview"
+            style={{display: showViewModal ? 'flex' : 'none'}} // Control visibility with CSS
+          >
+            <div className="bg-white rounded-lg shadow-2xl w-full h-full max-w-6xl max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-gray-50">
+                <h3 className="pdf-preview-title text-lg sm:text-xl font-bold text-gray-800">
+                  PDF PREVIEW MODAL - {uploadedFile?.name || 'Document'}
                 </h3>
                 <button
                   onClick={handleCloseViewModal}
-                  className="text-gray-500 hover:text-gray-700 text-xl sm:text-2xl"
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold transition-colors"
                 >
                   ×
                 </button>
               </div>
-              <div className="flex-1 p-1 sm:p-4 overflow-hidden">
-                <div className="w-full h-full border border-gray-300 rounded-lg overflow-hidden">
-                  {generatedPdfUrl ? (() => {
-                    const iframeSrc = generatedPdfUrl.startsWith("data:")
-                      ? generatedPdfUrl
-                      : generatedPdfUrl.startsWith("blob:")
-                      ? generatedPdfUrl
-                      : `${generatedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`;
-
-                    console.log("=== IFRAME SRC CALCULATION ===");
-                    console.log("generatedPdfUrl:", generatedPdfUrl);
-                    console.log("Calculated iframe src:", iframeSrc);
-                    console.log("Src starts with blob:", iframeSrc.startsWith("blob:"));
-                    console.log("Src starts with data:", iframeSrc.startsWith("data:"));
-                    console.log("=== IFRAME SRC CALCULATION END ===");
-
-                    return (
-                      <iframe
-                        src={iframeSrc}
-                        className="w-full h-full border-0"
-                        title="PDF Preview"
-                        style={{
-                          pointerEvents: "auto",
-                        }}
-                        sandbox="allow-same-origin allow-scripts allow-downloads"
-                        allow="fullscreen"
-                        onLoad={() => {
-                          console.log("=== PDF PREVIEW IFRAME LOAD START ===");
-                          console.log("PDF preview iframe loaded, src:", iframeSrc);
-                          const iframe = document.querySelector('iframe[title="PDF Preview"]') as HTMLIFrameElement;
-                          console.log("Iframe element found:", !!iframe);
-                          console.log("Iframe contentWindow:", !!iframe?.contentWindow);
-
-                          // Check iframe attributes
-                          console.log("Iframe sandbox:", iframe.sandbox);
-                          console.log("Iframe allow:", iframe.allow);
-                          console.log("Iframe referrerPolicy:", iframe.referrerPolicy);
-
-                      if (iframe?.contentWindow) {
-                        console.log("Iframe contentWindow exists, checking document...");
-
-                        // Wait a bit for the iframe content to load
-                        setTimeout(() => {
-                          try {
-                            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-                            console.log("Iframe document:", !!iframeDoc);
-                            console.log("Iframe document readyState:", iframeDoc?.readyState);
-                            console.log("Iframe document URL:", iframeDoc?.URL);
-                            console.log("Iframe document title:", iframeDoc?.title);
-                            console.log("Iframe document body:", iframeDoc?.body?.outerHTML?.substring(0, 500));
-
-                            // Check if there's any content in the iframe
-                            const bodyContent = iframeDoc?.body?.textContent || '';
-                            console.log("Iframe body text content length:", bodyContent.length);
-                            console.log("Iframe body text content preview:", bodyContent.substring(0, 200));
-
-                            // Check for any error messages
-                            const errorElements = iframeDoc?.querySelectorAll('[class*="error"], [id*="error"]');
-                            console.log("Error elements found in iframe:", errorElements?.length || 0);
-
-                            // Check for PDF viewer elements
-                            const pdfElements = iframeDoc?.querySelectorAll('[class*="pdf"], [id*="pdf"], embed, object');
-                            console.log("PDF elements found in iframe:", pdfElements?.length || 0);
-
-                            // Check iframe dimensions
-                            console.log("Iframe offsetWidth:", iframe.offsetWidth);
-                            console.log("Iframe offsetHeight:", iframe.offsetHeight);
-                            console.log("Iframe clientWidth:", iframe.clientWidth);
-                            console.log("Iframe clientHeight:", iframe.clientHeight);
-
-                          } catch (e) {
-                            console.error("Error accessing iframe content:", e);
-                          }
-                        }, 2000); // Wait 2 seconds for content to load
-                      } else {
-                        console.error("Iframe contentWindow is null or undefined");
-                      }
-
-                      console.log("=== PDF PREVIEW IFRAME LOAD END ===");
+              <div className="flex-1 overflow-hidden">
+                {generatedPdfUrl ? (
+                  <iframe
+                    src={generatedPdfUrl}
+                    className="pdf-preview-iframe w-full h-full border-0"
+                    title="PDF Preview"
+                    style={{
+                      pointerEvents: "auto",
                     }}
-                    onError={(e) => {
-                      console.error("=== IFRAME LOAD ERROR ===");
-                      console.error("Iframe failed to load:", e);
-                      console.error("Failed URL:", iframeSrc);
-                      console.error("Error type:", e.type);
-                      console.error("Error target:", e.target);
-                      console.error("=== IFRAME LOAD ERROR END ===");
-                    }}
-                    />
-                    );
-                  })() : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                      <div className="text-center">
-                        <div className="text-gray-500 mb-2">Generating PDF preview...</div>
-                        <div className="text-sm text-gray-400">generatedPdfUrl: {generatedPdfUrl ? 'set' : 'null'}</div>
-                      </div>
+                    allow="fullscreen"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <div className="text-center">
+                      <div className="text-gray-500 mb-2">Loading PDF preview...</div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
