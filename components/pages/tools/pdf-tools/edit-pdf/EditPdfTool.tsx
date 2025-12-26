@@ -553,7 +553,7 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
   };
 
   // Handle save changes - show view button first
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     console.log("=== HANDLE SAVE CHANGES START ===");
     console.log("Current state:");
     console.log("- isSaving:", isSaving);
