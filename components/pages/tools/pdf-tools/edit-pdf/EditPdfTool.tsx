@@ -7,6 +7,8 @@ import { PDFEditorLayout } from "@/components/ui/PDFEditorLayout";
 import { PDFProcessingModal } from "@/components/ui/PDFProcessingModal";
 import { useMonetization } from "@/contexts/MonetizationProvider";
 import { getApiUrl } from "@/lib/config";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 // Simple button component
 const Button: React.FC<{
@@ -408,7 +410,9 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
   // Listen for messages from iframe
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      console.log("PDF Editor received message:", event.data);
+      console.log("📨 PDF Editor received message:", event.data);
+      console.log("📨 Message origin:", event.origin);
+      console.log("📨 Message type:", event.data?.type);
 
       if (event.data.type === "SAVE_COMPLETE") {
         console.log("PDF save completed");
@@ -568,35 +572,108 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
     console.log("Iframe src:", iframe?.src);
 
     if (iframe && iframe.contentWindow) {
-      console.log("Sending GENERATE_PDF_FOR_PREVIEW message to iframe");
+      console.log("🎯 Sending GENERATE_PDF_FOR_PREVIEW to iframe");
+      console.log("Iframe src:", iframe.src);
+      console.log("Iframe readyState:", iframe.contentDocument?.readyState);
 
+      console.log("Sending GENERATE_PDF_FOR_PREVIEW to iframe");
       iframe.contentWindow.postMessage(
         {
           type: "GENERATE_PDF_FOR_PREVIEW",
         },
         "*"
       );
+      console.log("Message sent to iframe");
 
-      // Immediately show View button after Save is clicked
-      // Use the original uploaded PDF file for preview since iframe doesn't generate previews
-      console.log("=== IMMEDIATE VIEW BUTTON ===");
-      console.log("uploadedFile:", uploadedFile);
-      console.log("uploadedFilename:", uploadedFilename);
+      console.log("✅ GENERATE_PDF_FOR_PREVIEW message sent to iframe");
 
-      setShowViewButton(true);
-      setShowDownloadButton(true);
-      setIsSaving(false);
+      // Set timeout to check if iframe responds
+      setTimeout(() => {
+        console.log("⏰ 5-second timeout: Checking if PDF_GENERATED_FOR_PREVIEW was received...");
+        if (!generatedPdfUrl) {
+          console.log("❌ No response from iframe - PDF generation failed");
+          // Fallback: use original file
+          if (uploadedFile) {
+            const fallbackUrl = URL.createObjectURL(uploadedFile);
+            setGeneratedPdfUrl(fallbackUrl);
+            setShowViewButton(true);
+            setShowDownloadButton(true);
+            console.log("📄 Using fallback: original PDF file");
+          }
+        } else {
+          console.log("✅ Iframe responded with PDF URL");
+        }
+        setIsSaving(false);
+      }, 5000);
 
-      // Create a blob URL from the original uploaded file for preview
-      if (uploadedFile) {
-        const pdfBlobUrl = URL.createObjectURL(uploadedFile);
-        console.log("Created blob URL from original PDF file:", pdfBlobUrl);
-        setGeneratedPdfUrl(pdfBlobUrl);
-      } else {
-        console.error("No uploaded file available for PDF preview");
-        // Fallback to a sample PDF URL for testing
-        setGeneratedPdfUrl("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf");
+      // Generate PDF from edited iframe content
+      console.log("=== GENERATING PDF FROM EDITED CONTENT ===");
+
+      try {
+        const iframe = document.querySelector('iframe[title="PDF Editor"]') as HTMLIFrameElement;
+        if (iframe && iframe.contentWindow) {
+          // Get the edited HTML content from iframe
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+          const editedContent = iframeDoc.body;
+
+          if (editedContent) {
+            // Use html2canvas to capture the edited content as image
+            const canvas = await html2canvas(editedContent, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              backgroundColor: '#ffffff',
+              width: editedContent.scrollWidth,
+              height: editedContent.scrollHeight
+            });
+
+            // Convert canvas to PDF using jsPDF
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+
+            const imgWidth = 210; // A4 width in mm
+            const pageHeight = 295; // A4 height in mm
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+
+            // Add first page
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            // Add additional pages if content is taller than one page
+            while (heightLeft >= 0) {
+              pdf.addPage();
+              pdf.addImage(imgData, 'PNG', 0, -heightLeft, imgWidth, imgHeight);
+              heightLeft -= pageHeight;
+            }
+
+            // Create blob URL for the generated PDF
+            const pdfBlob = pdf.output('blob');
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+
+            setGeneratedPdfUrl(pdfUrl);
+            setShowViewButton(true);
+            setShowDownloadButton(true);
+
+            console.log("✅ Generated PDF from edited content:", pdfUrl);
+          } else {
+            throw new Error("Could not access iframe content");
+          }
+        } else {
+          throw new Error("Iframe not found or accessible");
+        }
+      } catch (error) {
+        console.error("❌ PDF generation failed:", error);
+        // Fallback: use original file
+        if (uploadedFile) {
+          const fallbackUrl = URL.createObjectURL(uploadedFile);
+          setGeneratedPdfUrl(fallbackUrl);
+        }
+        setShowViewButton(true);
+        setShowDownloadButton(true);
       }
+
+      setIsSaving(false);
 
     } else {
       console.error("ERROR: Cannot send message to iframe - iframe or contentWindow not found");
@@ -842,43 +919,32 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
           </PDFEditorLayout>
         </div>
 
-        {/* PDF View Modal - Simple PDF Preview */}
-        {true && ( // Force modal to render for testing
-          <div
-            className="pdf-preview-modal fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[10000] p-2 sm:p-4"
-            data-modal-type="pdf-preview"
-            style={{display: showViewModal ? 'flex' : 'none'}} // Control visibility with CSS
-          >
-            <div className="bg-white rounded-lg shadow-2xl w-full h-full max-w-6xl max-h-[90vh] flex flex-col">
-              <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-gray-50">
-                <h3 className="pdf-preview-title text-lg sm:text-xl font-bold text-gray-800">
-                  PDF PREVIEW MODAL - {uploadedFile?.name || 'Document'}
+        {/* PDF View Modal - Clean PDF Preview Only */}
+        {showViewModal && generatedPdfUrl && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[10000] p-4">
+            <div className="bg-white rounded-lg shadow-2xl w-full h-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden">
+              {/* Clean header - no editor UI */}
+              <div className="flex items-center justify-between p-4 border-b bg-white">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  PDF Preview
                 </h3>
                 <button
                   onClick={handleCloseViewModal}
-                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold transition-colors"
+                  className="text-gray-500 hover:text-gray-700 rounded-full w-10 h-10 flex items-center justify-center text-2xl hover:bg-gray-100 transition-colors"
                 >
                   ×
                 </button>
               </div>
-              <div className="flex-1 overflow-hidden">
-                {generatedPdfUrl ? (
-                  <iframe
-                    src={generatedPdfUrl}
-                    className="pdf-preview-iframe w-full h-full border-0"
-                    title="PDF Preview"
-                    style={{
-                      pointerEvents: "auto",
-                    }}
-                    allow="fullscreen"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                    <div className="text-center">
-                      <div className="text-gray-500 mb-2">Loading PDF preview...</div>
-                    </div>
-                  </div>
-                )}
+
+              {/* PDF iframe only - no editor contamination */}
+              <div className="flex-1 bg-gray-100 overflow-hidden">
+                <iframe
+                  src={generatedPdfUrl}
+                  className="w-full h-full border-0"
+                  title="PDF Preview"
+                  style={{ pointerEvents: "auto" }}
+                  allow="fullscreen"
+                />
               </div>
             </div>
           </div>
