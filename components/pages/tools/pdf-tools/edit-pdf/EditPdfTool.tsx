@@ -442,7 +442,7 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                   console.log("PDF header bytes (hex):", header);
 
                   // PDF files should start with "%PDF-"
-                  const headerString = String.fromCharCode(...bytes);
+                  const headerString = String.fromCharCode.apply(null, Array.from(bytes));
                   console.log("PDF header string:", headerString);
 
                   if (headerString.startsWith('%PDF-')) {
@@ -455,8 +455,8 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                 });
 
                 // Log blob details
-                console.log("Blob lastModified:", new Date(blob.lastModified));
-                console.log("Blob isClosed:", blob.stream().locked);
+                console.log("Blob size:", blob.size);
+                console.log("Blob type:", blob.type);
               }
 
               console.log("=== BLOB VALIDATION END ===");
@@ -893,10 +893,6 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                       console.error("Error target:", e.target);
                       console.error("=== IFRAME LOAD ERROR END ===");
                     }}
-                      onError={(e) => {
-                        console.log("PDF preview iframe error:", e);
-                        console.error("Failed to load PDF preview from:", iframeSrc);
-                      }}
                     />
                     );
                   })() : (
@@ -906,7 +902,6 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                         <div className="text-sm text-gray-400">generatedPdfUrl: {generatedPdfUrl ? 'set' : 'null'}</div>
                       </div>
                     </div>
-                  )}
                   )}
                 </div>
               </div>
