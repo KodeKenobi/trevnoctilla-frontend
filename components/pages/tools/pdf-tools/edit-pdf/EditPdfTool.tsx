@@ -899,14 +899,14 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                       }}
                     />
                     );
-                  })()
-                  ) : (
+                  })() : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100">
                       <div className="text-center">
                         <div className="text-gray-500 mb-2">Generating PDF preview...</div>
                         <div className="text-sm text-gray-400">generatedPdfUrl: {generatedPdfUrl ? 'set' : 'null'}</div>
                       </div>
                     </div>
+                  )}
                   )}
                 </div>
               </div>
