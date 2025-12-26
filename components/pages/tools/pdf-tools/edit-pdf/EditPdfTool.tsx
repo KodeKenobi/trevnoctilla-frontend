@@ -807,8 +807,7 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
               </div>
               <div className="flex-1 p-1 sm:p-4 overflow-hidden">
                 <div className="w-full h-full border border-gray-300 rounded-lg overflow-hidden">
-                  {generatedPdfUrl ? (
-                  {(() => {
+                  {generatedPdfUrl ? (() => {
                     const iframeSrc = generatedPdfUrl.startsWith("data:")
                       ? generatedPdfUrl
                       : generatedPdfUrl.startsWith("blob:")
@@ -834,7 +833,7 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                         allow="fullscreen"
                         onLoad={() => {
                           console.log("=== PDF PREVIEW IFRAME LOAD START ===");
-                          console.log("PDF preview iframe loaded, src:", generatedPdfUrl);
+                          console.log("PDF preview iframe loaded, src:", iframeSrc);
                           const iframe = document.querySelector('iframe[title="PDF Preview"]') as HTMLIFrameElement;
                           console.log("Iframe element found:", !!iframe);
                           console.log("Iframe contentWindow:", !!iframe?.contentWindow);
@@ -894,14 +893,13 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                       console.error("Error target:", e.target);
                       console.error("=== IFRAME LOAD ERROR END ===");
                     }}
-                      />
+                      onError={(e) => {
+                        console.log("PDF preview iframe error:", e);
+                        console.error("Failed to load PDF preview from:", iframeSrc);
+                      }}
+                    />
                     );
-                  })()}
-                    onError={(e) => {
-                      console.log("PDF preview iframe error:", e);
-                      console.error("Failed to load PDF preview from:", generatedPdfUrl);
-                    }}
-                  />
+                  })()
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100">
                       <div className="text-center">
