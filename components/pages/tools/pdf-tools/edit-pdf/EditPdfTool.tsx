@@ -405,7 +405,10 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
         console.log("Edit mode set:", event.data.mode);
         setActiveTool(event.data.mode);
       } else if (event.data.type === "PDF_GENERATED_FOR_PREVIEW") {
-        console.log("PDF_GENERATED_FOR_PREVIEW received:", event.data);
+        console.log("=== PDF_GENERATED_FOR_PREVIEW RECEIVED ===");
+        console.log("Full event data:", event.data);
+        console.log("PDF URL:", event.data.pdfUrl);
+        console.log("PDF filename:", event.data.filename);
 
         // Validate the blob URL
         if (event.data.pdfUrl && event.data.pdfUrl.startsWith("blob:")) {
@@ -414,20 +417,55 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
           // Try to fetch the blob to verify it contains data
           fetch(event.data.pdfUrl)
             .then(response => {
+              console.log("=== BLOB VALIDATION START ===");
               console.log("Blob fetch response:", response);
-              console.log("Blob size:", response.headers.get('content-length'));
+              console.log("Blob response status:", response.status);
+              console.log("Blob response ok:", response.ok);
+              console.log("Blob response headers:", Object.fromEntries(response.headers.entries()));
+              console.log("Blob size from headers:", response.headers.get('content-length'));
               return response.blob();
             })
             .then(blob => {
               console.log("Blob received, size:", blob.size, "type:", blob.type);
+
               if (blob.size === 0) {
                 console.error("ERROR: Blob is empty!");
               } else if (!blob.type.includes('pdf')) {
                 console.warn("WARNING: Blob type is not PDF:", blob.type);
+              } else {
+                console.log("SUCCESS: Valid PDF blob detected");
+
+                // Try to read the first few bytes to check if it's actually a PDF
+                blob.slice(0, 8).arrayBuffer().then(buffer => {
+                  const bytes = new Uint8Array(buffer);
+                  const header = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
+                  console.log("PDF header bytes (hex):", header);
+
+                  // PDF files should start with "%PDF-"
+                  const headerString = String.fromCharCode(...bytes);
+                  console.log("PDF header string:", headerString);
+
+                  if (headerString.startsWith('%PDF-')) {
+                    console.log("✅ PDF header is valid - file appears to be a proper PDF");
+                  } else {
+                    console.error("❌ PDF header is invalid - file may be corrupted");
+                  }
+                }).catch(err => {
+                  console.error("Error reading PDF header:", err);
+                });
+
+                // Log blob details
+                console.log("Blob lastModified:", new Date(blob.lastModified));
+                console.log("Blob isClosed:", blob.stream().locked);
               }
+
+              console.log("=== BLOB VALIDATION END ===");
             })
             .catch(error => {
               console.error("ERROR fetching blob:", error);
+              console.error("Error name:", error.name);
+              console.error("Error message:", error.message);
+              console.error("Error stack:", error.stack);
             });
         } else {
           console.error("ERROR: Invalid or missing blob URL:", event.data.pdfUrl);
@@ -518,16 +556,22 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
 
   // Handle view PDF
   const handleViewPdf = () => {
+    console.log("=== VIEW PDF BUTTON CLICKED ===");
     console.log("View PDF clicked");
     console.log("generatedPdfUrl:", generatedPdfUrl);
     console.log("showViewButton:", showViewButton);
     console.log("showDownloadButton:", showDownloadButton);
+    console.log("isSaving:", isSaving);
+    console.log("URL is blob:", generatedPdfUrl?.startsWith("blob:"));
+    console.log("URL is data:", generatedPdfUrl?.startsWith("data:"));
+    console.log("URL length:", generatedPdfUrl?.length);
 
     if (!generatedPdfUrl) {
       console.error("No PDF URL available for preview");
       alert("PDF not ready for preview yet. Please wait for generation to complete.");
       return;
     }
+    console.log("=== VIEW PDF BUTTON CLICKED END ===");
 
     setShowViewModal(true);
     setHasViewedPdf(true);
@@ -760,24 +804,88 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
               <div className="flex-1 p-1 sm:p-4 overflow-hidden">
                 <div className="w-full h-full border border-gray-300 rounded-lg overflow-hidden">
                   {generatedPdfUrl ? (
-                  <iframe
-                    src={
-                      generatedPdfUrl.startsWith("data:")
-                        ? generatedPdfUrl
-                        : generatedPdfUrl.startsWith("blob:")
-                        ? generatedPdfUrl
-                        : `${generatedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`
-                    }
-                    className="w-full h-full border-0"
-                    title="PDF Preview"
-                    style={{
-                      pointerEvents: "auto",
-                    }}
-                    onLoad={() => {
+                  {(() => {
+                    const iframeSrc = generatedPdfUrl.startsWith("data:")
+                      ? generatedPdfUrl
+                      : generatedPdfUrl.startsWith("blob:")
+                      ? generatedPdfUrl
+                      : `${generatedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`;
+
+                    console.log("=== IFRAME SRC CALCULATION ===");
+                    console.log("generatedPdfUrl:", generatedPdfUrl);
+                    console.log("Calculated iframe src:", iframeSrc);
+                    console.log("Src starts with blob:", iframeSrc.startsWith("blob:"));
+                    console.log("Src starts with data:", iframeSrc.startsWith("data:"));
+                    console.log("=== IFRAME SRC CALCULATION END ===");
+
+                    return (
+                      <iframe
+                        src={iframeSrc}
+                        className="w-full h-full border-0"
+                        title="PDF Preview"
+                        style={{
+                          pointerEvents: "auto",
+                        }}
+                        onLoad={() => {
+                      console.log("=== PDF PREVIEW IFRAME LOAD START ===");
                       console.log("PDF preview iframe loaded, src:", generatedPdfUrl);
                       const iframe = document.querySelector('iframe[title="PDF Preview"]') as HTMLIFrameElement;
+                      console.log("Iframe element found:", !!iframe);
                       console.log("Iframe contentWindow:", !!iframe?.contentWindow);
+
+                      if (iframe?.contentWindow) {
+                        console.log("Iframe contentWindow exists, checking document...");
+
+                        // Wait a bit for the iframe content to load
+                        setTimeout(() => {
+                          try {
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                            console.log("Iframe document:", !!iframeDoc);
+                            console.log("Iframe document readyState:", iframeDoc?.readyState);
+                            console.log("Iframe document URL:", iframeDoc?.URL);
+                            console.log("Iframe document title:", iframeDoc?.title);
+                            console.log("Iframe document body:", iframeDoc?.body?.outerHTML?.substring(0, 500));
+
+                            // Check if there's any content in the iframe
+                            const bodyContent = iframeDoc?.body?.textContent || '';
+                            console.log("Iframe body text content length:", bodyContent.length);
+                            console.log("Iframe body text content preview:", bodyContent.substring(0, 200));
+
+                            // Check for any error messages
+                            const errorElements = iframeDoc?.querySelectorAll('[class*="error"], [id*="error"]');
+                            console.log("Error elements found in iframe:", errorElements?.length || 0);
+
+                            // Check for PDF viewer elements
+                            const pdfElements = iframeDoc?.querySelectorAll('[class*="pdf"], [id*="pdf"], embed, object');
+                            console.log("PDF elements found in iframe:", pdfElements?.length || 0);
+
+                            // Check iframe dimensions
+                            console.log("Iframe offsetWidth:", iframe.offsetWidth);
+                            console.log("Iframe offsetHeight:", iframe.offsetHeight);
+                            console.log("Iframe clientWidth:", iframe.clientWidth);
+                            console.log("Iframe clientHeight:", iframe.clientHeight);
+
+                          } catch (e) {
+                            console.error("Error accessing iframe content:", e);
+                          }
+                        }, 2000); // Wait 2 seconds for content to load
+                      } else {
+                        console.error("Iframe contentWindow is null or undefined");
+                      }
+
+                      console.log("=== PDF PREVIEW IFRAME LOAD END ===");
                     }}
+                    onError={(e) => {
+                      console.error("=== IFRAME LOAD ERROR ===");
+                      console.error("Iframe failed to load:", e);
+                      console.error("Failed URL:", iframeSrc);
+                      console.error("Error type:", e.type);
+                      console.error("Error target:", e.target);
+                      console.error("=== IFRAME LOAD ERROR END ===");
+                    }}
+                      />
+                    );
+                  })()}
                     onError={(e) => {
                       console.log("PDF preview iframe error:", e);
                       console.error("Failed to load PDF preview from:", generatedPdfUrl);
