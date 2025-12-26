@@ -405,7 +405,33 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
         console.log("Edit mode set:", event.data.mode);
         setActiveTool(event.data.mode);
       } else if (event.data.type === "PDF_GENERATED_FOR_PREVIEW") {
-        console.log("PDF generated for preview, URL:", event.data.pdfUrl);
+        console.log("PDF_GENERATED_FOR_PREVIEW received:", event.data);
+
+        // Validate the blob URL
+        if (event.data.pdfUrl && event.data.pdfUrl.startsWith("blob:")) {
+          console.log("Valid blob URL received:", event.data.pdfUrl);
+
+          // Try to fetch the blob to verify it contains data
+          fetch(event.data.pdfUrl)
+            .then(response => {
+              console.log("Blob fetch response:", response);
+              console.log("Blob size:", response.headers.get('content-length'));
+              return response.blob();
+            })
+            .then(blob => {
+              console.log("Blob received, size:", blob.size, "type:", blob.type);
+              if (blob.size === 0) {
+                console.error("ERROR: Blob is empty!");
+              } else if (!blob.type.includes('pdf')) {
+                console.warn("WARNING: Blob type is not PDF:", blob.type);
+              }
+            })
+            .catch(error => {
+              console.error("ERROR fetching blob:", error);
+            });
+        } else {
+          console.error("ERROR: Invalid or missing blob URL:", event.data.pdfUrl);
+        }
 
         // Use blob URL directly - it works fine in iframes and allows hash parameters
         setGeneratedPdfUrl(event.data.pdfUrl);
@@ -734,22 +760,28 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
               <div className="flex-1 p-1 sm:p-4 overflow-hidden">
                 <div className="w-full h-full border border-gray-300 rounded-lg overflow-hidden">
                   {generatedPdfUrl ? (
-                    <iframe
-                      src={
-                        generatedPdfUrl.startsWith("data:")
-                          ? generatedPdfUrl
-                          : generatedPdfUrl.startsWith("blob:")
-                          ? generatedPdfUrl
-                          : `${generatedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`
-                      }
-                      className="w-full h-full border-0"
-                      title="PDF Preview"
-                      style={{
-                        pointerEvents: "auto",
-                      }}
-                      onLoad={() => console.log("PDF preview iframe loaded")}
-                      onError={() => console.log("PDF preview iframe error")}
-                    />
+                  <iframe
+                    src={
+                      generatedPdfUrl.startsWith("data:")
+                        ? generatedPdfUrl
+                        : generatedPdfUrl.startsWith("blob:")
+                        ? generatedPdfUrl
+                        : `${generatedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`
+                    }
+                    className="w-full h-full border-0"
+                    title="PDF Preview"
+                    style={{
+                      pointerEvents: "auto",
+                    }}
+                    onLoad={() => {
+                      console.log("PDF preview iframe loaded, src:", generatedPdfUrl);
+                      console.log("Iframe contentWindow:", !!document.querySelector('iframe[title="PDF Preview"]')?.contentWindow);
+                    }}
+                    onError={(e) => {
+                      console.log("PDF preview iframe error:", e);
+                      console.error("Failed to load PDF preview from:", generatedPdfUrl);
+                    }}
+                  />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-100">
                       <div className="text-center">
