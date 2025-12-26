@@ -10,12 +10,12 @@ export default withAuth(
     // Content Security Policy - Allow Ezoic scripts but restrict others
     const csp = [
       "default-src 'self' https:",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cmp.gatekeeperconsent.com https://the.gatekeeperconsent.com https://www.ezojs.com https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cmp.gatekeeperconsent.com https://the.gatekeeperconsent.com https://www.ezojs.com https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google.com https://www.gstatic.com https://cdn.id5-sync.com https://g.ezoic.net https://googleads.g.doubleclick.net https://api.rlcdn.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://*.railway.app https://*.trevnoctilla.com https://www.payfast.co.za https://sandbox.payfast.co.za https://www.googletagmanager.com https://www.google-analytics.com https://fonts.googleapis.com https://fonts.gstatic.com",
-      "frame-src 'self' blob: https://www.payfast.co.za https://sandbox.payfast.co.za https://www.google.com",
+      "connect-src 'self' https://*.railway.app https://*.trevnoctilla.com https://www.payfast.co.za https://sandbox.payfast.co.za https://www.googletagmanager.com https://www.google-analytics.com https://fonts.googleapis.com https://fonts.gstatic.com https://g.ezoic.net https://cdn.id5-sync.com https://api.rlcdn.com https://privacy.gatekeeperconsent.com https://googleads.g.doubleclick.net https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google",
+      "frame-src 'self' blob: https://www.payfast.co.za https://sandbox.payfast.co.za https://www.google.com https://googleads.g.doubleclick.net",
       "object-src 'none'",
       "base-uri 'self'",
       // "form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za",
