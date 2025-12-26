@@ -392,28 +392,29 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
   // Listen for messages from iframe
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      
+      console.log("PDF Editor received message:", event.data);
 
       if (event.data.type === "SAVE_COMPLETE") {
-        
+        console.log("PDF save completed");
         alertModal.showSuccess("Success", "PDF saved successfully!");
       } else if (event.data.type === "PDF_GENERATED") {
-        
+        console.log("PDF generated for download");
       } else if (event.data.type === "TEXT_ADDED") {
-        
+        console.log("Text added to PDF");
       } else if (event.data.type === "EDIT_MODE_SET") {
-        
+        console.log("Edit mode set:", event.data.mode);
         setActiveTool(event.data.mode);
       } else if (event.data.type === "PDF_GENERATED_FOR_PREVIEW") {
-        
+        console.log("PDF generated for preview, URL:", event.data.pdfUrl);
 
         // Use blob URL directly - it works fine in iframes and allows hash parameters
-        
         setGeneratedPdfUrl(event.data.pdfUrl);
+        console.log("Set generatedPdfUrl to:", event.data.pdfUrl);
 
         setShowViewButton(true); // Show View button
         setShowDownloadButton(true); // Show Download button
         setIsSaving(false); // Clear loading state
+        console.log("PDF preview ready - buttons should now be visible");
       } else if (event.data.type === "SHOW_CONFIRMATION") {
         
         setConfirmationModal({
@@ -491,9 +492,20 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
 
   // Handle view PDF
   const handleViewPdf = () => {
-    
+    console.log("View PDF clicked");
+    console.log("generatedPdfUrl:", generatedPdfUrl);
+    console.log("showViewButton:", showViewButton);
+    console.log("showDownloadButton:", showDownloadButton);
+
+    if (!generatedPdfUrl) {
+      console.error("No PDF URL available for preview");
+      alert("PDF not ready for preview yet. Please wait for generation to complete.");
+      return;
+    }
+
     setShowViewModal(true);
     setHasViewedPdf(true);
+    console.log("PDF preview modal opened");
   };
 
   // Handle close view modal
@@ -721,20 +733,31 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
               </div>
               <div className="flex-1 p-1 sm:p-4 overflow-hidden">
                 <div className="w-full h-full border border-gray-300 rounded-lg overflow-hidden">
-                  <iframe
-                    src={
-                      generatedPdfUrl.startsWith("data:")
-                        ? generatedPdfUrl
-                        : generatedPdfUrl.startsWith("blob:")
-                        ? generatedPdfUrl
-                        : `${generatedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`
-                    }
-                    className="w-full h-full border-0"
-                    title="PDF Preview"
-                    style={{
-                      pointerEvents: "auto",
-                    }}
-                  />
+                  {generatedPdfUrl ? (
+                    <iframe
+                      src={
+                        generatedPdfUrl.startsWith("data:")
+                          ? generatedPdfUrl
+                          : generatedPdfUrl.startsWith("blob:")
+                          ? generatedPdfUrl
+                          : `${generatedPdfUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`
+                      }
+                      className="w-full h-full border-0"
+                      title="PDF Preview"
+                      style={{
+                        pointerEvents: "auto",
+                      }}
+                      onLoad={() => console.log("PDF preview iframe loaded")}
+                      onError={() => console.log("PDF preview iframe error")}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                      <div className="text-center">
+                        <div className="text-gray-500 mb-2">Generating PDF preview...</div>
+                        <div className="text-sm text-gray-400">generatedPdfUrl: {generatedPdfUrl ? 'set' : 'null'}</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
