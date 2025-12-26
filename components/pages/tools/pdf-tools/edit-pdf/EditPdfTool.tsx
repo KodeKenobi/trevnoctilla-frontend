@@ -775,7 +775,8 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                     }}
                     onLoad={() => {
                       console.log("PDF preview iframe loaded, src:", generatedPdfUrl);
-                      console.log("Iframe contentWindow:", !!document.querySelector('iframe[title="PDF Preview"]')?.contentWindow);
+                      const iframe = document.querySelector('iframe[title="PDF Preview"]') as HTMLIFrameElement;
+                      console.log("Iframe contentWindow:", !!iframe?.contentWindow);
                     }}
                     onError={(e) => {
                       console.log("PDF preview iframe error:", e);
