@@ -571,11 +571,15 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
       alert("PDF not ready for preview yet. Please wait for generation to complete.");
       return;
     }
-    console.log("=== VIEW PDF BUTTON CLICKED END ===");
 
-    setShowViewModal(true);
-    setHasViewedPdf(true);
-    console.log("PDF preview modal opened");
+    // Since iframe PDF preview doesn't work reliably, download the PDF instead
+    console.log("Opening PDF in new tab for viewing (iframe preview not working)");
+    window.open(generatedPdfUrl, '_blank');
+
+    console.log("=== VIEW PDF BUTTON CLICKED END ===");
+    // Don't show modal since we're opening in new tab
+    // setShowViewModal(true);
+    // setHasViewedPdf(true);
   };
 
   // Handle close view modal
@@ -826,12 +830,19 @@ export const EditPdfTool: React.FC<EditPdfToolProps> = ({
                         style={{
                           pointerEvents: "auto",
                         }}
+                        sandbox="allow-same-origin allow-scripts allow-downloads"
+                        allow="fullscreen"
                         onLoad={() => {
-                      console.log("=== PDF PREVIEW IFRAME LOAD START ===");
-                      console.log("PDF preview iframe loaded, src:", generatedPdfUrl);
-                      const iframe = document.querySelector('iframe[title="PDF Preview"]') as HTMLIFrameElement;
-                      console.log("Iframe element found:", !!iframe);
-                      console.log("Iframe contentWindow:", !!iframe?.contentWindow);
+                          console.log("=== PDF PREVIEW IFRAME LOAD START ===");
+                          console.log("PDF preview iframe loaded, src:", generatedPdfUrl);
+                          const iframe = document.querySelector('iframe[title="PDF Preview"]') as HTMLIFrameElement;
+                          console.log("Iframe element found:", !!iframe);
+                          console.log("Iframe contentWindow:", !!iframe?.contentWindow);
+
+                          // Check iframe attributes
+                          console.log("Iframe sandbox:", iframe.sandbox);
+                          console.log("Iframe allow:", iframe.allow);
+                          console.log("Iframe referrerPolicy:", iframe.referrerPolicy);
 
                       if (iframe?.contentWindow) {
                         console.log("Iframe contentWindow exists, checking document...");
