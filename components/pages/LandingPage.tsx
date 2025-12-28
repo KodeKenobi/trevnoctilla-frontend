@@ -196,7 +196,7 @@ export default function LandingPage() {
                 <SplitText
                   text="Edit PDFs, merge documents, convert videos to MP3, transform images, generate QR codes, and more. All processing happens instantly in your browser with no software installation required."
                   delay={10}
-                  duration={0.1}
+                  duration={0}
                 />
               </p>
             </motion.div>
@@ -255,14 +255,7 @@ export default function LandingPage() {
                     </div>
 
                     <div className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
-                      <TextType
-                        text={feature.description}
-                        typingSpeed={10}
-                        showCursor={false}
-                        startOnVisible={true}
-                        loop={false}
-                        initialDelay={200}
-                      />
+                      {feature.description}
                     </div>
 
                     {/* affordance */}
@@ -273,20 +266,6 @@ export default function LandingPage() {
                 </Link>
               ))}
             </div>
-
-            {/* Ezoic Ad Placement - Between Features and Stats */}
-            <div id="ezoic-pub-ad-placeholder-102"></div>
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `
-          if (typeof ezstandalone !== 'undefined') {
-            ezstandalone.cmd.push(function () {
-              ezstandalone.showAds(102);
-            });
-          }
-        `,
-              }}
-            />
           </div>
         </section>
 
@@ -311,14 +290,14 @@ export default function LandingPage() {
                 text="Powerful Tools for Every Need"
                 tag="h2"
                 className="text-2xl lg:text-3xl font-bold text-white mb-6"
-                delay={50}
+                delay={30}
                 duration={0.1}
               />
               <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
                 <SplitText
                   text="From PDF editing to video conversion, our comprehensive toolkit handles all your file processing needs with professional-grade quality. Edit PDFs online for free, merge PDF files, and convert videos - all in your browser."
                   delay={10}
-                  duration={0.1}
+                  duration={0}
                 />
               </p>
             </motion.div>
@@ -394,11 +373,11 @@ export default function LandingPage() {
                     <div className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
                       <TextType
                         text={tool.description}
-                        typingSpeed={50}
+                        typingSpeed={0}
                         showCursor={false}
                         startOnVisible={true}
                         loop={false}
-                        initialDelay={200}
+                        initialDelay={10}
                       />
                     </div>
 
@@ -445,7 +424,7 @@ export default function LandingPage() {
               <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
                 <SplitText
                   text="Integrate our advanced file processing capabilities into your applications with our comprehensive API suite. Built for developers, by developers."
-                  delay={10}
+                  delay={0}
                   duration={0.1}
                 />
               </p>
@@ -521,7 +500,7 @@ export default function LandingPage() {
                   <div className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
                     <TextType
                       text={api.description}
-                      typingSpeed={50}
+                      typingSpeed={0}
                       showCursor={false}
                       startOnVisible={true}
                       loop={false}
