@@ -177,11 +177,11 @@ export default function ToolsPage() {
                     <div className="text-gray-300 mb-6 leading-relaxed text-center">
                       <TextType
                         text={tool.description}
-                        typingSpeed={50}
+                        typingSpeed={0}
                         showCursor={false}
                         startOnVisible={true}
                         loop={false}
-                        initialDelay={300}
+                        initialDelay={0}
                       />
                     </div>
 
@@ -298,11 +298,11 @@ export default function ToolsPage() {
                 <div className="mt-3 text-sm leading-relaxed text-white text-center md:text-left">
                   <TextType
                     text={feature.description}
-                    typingSpeed={50}
+                    typingSpeed={0}
                     showCursor={false}
                     startOnVisible={true}
                     loop={false}
-                    initialDelay={200}
+                    initialDelay={0}
                   />
                 </div>
 
