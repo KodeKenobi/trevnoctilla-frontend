@@ -327,7 +327,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* View Ad Option */}
-                <button
+                {/* <button
                   onClick={handleViewAd}
                   className="group relative p-4 bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] rounded-lg border border-[#8b5cf6]/30 hover:border-[#8b5cf6] transition-all hover:shadow-lg hover:shadow-[#8b5cf6]/20 h-full"
                 >
@@ -346,7 +346,7 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                       </p>
                     </div>
                   </div>
-                </button>
+                </button> */}
 
                 {/* Pay Option */}
                 <div className="flex flex-col">
