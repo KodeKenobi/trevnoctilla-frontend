@@ -407,9 +407,9 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                         <h4 className="text-base font-medium text-white mb-0.5">
                           Pay $1
                         </h4>
-                        <p className="text-xs text-white/70">
+                        {/* <p className="text-xs text-white/70">
                           Instant access, no ads
-                        </p>
+                        </p> */}
                       </div>
                     </div>
                   </button>
@@ -447,9 +447,8 @@ const MonetizationModal: React.FC<MonetizationModalProps> = ({
                 </div>
               )}
               <div className="pt-3 border-t border-[#2a2a2a]">
-                <p className="text-xs text-gray-500 text-center">
-                  By continuing, you agree to view advertisements or complete
-                  payment
+                <p className="text-xs text-gray-500 text-left">
+                  By continuing, you agree to be billed $1.00
                 </p>
               </div>
             </div>
