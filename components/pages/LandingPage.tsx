@@ -105,7 +105,7 @@ export default function LandingPage() {
                         opacity: 1,
                         y: 0,
                         width: `${Math.max(85, 100 - index * 10)}%`,
-                        height: `${80 - index * 12}px`,
+                        height: `${90 - index * 9}px`,
                         top: `${index * 8}%`,
                       }}
                       transition={{
