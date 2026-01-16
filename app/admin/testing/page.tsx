@@ -1072,9 +1072,6 @@ export default function TestingPage() {
             });
             break;
           }
-        } else {
-          setImageTestProgress(70 + (attempts * 1));
-          setImageTestStep(`Waiting for conversion... (${attempts * 2}/${maxAttempts * 2} seconds)`);
         }
       }
 
