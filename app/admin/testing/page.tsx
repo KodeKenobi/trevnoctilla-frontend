@@ -663,8 +663,9 @@ export default function TestingPage() {
           });
 
           // Check for file size comparison
-          const fileSizeInfo = iframeDoc.textContent?.includes('Original size') || 
-                              iframeDoc.textContent?.includes('Converted size');
+          const textContent = iframeDoc.textContent || '';
+          const fileSizeInfo = textContent.includes('Original size') || 
+                              textContent.includes('Converted size');
           
           if (fileSizeInfo) {
             results.tests.push({
