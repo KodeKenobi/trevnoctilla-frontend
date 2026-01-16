@@ -527,10 +527,10 @@ export default function TestingPage() {
         formatsToRun.push(availableFormats[0] || 'mp4');
       }
       
-      // Test combinations: each format with medium quality (75%) and medium compression
+      // Test combinations: each format with medium quality (75%) and heavy compression
       const testCombinations: Array<{format: string, quality: number, compression: string}> = [];
       for (const format of formatsToRun) {
-        testCombinations.push({ format, quality: 75, compression: 'medium' });
+        testCombinations.push({ format, quality: 75, compression: 'heavy' });
       }
       
       results.tests.push({
