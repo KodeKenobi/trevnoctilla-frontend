@@ -125,6 +125,8 @@ edited/
 converted_videos/
 saved_html/
 test-files/
+# But allow test files in public folder for testing
+!public/test-files/
 
 # Lock files
 pnpm-lock.yaml
