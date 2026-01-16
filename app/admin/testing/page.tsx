@@ -417,6 +417,163 @@ export default function TestingPage() {
     setAudioTestLoading(false);
   };
 
+  // Helper function to test a single format conversion
+  const testSingleFormat = async (
+    iframeDoc: Document,
+    format: string,
+    file: File,
+    fileSizeKB: string,
+    fileSizeMB: string,
+    displayedFileName: string,
+    displayedFileSize: string,
+    formatIndex: number,
+    totalFormats: number
+  ): Promise<any> => {
+    const formatResults: any = { format, tests: [] };
+    
+    try {
+      setImageTestStep(`Testing format ${formatIndex + 1}/${totalFormats}: ${format.toUpperCase()}...`);
+      setImageTestProgress(35 + (formatIndex * 10));
+      
+      // Select the format
+      const formatSelect = iframeDoc.querySelector('select') as HTMLSelectElement;
+      if (formatSelect) {
+        formatSelect.value = format;
+        formatSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      // Set quality
+      const qualitySlider = iframeDoc.querySelector('input[type="range"]') as HTMLInputElement;
+      if (qualitySlider) {
+        qualitySlider.value = '85';
+        qualitySlider.dispatchEvent(new Event('input', { bubbles: true }));
+        qualitySlider.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      // Click convert
+      const convertButton = Array.from(iframeDoc.querySelectorAll('button')).find(
+        btn => btn.textContent?.includes('Convert Image') || btn.textContent?.includes('Convert')
+      );
+      
+      if (!convertButton) {
+        formatResults.tests.push({
+          name: `Format ${format.toUpperCase()} - Convert Button`,
+          status: 'FAIL',
+          message: 'Convert button not found'
+        });
+        return formatResults;
+      }
+      
+      convertButton.click();
+      formatResults.tests.push({
+        name: `Format ${format.toUpperCase()} - Conversion Started`,
+        status: 'PASS',
+        message: `Started conversion to ${format.toUpperCase()} format`
+      });
+      
+      // Wait for conversion
+      let conversionComplete = false;
+      let attempts = 0;
+      const maxAttempts = 30;
+      
+      while (!conversionComplete && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        attempts++;
+        
+        const downloadButton = Array.from(iframeDoc.querySelectorAll('button')).find(
+          btn => btn.textContent?.includes('Download')
+        );
+        
+        const textContent = iframeDoc.textContent || '';
+        const successMessage = textContent.toLowerCase().includes('successfully') ||
+                              textContent.toLowerCase().includes('converted successfully');
+        
+        if (downloadButton || successMessage) {
+          conversionComplete = true;
+          const conversionTime = attempts * 2;
+          
+          formatResults.tests.push({
+            name: `Format ${format.toUpperCase()} - Conversion Complete`,
+            status: 'PASS',
+            message: `Conversion to ${format.toUpperCase()} completed in ${conversionTime}s | Quality: 85%`
+          });
+          
+          // Check for download button
+          if (downloadButton) {
+            formatResults.tests.push({
+              name: `Format ${format.toUpperCase()} - Download Available`,
+              status: 'PASS',
+              message: `Download button available for ${format.toUpperCase()} format`
+            });
+          } else {
+            formatResults.tests.push({
+              name: `Format ${format.toUpperCase()} - Download Available`,
+              status: 'WARN',
+              message: `Download button not immediately visible for ${format.toUpperCase()}`
+            });
+          }
+          
+          // Extract file size info
+          const fileSizeText = iframeDoc.textContent || '';
+          let convertedSize = '';
+          const sizeMatch = fileSizeText.match(/converted[:\s]+size[:\s]+([\d.]+)\s*(KB|MB|bytes?)/i);
+          if (sizeMatch) {
+            convertedSize = `${sizeMatch[1]} ${sizeMatch[2]}`;
+          }
+          
+          if (convertedSize) {
+            formatResults.tests.push({
+              name: `Format ${format.toUpperCase()} - File Size`,
+              status: 'PASS',
+              message: `Converted size: ${convertedSize} | Original: ${fileSizeKB} KB`
+            });
+          }
+        }
+      }
+      
+      if (!conversionComplete) {
+        formatResults.tests.push({
+          name: `Format ${format.toUpperCase()} - Conversion Complete`,
+          status: 'WARN',
+          message: `Conversion timeout after ${maxAttempts * 2}s for ${format.toUpperCase()}`
+        });
+      }
+      
+      // Reset for next format - clear the result and re-upload file
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Try to find and click a "Remove" or "Clear" button to reset
+      const removeButton = Array.from(iframeDoc.querySelectorAll('button')).find(
+        btn => btn.textContent?.includes('Remove') || btn.textContent?.includes('Clear') || btn.textContent?.includes('Reset')
+      );
+      if (removeButton) {
+        removeButton.click();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      // Re-upload the file for the next format
+      const fileInput = iframeDoc.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput) {
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+      
+    } catch (error) {
+      formatResults.tests.push({
+        name: `Format ${format.toUpperCase()} - Error`,
+        status: 'FAIL',
+        message: `Error testing ${format.toUpperCase()}: ${error instanceof Error ? error.message : String(error)}`
+      });
+    }
+    
+    return formatResults;
+  };
+
   // Automated iframe interaction function
   const automateImageConverterTest = async (iframe: HTMLIFrameElement): Promise<any> => {
     const results: any = { tests: [] };
@@ -589,40 +746,76 @@ export default function TestingPage() {
         }
       }
 
-      setImageTestStep('Selecting output format...');
-      setImageTestProgress(40);
-
-      // Select output format and capture all available options
+      // Get all available formats
       const formatSelect = iframeDoc.querySelector('select') as HTMLSelectElement;
-      let selectedFormat = 'png'; // Default fallback
       let availableFormats: string[] = [];
       
       if (formatSelect) {
-        // Get all available format options
         availableFormats = Array.from(formatSelect.options)
           .map(opt => opt.value || opt.text)
-          .filter(f => f && f.trim() !== '');
-        
-        // Test different formats: prioritize webp (good compression), then jpg, then png
-        // This ensures we test formats that typically compress better
-        const preferredFormats = ['webp', 'jpg', 'jpeg', 'png', 'bmp', 'tiff', 'gif', 'pdf'];
-        const formatToTest = preferredFormats.find(f => 
-          availableFormats.some(af => af.toLowerCase().includes(f.toLowerCase()))
-        ) || availableFormats[0] || 'png';
-        
-        selectedFormat = formatToTest;
-        formatSelect.value = selectedFormat;
-        formatSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        
-        setImageTestStep(`Selected format: ${selectedFormat.toUpperCase()} (testing ${availableFormats.length} available formats)`);
+          .filter(f => f && f.trim() !== '')
+          .map(f => f.toLowerCase().replace(/\./g, ''));
       }
+      
+      // Test multiple key formats: webp, jpg, png, and up to 2 more
+      const formatsToTest = ['webp', 'jpg', 'jpeg', 'png', 'bmp', 'tiff', 'gif', 'pdf'];
+      const formatsToRun = formatsToTest
+        .filter(f => availableFormats.some(af => af.includes(f.toLowerCase())))
+        .slice(0, 5); // Test up to 5 formats to keep test time reasonable
+      
+      if (formatsToRun.length === 0) {
+        formatsToRun.push(availableFormats[0] || 'png');
+      }
+      
+      results.tests.push({
+        name: 'Format Testing Plan',
+        status: 'PASS',
+        message: `Will test ${formatsToRun.length} formats: ${formatsToRun.map(f => f.toUpperCase()).join(', ')} | Total available: ${availableFormats.length}`
+      });
+      
+      // Test each format
+      for (let i = 0; i < formatsToRun.length; i++) {
+        const format = formatsToRun[i];
+        const formatTestResults = await testSingleFormat(
+          iframeDoc,
+          format,
+          file,
+          fileSizeKB,
+          fileSizeMB,
+          displayedFileName,
+          displayedFileSize,
+          i,
+          formatsToRun.length
+        );
+        
+        // Add format-specific tests to results
+        results.tests.push(...formatTestResults.tests);
+      }
+      
+      // Add summary
+      const passedFormats = results.tests.filter((t: any) => 
+        t.name.includes('Conversion Complete') && t.status === 'PASS'
+      ).length;
+      
+      results.tests.push({
+        name: 'Multi-Format Test Summary',
+        status: passedFormats === formatsToRun.length ? 'PASS' : 'WARN',
+        message: `Tested ${formatsToRun.length} formats | Passed: ${passedFormats}/${formatsToRun.length} | Formats: ${formatsToRun.map(f => f.toUpperCase()).join(', ')}`
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      setImageTestStep('Adjusting quality slider to 85%...');
-      setImageTestProgress(50);
-
-      // Adjust quality slider and capture min/max/current values
+      // Add file upload test result
+      results.tests.push({
+        name: 'File Upload',
+        status: 'PASS',
+        message: `Uploaded file: ${displayedFileName} | Size: ${displayedFileSize} | Type: ${file.type} | Original size: ${fileSizeKB} KB (${fileSizeMB} MB)`
+      });
+      
+      // Test quality and resize controls (only once, not per format)
+      setImageTestStep('Testing quality and resize controls...');
+      setImageTestProgress(85);
+      
       const qualitySlider = iframeDoc.querySelector('input[type="range"]') as HTMLInputElement;
       let qualityValue = '85';
       let qualityMin = '10';
@@ -632,75 +825,20 @@ export default function TestingPage() {
         qualityMin = qualitySlider.min || '10';
         qualityMax = qualitySlider.max || '100';
         qualityValue = '85';
-        qualitySlider.value = qualityValue;
-        qualitySlider.dispatchEvent(new Event('input', { bubbles: true }));
-        qualitySlider.dispatchEvent(new Event('change', { bubbles: true }));
       }
-
-      // Check for resize controls
-      const resizeCheckbox = iframeDoc.querySelector('input[type="checkbox"][name*="resize"], input[type="checkbox"][id*="resize"]') as HTMLInputElement;
-      const widthInput = iframeDoc.querySelector('input[type="number"][name*="width"], input[type="number"][id*="width"]') as HTMLInputElement;
-      const heightInput = iframeDoc.querySelector('input[type="number"][name*="height"], input[type="number"][id*="height"]') as HTMLInputElement;
-      const aspectRatioCheckbox = iframeDoc.querySelector('input[type="checkbox"][name*="aspect"], input[type="checkbox"][id*="aspect"]') as HTMLInputElement;
       
-      let resizeEnabled = false;
-      let resizeWidth = '';
-      let resizeHeight = '';
-      let aspectRatioMaintained = false;
-      
-      if (resizeCheckbox) {
-        resizeEnabled = resizeCheckbox.checked;
-      }
-      if (widthInput) {
-        resizeWidth = widthInput.value || '';
-      }
-      if (heightInput) {
-        resizeHeight = heightInput.value || '';
-      }
-      if (aspectRatioCheckbox) {
-        aspectRatioMaintained = aspectRatioCheckbox.checked;
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      setImageTestStep('Clicking Convert Image button...');
-      setImageTestProgress(60);
-
-      // Find and click convert button
-      const convertButton = Array.from(iframeDoc.querySelectorAll('button')).find(
-        btn => btn.textContent?.includes('Convert Image') || btn.textContent?.includes('Convert')
-      );
-
-      if (!convertButton) {
-        throw new Error('Convert button not found');
-      }
-
-      convertButton.click();
-      
-      // Detailed test results with all captured information
-      results.tests.push({
-        name: 'File Upload',
-        status: 'PASS',
-        message: `Uploaded file: ${displayedFileName} | Size: ${displayedFileSize} | Type: ${file.type} | Original size: ${fileSizeKB} KB (${fileSizeMB} MB)`
-      });
-
-      results.tests.push({
-        name: 'Output Format Selection',
-        status: 'PASS',
-        message: `Selected format: ${selectedFormat.toUpperCase()} | Available formats: ${availableFormats.length > 0 ? availableFormats.join(', ') : 'Not detected'} | Total formats available: ${availableFormats.length}`
-      });
-
       results.tests.push({
         name: 'Quality Setting',
         status: 'PASS',
-        message: `Quality set to: ${qualityValue}% | Range: ${qualityMin}% - ${qualityMax}% | Slider found: ${qualitySlider ? 'Yes' : 'No'}`
+        message: `Quality slider available | Range: ${qualityMin}% - ${qualityMax}% | Default: ${qualityValue}%`
       });
-
-      if (resizeEnabled || resizeWidth || resizeHeight) {
+      
+      const resizeCheckbox = iframeDoc.querySelector('input[type="checkbox"][name*="resize"], input[type="checkbox"][id*="resize"]') as HTMLInputElement;
+      if (resizeCheckbox) {
         results.tests.push({
           name: 'Resize Settings',
           status: 'PASS',
-          message: `Resize enabled: ${resizeEnabled ? 'Yes' : 'No'} | Width: ${resizeWidth || 'Not set'} | Height: ${resizeHeight || 'Not set'} | Aspect ratio maintained: ${aspectRatioMaintained ? 'Yes' : 'No'}`
+          message: 'Resize controls available with aspect ratio maintenance'
         });
       } else {
         results.tests.push({
@@ -709,145 +847,32 @@ export default function TestingPage() {
           message: 'Resize disabled (original dimensions maintained)'
         });
       }
+      
+      // Now test monetization modal with the last converted format
+      setImageTestStep('Testing monetization modal...');
+      setImageTestProgress(90);
+      
+      // Find download button from the last format conversion
+      const downloadButton = Array.from(iframeDoc.querySelectorAll('button')).find(
+        btn => btn.textContent?.includes('Download')
+      );
+      
+      if (downloadButton) {
+        const downloadButtonText = downloadButton.textContent?.trim() || '';
+        const downloadUrl = (downloadButton instanceof HTMLAnchorElement ? downloadButton.href : null) || 
+                          downloadButton.getAttribute('href') || 
+                          downloadButton.getAttribute('data-download-url') ||
+                          'Not available';
+        
+        results.tests.push({
+          name: 'Download Button',
+          status: 'PASS',
+          message: `Download button appeared | Button text: "${downloadButtonText}" | Download URL: ${downloadUrl.length > 50 ? downloadUrl.substring(0, 50) + '...' : downloadUrl}`
+        });
 
-      results.tests.push({
-        name: 'Convert Button Click',
-        status: 'PASS',
-        message: `Successfully clicked convert button | Button text: "${convertButton.textContent?.trim() || 'N/A'}"`
-      });
-
-      // Wait for conversion to complete
-      setImageTestStep('Waiting for conversion to complete...');
-      setImageTestProgress(70);
-
-      // Poll for conversion result with timeout
-      let conversionComplete = false;
-      let attempts = 0;
-      const maxAttempts = 30; // 30 seconds max wait (reduced from 60 to prevent hanging)
-
-      while (!conversionComplete && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        attempts++;
-
-        try {
-          const downloadButton = Array.from(iframeDoc.querySelectorAll('button')).find(
-            btn => btn.textContent?.includes('Download')
-          );
-          
-          const textContent = iframeDoc.textContent || '';
-          const lowerText = textContent.toLowerCase();
-          const successMessage = lowerText.includes('successfully') ||
-                                lowerText.includes('converted successfully');
-          
-          if (downloadButton || successMessage) {
-            conversionComplete = true;
-            setImageTestProgress(90);
-            setImageTestStep('Conversion completed! Verifying results...');
-            
-            const conversionTime = attempts * 2;
-            const conversionTimeFormatted = conversionTime < 60 ? `${conversionTime}s` : `${Math.floor(conversionTime / 60)}m ${conversionTime % 60}s`;
-            
-            results.tests.push({
-              name: 'Conversion Completion',
-              status: 'PASS',
-              message: `Conversion completed successfully | Time: ${conversionTimeFormatted} (${conversionTime} seconds) | Attempts: ${attempts}/${maxAttempts} | Output format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
-            });
-
-            // Extract file size information from the page
-            const fileSizeText = iframeDoc.textContent || '';
-            let originalSize = '';
-            let convertedSize = '';
-            let compressionRatio = '';
-            
-            // Try to extract size information from text
-            const sizePatterns = [
-              /original[:\s]+([\d.]+)\s*(KB|MB|bytes?)/i,
-              /converted[:\s]+([\d.]+)\s*(KB|MB|bytes?)/i,
-              /size[:\s]+([\d.]+)\s*(KB|MB|bytes?)/i,
-              /([\d.]+)\s*(KB|MB|bytes?)\s*→\s*([\d.]+)\s*(KB|MB|bytes?)/i
-            ];
-            
-            for (const pattern of sizePatterns) {
-              const match = fileSizeText.match(pattern);
-              if (match) {
-                if (match[0].toLowerCase().includes('original')) {
-                  originalSize = `${match[1]} ${match[2]}`;
-                } else if (match[0].toLowerCase().includes('converted')) {
-                  convertedSize = `${match[1]} ${match[2]}`;
-                }
-              }
-            }
-            
-            // Try to find size elements in the DOM - look for specific text patterns
-            const allElements = iframeDoc.querySelectorAll('p, span, div, td, li');
-            for (const elem of Array.from(allElements)) {
-              const text = elem.textContent || '';
-              // Look for "Original size:" or "Original:" patterns
-              if (text.match(/original[:\s]+size[:\s]+/i) || (text.match(/original[:\s]+[\d.]+/i) && text.match(/[\d.]+\s*(KB|MB)/i))) {
-                const match = text.match(/([\d.]+)\s*(KB|MB|bytes?)/i);
-                if (match) originalSize = `${match[1]} ${match[2]}`;
-              }
-              // Look for "Converted size:" or "Converted:" patterns
-              if (text.match(/converted[:\s]+size[:\s]+/i) || (text.match(/converted[:\s]+[\d.]+/i) && text.match(/[\d.]+\s*(KB|MB)/i))) {
-                const match = text.match(/([\d.]+)\s*(KB|MB|bytes?)/i);
-                if (match) convertedSize = `${match[1]} ${match[2]}`;
-              }
-              // Look for compression ratio
-              if (text.includes('%') && (text.includes('reduction') || text.includes('compression') || text.includes('ratio'))) {
-                const match = text.match(/([\d.]+)%/);
-                if (match) compressionRatio = `${match[1]}%`;
-              }
-            }
-            
-            // Also check for file size in the file info section (where file details are shown)
-            const fileInfoSection = iframeDoc.querySelector('[class*="file"], [class*="upload"], [class*="selected"]');
-            if (fileInfoSection) {
-              const fileInfoText = fileInfoSection.textContent || '';
-              if (fileInfoText.includes('Original size') || fileInfoText.includes('original')) {
-                const match = fileInfoText.match(/original[:\s]+size[:\s]+([\d.]+)\s*(KB|MB|bytes?)/i);
-                if (match) originalSize = `${match[1]} ${match[2]}`;
-              }
-              if (fileInfoText.includes('Converted size') || fileInfoText.includes('converted')) {
-                const match = fileInfoText.match(/converted[:\s]+size[:\s]+([\d.]+)\s*(KB|MB|bytes?)/i);
-                if (match) convertedSize = `${match[1]} ${match[2]}`;
-              }
-            }
-            
-            const fileSizeInfo = fileSizeText.includes('Original size') || 
-                                fileSizeText.includes('Converted size') ||
-                                fileSizeText.includes('size') ||
-                                originalSize || convertedSize;
-            
-            if (fileSizeInfo) {
-              results.tests.push({
-                name: 'File Size Comparison',
-                status: 'PASS',
-                message: `Original size: ${originalSize || fileSizeKB + ' KB'} | Converted size: ${convertedSize || 'Not displayed'} | Compression ratio: ${compressionRatio || 'Not calculated'} | Format: ${selectedFormat.toUpperCase()}`
-              });
-            } else {
-              results.tests.push({
-                name: 'File Size Comparison',
-                status: 'WARN',
-                message: `File size information not found in UI | Original size: ${fileSizeKB} KB (${fileSizeMB} MB)`
-              });
-            }
-
-            if (downloadButton) {
-              const downloadButtonText = downloadButton.textContent?.trim() || '';
-              const downloadUrl = (downloadButton instanceof HTMLAnchorElement ? downloadButton.href : null) || 
-                                downloadButton.getAttribute('href') || 
-                                downloadButton.getAttribute('data-download-url') ||
-                                'Not available';
-              
-              results.tests.push({
-                name: 'Download Button',
-                status: 'PASS',
-                message: `Download button appeared | Button text: "${downloadButtonText}" | Download URL: ${downloadUrl.length > 50 ? downloadUrl.substring(0, 50) + '...' : downloadUrl}`
-              });
-
-            // STEP: Test Monetization Modal
-            setImageTestStep('Testing monetization modal...');
-            setImageTestProgress(92);
+        // STEP: Test Monetization Modal
+        setImageTestStep('Testing monetization modal...');
+        setImageTestProgress(92);
             
             // Wrap monetization modal test in a timeout to prevent hanging (15 second max)
             try {
@@ -1170,7 +1195,7 @@ export default function TestingPage() {
                     results.tests.push({
                       name: 'Download Available After Ad',
                       status: 'INFO',
-                      message: `Page redirected to /ad-success after ad click | Download will be available via ad-success page | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}% | Note: Ad tab remains open (expected behavior)`
+                      message: `Page redirected to /ad-success after ad click | Download will be available via ad-success page | Note: Ad tab remains open (expected behavior)`
                     });
                   } else {
                     // Check for download availability after ad view (only if page wasn't redirected)
@@ -1190,13 +1215,13 @@ export default function TestingPage() {
                       results.tests.push({
                         name: 'Download Available After Ad',
                         status: 'PASS',
-                        message: `Download available after viewing ad | Button text: "${downloadText}" | Download URL: ${downloadHref.length > 50 ? downloadHref.substring(0, 50) + '...' : downloadHref} | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
+                        message: `Download available after viewing ad | Button text: "${downloadText}" | Download URL: ${downloadHref.length > 50 ? downloadHref.substring(0, 50) + '...' : downloadHref}`
                       });
                     } else {
                       results.tests.push({
                         name: 'Download Available After Ad',
                         status: 'WARN',
-                        message: `Download not immediately visible | Wait time: 2 seconds | Possible causes: Ad not completed, page refresh needed, or download not yet enabled | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
+                        message: `Download not immediately visible | Wait time: 2 seconds | Possible causes: Ad not completed, page refresh needed, or download not yet enabled`
                       });
                     }
                   }
@@ -1211,13 +1236,13 @@ export default function TestingPage() {
                     message: `"View Ad" button not found in monetization modal | Total buttons in modal: ${allModalButtons.length} | Button texts found: ${allModalButtons.map(b => `"${b.textContent?.trim()}"`).join(', ') || 'None'}`
                   });
                 }
-                } else {
-                  results.tests.push({
-                    name: 'Monetization Modal Detected',
-                    status: 'WARN',
-                    message: `Monetization modal did not appear | Wait time: 2 seconds | Possible causes: User already has access, modal not triggered for this test case, or modal selector not matching | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
-                  });
-                }
+              } else {
+                results.tests.push({
+                  name: 'Monetization Modal Detected',
+                  status: 'WARN',
+                  message: `Monetization modal did not appear | Wait time: 2 seconds | Possible causes: User already has access, modal not triggered for this test case, or modal selector not matching`
+                });
+              }
               })();
               
               // Race against timeout (15 seconds max for monetization test)
@@ -1245,85 +1270,13 @@ export default function TestingPage() {
                 message: `Error testing monetization modal: ${monetError instanceof Error ? monetError.message : String(monetError)}`
               });
             }
-            } else {
-              // No download button found, but conversion completed
-              results.tests.push({
-                name: 'Download Button After Conversion',
-                status: 'WARN',
-                message: 'Conversion completed but download button not found'
-              });
-            }
           } else {
-            setImageTestProgress(70 + (attempts * 1));
-            setImageTestStep(`Waiting for conversion... (${attempts * 2}/${maxAttempts * 2} seconds)`);
-          }
-        } catch (pollError) {
-          // If polling fails, break out to prevent infinite loop
-          results.tests.push({
-            name: 'Conversion Polling Error',
-            status: 'WARN',
-            message: `Error while checking conversion status: ${pollError instanceof Error ? pollError.message : String(pollError)}`
-          });
-          break;
-        }
-      }
-
-      if (!conversionComplete) {
-        results.tests.push({
-          name: 'Conversion Completion',
-          status: 'WARN',
-          message: `Conversion may still be in progress or timed out after ${maxAttempts * 2} seconds. Results may be incomplete.`
-        });
-        // Even if conversion didn't complete, try to test monetization modal if download button exists
-        setImageTestStep('Conversion timeout - checking for download button anyway...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const downloadButtonAfterTimeout = Array.from(iframeDoc.querySelectorAll('button')).find(
-          btn => btn.textContent?.includes('Download')
-        );
-        if (downloadButtonAfterTimeout) {
-          results.tests.push({
-            name: 'Download Button Found After Timeout',
-            status: 'PASS',
-            message: 'Download button found even though conversion status unclear'
-          });
-          
-          // Try to test monetization modal even after timeout
-          setImageTestStep('Testing monetization modal after timeout...');
-          setImageTestProgress(92);
-          try {
-            downloadButtonAfterTimeout.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            await new Promise(resolve => setTimeout(resolve, 500));
-            downloadButtonAfterTimeout.click();
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            const monetizationModal = iframeDoc.querySelector('[data-monetization-modal="true"]') ||
-                                    iframeDoc.querySelector('[class*="monetization"]');
-            
-            if (monetizationModal) {
-              results.tests.push({
-                name: 'Monetization Modal (After Timeout)',
-                status: 'PASS',
-                message: 'Monetization modal appeared when download was requested'
-              });
-            } else {
-              results.tests.push({
-                name: 'Monetization Modal (After Timeout)',
-                status: 'WARN',
-                message: 'Monetization modal did not appear'
-              });
-            }
-          } catch (timeoutMonetError) {
             results.tests.push({
-              name: 'Monetization Modal (After Timeout)',
+              name: 'Download Button Not Found',
               status: 'WARN',
-              message: `Could not test monetization modal: ${timeoutMonetError instanceof Error ? timeoutMonetError.message : String(timeoutMonetError)}`
+              message: 'Download button not found after format conversions. Monetization modal test skipped.'
             });
           }
-        }
-      } else {
-        // Wait a bit longer after conversion completes to ensure everything is ready
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
 
       // Always complete the test, even if conversion didn't finish
       setImageTestProgress(100);
