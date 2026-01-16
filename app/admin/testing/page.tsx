@@ -1298,7 +1298,7 @@ export default function TestingPage() {
               resolve({ timeout: true, tests: [{
                 name: 'Automation Timeout',
                 status: 'WARN',
-                message: 'Automation exceeded 20 minutes timeout. Some tests may be incomplete. Video conversions can take longer, especially with heavy compression.'
+                message: 'Automation exceeded 20 minutes timeout. Some tests may be incomplete. Video conversions can take longer, especially with heavy compression. Please try running the test again.'
               }]});
             }, 1200000); // 20 minute timeout for videos (allows multiple format conversions)
           });
