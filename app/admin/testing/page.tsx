@@ -1063,15 +1063,14 @@ export default function TestingPage() {
             setImageTestProgress(70 + (attempts * 1));
             setImageTestStep(`Waiting for conversion... (${attempts * 2}/${maxAttempts * 2} seconds)`);
           }
-          } catch (pollError) {
-            // If polling fails, break out to prevent infinite loop
-            results.tests.push({
-              name: 'Conversion Polling Error',
-              status: 'WARN',
-              message: `Error while checking conversion status: ${pollError instanceof Error ? pollError.message : String(pollError)}`
-            });
-            break;
-          }
+        } catch (pollError) {
+          // If polling fails, break out to prevent infinite loop
+          results.tests.push({
+            name: 'Conversion Polling Error',
+            status: 'WARN',
+            message: `Error while checking conversion status: ${pollError instanceof Error ? pollError.message : String(pollError)}`
+          });
+          break;
         }
       }
 
