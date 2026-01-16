@@ -1637,29 +1637,38 @@ This is an automated notification from the Trevnoctilla Admin Dashboard
         `;
         
         // Send email via API
-        const emailResponse = await fetch('/api/email/send', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            to: 'info@trevnoctilla.com',
-            cc: ['kodekenobi@gmail.com', 'rnkanunu@gmail.com'],
-            subject: `✅ Image Converter Test - All Tests Passed (${passedTests}/${totalTests})`,
-            html: emailHtml,
-            text: emailText,
-          }),
-        });
-        
-        if (emailResponse.ok) {
+        try {
+          const emailResponse = await fetch('/api/email/send', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to: 'info@trevnoctilla.com',
+              cc: ['kodekenobi@gmail.com', 'rnkanunu@gmail.com'],
+              subject: `✅ Image Converter Test - All Tests Passed (${passedTests}/${totalTests})`,
+              html: emailHtml,
+              text: emailText,
+            }),
+          });
+          
           const emailData = await emailResponse.json();
-          if (emailData.success) {
-            console.log('✅ Test success email sent successfully');
+          
+          if (emailResponse.ok && emailData.success) {
+            console.log('✅ Test success email sent successfully', {
+              emailId: emailData.email_id,
+              to: 'info@trevnoctilla.com',
+              cc: ['kodekenobi@gmail.com', 'rnkanunu@gmail.com']
+            });
           } else {
-            console.warn('⚠️ Email send failed:', emailData.error);
+            console.error('❌ Email send failed:', {
+              status: emailResponse.status,
+              error: emailData.error,
+              details: emailData.details
+            });
           }
-        } else {
-          console.warn('⚠️ Email API error:', emailResponse.status);
+        } catch (fetchError) {
+          console.error('❌ Error calling email API:', fetchError);
         }
       } catch (emailError) {
         // Don't fail the test if email fails - just log it

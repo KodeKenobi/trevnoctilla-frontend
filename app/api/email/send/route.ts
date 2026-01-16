@@ -42,19 +42,24 @@ export async function POST(request: NextRequest) {
       fromEmail = `Trevnoctilla <${fromEmail}>`;
     }
 
+    // Ensure 'to' is an array (Resend accepts both string and array)
+    const toArray = Array.isArray(to) ? to : [to];
+    
     const emailPayload: any = {
       from: fromEmail,
-      to,
+      to: toArray,
       subject,
       html,
       text,
     };
     
-    // Add CC if provided
-    if (cc && Array.isArray(cc) && cc.length > 0) {
-      emailPayload.cc = cc;
-    } else if (cc && typeof cc === 'string') {
-      emailPayload.cc = [cc];
+    // Add CC if provided (Resend expects array for CC)
+    if (cc) {
+      if (Array.isArray(cc) && cc.length > 0) {
+        emailPayload.cc = cc;
+      } else if (typeof cc === 'string') {
+        emailPayload.cc = [cc];
+      }
     }
 
     // Add attachments if provided
@@ -85,14 +90,38 @@ export async function POST(request: NextRequest) {
     }
 
     const resend = getResend();
+    
+    // Log email payload for debugging (without sensitive data)
+    console.log('📧 [EMAIL] Sending email:', {
+      from: fromEmail,
+      to: toArray,
+      cc: emailPayload.cc || 'none',
+      subject,
+      hasHtml: !!html,
+      hasText: !!text,
+      hasAttachments: !!(attachments && attachments.length > 0)
+    });
+    
     const { data, error } = await resend.emails.send(emailPayload);
 
     if (error) {
+      console.error('❌ [EMAIL] Resend API error:', {
+        message: error.message,
+        name: error.name,
+        error: JSON.stringify(error, null, 2)
+      });
       return NextResponse.json(
-        { success: false, error: error.message || "Failed to send email" },
+        { success: false, error: error.message || "Failed to send email", details: error },
         { status: 500 }
       );
     }
+    
+    console.log('✅ [EMAIL] Email sent successfully:', {
+      emailId: data?.id,
+      to: toArray,
+      cc: emailPayload.cc || 'none'
+    });
+    
     return NextResponse.json({
       success: true,
       message: "Email sent successfully",
