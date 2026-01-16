@@ -183,7 +183,7 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
       const completed = await showMonetizationModal({
         title: outputFormat === "pdf" ? "Download PDF" : "Download Image",
         message: `Choose how you'd like to download ${
-          file?.name || outputFormat === "pdf" ? "this PDF" : "this image"
+          file?.name || outputFormat === "pdf" ? "this image" : "this image"
         }`,
         fileName: file?.name || `converted.${outputFormat}`,
         fileType: outputFormat === "pdf" ? "PDF" : "image",

@@ -37,6 +37,12 @@ export default function TestingPage() {
   const [imageTestStep, setImageTestStep] = useState<string>('');
   const [imageTestProgress, setImageTestProgress] = useState(0);
   const imageTestIframeRef = useRef<HTMLIFrameElement>(null);
+  
+  // Selected tool for sidebar navigation
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  
+  // Expanded test result for details (format: "toolId-index")
+  const [expandedTest, setExpandedTest] = useState<string | null>(null);
 
   const testSupabaseUsers = async () => {
     setLoading(true);
@@ -67,7 +73,7 @@ export default function TestingPage() {
     return (
       <div className="min-h-screen bg-black pt-20 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-purple-400 mx-auto mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto mb-4" />
           <p className="text-gray-300">Loading...</p>
         </div>
       </div>
@@ -422,7 +428,7 @@ export default function TestingPage() {
       }
 
       // Wait for iframe to be fully loaded
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       // STEP 1: Handle Cookie Consent Modal FIRST (MOST IMPORTANT)
       setImageTestStep('Checking for cookie consent modal...');
@@ -433,7 +439,7 @@ export default function TestingPage() {
       const maxConsentChecks = 10; // Check for up to 5 seconds
       
       while (!cookieConsentHandled && consentCheckAttempts < maxConsentChecks) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 800));
         
         // Look for "Reject All" button - try multiple selectors
         const allButtons = Array.from(iframeDoc.querySelectorAll('button'));
@@ -464,7 +470,7 @@ export default function TestingPage() {
           cookieConsentHandled = true;
           
           // Wait for modal to close and animations to complete
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          await new Promise(resolve => setTimeout(resolve, 2500));
           
           // Verify modal is gone
           const modalStillVisible = iframeDoc.querySelector('[class*="cookie"], [class*="consent"]');
@@ -577,7 +583,7 @@ export default function TestingPage() {
         formatSelect.dispatchEvent(new Event('change', { bubbles: true }));
       }
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       setImageTestStep('Adjusting quality slider to 85%...');
       setImageTestProgress(50);
@@ -590,7 +596,7 @@ export default function TestingPage() {
         qualitySlider.dispatchEvent(new Event('change', { bubbles: true }));
       }
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       setImageTestStep('Clicking Convert Image button...');
       setImageTestProgress(60);
@@ -636,10 +642,10 @@ export default function TestingPage() {
       // Poll for conversion result
       let conversionComplete = false;
       let attempts = 0;
-      const maxAttempts = 30; // 30 seconds max wait
+      const maxAttempts = 60; // 60 seconds max wait
 
       while (!conversionComplete && attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
         attempts++;
 
         const downloadButton = Array.from(iframeDoc.querySelectorAll('button')).find(
@@ -663,9 +669,9 @@ export default function TestingPage() {
           });
 
           // Check for file size comparison
-          const textContent = iframeDoc.textContent || '';
-          const fileSizeInfo = textContent.includes('Original size') || 
-                              textContent.includes('Converted size');
+          const fileSizeText = iframeDoc.textContent || '';
+          const fileSizeInfo = fileSizeText.includes('Original size') || 
+                              fileSizeText.includes('Converted size');
           
           if (fileSizeInfo) {
             results.tests.push({
@@ -681,9 +687,136 @@ export default function TestingPage() {
               status: 'PASS',
               message: 'Download button appeared after conversion'
             });
+
+            // STEP: Test Monetization Modal
+            setImageTestStep('Testing monetization modal...');
+            setImageTestProgress(92);
+            
+            try {
+              // Click download button to trigger monetization modal
+              downloadButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              await new Promise(resolve => setTimeout(resolve, 500));
+              downloadButton.click();
+              
+              // Wait for monetization modal to appear
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              
+              // Look for monetization modal - try multiple selectors
+              const monetizationModal = iframeDoc.querySelector('[data-monetization-modal="true"]') ||
+                                      iframeDoc.querySelector('[class*="monetization"]') ||
+                                      iframeDoc.querySelector('[class*="monet"]') ||
+                                      Array.from(iframeDoc.querySelectorAll('div')).find(
+                                        div => {
+                                          const text = div.textContent || '';
+                                          return text.includes('View Ad') || 
+                                                 text.includes('Watch Ad') ||
+                                                 text.includes('Make Payment');
+                                        }
+                                      );
+              
+              if (monetizationModal) {
+                results.tests.push({
+                  name: 'Monetization Modal Detected',
+                  status: 'PASS',
+                  message: 'Monetization modal appeared when download was requested'
+                });
+                
+                // Find "View Ad" button
+                const allModalButtons = Array.from(monetizationModal.querySelectorAll('button'));
+                const viewAdButton = allModalButtons.find(
+                  btn => {
+                    const text = btn.textContent?.trim() || '';
+                    return text.includes('View Ad') || 
+                           text.includes('Watch Ad') ||
+                           text.toLowerCase().includes('view ad') ||
+                           text.toLowerCase().includes('watch ad');
+                  }
+                );
+                
+                if (viewAdButton) {
+                  setImageTestStep('Clicking "View Ad" button...');
+                  setImageTestProgress(95);
+                  
+                  // Scroll button into view
+                  viewAdButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  await new Promise(resolve => setTimeout(resolve, 300));
+                  
+                  // Click View Ad button
+                  viewAdButton.click();
+                  
+                  results.tests.push({
+                    name: 'View Ad Button Clicked',
+                    status: 'PASS',
+                    message: 'Successfully clicked "View Ad" button in monetization modal'
+                  });
+                  
+                  // Wait for ad to open/redirect and modal to close
+                  await new Promise(resolve => setTimeout(resolve, 5000));
+                  
+                  // Check if modal closed
+                  const modalStillVisible = iframeDoc.querySelector('[data-monetization-modal="true"]') ||
+                                          iframeDoc.querySelector('[class*="monetization"]');
+                  
+                  if (!modalStillVisible) {
+                    results.tests.push({
+                      name: 'Monetization Modal Closed',
+                      status: 'PASS',
+                      message: 'Monetization modal closed after clicking "View Ad"'
+                    });
+                  } else {
+                    results.tests.push({
+                      name: 'Monetization Modal Closed',
+                      status: 'WARN',
+                      message: 'Monetization modal may still be visible after clicking "View Ad"'
+                    });
+                  }
+                  
+                  // Check for download availability after ad view
+                  await new Promise(resolve => setTimeout(resolve, 3000));
+                  
+                  const downloadAvailable = Array.from(iframeDoc.querySelectorAll('button')).find(
+                    btn => btn.textContent?.includes('Download')
+                  ) || iframeDoc.querySelector('a[download]');
+                  
+                  if (downloadAvailable) {
+                    results.tests.push({
+                      name: 'Download Available After Ad',
+                      status: 'PASS',
+                      message: 'Download button/link is available after viewing ad'
+                    });
+                  } else {
+                    results.tests.push({
+                      name: 'Download Available After Ad',
+                      status: 'WARN',
+                      message: 'Download button/link not immediately visible after ad view (may require page refresh)'
+                    });
+                  }
+                  
+                } else {
+                  results.tests.push({
+                    name: 'View Ad Button Found',
+                    status: 'FAIL',
+                    message: '"View Ad" button not found in monetization modal'
+                  });
+                }
+              } else {
+                results.tests.push({
+                  name: 'Monetization Modal Detected',
+                  status: 'WARN',
+                  message: 'Monetization modal did not appear (may not be triggered for this user/test case)'
+                });
+              }
+            } catch (monetError) {
+              results.tests.push({
+                name: 'Monetization Modal Test',
+                status: 'FAIL',
+                message: `Error testing monetization modal: ${monetError instanceof Error ? monetError.message : String(monetError)}`
+              });
+            }
           }
         } else {
-          setImageTestProgress(70 + (attempts * 2));
+          setImageTestProgress(70 + (attempts * 1));
+          setImageTestStep(`Waiting for conversion... (${attempts}/${maxAttempts} seconds)`);
         }
       }
 
@@ -691,12 +824,15 @@ export default function TestingPage() {
         results.tests.push({
           name: 'Conversion Completion',
           status: 'WARN',
-          message: 'Conversion may still be in progress or timed out'
+          message: `Conversion may still be in progress or timed out after ${maxAttempts} seconds`
         });
+      } else {
+        // Wait a bit longer after conversion completes to ensure everything is ready
+        await new Promise(resolve => setTimeout(resolve, 3000));
       }
 
       setImageTestProgress(100);
-      setImageTestStep('Automated testing complete!');
+      setImageTestStep('Automated testing complete! Keep the window open to review results.');
 
     } catch (error) {
       results.tests.push({
@@ -920,12 +1056,8 @@ export default function TestingPage() {
     setImageTestLoading(false);
     if (visualMode) {
       setImageTestProgress(100);
-      setImageTestStep('Testing complete!');
-      setTimeout(() => {
-        setShowImageVisualTest(false);
-        setImageTestStep('');
-        setImageTestProgress(0);
-      }, 2000);
+      setImageTestStep('Testing complete! Keep the window open to review results.');
+      // Don't auto-close - let user close manually
     }
   };
 
@@ -1250,9 +1382,9 @@ export default function TestingPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20 pb-20">
+      <div className="container mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto space-y-4">
           {/* Header */}
           <div className="sm:flex sm:items-center sm:justify-between">
             <div className="sm:flex-auto">
@@ -1278,7 +1410,7 @@ export default function TestingPage() {
               <button
                 onClick={testSupabaseUsers}
                 disabled={loading}
-                className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+                className="flex items-center gap-2 px-6 py-3 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
               >
                 {loading ? (
                   <>
@@ -1582,386 +1714,690 @@ export default function TestingPage() {
             )}
           </div>
 
-          {/* Converter Tools Testing Section */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white mb-2">
-                Converter Tools Testing
-              </h2>
-              <p className="text-gray-400">
-                Comprehensive testing of all converter tools, their features, and API endpoints
-              </p>
+          {/* Converter Tools Testing Section - COMPLETE REVAMP */}
+          <div className="w-full">
+            {/* Header */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-white mb-1">Converter Tools Testing</h2>
+                  <p className="text-sm text-gray-400">Select a tool to test or run all tests simultaneously</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    await Promise.all([
+                      testVideoConverter(),
+                      testAudioConverter(),
+                      testImageConverter(),
+                      testPDFTools(),
+                      testQRGenerator()
+                    ]);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
+                >
+                  <Play className="h-4 w-4" />
+                  Run All Tests
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Video Converter Test */}
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Film className="h-5 w-5 text-blue-400" />
-                    <span className="text-white font-medium">Video Converter</span>
-                  </div>
-                  <button
-                    onClick={testVideoConverter}
-                    disabled={videoTestLoading}
-                    className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
-                  >
-                    {videoTestLoading ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Testing...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-3 w-3" />
-                        Test
-                      </>
-                    )}
-                  </button>
+            {/* NEW LAYOUT: Sidebar + Main Content */}
+            <div className="flex gap-6 min-h-[600px]">
+              {/* Left Sidebar - Tool Navigation */}
+              <div className="w-56 flex-shrink-0 bg-gray-900/50 border border-gray-700 rounded-lg p-3 overflow-y-auto">
+                <div className="space-y-2">
+                  {[
+                    { id: 'video', key: 'videoConverter', icon: Film, label: 'Video Converter', color: 'blue', loading: videoTestLoading },
+                    { id: 'audio', key: 'audioConverter', icon: Music, label: 'Audio Converter', color: 'green', loading: audioTestLoading },
+                    { id: 'image', key: 'imageConverter', icon: Image, label: 'Image Converter', color: 'purple', loading: imageTestLoading },
+                    { id: 'pdf', key: 'pdfTools', icon: FileText, label: 'PDF Tools', color: 'red', loading: pdfTestLoading },
+                    { id: 'qr', key: 'qrGenerator', icon: QrCode, label: 'QR Generator', color: 'cyan', loading: qrTestLoading },
+                  ].map((tool) => {
+                    const Icon = tool.icon;
+                    const isSelected = selectedTool === tool.id;
+                    const hasResults = testResults[tool.key];
+                    const allPassed = hasResults?.tests?.every((t: any) => t.status === 'PASS');
+                    const hasFailures = hasResults?.tests?.some((t: any) => t.status === 'FAIL');
+                    
+                    // Subtle gray theme - no bright colors
+                    const colors = {
+                      bg: isSelected ? 'bg-gray-700/50 border-2 border-gray-500' : 'bg-gray-800/50 border border-gray-700 hover:border-gray-600',
+                      border: 'border-gray-500',
+                      icon: isSelected ? 'text-gray-300' : 'text-gray-400',
+                      iconBg: isSelected ? 'bg-gray-600/50' : 'bg-gray-700/50'
+                    };
+                    
+                    return (
+                      <button
+                        key={tool.id}
+                        onClick={() => setSelectedTool(tool.id)}
+                        className={`w-full p-2.5 rounded-md text-left transition-all text-sm ${colors.bg}`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className={`p-1.5 rounded-md ${colors.iconBg}`}>
+                            <Icon className={`h-4 w-4 ${colors.icon}`} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-medium ${
+                                isSelected ? 'text-white' : 'text-gray-300'
+                              }`}>
+                                {tool.label}
+                              </span>
+                              {tool.loading && (
+                                <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                              )}
+                            </div>
+                            {hasResults && (
+                              <div className="flex items-center gap-2 mt-1">
+                                {hasFailures ? (
+                                  <span className="text-xs text-gray-400">Failed</span>
+                                ) : allPassed ? (
+                                  <span className="text-xs text-gray-300">All Passed</span>
+                                ) : (
+                                  <span className="text-xs text-gray-400">Warnings</span>
+                                )}
+                                <span className="text-xs text-gray-500">
+                                  ({hasResults.tests?.length || 0} tests)
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
-                <p className="text-xs text-gray-400 mb-2">
-                  Tests MP4/WebM/AVI/MOV/MKV/FLV/WMV/MP3 formats, compression levels, progress tracking, large file support
-                </p>
-                {testResults.videoConverter && (
-                  <div className="space-y-1">
-                    {testResults.videoConverter.tests.map((test: any, index: number) => (
-                      <div key={index} className="flex items-center gap-2 text-xs">
-                        <span className={`w-2 h-2 rounded-full ${
-                          test.status === 'PASS' ? 'bg-green-400' :
-                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                        }`}></span>
-                        <span className="text-gray-300 truncate">{test.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
-              {/* Audio Converter Test */}
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Music className="h-5 w-5 text-green-400" />
-                    <span className="text-white font-medium">Audio Converter</span>
-                  </div>
-                  <button
-                    onClick={testAudioConverter}
-                    disabled={audioTestLoading}
-                    className="flex items-center gap-1 px-3 py-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
-                  >
-                    {audioTestLoading ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Testing...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-3 w-3" />
-                        Test
-                      </>
-                    )}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400 mb-2">
-                  Tests MP3/WAV/FLAC/AAC/OGG/WMA/M4A formats, quality control (0-100%), progress tracking
-                </p>
-                {testResults.audioConverter && (
-                  <div className="space-y-1">
-                    {testResults.audioConverter.tests.map((test: any, index: number) => (
-                      <div key={index} className="flex items-center gap-2 text-xs">
-                        <span className={`w-2 h-2 rounded-full ${
-                          test.status === 'PASS' ? 'bg-green-400' :
-                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                        }`}></span>
-                        <span className="text-gray-300 truncate">{test.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Image Converter Test */}
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Image className="h-5 w-5 text-purple-400" />
-                    <span className="text-white font-medium">Image Converter</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => testImageConverter(true)}
-                      disabled={imageTestLoading}
-                      className="flex items-center gap-1 px-3 py-1 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
-                      title="Visual Test - See the tool in action"
-                    >
-                      {imageTestLoading && showImageVisualTest ? (
-                        <>
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          Visual Testing...
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-3 w-3" />
-                          Visual Test
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => testImageConverter(false)}
-                      disabled={imageTestLoading}
-                      className="flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
-                    >
-                      {imageTestLoading && !showImageVisualTest ? (
-                        <>
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          Testing...
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-3 w-3" />
-                          Quick Test
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-400 mb-2">
-                  Tests JPG/PNG/WebP/BMP/TIFF/GIF/PDF formats, quality control, resize functionality, file size comparison
-                </p>
-                
-                {/* Visual Testing Interface */}
-                {showImageVisualTest && (
-                  <div className="mt-4 mb-4 border-t border-gray-700 pt-4">
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-purple-300">Visual Test Progress</span>
-                        <span className="text-xs text-gray-400">{imageTestProgress}%</span>
-                      </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="bg-purple-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${imageTestProgress}%` }}
-                        />
-                      </div>
-                      {imageTestStep && (
-                        <p className="text-xs text-gray-300 mt-2 flex items-center gap-2">
-                          <Loader2 className="h-3 w-3 animate-spin text-purple-400" />
-                          {imageTestStep}
-                        </p>
-                      )}
+              {/* Main Content Area - Shows Selected Tool */}
+              <div className="flex-1 flex flex-col gap-4 min-w-0">
+                {!selectedTool ? (
+                  <div className="flex-1 flex items-center justify-center bg-gray-900/30 border border-dashed border-gray-700 rounded-lg py-12">
+                    <div className="text-center">
+                      <Play className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+                      <h3 className="text-xl font-semibold text-gray-400 mb-1">Select a Tool to Test</h3>
+                      <p className="text-sm text-gray-500">Choose a converter tool from the sidebar to begin testing</p>
                     </div>
-                    
-                    {/* Automated Testing Info */}
-                    <div className="mb-3 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
-                      <h4 className="text-xs font-semibold text-green-300 mb-2 flex items-center gap-2">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Fully Automated Testing
-                      </h4>
-                      <p className="text-xs text-gray-300">
-                        The system will automatically: upload test file, select format, adjust quality, click convert, and verify results. Watch it happen in real-time!
-                      </p>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {/* Live Tool Preview */}
-                      <div className="border border-gray-600 rounded-lg overflow-hidden bg-gray-900">
-                        <div className="bg-gray-800 px-3 py-2 flex items-center justify-between">
-                          <span className="text-xs text-gray-300 font-medium">Live Tool Preview</span>
+                  </div>
+                ) : (
+                  <>
+                    {/* Video Converter */}
+                    {selectedTool === 'video' && (
+                      <div className="flex-1 bg-gray-900/50 border border-gray-700 rounded-lg p-4 flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gray-700/50 rounded-lg">
+                              <Film className="h-5 w-5 text-gray-300" />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold text-white">Video Converter</h3>
+                              <p className="text-sm text-gray-400 mt-0.5">MP4/WebM/AVI/MOV/MKV/FLV/WMV/MP3 formats</p>
+                            </div>
+                          </div>
                           <button
-                            onClick={() => {
-                              setShowImageVisualTest(false);
-                              setImageTestStep('');
-                              setImageTestProgress(0);
-                            }}
-                            className="text-gray-400 hover:text-white text-xs"
+                            onClick={testVideoConverter}
+                            disabled={videoTestLoading}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
                           >
-                            Close
+                            {videoTestLoading ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Testing...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="h-4 w-4" />
+                                Run Test
+                              </>
+                            )}
                           </button>
                         </div>
-                      <iframe
-                        ref={imageTestIframeRef}
-                        src="/tools/image-converter"
-                        className="w-full h-[600px] border-0"
-                        title="Image Converter Visual Test"
-                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
-                        onLoad={() => {
-                          if (imageTestLoading && showImageVisualTest) {
-                            setImageTestStep('Iframe loaded, starting automation...');
-                            setImageTestProgress(5);
-                          }
-                        }}
-                      />
+                        {testResults.videoConverter && (
+                          <div className="flex-1 overflow-y-auto">
+                            <div className="space-y-2">
+                              {testResults.videoConverter.tests.map((test: any, index: number) => (
+                                <div key={index} className="p-3 bg-gray-800/50 rounded-md border border-gray-700">
+                                  <div className="flex items-start gap-3">
+                                    <span className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${
+                                      test.status === 'PASS' ? 'bg-green-400' :
+                                      test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
+                                    }`}></span>
+                                    <div className="flex-1">
+                                      <div className="text-white font-medium">{test.name}</div>
+                                      {test.message && (
+                                        <div className="text-gray-400 text-sm mt-1">{test.message}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      
-                      {/* Test File Info */}
-                      <div className="border border-gray-600 rounded-lg p-4 bg-gray-900">
-                        <h4 className="text-xs font-semibold text-purple-300 mb-3">Test Files Available:</h4>
-                        <div className="space-y-2 text-xs">
-                          <div className="p-2 bg-gray-800 rounded border border-gray-700">
-                            <p className="text-gray-300 font-medium">test-video.jpeg</p>
-                            <p className="text-gray-400 text-[10px] mt-1">Location: /test-files/main-files/</p>
-                            <p className="text-gray-400 text-[10px]">Use this for JPG to PNG/WebP conversion tests</p>
+                    )}
+
+                    {/* Audio Converter */}
+                    {selectedTool === 'audio' && (
+                      <div className="flex-1 bg-gray-900/50 border border-gray-700 rounded-lg p-4 flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gray-700/50 rounded-lg">
+                              <Music className="h-5 w-5 text-gray-300" />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold text-white">Audio Converter</h3>
+                              <p className="text-sm text-gray-400 mt-0.5">MP3/WAV/FLAC/AAC/OGG/WMA/M4A formats</p>
+                            </div>
                           </div>
-                          <div className="p-2 bg-gray-800 rounded border border-gray-700">
-                            <p className="text-gray-300 font-medium">Test Scenarios:</p>
-                            <ul className="text-gray-400 text-[10px] mt-1 space-y-1 list-disc list-inside">
-                              <li>JPG → PNG (quality: 85%)</li>
-                              <li>JPG → WebP (quality: 90%)</li>
-                              <li>JPG → PDF</li>
-                              <li>Resize: 1920x1080 with aspect ratio</li>
-                              <li>Resize: 800x600 without aspect ratio</li>
-                              <li>Quality: 50% (low) vs 100% (high)</li>
-                            </ul>
+                          <button
+                            onClick={testAudioConverter}
+                            disabled={audioTestLoading}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
+                          >
+                            {audioTestLoading ? (
+                              <>
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                Testing...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="h-5 w-5" />
+                                Run Test
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        {testResults.audioConverter && (
+                          <div className="flex-1 overflow-y-auto">
+                            <div className="space-y-2">
+                              {testResults.audioConverter.tests.map((test: any, index: number) => {
+                                const testKey = `audio-${index}`;
+                                const isExpanded = expandedTest === testKey;
+                                return (
+                                  <div 
+                                    key={index} 
+                                    className="p-3 bg-gray-800/50 rounded-md border border-gray-700 cursor-pointer hover:bg-gray-800/70 transition-colors"
+                                    onClick={() => setExpandedTest(isExpanded ? null : testKey)}
+                                  >
+                                    <div className="flex items-start gap-2.5">
+                                      <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
+                                        test.status === 'PASS' ? 'bg-green-400' :
+                                        test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
+                                      }`}></span>
+                                      <div className="flex-1">
+                                        <div className="text-white text-sm font-medium flex items-center justify-between">
+                                          <span>{test.name}</span>
+                                          <span className="text-gray-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
+                                        </div>
+                                        {test.message && (
+                                          <div className={`text-gray-400 text-xs mt-0.5 ${isExpanded ? '' : 'truncate'}`}>
+                                            {test.message}
+                                          </div>
+                                        )}
+                                        {isExpanded && (
+                                          <div className="mt-2 pt-2 border-t border-gray-700">
+                                            <div className="text-xs text-gray-500 space-y-1">
+                                              <div><span className="text-gray-400">Status:</span> <span className="text-white">{test.status}</span></div>
+                                              {test.timestamp && <div><span className="text-gray-400">Time:</span> <span className="text-white">{new Date(test.timestamp).toLocaleString()}</span></div>}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
-                          <div className="p-2 bg-gray-800 rounded border border-gray-700">
-                            <p className="text-gray-300 font-medium">Expected Results:</p>
-                            <ul className="text-gray-400 text-[10px] mt-1 space-y-1 list-disc list-inside">
-                              <li>File upload area appears</li>
-                              <li>File name and size displayed</li>
-                              <li>Format dropdown shows 7 options</li>
-                              <li>Quality slider works (10-100%)</li>
-                              <li>Resize controls appear when enabled</li>
-                              <li>Progress bar shows during conversion</li>
-                              <li>Original vs converted size comparison</li>
-                              <li>Download button appears after success</li>
-                            </ul>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Image Converter */}
+                    {selectedTool === 'image' && (
+                      <div className="flex-1 bg-gray-900/50 border border-gray-700 rounded-lg p-4 flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gray-700/50 rounded-lg">
+                              <Image className="h-5 w-5 text-gray-300" />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold text-white">Image Converter</h3>
+                              <p className="text-sm text-gray-400 mt-0.5">JPG/PNG/WebP/BMP/TIFF/GIF/PDF formats</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => testImageConverter(true)}
+                              disabled={imageTestLoading}
+                              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
+                            >
+                              {imageTestLoading && showImageVisualTest ? (
+                                <>
+                                  <Loader2 className="h-5 w-5 animate-spin" />
+                                  Visual Testing...
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="h-5 w-5" />
+                                  Visual Test
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => testImageConverter(false)}
+                              disabled={imageTestLoading}
+                              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
+                            >
+                              {imageTestLoading && !showImageVisualTest ? (
+                                <>
+                                  <Loader2 className="h-5 w-5 animate-spin" />
+                                  Testing...
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="h-5 w-5" />
+                                  Quick Test
+                                </>
+                              )}
+                            </button>
                           </div>
                         </div>
+                        {testResults.imageConverter && (
+                          <div className="flex-1 overflow-y-auto">
+                            <div className="space-y-2">
+                              {testResults.imageConverter.tests.map((test: any, index: number) => {
+                                const testKey = `image-${index}`;
+                                const isExpanded = expandedTest === testKey;
+                                return (
+                                  <div 
+                                    key={index} 
+                                    className="p-3 bg-gray-800/50 rounded-md border border-gray-700 cursor-pointer hover:bg-gray-800/70 transition-colors"
+                                    onClick={() => setExpandedTest(isExpanded ? null : testKey)}
+                                  >
+                                    <div className="flex items-start gap-2.5">
+                                      <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
+                                        test.status === 'PASS' ? 'bg-green-400' :
+                                        test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
+                                      }`}></span>
+                                      <div className="flex-1">
+                                        <div className="text-white text-sm font-medium flex items-center justify-between">
+                                          <span>{test.name}</span>
+                                          <span className="text-gray-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
+                                        </div>
+                                        {test.message && (
+                                          <div className={`text-gray-400 text-xs mt-0.5 ${isExpanded ? '' : 'truncate'}`}>
+                                            {test.message}
+                                          </div>
+                                        )}
+                                        {isExpanded && (
+                                          <div className="mt-2 pt-2 border-t border-gray-700">
+                                            <div className="text-xs text-gray-500 space-y-1">
+                                              <div><span className="text-gray-400">Status:</span> <span className="text-white">{test.status}</span></div>
+                                              {test.timestamp && <div><span className="text-gray-400">Time:</span> <span className="text-white">{new Date(test.timestamp).toLocaleString()}</span></div>}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </div>
-                )}
-                
-                {testResults.imageConverter && (
-                  <div className="space-y-1">
-                    {testResults.imageConverter.tests.map((test: any, index: number) => (
-                      <div key={index} className="flex items-center gap-2 text-xs">
-                        <span className={`w-2 h-2 rounded-full ${
-                          test.status === 'PASS' ? 'bg-green-400' :
-                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                        }`}></span>
-                        <span className="text-gray-300 truncate">{test.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* PDF Tools Test */}
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-red-400" />
-                    <span className="text-white font-medium">PDF Tools</span>
-                  </div>
-                  <button
-                    onClick={testPDFTools}
-                    disabled={pdfTestLoading}
-                    className="flex items-center gap-1 px-3 py-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
-                  >
-                    {pdfTestLoading ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Testing...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-3 w-3" />
-                        Test
-                      </>
                     )}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400 mb-2">
-                  Tests Split/Merge/Extract Text/Images/Add Signature/Watermark/Edit/HTML conversion tools
-                </p>
-                {testResults.pdfTools && (
-                  <div className="space-y-1">
-                    {testResults.pdfTools.tests.map((test: any, index: number) => (
-                      <div key={index} className="flex items-center gap-2 text-xs">
-                        <span className={`w-2 h-2 rounded-full ${
-                          test.status === 'PASS' ? 'bg-green-400' :
-                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                        }`}></span>
-                        <span className="text-gray-300 truncate">{test.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
 
-              {/* QR Generator Test */}
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <QrCode className="h-5 w-5 text-cyan-400" />
-                    <span className="text-white font-medium">QR Generator</span>
-                  </div>
-                  <button
-                    onClick={testQRGenerator}
-                    disabled={qrTestLoading}
-                    className="flex items-center gap-1 px-3 py-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
-                  >
-                    {qrTestLoading ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Testing...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-3 w-3" />
-                        Test
-                      </>
+                    {/* PDF Tools */}
+                    {selectedTool === 'pdf' && (
+                      <div className="flex-1 bg-gray-900/50 border border-gray-700 rounded-lg p-4 flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gray-700/50 rounded-lg">
+                              <FileText className="h-5 w-5 text-gray-300" />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold text-white">PDF Tools</h3>
+                              <p className="text-sm text-gray-400 mt-0.5">Split/Merge/Extract/Edit/Convert</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={testPDFTools}
+                            disabled={pdfTestLoading}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
+                          >
+                            {pdfTestLoading ? (
+                              <>
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                Testing...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="h-5 w-5" />
+                                Run Test
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        {testResults.pdfTools && (
+                          <div className="flex-1 overflow-y-auto">
+                            <div className="space-y-2">
+                              {testResults.pdfTools.tests.map((test: any, index: number) => {
+                                const testKey = `pdf-${index}`;
+                                const isExpanded = expandedTest === testKey;
+                                return (
+                                  <div 
+                                    key={index} 
+                                    className="p-3 bg-gray-800/50 rounded-md border border-gray-700 cursor-pointer hover:bg-gray-800/70 transition-colors"
+                                    onClick={() => setExpandedTest(isExpanded ? null : testKey)}
+                                  >
+                                    <div className="flex items-start gap-2.5">
+                                      <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
+                                        test.status === 'PASS' ? 'bg-green-400' :
+                                        test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
+                                      }`}></span>
+                                      <div className="flex-1">
+                                        <div className="text-white text-sm font-medium flex items-center justify-between">
+                                          <span>{test.name}</span>
+                                          <span className="text-gray-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
+                                        </div>
+                                        {test.message && (
+                                          <div className={`text-gray-400 text-xs mt-0.5 ${isExpanded ? '' : 'truncate'}`}>
+                                            {test.message}
+                                          </div>
+                                        )}
+                                        {isExpanded && (
+                                          <div className="mt-2 pt-2 border-t border-gray-700">
+                                            <div className="text-xs text-gray-500 space-y-1">
+                                              <div><span className="text-gray-400">Status:</span> <span className="text-white">{test.status}</span></div>
+                                              {test.timestamp && <div><span className="text-gray-400">Time:</span> <span className="text-white">{new Date(test.timestamp).toLocaleString()}</span></div>}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400 mb-2">
-                  Tests URL/Text/WiFi/Email/SMS/Phone/vCard/Location/Calendar types, size/error correction/margin controls, JPG download
-                </p>
-                {testResults.qrGenerator && (
-                  <div className="space-y-1">
-                    {testResults.qrGenerator.tests.map((test: any, index: number) => (
-                      <div key={index} className="flex items-center gap-2 text-xs">
-                        <span className={`w-2 h-2 rounded-full ${
-                          test.status === 'PASS' ? 'bg-green-400' :
-                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                        }`}></span>
-                        <span className="text-gray-300 truncate">{test.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
 
-              {/* Test All Converters */}
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 md:col-span-2 lg:col-span-3">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Play className="h-5 w-5 text-yellow-400" />
-                    <span className="text-white font-medium">Test All Converters</span>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      await Promise.all([
-                        testVideoConverter(),
-                        testAudioConverter(),
-                        testImageConverter(),
-                        testPDFTools(),
-                        testQRGenerator()
-                      ]);
-                    }}
-                    className="flex items-center gap-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded transition-colors font-medium"
-                  >
-                    <Play className="h-4 w-4" />
-                    Run All Tests
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400">
-                  Run comprehensive tests on all converter tools simultaneously to verify full functionality
-                </p>
+                    {/* QR Generator */}
+                    {selectedTool === 'qr' && (
+                      <div className="flex-1 bg-gray-900/50 border border-gray-700 rounded-lg p-4 flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gray-700/50 rounded-lg">
+                              <QrCode className="h-5 w-5 text-gray-300" />
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold text-white">QR Generator</h3>
+                              <p className="text-sm text-gray-400 mt-0.5">URL/Text/WiFi/Email/SMS/Phone/vCard</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={testQRGenerator}
+                            disabled={qrTestLoading}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
+                          >
+                            {qrTestLoading ? (
+                              <>
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                Testing...
+                              </>
+                            ) : (
+                              <>
+                                <Play className="h-5 w-5" />
+                                Run Test
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        {testResults.qrGenerator && (
+                          <div className="flex-1 overflow-y-auto">
+                            <div className="space-y-2">
+                              {testResults.qrGenerator.tests.map((test: any, index: number) => {
+                                const testKey = `qr-${index}`;
+                                const isExpanded = expandedTest === testKey;
+                                return (
+                                  <div 
+                                    key={index} 
+                                    className="p-3 bg-gray-800/50 rounded-md border border-gray-700 cursor-pointer hover:bg-gray-800/70 transition-colors"
+                                    onClick={() => setExpandedTest(isExpanded ? null : testKey)}
+                                  >
+                                    <div className="flex items-start gap-2.5">
+                                      <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
+                                        test.status === 'PASS' ? 'bg-green-400' :
+                                        test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
+                                      }`}></span>
+                                      <div className="flex-1">
+                                        <div className="text-white text-sm font-medium flex items-center justify-between">
+                                          <span>{test.name}</span>
+                                          <span className="text-gray-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
+                                        </div>
+                                        {test.message && (
+                                          <div className={`text-gray-400 text-xs mt-0.5 ${isExpanded ? '' : 'truncate'}`}>
+                                            {test.message}
+                                          </div>
+                                        )}
+                                        {isExpanded && (
+                                          <div className="mt-2 pt-2 border-t border-gray-700">
+                                            <div className="text-xs text-gray-500 space-y-1">
+                                              <div><span className="text-gray-400">Status:</span> <span className="text-white">{test.status}</span></div>
+                                              {test.timestamp && <div><span className="text-gray-400">Time:</span> <span className="text-white">{new Date(test.timestamp).toLocaleString()}</span></div>}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>
+
+        {/* Visual Testing Interface - FULL SCREEN MODE */}
+        {showImageVisualTest && (
+          <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex flex-col pt-20">
+            {/* Top Control Bar */}
+            <div className="bg-gray-900 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-6 flex-1">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gray-700/50 rounded-lg">
+                    <Image className="h-5 w-5 text-gray-300" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">Image Converter Visual Test</h3>
+                    <p className="text-gray-400 text-sm">Watch automated testing in real-time</p>
+                  </div>
+                </div>
+                
+                {/* Progress Section */}
+                <div className="flex-1 max-w-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-purple-300">Progress</span>
+                    <span className="text-sm text-gray-400 font-mono">{imageTestProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-300 shadow-lg shadow-purple-500/50"
+                      style={{ width: `${imageTestProgress}%` }}
+                    />
+                  </div>
+                  {imageTestStep && (
+                    <p className="text-sm text-gray-300 mt-2 flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                      <span className="truncate">{imageTestStep}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <button
+                onClick={() => {
+                  setShowImageVisualTest(false);
+                  setImageTestStep('');
+                  setImageTestProgress(0);
+                }}
+                className="ml-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                Close
+              </button>
+            </div>
+
+            {/* Main Content Area - Full Width Iframe */}
+            <div className="flex-1 flex overflow-hidden">
+              {/* Full Width Iframe */}
+              <div className="flex-1 flex flex-col bg-gray-950">
+                <div className="bg-gray-900 px-4 py-2 border-b border-gray-800 flex items-center justify-between">
+                  <span className="text-xs text-gray-400 font-mono">Live Preview</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-gray-400">Connected</span>
+                  </div>
+                </div>
+                <iframe
+                  ref={imageTestIframeRef}
+                  src="/tools/image-converter"
+                  className="flex-1 w-full border-0"
+                  title="Image Converter Visual Test"
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+                  onLoad={() => {
+                    if (imageTestLoading && showImageVisualTest) {
+                      setImageTestStep('Iframe loaded, starting automation...');
+                      setImageTestProgress(5);
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Sidebar Info Panel */}
+              <div className="w-80 bg-gray-900 border-l border-gray-800 overflow-y-auto">
+                <div className="p-4 space-y-4">
+                  {/* Automated Testing Info */}
+                  <div className="p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
+                    <h4 className="text-sm font-semibold text-green-300 mb-2 flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Fully Automated
+                    </h4>
+                    <p className="text-xs text-gray-300 leading-relaxed">
+                      The system automatically uploads files, selects formats, adjusts quality, clicks convert, and verifies results in real-time.
+                    </p>
+                  </div>
+
+                  {/* Test File Info */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-purple-300 mb-3">Test File</h4>
+                    <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
+                      <p className="text-white font-medium text-sm">test-video.jpeg</p>
+                      <p className="text-gray-400 text-xs mt-1">/test-files/main-files/</p>
+                    </div>
+                  </div>
+
+                  {/* Test Scenarios */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-purple-300 mb-3">Test Scenarios</h4>
+                    <div className="space-y-2">
+                      <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
+                        <ul className="text-gray-300 text-xs space-y-1.5">
+                          <li className="flex items-start gap-2">
+                            <span className="text-gray-400 mt-0.5">•</span>
+                            <span>JPG → PNG (quality: 85%)</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-gray-400 mt-0.5">•</span>
+                            <span>JPG → WebP (quality: 90%)</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-gray-400 mt-0.5">•</span>
+                            <span>JPG → PDF</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-gray-400 mt-0.5">•</span>
+                            <span>Resize: 1920x1080 (aspect ratio)</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-gray-400 mt-0.5">•</span>
+                            <span>Resize: 800x600 (no aspect ratio)</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-gray-400 mt-0.5">•</span>
+                            <span>Quality: 50% vs 100%</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expected Results */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-purple-300 mb-3">Expected Results</h4>
+                    <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
+                      <ul className="text-gray-300 text-xs space-y-1.5">
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400 mt-0.5">✓</span>
+                          <span>File upload area appears</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400 mt-0.5">✓</span>
+                          <span>File name and size displayed</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400 mt-0.5">✓</span>
+                          <span>Format dropdown (7 options)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400 mt-0.5">✓</span>
+                          <span>Quality slider (10-100%)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400 mt-0.5">✓</span>
+                          <span>Resize controls when enabled</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400 mt-0.5">✓</span>
+                          <span>Progress bar during conversion</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400 mt-0.5">✓</span>
+                          <span>Size comparison display</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-gray-400 mt-0.5">✓</span>
+                          <span>Download button after success</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Monetization Modal Info */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-yellow-300 mb-3">Monetization Test</h4>
+                    <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
+                      <p className="text-gray-300 text-xs leading-relaxed">
+                        The test will automatically detect and interact with the monetization modal, clicking "View Ad" and verifying download availability.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         </div>
       </div>
     </div>
