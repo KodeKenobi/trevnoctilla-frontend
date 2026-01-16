@@ -875,7 +875,7 @@ export default function TestingPage() {
                   
                   // Set up tab detection before clicking
                   let adTabOpened = false;
-                  let adTabWindow: Window | null = null;
+                  let adTabWindow: Window | null | undefined = null;
                   
                   // Listen for window blur (indicates new tab opened)
                   const handleBlur = () => {
