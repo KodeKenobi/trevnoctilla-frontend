@@ -984,9 +984,46 @@ export default function TestingPage() {
                     }
                   }
                   
-                  // Wait for modal to close
+                  // Simulate user returning from ad tab to trigger modal close
+                  // The modal waits for focus/visibilitychange events to detect user return
+                  // Sequence: blur (left) -> visibilitychange hidden -> visibilitychange visible -> focus (returned)
+                  setImageTestStep('Simulating user return from ad tab...');
+                  const iframeWindowForEvents = iframe.contentWindow;
+                  if (iframeWindowForEvents && iframeDoc) {
+                    // Step 1: Simulate blur (user left the tab)
+                    iframeWindowForEvents.dispatchEvent(new Event('blur', { bubbles: true }));
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // Step 2: Simulate visibility change to hidden (tab switched away)
+                    // We need to temporarily override visibilityState property
+                    const originalVisibilityState = Object.getOwnPropertyDescriptor(iframeDoc, 'visibilityState');
+                    Object.defineProperty(iframeDoc, 'visibilityState', {
+                      get: () => 'hidden',
+                      configurable: true
+                    });
+                    iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // Step 3: Simulate visibility change to visible (user returned)
+                    Object.defineProperty(iframeDoc, 'visibilityState', {
+                      get: () => 'visible',
+                      configurable: true
+                    });
+                    iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // Step 4: Trigger focus event (user returned to tab)
+                    iframeWindowForEvents.dispatchEvent(new Event('focus', { bubbles: true }));
+                    
+                    // Restore original visibilityState if it existed
+                    if (originalVisibilityState) {
+                      Object.defineProperty(iframeDoc, 'visibilityState', originalVisibilityState);
+                    }
+                  }
+                  
+                  // Wait for modal to close (reduced wait since we triggered the events)
                   setImageTestStep('Waiting for modal to close...');
-                  await new Promise(resolve => setTimeout(resolve, 2000));
+                  await new Promise(resolve => setTimeout(resolve, 1500));
                   
                   // Check if modal closed
                   const modalStillVisible = iframeDoc.querySelector('[data-monetization-modal="true"]') ||
