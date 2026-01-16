@@ -805,7 +805,7 @@ export default function TestingPage() {
 
             if (downloadButton) {
               const downloadButtonText = downloadButton.textContent?.trim() || '';
-              const downloadUrl = (downloadButton as HTMLAnchorElement).href || 
+              const downloadUrl = (downloadButton instanceof HTMLAnchorElement ? downloadButton.href : null) || 
                                 downloadButton.getAttribute('href') || 
                                 downloadButton.getAttribute('data-download-url') ||
                                 'Not available';
@@ -820,29 +820,31 @@ export default function TestingPage() {
             setImageTestStep('Testing monetization modal...');
             setImageTestProgress(92);
             
+            // Wrap monetization modal test in a timeout to prevent hanging (15 second max)
             try {
-              // Click download button to trigger monetization modal
-              downloadButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              await new Promise(resolve => setTimeout(resolve, 500));
-              downloadButton.click();
+              const monetizationTestPromise = (async () => {
+                // Click download button to trigger monetization modal
+                downloadButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                await new Promise(resolve => setTimeout(resolve, 500));
+                downloadButton.click();
+                
+                // Wait for monetization modal to appear (with timeout)
+                await new Promise(resolve => setTimeout(resolve, 2000));
               
-              // Wait for monetization modal to appear
-              await new Promise(resolve => setTimeout(resolve, 2000));
+                // Look for monetization modal - try multiple selectors
+                const monetizationModal = iframeDoc.querySelector('[data-monetization-modal="true"]') ||
+                                        iframeDoc.querySelector('[class*="monetization"]') ||
+                                        iframeDoc.querySelector('[class*="monet"]') ||
+                                        Array.from(iframeDoc.querySelectorAll('div')).find(
+                                          div => {
+                                            const text = div.textContent || '';
+                                            return text.includes('View Ad') || 
+                                                   text.includes('Watch Ad') ||
+                                                   text.includes('Make Payment');
+                                          }
+                                        );
               
-              // Look for monetization modal - try multiple selectors
-              const monetizationModal = iframeDoc.querySelector('[data-monetization-modal="true"]') ||
-                                      iframeDoc.querySelector('[class*="monetization"]') ||
-                                      iframeDoc.querySelector('[class*="monet"]') ||
-                                      Array.from(iframeDoc.querySelectorAll('div')).find(
-                                        div => {
-                                          const text = div.textContent || '';
-                                          return text.includes('View Ad') || 
-                                                 text.includes('Watch Ad') ||
-                                                 text.includes('Make Payment');
-                                        }
-                                      );
-              
-              if (monetizationModal) {
+                if (monetizationModal) {
                 const modalText = monetizationModal.textContent || '';
                 const modalTitle = Array.from(monetizationModal.querySelectorAll('h1, h2, h3, [class*="title"], [class*="heading"]'))
                   .map(e => e.textContent?.trim())
@@ -1013,7 +1015,7 @@ export default function TestingPage() {
                   
                   if (downloadAvailable) {
                     const downloadText = downloadAvailable.textContent?.trim() || '';
-                    const downloadHref = (downloadAvailable as HTMLAnchorElement).href || 
+                    const downloadHref = (downloadAvailable instanceof HTMLAnchorElement ? downloadAvailable.href : null) || 
                                        downloadAvailable.getAttribute('href') || 
                                        'Not available';
                     
@@ -1037,13 +1039,33 @@ export default function TestingPage() {
                     message: `"View Ad" button not found in monetization modal | Total buttons in modal: ${allModalButtons.length} | Button texts found: ${allModalButtons.map(b => `"${b.textContent?.trim()}"`).join(', ') || 'None'}`
                   });
                 }
-              } else {
+                } else {
+                  results.tests.push({
+                    name: 'Monetization Modal Detected',
+                    status: 'WARN',
+                    message: `Monetization modal did not appear | Wait time: 2 seconds | Possible causes: User already has access, modal not triggered for this test case, or modal selector not matching | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
+                  });
+                }
+              })();
+              
+              // Race against timeout (15 seconds max for monetization test)
+              const timeoutPromise = new Promise((resolve) => {
+                setTimeout(() => {
+                  resolve({ timeout: true });
+                }, 15000); // 15 second timeout
+              });
+              
+              const monetizationResult = await Promise.race([monetizationTestPromise, timeoutPromise]);
+              
+              // If timeout occurred, add a warning
+              if (monetizationResult && typeof monetizationResult === 'object' && 'timeout' in monetizationResult) {
                 results.tests.push({
-                  name: 'Monetization Modal Detected',
+                  name: 'Monetization Modal Test Timeout',
                   status: 'WARN',
-                  message: `Monetization modal did not appear | Wait time: 2 seconds | Possible causes: User already has access, modal not triggered for this test case, or modal selector not matching | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
+                  message: 'Monetization modal test exceeded 15 second timeout. Test may be incomplete.'
                 });
               }
+              
             } catch (monetError) {
               results.tests.push({
                 name: 'Monetization Modal Test',
@@ -1386,23 +1408,6 @@ export default function TestingPage() {
       setImageTestStep('Testing complete! Keep the window open to review results.');
       // Don't auto-close - let user close manually
     }
-  } catch (finalError) {
-    // Final catch to ensure we always set results
-    const errorResults: any = { 
-      timestamp: new Date(), 
-      tests: [{
-        name: 'Test Execution Error',
-        status: 'FAIL',
-        message: finalError instanceof Error ? finalError.message : 'Unknown error occurred'
-      }]
-    };
-    setTestResults(prev => ({ ...prev, imageConverter: errorResults }));
-    setImageTestLoading(false);
-    if (visualMode) {
-      setImageTestProgress(100);
-      setImageTestStep('Test failed. Check results below.');
-    }
-  }
   };
 
   const testPDFTools = async () => {
