@@ -304,15 +304,31 @@ export const ImageConverterTool: React.FC<ImageConverterToolProps> = ({
                 )}
                 {originalFileSize && convertedFileSize && (
                   <p className="text-xs text-gray-400">
-                    Compression:{" "}
-                    <span className="text-purple-300 font-medium">
-                      {(
-                        ((originalFileSize - convertedFileSize) /
-                          originalFileSize) *
-                        100
-                      ).toFixed(1)}
-                      % reduction
-                    </span>
+                    {convertedFileSize < originalFileSize ? (
+                      <>
+                        Compression:{" "}
+                        <span className="text-purple-300 font-medium">
+                          {(
+                            ((originalFileSize - convertedFileSize) /
+                              originalFileSize) *
+                            100
+                          ).toFixed(1)}
+                          % reduction
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        Size change:{" "}
+                        <span className="text-orange-300 font-medium">
+                          {(
+                            ((convertedFileSize - originalFileSize) /
+                              originalFileSize) *
+                            100
+                          ).toFixed(1)}
+                          % increase
+                        </span>
+                      </>
+                    )}
                   </p>
                 )}
               </div>

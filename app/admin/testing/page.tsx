@@ -589,20 +589,32 @@ export default function TestingPage() {
         }
       }
 
-      setImageTestStep('Selecting output format (PNG)...');
+      setImageTestStep('Selecting output format...');
       setImageTestProgress(40);
 
       // Select output format and capture all available options
       const formatSelect = iframeDoc.querySelector('select') as HTMLSelectElement;
-      let selectedFormat = 'png';
+      let selectedFormat = 'png'; // Default fallback
       let availableFormats: string[] = [];
       
       if (formatSelect) {
         // Get all available format options
-        availableFormats = Array.from(formatSelect.options).map(opt => opt.value || opt.text);
-        selectedFormat = 'png';
+        availableFormats = Array.from(formatSelect.options)
+          .map(opt => opt.value || opt.text)
+          .filter(f => f && f.trim() !== '');
+        
+        // Test different formats: prioritize webp (good compression), then jpg, then png
+        // This ensures we test formats that typically compress better
+        const preferredFormats = ['webp', 'jpg', 'jpeg', 'png', 'bmp', 'tiff', 'gif', 'pdf'];
+        const formatToTest = preferredFormats.find(f => 
+          availableFormats.some(af => af.toLowerCase().includes(f.toLowerCase()))
+        ) || availableFormats[0] || 'png';
+        
+        selectedFormat = formatToTest;
         formatSelect.value = selectedFormat;
         formatSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        
+        setImageTestStep(`Selected format: ${selectedFormat.toUpperCase()} (testing ${availableFormats.length} available formats)`);
       }
 
       await new Promise(resolve => setTimeout(resolve, 1500));
