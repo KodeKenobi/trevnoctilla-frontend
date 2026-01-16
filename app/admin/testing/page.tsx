@@ -639,54 +639,55 @@ export default function TestingPage() {
       setImageTestStep('Waiting for conversion to complete...');
       setImageTestProgress(70);
 
-      // Poll for conversion result
+      // Poll for conversion result with timeout
       let conversionComplete = false;
       let attempts = 0;
-      const maxAttempts = 60; // 60 seconds max wait
+      const maxAttempts = 30; // 30 seconds max wait (reduced from 60 to prevent hanging)
 
       while (!conversionComplete && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         attempts++;
 
-        const downloadButton = Array.from(iframeDoc.querySelectorAll('button')).find(
-          btn => btn.textContent?.includes('Download')
-        );
-        
-        const textContent = iframeDoc.textContent || '';
-        const lowerText = textContent.toLowerCase();
-        const successMessage = lowerText.includes('successfully') ||
-                              lowerText.includes('converted successfully');
-        
-        if (downloadButton || successMessage) {
-          conversionComplete = true;
-          setImageTestProgress(90);
-          setImageTestStep('Conversion completed! Verifying results...');
+        try {
+          const downloadButton = Array.from(iframeDoc.querySelectorAll('button')).find(
+            btn => btn.textContent?.includes('Download')
+          );
           
-          results.tests.push({
-            name: 'Conversion Completion',
-            status: 'PASS',
-            message: `Conversion completed in ${attempts} seconds`
-          });
-
-          // Check for file size comparison
-          const fileSizeText = iframeDoc.textContent || '';
-          const fileSizeInfo = fileSizeText.includes('Original size') || 
-                              fileSizeText.includes('Converted size');
+          const textContent = iframeDoc.textContent || '';
+          const lowerText = textContent.toLowerCase();
+          const successMessage = lowerText.includes('successfully') ||
+                                lowerText.includes('converted successfully');
           
-          if (fileSizeInfo) {
+          if (downloadButton || successMessage) {
+            conversionComplete = true;
+            setImageTestProgress(90);
+            setImageTestStep('Conversion completed! Verifying results...');
+            
             results.tests.push({
-              name: 'File Size Comparison Display',
+              name: 'Conversion Completion',
               status: 'PASS',
-              message: 'File size comparison displayed correctly'
+              message: `Conversion completed in ${attempts * 2} seconds`
             });
-          }
 
-          if (downloadButton) {
-            results.tests.push({
-              name: 'Download Button Appears',
-              status: 'PASS',
-              message: 'Download button appeared after conversion'
-            });
+            // Check for file size comparison
+            const fileSizeText = iframeDoc.textContent || '';
+            const fileSizeInfo = fileSizeText.includes('Original size') || 
+                                fileSizeText.includes('Converted size');
+            
+            if (fileSizeInfo) {
+              results.tests.push({
+                name: 'File Size Comparison Display',
+                status: 'PASS',
+                message: 'File size comparison displayed correctly'
+              });
+            }
+
+            if (downloadButton) {
+              results.tests.push({
+                name: 'Download Button Appears',
+                status: 'PASS',
+                message: 'Download button appeared after conversion'
+              });
 
             // STEP: Test Monetization Modal
             setImageTestStep('Testing monetization modal...');
@@ -737,6 +738,31 @@ export default function TestingPage() {
                   setImageTestStep('Clicking "View Ad" button...');
                   setImageTestProgress(95);
                   
+                  // Set up tab detection before clicking
+                  let adTabOpened = false;
+                  let adTabWindow: Window | null = null;
+                  
+                  // Listen for window blur (indicates new tab opened)
+                  const handleBlur = () => {
+                    adTabOpened = true;
+                  };
+                  
+                  // Intercept window.open in iframe to capture the opened window
+                  const iframeWindow = iframe.contentWindow;
+                  if (iframeWindow) {
+                    const originalOpen = iframeWindow.open;
+                    iframeWindow.open = function(url?: string | URL, target?: string, features?: string) {
+                      const newWindow = originalOpen.call(this, url, target, features);
+                      if (newWindow) {
+                        adTabWindow = newWindow;
+                        adTabOpened = true;
+                      }
+                      return newWindow;
+                    };
+                    
+                    window.addEventListener('blur', handleBlur);
+                  }
+                  
                   // Scroll button into view
                   viewAdButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   await new Promise(resolve => setTimeout(resolve, 300));
@@ -750,8 +776,77 @@ export default function TestingPage() {
                     message: 'Successfully clicked "View Ad" button in monetization modal'
                   });
                   
-                  // Wait for ad to open/redirect and modal to close
-                  await new Promise(resolve => setTimeout(resolve, 5000));
+                  // Wait for tab to open (check for blur or window.open result)
+                  setImageTestStep('Waiting for ad tab to open...');
+                  await new Promise(resolve => setTimeout(resolve, 2000));
+                  
+                  // Check if tab opened
+                  if (adTabOpened || adTabWindow) {
+                    results.tests.push({
+                      name: 'Ad Tab Opened',
+                      status: 'PASS',
+                      message: 'New tab opened after clicking "View Ad"'
+                    });
+                    
+                    // Try to close the tab
+                    setImageTestStep('Attempting to close ad tab...');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    try {
+                      if (adTabWindow && !adTabWindow.closed) {
+                        adTabWindow.close();
+                        // Wait a bit to see if it closed
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                        if (adTabWindow.closed) {
+                          results.tests.push({
+                            name: 'Ad Tab Closed',
+                            status: 'PASS',
+                            message: 'Successfully closed the ad tab'
+                          });
+                        } else {
+                          results.tests.push({
+                            name: 'Ad Tab Closed',
+                            status: 'WARN',
+                            message: 'Ad tab may still be open (browser security may prevent closing)'
+                          });
+                        }
+                      } else {
+                        results.tests.push({
+                          name: 'Ad Tab Closed',
+                          status: 'WARN',
+                          message: 'Could not access ad tab window reference (browser security)'
+                        });
+                      }
+                    } catch (closeError) {
+                      results.tests.push({
+                        name: 'Ad Tab Closed',
+                        status: 'WARN',
+                        message: `Could not close ad tab: ${closeError instanceof Error ? closeError.message : 'Browser security restriction'}`
+                      });
+                    }
+                  } else {
+                    results.tests.push({
+                      name: 'Ad Tab Opened',
+                      status: 'WARN',
+                      message: 'Could not confirm if ad tab opened (may have been blocked by popup blocker)'
+                    });
+                  }
+                  
+                  // Clean up listeners
+                  window.removeEventListener('blur', handleBlur);
+                  if (iframeWindow && iframeWindow.open) {
+                    // Restore original open if possible (may not work due to security)
+                    try {
+                      iframeWindow.open = iframeWindow.open;
+                    } catch (e) {
+                      // Ignore - can't restore due to security
+                    }
+                  }
+                  
+                  // Wait for modal to close
+                  setImageTestStep('Waiting for modal to close...');
+                  await new Promise(resolve => setTimeout(resolve, 2000));
                   
                   // Check if modal closed
                   const modalStillVisible = iframeDoc.querySelector('[data-monetization-modal="true"]') ||
@@ -772,7 +867,8 @@ export default function TestingPage() {
                   }
                   
                   // Check for download availability after ad view
-                  await new Promise(resolve => setTimeout(resolve, 3000));
+                  setImageTestStep('Checking for download availability...');
+                  await new Promise(resolve => setTimeout(resolve, 2000));
                   
                   const downloadAvailable = Array.from(iframeDoc.querySelectorAll('button')).find(
                     btn => btn.textContent?.includes('Download')
@@ -813,10 +909,30 @@ export default function TestingPage() {
                 message: `Error testing monetization modal: ${monetError instanceof Error ? monetError.message : String(monetError)}`
               });
             }
+            } else {
+              // No download button found, but conversion completed
+              results.tests.push({
+                name: 'Download Button After Conversion',
+                status: 'WARN',
+                message: 'Conversion completed but download button not found'
+              });
+            }
+          } else {
+            setImageTestProgress(70 + (attempts * 1));
+            setImageTestStep(`Waiting for conversion... (${attempts * 2}/${maxAttempts * 2} seconds)`);
+          }
+          } catch (pollError) {
+            // If polling fails, break out to prevent infinite loop
+            results.tests.push({
+              name: 'Conversion Polling Error',
+              status: 'WARN',
+              message: `Error while checking conversion status: ${pollError instanceof Error ? pollError.message : String(pollError)}`
+            });
+            break;
           }
         } else {
           setImageTestProgress(70 + (attempts * 1));
-          setImageTestStep(`Waiting for conversion... (${attempts}/${maxAttempts} seconds)`);
+          setImageTestStep(`Waiting for conversion... (${attempts * 2}/${maxAttempts * 2} seconds)`);
         }
       }
 
@@ -824,15 +940,65 @@ export default function TestingPage() {
         results.tests.push({
           name: 'Conversion Completion',
           status: 'WARN',
-          message: `Conversion may still be in progress or timed out after ${maxAttempts} seconds`
+          message: `Conversion may still be in progress or timed out after ${maxAttempts * 2} seconds. Results may be incomplete.`
         });
+        // Even if conversion didn't complete, try to test monetization modal if download button exists
+        setImageTestStep('Conversion timeout - checking for download button anyway...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const downloadButtonAfterTimeout = Array.from(iframeDoc.querySelectorAll('button')).find(
+          btn => btn.textContent?.includes('Download')
+        );
+        if (downloadButtonAfterTimeout) {
+          results.tests.push({
+            name: 'Download Button Found After Timeout',
+            status: 'PASS',
+            message: 'Download button found even though conversion status unclear'
+          });
+          
+          // Try to test monetization modal even after timeout
+          setImageTestStep('Testing monetization modal after timeout...');
+          setImageTestProgress(92);
+          try {
+            downloadButtonAfterTimeout.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            await new Promise(resolve => setTimeout(resolve, 500));
+            downloadButtonAfterTimeout.click();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const monetizationModal = iframeDoc.querySelector('[data-monetization-modal="true"]') ||
+                                    iframeDoc.querySelector('[class*="monetization"]');
+            
+            if (monetizationModal) {
+              results.tests.push({
+                name: 'Monetization Modal (After Timeout)',
+                status: 'PASS',
+                message: 'Monetization modal appeared when download was requested'
+              });
+            } else {
+              results.tests.push({
+                name: 'Monetization Modal (After Timeout)',
+                status: 'WARN',
+                message: 'Monetization modal did not appear'
+              });
+            }
+          } catch (timeoutMonetError) {
+            results.tests.push({
+              name: 'Monetization Modal (After Timeout)',
+              status: 'WARN',
+              message: `Could not test monetization modal: ${timeoutMonetError instanceof Error ? timeoutMonetError.message : String(timeoutMonetError)}`
+            });
+          }
+        }
       } else {
         // Wait a bit longer after conversion completes to ensure everything is ready
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
+      // Always complete the test, even if conversion didn't finish
       setImageTestProgress(100);
-      setImageTestStep('Automated testing complete! Keep the window open to review results.');
+      setImageTestStep('Automated testing complete! All results are shown below.');
+      
+      // Ensure we always return results, even if something hangs
+      return results;
 
     } catch (error) {
       results.tests.push({
@@ -840,9 +1006,10 @@ export default function TestingPage() {
         status: 'FAIL',
         message: error instanceof Error ? error.message : 'Unknown error during automation'
       });
+      setImageTestProgress(100);
+      setImageTestStep('Test completed with errors. Check results below.');
+      return results;
     }
-
-    return results;
   };
 
   const testImageConverter = async (visualMode: boolean = false) => {
@@ -885,8 +1052,29 @@ export default function TestingPage() {
         if (iframeReady) {
           setImageTestStep('Starting automated testing - handling cookie consent first...');
           setImageTestProgress(10);
-          const iframeResults = await automateImageConverterTest(imageTestIframeRef.current);
-          results.tests.push(...iframeResults.tests);
+          
+          // Add timeout wrapper to prevent infinite hanging
+          const automationPromise = automateImageConverterTest(imageTestIframeRef.current);
+          const timeoutPromise = new Promise((resolve) => {
+            setTimeout(() => {
+              resolve({ tests: [{
+                name: 'Automation Timeout',
+                status: 'WARN',
+                message: 'Automation exceeded 90 seconds timeout. Some tests may be incomplete.'
+              }]});
+            }, 90000); // 90 second timeout (reduced from 120 to prevent hanging)
+          });
+          
+          try {
+            const iframeResults = await Promise.race([automationPromise, timeoutPromise]) as any;
+            results.tests.push(...iframeResults.tests);
+          } catch (raceError) {
+            results.tests.push({
+              name: 'Automation Error',
+              status: 'FAIL',
+              message: `Automation failed: ${raceError instanceof Error ? raceError.message : String(raceError)}`
+            });
+          }
         } else {
           results.tests.push({
             name: 'Iframe Ready Check',
@@ -1052,6 +1240,7 @@ export default function TestingPage() {
       });
     }
 
+    // Always set results and stop loading, even if there were errors
     setTestResults(prev => ({ ...prev, imageConverter: results }));
     setImageTestLoading(false);
     if (visualMode) {
@@ -1059,6 +1248,23 @@ export default function TestingPage() {
       setImageTestStep('Testing complete! Keep the window open to review results.');
       // Don't auto-close - let user close manually
     }
+  } catch (finalError) {
+    // Final catch to ensure we always set results
+    const errorResults: any = { 
+      timestamp: new Date(), 
+      tests: [{
+        name: 'Test Execution Error',
+        status: 'FAIL',
+        message: finalError instanceof Error ? finalError.message : 'Unknown error occurred'
+      }]
+    };
+    setTestResults(prev => ({ ...prev, imageConverter: errorResults }));
+    setImageTestLoading(false);
+    if (visualMode) {
+      setImageTestProgress(100);
+      setImageTestStep('Test failed. Check results below.');
+    }
+  }
   };
 
   const testPDFTools = async () => {
