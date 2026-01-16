@@ -220,10 +220,66 @@ export default function TestingPage() {
         message: `Started conversion to ${format.toUpperCase()} format | Quality: ${quality}% | Compression: ${compression}`
       });
       
-      // Wait for conversion (videos take longer - up to 5 minutes)
+      // STEP 1: Wait for upload to complete (check for upload progress to finish)
+      setVideoTestStep(`Format ${formatIndex + 1}/${totalFormats}: Uploading ${format.toUpperCase()}...`);
+      let uploadComplete = false;
+      let uploadAttempts = 0;
+      const maxUploadAttempts = 60; // 2 minutes max for upload (60 * 2 seconds)
+      
+      while (!uploadComplete && uploadAttempts < maxUploadAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        uploadAttempts++;
+        
+        // Check if upload is complete by looking for:
+        // 1. Upload progress text disappears or shows 100%
+        // 2. "Uploading" text is gone
+        // 3. Progress bar appears (indicating conversion started)
+        const textContent = iframeDoc.textContent || '';
+        const uploadingText = textContent.toLowerCase().includes('uploading');
+        const uploadProgress = iframeDoc.querySelector('[class*="upload"], [class*="progress"]');
+        const progressBar = iframeDoc.querySelector('[style*="width"], [class*="progress"]') as HTMLElement;
+        
+        // If we see a progress bar with width > 0% or no "uploading" text, upload is likely complete
+        if (progressBar) {
+          const style = progressBar.getAttribute('style') || '';
+          const widthMatch = style.match(/width:\s*(\d+)%/);
+          if (widthMatch) {
+            const progressValue = parseInt(widthMatch[1]);
+            if (progressValue > 0 && progressValue < 100) {
+              // Conversion has started (progress > 0% but not 100% yet)
+              uploadComplete = true;
+              setVideoTestStep(`Format ${formatIndex + 1}/${totalFormats}: Converting ${format.toUpperCase()}...`);
+            }
+          }
+        }
+        
+        // If "uploading" text is gone and we see processing messages, upload is complete
+        if (!uploadingText && (textContent.toLowerCase().includes('processing') || 
+                               textContent.toLowerCase().includes('converting') ||
+                               textContent.toLowerCase().includes('analyzing'))) {
+          uploadComplete = true;
+          setVideoTestStep(`Format ${formatIndex + 1}/${totalFormats}: Converting ${format.toUpperCase()}...`);
+        }
+      }
+      
+      if (!uploadComplete) {
+        formatResults.tests.push({
+          name: `Format ${format.toUpperCase()} - Upload Complete`,
+          status: 'WARN',
+          message: `Upload timeout after ${maxUploadAttempts * 2}s, assuming upload complete and continuing with conversion check`
+        });
+      } else {
+        formatResults.tests.push({
+          name: `Format ${format.toUpperCase()} - Upload Complete`,
+          status: 'PASS',
+          message: `File upload completed in ~${uploadAttempts * 2}s, conversion started`
+        });
+      }
+      
+      // STEP 2: Wait for conversion to complete (check for loading=false, conversionResult set, download button)
       let conversionComplete = false;
       let attempts = 0;
-      const maxAttempts = 150; // 5 minutes max (150 * 2 seconds)
+      const maxAttempts = 300; // 10 minutes max for conversion (300 * 2 seconds = 10 minutes)
       
       while (!conversionComplete && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -237,24 +293,51 @@ export default function TestingPage() {
           if (widthMatch) {
             const progressValue = parseInt(widthMatch[1]);
             setVideoTestProgress(35 + (formatIndex * 10) + Math.floor(progressValue * 0.4));
+            setVideoTestStep(`Format ${formatIndex + 1}/${totalFormats}: Converting ${format.toUpperCase()}... ${progressValue}%`);
           }
         }
         
+        // Check for conversion completion indicators:
+        // 1. Download button appears
+        // 2. Success message appears
+        // 3. "Conversion completed successfully" text
+        // 4. Progress bar at 100%
+        // 5. Loading state is false (button is no longer disabled)
         const downloadButton = Array.from(iframeDoc.querySelectorAll('button, a')).find(
           btn => {
             const text = btn.textContent?.trim() || '';
-            return text.includes('Download') || 
+            const disabled = btn.hasAttribute('disabled') || (btn as HTMLButtonElement).disabled;
+            return (text.includes('Download') || 
                    text.toLowerCase().includes('download') ||
-                   btn.getAttribute('href')?.includes('download');
+                   btn.getAttribute('href')?.includes('download')) && !disabled;
           }
         );
         
         const textContent = iframeDoc.textContent || '';
         const successMessage = textContent.toLowerCase().includes('successfully') ||
-                              textContent.toLowerCase().includes('completed') ||
-                              textContent.toLowerCase().includes('conversion completed');
+                              textContent.toLowerCase().includes('conversion completed') ||
+                              textContent.toLowerCase().includes('completed successfully');
         
-        if (downloadButton || successMessage) {
+        // Check if convert button is no longer disabled (loading=false)
+        const convertButtonAfter = Array.from(iframeDoc.querySelectorAll('button')).find(
+          btn => {
+            const text = btn.textContent?.trim() || '';
+            return (text.includes('Convert') || text.includes('Extract')) && !btn.hasAttribute('disabled') && !(btn as HTMLButtonElement).disabled;
+          }
+        );
+        
+        // Check for progress bar at 100%
+        let progressAt100 = false;
+        if (progressBar) {
+          const style = progressBar.getAttribute('style') || '';
+          const widthMatch = style.match(/width:\s*(\d+)%/);
+          if (widthMatch && parseInt(widthMatch[1]) >= 100) {
+            progressAt100 = true;
+          }
+        }
+        
+        // Conversion is complete if any of these conditions are met
+        if (downloadButton || (successMessage && progressAt100) || (successMessage && convertButtonAfter)) {
           conversionComplete = true;
           const conversionTime = attempts * 2;
           const conversionTimeFormatted = conversionTime < 60 ? `${conversionTime}s` : `${Math.floor(conversionTime / 60)}m ${conversionTime % 60}s`;
@@ -1206,16 +1289,18 @@ export default function TestingPage() {
           setVideoTestStep('Starting automated testing - handling cookie consent first...');
           setVideoTestProgress(10);
           
-          // Add timeout wrapper to prevent infinite hanging (5 minutes max for videos)
+          // Add timeout wrapper to prevent infinite hanging (20 minutes max for videos - allows for multiple format conversions)
+          // Each format: ~2 min upload + ~10 min conversion = ~12 min per format
+          // 4 formats = ~48 min max, but we'll set to 20 min to be reasonable
           const automationPromise = automateVideoConverterTest(videoTestIframeRef.current);
           const timeoutPromise = new Promise((resolve) => {
             setTimeout(() => {
               resolve({ timeout: true, tests: [{
                 name: 'Automation Timeout',
                 status: 'WARN',
-                message: 'Automation exceeded 5 minutes timeout. Some tests may be incomplete.'
+                message: 'Automation exceeded 20 minutes timeout. Some tests may be incomplete. Video conversions can take longer, especially with heavy compression.'
               }]});
-            }, 300000); // 5 minute timeout for videos
+            }, 1200000); // 20 minute timeout for videos (allows multiple format conversions)
           });
           
           try {
