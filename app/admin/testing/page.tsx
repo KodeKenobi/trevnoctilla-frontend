@@ -2514,16 +2514,16 @@ export default function TestingPage() {
                 {testResults.imageConverter && (
                           <div className="flex-1 overflow-y-auto">
                             {/* Visual Summary - Creative Design */}
-                            <div className="relative mb-6">
+                            <div className="relative mb-6 pt-2">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-3">
-                                  <div className="relative">
+                                  <div className="relative pt-1 pr-1">
                                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/30 flex items-center justify-center">
                                       <div className="text-2xl font-bold text-green-400">
                                         {testResults.imageConverter.tests.filter((t: any) => t.status === 'PASS').length}
                                       </div>
                                     </div>
-                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-gray-900">
+                                    <div className="absolute top-0 right-0 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-gray-900 shadow-lg">
                                       <span className="text-[10px] text-white">✓</span>
                                     </div>
                                   </div>
