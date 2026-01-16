@@ -2505,41 +2505,74 @@ export default function TestingPage() {
                         </div>
                 {testResults.imageConverter && (
                           <div className="flex-1 overflow-y-auto">
-                            <div className="space-y-2">
+                            {/* Summary Stats */}
+                            <div className="grid grid-cols-3 gap-3 mb-4">
+                              <div className="bg-gray-800/50 rounded-md p-3 border border-gray-700">
+                                <div className="text-xs text-gray-400 mb-1">Total Tests</div>
+                                <div className="text-lg font-semibold text-white">{testResults.imageConverter.tests.length}</div>
+                              </div>
+                              <div className="bg-green-900/20 rounded-md p-3 border border-green-500/30">
+                                <div className="text-xs text-gray-400 mb-1">Passed</div>
+                                <div className="text-lg font-semibold text-green-400">
+                                  {testResults.imageConverter.tests.filter((t: any) => t.status === 'PASS').length}
+                                </div>
+                              </div>
+                              <div className="bg-yellow-900/20 rounded-md p-3 border border-yellow-500/30">
+                                <div className="text-xs text-gray-400 mb-1">Warnings</div>
+                                <div className="text-lg font-semibold text-yellow-400">
+                                  {testResults.imageConverter.tests.filter((t: any) => t.status === 'WARN').length}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Compact Results Grid */}
+                            <div className="grid grid-cols-1 gap-2">
                               {testResults.imageConverter.tests.map((test: any, index: number) => {
                                 const testKey = `image-${index}`;
                                 const isExpanded = expandedTest === testKey;
                                 return (
                                   <div 
                                     key={index} 
-                                    className="p-3 bg-gray-800/50 rounded-md border border-gray-700 cursor-pointer hover:bg-gray-800/70 transition-colors"
-                                    onClick={() => setExpandedTest(isExpanded ? null : testKey)}
+                                    className="bg-gray-800/50 rounded-md border border-gray-700 hover:bg-gray-800/70 transition-colors"
                                   >
-                                    <div className="flex items-start gap-2.5">
-                                      <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
-                          test.status === 'PASS' ? 'bg-green-400' :
-                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                        }`}></span>
-                                      <div className="flex-1">
-                                        <div className="text-white text-sm font-medium flex items-center justify-between">
-                                          <span>{test.name}</span>
-                                          <span className="text-gray-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
-                      </div>
-                                        {test.message && (
-                                          <div className={`text-gray-400 text-xs mt-0.5 ${isExpanded ? '' : 'truncate'}`}>
-                                            {test.message}
-                  </div>
-                )}
-                                        {isExpanded && (
-                                          <div className="mt-2 pt-2 border-t border-gray-700">
-                                            <div className="text-xs text-gray-500 space-y-1">
-                                              <div><span className="text-gray-400">Status:</span> <span className="text-white">{test.status}</span></div>
-                                              {test.timestamp && <div><span className="text-gray-400">Time:</span> <span className="text-white">{new Date(test.timestamp).toLocaleString()}</span></div>}
-              </div>
+                                    <div 
+                                      className="p-2.5 cursor-pointer"
+                                      onClick={() => setExpandedTest(isExpanded ? null : testKey)}
+                                    >
+                                      <div className="flex items-center gap-2.5">
+                                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                          test.status === 'PASS' ? 'bg-green-400' :
+                                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
+                                        }`}></span>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center justify-between gap-2">
+                                            <span className="text-white text-sm font-medium truncate">{test.name}</span>
+                                            <span className="text-gray-500 text-xs flex-shrink-0">{isExpanded ? '▼' : '▶'}</span>
                                           </div>
-                                        )}
+                                          {test.message && !isExpanded && (
+                                            <div className="text-gray-400 text-xs mt-0.5 truncate">
+                                              {test.message}
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
+                                    {isExpanded && (
+                                      <div className="px-2.5 pb-2.5 pt-0 border-t border-gray-700 mt-2">
+                                        <div className="text-xs text-gray-400 mt-2 space-y-1">
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-gray-500">Status:</span>
+                                            <span className={`font-medium ${
+                                              test.status === 'PASS' ? 'text-green-400' :
+                                              test.status === 'WARN' ? 'text-yellow-400' : 'text-red-400'
+                                            }`}>{test.status}</span>
+                                          </div>
+                                          {test.message && (
+                                            <div className="text-gray-300 mt-1.5 break-words">{test.message}</div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
