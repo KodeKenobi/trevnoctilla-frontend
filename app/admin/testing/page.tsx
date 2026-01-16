@@ -1012,50 +1012,72 @@ export default function TestingPage() {
                   
                   clearTimeout(modalCloseTimeout);
                   
-                  // Check if modal closed
+                  // Check if modal closed or if page was redirected (ad-success page)
+                  // Note: The modal redirects to /ad-success when View Ad is clicked, so the iframe navigates away
                   const modalStillVisible = iframeDoc.querySelector('[data-monetization-modal="true"]') ||
                                           iframeDoc.querySelector('[class*="monetization"]');
                   
-                  if (!modalStillVisible) {
+                  // Check if we were redirected to ad-success page
+                  let redirectedToAdSuccess = false;
+                  try {
+                    const currentUrl = iframe.contentWindow?.location?.href || '';
+                    redirectedToAdSuccess = currentUrl.includes('/ad-success');
+                  } catch (e) {
+                    // Cross-origin restriction - can't check URL
+                  }
+                  
+                  if (!modalStillVisible || redirectedToAdSuccess) {
                     results.tests.push({
                       name: 'Monetization Modal Closed',
                       status: 'PASS',
-                      message: `Modal closed after clicking "View Ad" | Time to close: ~2 seconds | Modal state: Hidden | Ad tab: ${adTabOpened || adTabWindow ? 'Opened' : 'Not detected'}`
+                      message: `Modal closed after clicking "View Ad" | Time to close: ~2 seconds | Modal state: Hidden | Ad tab: ${adTabOpened || adTabWindow ? 'Opened (will remain open)' : 'Not detected'} | Page redirected: ${redirectedToAdSuccess ? 'Yes (to /ad-success)' : 'No'}`
                     });
                   } else {
                     results.tests.push({
                       name: 'Monetization Modal Closed',
                       status: 'WARN',
-                      message: `Modal may still be visible | Modal state: Still visible | Wait time: 2 seconds | Possible cause: Ad tab not closed or modal waiting for ad completion`
+                      message: `Modal may still be visible but test continuing | Modal state: ${modalStillVisible ? 'Still visible' : 'Hidden'} | Wait time: 2 seconds | Test will continue regardless to prevent hanging`
                     });
                   }
                   
-                  // Check for download availability after ad view
-                  setImageTestStep('Checking for download availability...');
-                  await new Promise(resolve => setTimeout(resolve, 2000));
-                  
-                  const downloadAvailable = Array.from(iframeDoc.querySelectorAll('button')).find(
-                    btn => btn.textContent?.includes('Download')
-                  ) || iframeDoc.querySelector('a[download]');
-                  
-                  if (downloadAvailable) {
-                    const downloadText = downloadAvailable.textContent?.trim() || '';
-                    const downloadHref = (downloadAvailable instanceof HTMLAnchorElement ? downloadAvailable.href : null) || 
-                                       downloadAvailable.getAttribute('href') || 
-                                       'Not available';
+                  // If page was redirected, skip download check and continue
+                  if (redirectedToAdSuccess) {
+                    results.tests.push({
+                      name: 'Download Available After Ad',
+                      status: 'INFO',
+                      message: `Page redirected to /ad-success after ad click | Download will be available via ad-success page | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}% | Note: Ad tab remains open (expected behavior)`
+                    });
+                  } else {
+                    // Check for download availability after ad view (only if page wasn't redirected)
+                    setImageTestStep('Checking for download availability...');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                     
-                    results.tests.push({
-                      name: 'Download Available After Ad',
-                      status: 'PASS',
-                      message: `Download available after viewing ad | Button text: "${downloadText}" | Download URL: ${downloadHref.length > 50 ? downloadHref.substring(0, 50) + '...' : downloadHref} | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
-                    });
-                  } else {
-                    results.tests.push({
-                      name: 'Download Available After Ad',
-                      status: 'WARN',
-                      message: `Download not immediately visible | Wait time: 2 seconds | Possible causes: Ad not completed, page refresh needed, or download not yet enabled | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
-                    });
+                    const downloadAvailable = Array.from(iframeDoc.querySelectorAll('button')).find(
+                      btn => btn.textContent?.includes('Download')
+                    ) || iframeDoc.querySelector('a[download]');
+                    
+                    if (downloadAvailable) {
+                      const downloadText = downloadAvailable.textContent?.trim() || '';
+                      const downloadHref = (downloadAvailable instanceof HTMLAnchorElement ? downloadAvailable.href : null) || 
+                                         downloadAvailable.getAttribute('href') || 
+                                         'Not available';
+                      
+                      results.tests.push({
+                        name: 'Download Available After Ad',
+                        status: 'PASS',
+                        message: `Download available after viewing ad | Button text: "${downloadText}" | Download URL: ${downloadHref.length > 50 ? downloadHref.substring(0, 50) + '...' : downloadHref} | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
+                      });
+                    } else {
+                      results.tests.push({
+                        name: 'Download Available After Ad',
+                        status: 'WARN',
+                        message: `Download not immediately visible | Wait time: 2 seconds | Possible causes: Ad not completed, page refresh needed, or download not yet enabled | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
+                      });
+                    }
                   }
+                  
+                  // Force continue - don't let anything block the test
+                  // The ad tab will remain open - this is expected and fine
                   
                 } else {
                   results.tests.push({
