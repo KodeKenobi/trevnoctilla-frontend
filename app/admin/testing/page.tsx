@@ -766,21 +766,38 @@ export default function TestingPage() {
               }
             }
             
-            // Try to find size elements in the DOM
-            const sizeElements = iframeDoc.querySelectorAll('[class*="size"], [class*="file-size"], [class*="original"], [class*="converted"]');
-            for (const elem of Array.from(sizeElements)) {
+            // Try to find size elements in the DOM - look for specific text patterns
+            const allElements = iframeDoc.querySelectorAll('p, span, div, td, li');
+            for (const elem of Array.from(allElements)) {
               const text = elem.textContent || '';
-              if (text.includes('Original') || text.includes('original')) {
+              // Look for "Original size:" or "Original:" patterns
+              if (text.match(/original[:\s]+size[:\s]+/i) || (text.match(/original[:\s]+[\d.]+/i) && text.match(/[\d.]+\s*(KB|MB)/i))) {
                 const match = text.match(/([\d.]+)\s*(KB|MB|bytes?)/i);
                 if (match) originalSize = `${match[1]} ${match[2]}`;
               }
-              if (text.includes('Converted') || text.includes('converted')) {
+              // Look for "Converted size:" or "Converted:" patterns
+              if (text.match(/converted[:\s]+size[:\s]+/i) || (text.match(/converted[:\s]+[\d.]+/i) && text.match(/[\d.]+\s*(KB|MB)/i))) {
                 const match = text.match(/([\d.]+)\s*(KB|MB|bytes?)/i);
                 if (match) convertedSize = `${match[1]} ${match[2]}`;
               }
-              if (text.includes('%') || text.includes('ratio') || text.includes('compression')) {
+              // Look for compression ratio
+              if (text.includes('%') && (text.includes('reduction') || text.includes('compression') || text.includes('ratio'))) {
                 const match = text.match(/([\d.]+)%/);
                 if (match) compressionRatio = `${match[1]}%`;
+              }
+            }
+            
+            // Also check for file size in the file info section (where file details are shown)
+            const fileInfoSection = iframeDoc.querySelector('[class*="file"], [class*="upload"], [class*="selected"]');
+            if (fileInfoSection) {
+              const fileInfoText = fileInfoSection.textContent || '';
+              if (fileInfoText.includes('Original size') || fileInfoText.includes('original')) {
+                const match = fileInfoText.match(/original[:\s]+size[:\s]+([\d.]+)\s*(KB|MB|bytes?)/i);
+                if (match) originalSize = `${match[1]} ${match[2]}`;
+              }
+              if (fileInfoText.includes('Converted size') || fileInfoText.includes('converted')) {
+                const match = fileInfoText.match(/converted[:\s]+size[:\s]+([\d.]+)\s*(KB|MB|bytes?)/i);
+                if (match) convertedSize = `${match[1]} ${match[2]}`;
               }
             }
             
@@ -2505,74 +2522,123 @@ export default function TestingPage() {
                         </div>
                 {testResults.imageConverter && (
                           <div className="flex-1 overflow-y-auto">
-                            {/* Summary Stats */}
-                            <div className="grid grid-cols-3 gap-3 mb-4">
-                              <div className="bg-gray-800/50 rounded-md p-3 border border-gray-700">
-                                <div className="text-xs text-gray-400 mb-1">Total Tests</div>
-                                <div className="text-lg font-semibold text-white">{testResults.imageConverter.tests.length}</div>
-                              </div>
-                              <div className="bg-green-900/20 rounded-md p-3 border border-green-500/30">
-                                <div className="text-xs text-gray-400 mb-1">Passed</div>
-                                <div className="text-lg font-semibold text-green-400">
-                                  {testResults.imageConverter.tests.filter((t: any) => t.status === 'PASS').length}
+                            {/* Visual Summary - Creative Design */}
+                            <div className="relative mb-6">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative">
+                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-600/10 border border-green-500/30 flex items-center justify-center">
+                                      <div className="text-2xl font-bold text-green-400">
+                                        {testResults.imageConverter.tests.filter((t: any) => t.status === 'PASS').length}
+                                      </div>
+                                    </div>
+                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-gray-900">
+                                      <span className="text-[10px] text-white">✓</span>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-semibold text-white">Test Results</div>
+                                    <div className="text-xs text-gray-400">
+                                      {testResults.imageConverter.tests.length} tests completed
+                                    </div>
+                                  </div>
                                 </div>
+                                {testResults.imageConverter.tests.filter((t: any) => t.status === 'WARN').length > 0 && (
+                                  <div className="px-3 py-1.5 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                    <div className="text-xs font-medium text-yellow-400">
+                                      {testResults.imageConverter.tests.filter((t: any) => t.status === 'WARN').length} warning{testResults.imageConverter.tests.filter((t: any) => t.status === 'WARN').length !== 1 ? 's' : ''}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                              <div className="bg-yellow-900/20 rounded-md p-3 border border-yellow-500/30">
-                                <div className="text-xs text-gray-400 mb-1">Warnings</div>
-                                <div className="text-lg font-semibold text-yellow-400">
-                                  {testResults.imageConverter.tests.filter((t: any) => t.status === 'WARN').length}
-                                </div>
+                              
+                              {/* Progress Bar */}
+                              <div className="relative h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                <div 
+                                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-green-500 to-green-400 transition-all duration-500"
+                                  style={{ 
+                                    width: `${(testResults.imageConverter.tests.filter((t: any) => t.status === 'PASS').length / testResults.imageConverter.tests.length) * 100}%` 
+                                  }}
+                                />
                               </div>
                             </div>
                             
-                            {/* Compact Results Grid */}
-                            <div className="grid grid-cols-1 gap-2">
+                            {/* Timeline-style Results */}
+                            <div className="space-y-0">
                               {testResults.imageConverter.tests.map((test: any, index: number) => {
                                 const testKey = `image-${index}`;
                                 const isExpanded = expandedTest === testKey;
+                                const isLast = index === testResults.imageConverter.tests.length - 1;
+                                const statusColor = test.status === 'PASS' ? 'green' : test.status === 'WARN' ? 'yellow' : 'red';
+                                
                                 return (
-                                  <div 
-                                    key={index} 
-                                    className="bg-gray-800/50 rounded-md border border-gray-700 hover:bg-gray-800/70 transition-colors"
-                                  >
+                                  <div key={index} className="relative flex gap-4">
+                                    {/* Timeline Line */}
+                                    {!isLast && (
+                                      <div className="absolute left-[11px] top-8 bottom-0 w-0.5 bg-gray-800" />
+                                    )}
+                                    
+                                    {/* Status Icon */}
+                                    <div className="relative z-10 flex-shrink-0">
+                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                                        test.status === 'PASS' ? 'bg-green-500/20 border-green-500/50' :
+                                        test.status === 'WARN' ? 'bg-yellow-500/20 border-yellow-500/50' :
+                                        'bg-red-500/20 border-red-500/50'
+                                      }`}>
+                                        {test.status === 'PASS' ? (
+                                          <span className="text-[10px] text-green-400 font-bold">✓</span>
+                                        ) : test.status === 'WARN' ? (
+                                          <span className="text-[10px] text-yellow-400 font-bold">!</span>
+                                        ) : (
+                                          <span className="text-[10px] text-red-400 font-bold">×</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Content */}
                                     <div 
-                                      className="p-2.5 cursor-pointer"
+                                      className={`flex-1 pb-4 cursor-pointer transition-all ${
+                                        isExpanded ? 'pb-4' : ''
+                                      }`}
                                       onClick={() => setExpandedTest(isExpanded ? null : testKey)}
                                     >
-                                      <div className="flex items-center gap-2.5">
-                                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                                          test.status === 'PASS' ? 'bg-green-400' :
-                                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                                        }`}></span>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex items-center justify-between gap-2">
-                                            <span className="text-white text-sm font-medium truncate">{test.name}</span>
-                                            <span className="text-gray-500 text-xs flex-shrink-0">{isExpanded ? '▼' : '▶'}</span>
-                                          </div>
-                                          {test.message && !isExpanded && (
-                                            <div className="text-gray-400 text-xs mt-0.5 truncate">
-                                              {test.message}
+                                      <div className={`rounded-lg border transition-all ${
+                                        test.status === 'PASS' ? 'bg-green-500/5 border-green-500/20 hover:bg-green-500/10' :
+                                        test.status === 'WARN' ? 'bg-yellow-500/5 border-yellow-500/20 hover:bg-yellow-500/10' :
+                                        'bg-red-500/5 border-red-500/20 hover:bg-red-500/10'
+                                      } ${isExpanded ? 'p-4' : 'p-3'}`}>
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                              <span className={`text-sm font-semibold ${
+                                                test.status === 'PASS' ? 'text-green-300' :
+                                                test.status === 'WARN' ? 'text-yellow-300' :
+                                                'text-red-300'
+                                              }`}>
+                                                {test.name}
+                                              </span>
+                                              <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                                                test.status === 'PASS' ? 'bg-green-500/20 text-green-400' :
+                                                test.status === 'WARN' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                'bg-red-500/20 text-red-400'
+                                              }`}>
+                                                {test.status}
+                                              </span>
                                             </div>
-                                          )}
+                                            {test.message && (
+                                              <div className={`text-xs mt-1.5 ${
+                                                isExpanded ? 'text-gray-300' : 'text-gray-400 line-clamp-2'
+                                              }`}>
+                                                {test.message}
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="flex-shrink-0 text-gray-500 text-xs">
+                                            {isExpanded ? '▲' : '▼'}
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
-                                    {isExpanded && (
-                                      <div className="px-2.5 pb-2.5 pt-0 border-t border-gray-700 mt-2">
-                                        <div className="text-xs text-gray-400 mt-2 space-y-1">
-                                          <div className="flex items-center gap-2">
-                                            <span className="text-gray-500">Status:</span>
-                                            <span className={`font-medium ${
-                                              test.status === 'PASS' ? 'text-green-400' :
-                                              test.status === 'WARN' ? 'text-yellow-400' : 'text-red-400'
-                                            }`}>{test.status}</span>
-                                          </div>
-                                          {test.message && (
-                                            <div className="text-gray-300 mt-1.5 break-words">{test.message}</div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
                                   </div>
                                 );
                               })}
