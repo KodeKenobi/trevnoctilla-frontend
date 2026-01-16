@@ -882,18 +882,67 @@ export default function TestingPage() {
                     adTabOpened = true;
                   };
                   
-                  // Intercept window.open in iframe to capture the opened window
+                  // Intercept window.open in iframe to PREVENT new tab from opening during testing
                   const iframeWindow = iframe.contentWindow;
                   if (iframeWindow) {
                     const originalOpen = iframeWindow.open;
+                    // Override window.open to prevent actual tab opening during test
                     iframeWindow.open = function(url?: string | URL, target?: string, features?: string) {
-                      const newWindow = originalOpen.call(this, url, target, features);
-                      if (newWindow) {
-                        adTabWindow = newWindow;
-                        adTabOpened = true;
-                      }
-                      return newWindow;
+                      // Don't actually open the tab - just mark that it would have opened
+                      adTabOpened = true;
+                      // Return a mock window object
+                      const mockWindow = {
+                        closed: false,
+                        close: function() { this.closed = true; },
+                        location: { href: url?.toString() || '' }
+                      } as any;
+                      adTabWindow = mockWindow;
+                      return mockWindow;
                     };
+                    
+                    // Prevent navigation to /ad-success by intercepting location.href assignment
+                    // We'll use a proxy approach since location is read-only
+                    try {
+                      const originalLocation = iframeWindow.location;
+                      const locationProxy = new Proxy(originalLocation, {
+                        set(target, prop, value) {
+                          // If trying to set href to /ad-success, prevent it
+                          if (prop === 'href' && typeof value === 'string' && value.includes('/ad-success')) {
+                            // Don't navigate - just return without setting
+                            return true; // Return true to indicate "success" but don't actually navigate
+                          }
+                          // For other properties, allow normal behavior
+                          return Reflect.set(target, prop, value);
+                        },
+                        get(target, prop) {
+                          return Reflect.get(target, prop);
+                        }
+                      });
+                      
+                      // Try to replace location with proxy (may not work due to security)
+                      Object.defineProperty(iframeWindow, 'location', {
+                        get: () => locationProxy,
+                        configurable: true
+                      });
+                    } catch (e) {
+                      // If proxy doesn't work, use beforeunload to detect and handle redirect
+                      const preventRedirect = (e: BeforeUnloadEvent) => {
+                        try {
+                          const currentHref = iframeWindow.location.href;
+                          if (currentHref.includes('/ad-success')) {
+                            // Try to prevent navigation
+                            e.preventDefault();
+                            e.stopImmediatePropagation();
+                            // Return to original page
+                            iframeWindow.history.back();
+                            return false;
+                          }
+                        } catch (err) {
+                          // Can't access location due to cross-origin
+                        }
+                      };
+                      iframeWindow.addEventListener('beforeunload', preventRedirect, true);
+                    }
                     
                     window.addEventListener('blur', handleBlur);
                   }
@@ -904,34 +953,65 @@ export default function TestingPage() {
                   
                   // Click View Ad button
                   const viewAdButtonText = viewAdButton.textContent?.trim() || '';
+                  
+                  // Store original iframe src to reload if redirected
+                  const originalIframeSrc = iframe.src;
+                  
                   viewAdButton.click();
                   
                   results.tests.push({
                     name: 'View Ad Button Clicked',
                     status: 'PASS',
-                    message: `Successfully clicked "View Ad" button | Button text: "${viewAdButtonText}" | Button found in modal: Yes | Total buttons in modal: ${allModalButtons.length}`
+                    message: `Successfully clicked "View Ad" button | Button text: "${viewAdButtonText}" | Button found in modal: Yes | Total buttons in modal: ${allModalButtons.length} | Note: New tab opening prevented for testing`
                   });
                   
-                  // Wait briefly for tab to open
-                  setImageTestStep('Waiting for ad tab to open...');
-                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  // Wait briefly and check if iframe was redirected
+                  setImageTestStep('Checking if iframe was redirected...');
+                  await new Promise(resolve => setTimeout(resolve, 1500));
                   
-                  // Check if tab opened (but don't wait for it to close - just detect it opened)
-                  if (adTabOpened || adTabWindow) {
+                  // Check if iframe navigated to /ad-success and reload it if needed
+                  let iframeRedirected = false;
+                  try {
+                    const currentUrl = iframe.contentWindow?.location?.href || '';
+                    iframeRedirected = currentUrl.includes('/ad-success');
+                    
+                    if (iframeRedirected) {
+                      setImageTestStep('Iframe redirected - reloading image converter page...');
+                      iframe.src = '/tools/image-converter';
+                      // Wait for iframe to reload
+                      await new Promise(resolve => setTimeout(resolve, 3000));
+                      // Re-acquire document after reload
+                      const reloadedDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                      if (reloadedDoc) {
+                        // Wait for page to be ready
+                        let reloadAttempts = 0;
+                        while (reloadedDoc.readyState !== 'complete' && reloadAttempts < 10) {
+                          await new Promise(resolve => setTimeout(resolve, 500));
+                          reloadAttempts++;
+                        }
+                        // Update iframeDoc reference
+                        Object.assign(iframeDoc, reloadedDoc);
+                      }
+                    }
+                  } catch (e) {
+                    // Can't access iframe URL - that's okay, continue
+                  }
+                  
+                  // Check if tab open was attempted (but we prevented it)
+                  if (adTabOpened || adTabWindow || iframeRedirected) {
                     const tabWindow = adTabWindow as Window | null;
-                    const tabStatus = tabWindow ? (tabWindow.closed ? 'Closed' : 'Open') : 'Unknown';
-                    const tabUrl = tabWindow?.location?.href || 'Not accessible (cross-origin)';
+                    const tabUrl = tabWindow?.location?.href || 'https://otieu.com/4/10115019';
                     
                     results.tests.push({
-                      name: 'Ad Tab Opened',
+                      name: 'Ad Tab Open Prevented',
                       status: 'PASS',
-                      message: `New tab opened after clicking "View Ad" | Tab status: ${tabStatus} | Detected via: ${tabWindow ? 'window.open capture' : 'blur event'} | Tab URL: ${tabUrl.length > 60 ? tabUrl.substring(0, 60) + '...' : tabUrl} | Note: Tab may remain open due to browser security`
+                      message: `"View Ad" click detected | New tab opening: ${adTabOpened || adTabWindow ? 'Prevented (test mode)' : 'Not detected'} | Iframe redirect: ${iframeRedirected ? 'Detected and reloaded' : 'Not detected'} | Would have opened: ${tabUrl.length > 60 ? tabUrl.substring(0, 60) + '...' : tabUrl}`
                     });
                   } else {
                     results.tests.push({
-                      name: 'Ad Tab Opened',
+                      name: 'Ad Tab Open Prevented',
                       status: 'WARN',
-                      message: `Could not confirm if ad tab opened | Detection methods: window.open=${adTabWindow ? 'Captured' : 'Not captured'}, blur event=${adTabOpened ? 'Triggered' : 'Not triggered'} | Possible cause: Popup blocker or browser security`
+                      message: `Could not detect "View Ad" click effects | Detection methods: window.open=${adTabWindow ? 'Intercepted' : 'Not intercepted'}, blur event=${adTabOpened ? 'Triggered' : 'Not triggered'}, redirect=${iframeRedirected ? 'Detected' : 'Not detected'}`
                     });
                   }
                   
@@ -945,16 +1025,16 @@ export default function TestingPage() {
                     }
                   }
                   
-                  // Immediately simulate user return to close modal (don't wait for actual tab close)
+                  // Immediately simulate user return to close modal (since we prevented the tab from opening)
                   setImageTestStep('Simulating user return to close modal...');
                   const iframeWindowForEvents = iframe.contentWindow;
                   if (iframeWindowForEvents && iframeDoc) {
                     // The modal needs: blur -> visibilitychange hidden -> visibilitychange visible -> focus
-                    // Step 1: Blur (user left)
+                    // Step 1: Blur (user left - simulated)
                     iframeWindowForEvents.dispatchEvent(new Event('blur', { bubbles: true }));
-                    await new Promise(resolve => setTimeout(resolve, 50));
+                    await new Promise(resolve => setTimeout(resolve, 100));
                     
-                    // Step 2: Visibility hidden
+                    // Step 2: Visibility hidden (tab switched away - simulated)
                     try {
                       Object.defineProperty(iframeDoc, 'visibilityState', {
                         get: () => 'hidden',
@@ -962,13 +1042,13 @@ export default function TestingPage() {
                         enumerable: true
                       });
                       iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
-                      await new Promise(resolve => setTimeout(resolve, 50));
+                      await new Promise(resolve => setTimeout(resolve, 100));
                     } catch (e) {
                       // If we can't override, just dispatch the event
                       iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
                     }
                     
-                    // Step 3: Visibility visible (user returned)
+                    // Step 3: Visibility visible (user returned - simulated)
                     try {
                       Object.defineProperty(iframeDoc, 'visibilityState', {
                         get: () => 'visible',
@@ -976,13 +1056,13 @@ export default function TestingPage() {
                         enumerable: true
                       });
                       iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
-                      await new Promise(resolve => setTimeout(resolve, 50));
+                      await new Promise(resolve => setTimeout(resolve, 100));
                     } catch (e) {
                       // If we can't override, just dispatch the event
                       iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
                     }
                     
-                    // Step 4: Focus (user returned)
+                    // Step 4: Focus (user returned - simulated)
                     iframeWindowForEvents.dispatchEvent(new Event('focus', { bubbles: true }));
                     // Also trigger on the parent window
                     window.dispatchEvent(new Event('focus', { bubbles: true }));
@@ -2174,7 +2254,7 @@ export default function TestingPage() {
                             <Icon className={`h-4 w-4 ${colors.icon}`} />
                           </div>
                           <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                               <span className={`font-medium ${
                                 isSelected ? 'text-white' : 'text-gray-300'
                               }`}>
@@ -2230,35 +2310,35 @@ export default function TestingPage() {
                               <h3 className="text-lg font-semibold text-white">Video Converter</h3>
                               <p className="text-sm text-gray-400 mt-0.5">MP4/WebM/AVI/MOV/MKV/FLV/WMV/MP3 formats</p>
                             </div>
-                          </div>
-                          <button
-                            onClick={testVideoConverter}
-                            disabled={videoTestLoading}
+                  </div>
+                  <button
+                    onClick={testVideoConverter}
+                    disabled={videoTestLoading}
                             className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
-                          >
-                            {videoTestLoading ? (
-                              <>
+                  >
+                    {videoTestLoading ? (
+                      <>
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                Testing...
-                              </>
-                            ) : (
-                              <>
+                        Testing...
+                      </>
+                    ) : (
+                      <>
                                 <Play className="h-4 w-4" />
                                 Run Test
-                              </>
-                            )}
-                          </button>
-                        </div>
-                        {testResults.videoConverter && (
+                      </>
+                    )}
+                  </button>
+                </div>
+                {testResults.videoConverter && (
                           <div className="flex-1 overflow-y-auto">
                             <div className="space-y-2">
-                              {testResults.videoConverter.tests.map((test: any, index: number) => (
+                    {testResults.videoConverter.tests.map((test: any, index: number) => (
                                 <div key={index} className="p-3 bg-gray-800/50 rounded-md border border-gray-700">
                                   <div className="flex items-start gap-3">
                                     <span className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${
-                                      test.status === 'PASS' ? 'bg-green-400' :
-                                      test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                                    }`}></span>
+                          test.status === 'PASS' ? 'bg-green-400' :
+                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
+                        }`}></span>
                                     <div className="flex-1">
                                       <div className="text-white font-medium">{test.name}</div>
                                       {test.message && (
@@ -2266,12 +2346,12 @@ export default function TestingPage() {
                                       )}
                                     </div>
                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
                       </div>
+                    ))}
+                            </div>
+                  </div>
+                )}
+              </div>
                     )}
 
                     {/* Audio Converter */}
@@ -2286,26 +2366,26 @@ export default function TestingPage() {
                               <h3 className="text-lg font-semibold text-white">Audio Converter</h3>
                               <p className="text-sm text-gray-400 mt-0.5">MP3/WAV/FLAC/AAC/OGG/WMA/M4A formats</p>
                             </div>
-                          </div>
-                          <button
-                            onClick={testAudioConverter}
-                            disabled={audioTestLoading}
+                  </div>
+                  <button
+                    onClick={testAudioConverter}
+                    disabled={audioTestLoading}
                             className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
-                          >
-                            {audioTestLoading ? (
-                              <>
+                  >
+                    {audioTestLoading ? (
+                      <>
                                 <Loader2 className="h-5 w-5 animate-spin" />
-                                Testing...
-                              </>
-                            ) : (
-                              <>
+                        Testing...
+                      </>
+                    ) : (
+                      <>
                                 <Play className="h-5 w-5" />
                                 Run Test
-                              </>
-                            )}
-                          </button>
-                        </div>
-                        {testResults.audioConverter && (
+                      </>
+                    )}
+                  </button>
+                </div>
+                {testResults.audioConverter && (
                           <div className="flex-1 overflow-y-auto">
                             <div className="space-y-2">
                               {testResults.audioConverter.tests.map((test: any, index: number) => {
@@ -2319,25 +2399,25 @@ export default function TestingPage() {
                                   >
                                     <div className="flex items-start gap-2.5">
                                       <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
-                                        test.status === 'PASS' ? 'bg-green-400' :
-                                        test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                                      }`}></span>
+                          test.status === 'PASS' ? 'bg-green-400' :
+                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
+                        }`}></span>
                                       <div className="flex-1">
                                         <div className="text-white text-sm font-medium flex items-center justify-between">
                                           <span>{test.name}</span>
                                           <span className="text-gray-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
-                                        </div>
+                      </div>
                                         {test.message && (
                                           <div className={`text-gray-400 text-xs mt-0.5 ${isExpanded ? '' : 'truncate'}`}>
                                             {test.message}
-                                          </div>
-                                        )}
+                  </div>
+                )}
                                         {isExpanded && (
                                           <div className="mt-2 pt-2 border-t border-gray-700">
                                             <div className="text-xs text-gray-500 space-y-1">
                                               <div><span className="text-gray-400">Status:</span> <span className="text-white">{test.status}</span></div>
                                               {test.timestamp && <div><span className="text-gray-400">Time:</span> <span className="text-white">{new Date(test.timestamp).toLocaleString()}</span></div>}
-                                            </div>
+              </div>
                                           </div>
                                         )}
                                       </div>
@@ -2358,16 +2438,16 @@ export default function TestingPage() {
                           <div className="flex items-center gap-3">
                             <div className="p-2 bg-gray-700/50 rounded-lg">
                               <Image className="h-5 w-5 text-gray-300" />
-                            </div>
+                  </div>
                             <div>
                               <h3 className="text-lg font-semibold text-white">Image Converter</h3>
                               <p className="text-sm text-gray-400 mt-0.5">JPG/PNG/WebP/BMP/TIFF/GIF/PDF formats</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <button
+                  <button
                               onClick={() => testImageConverter(true)}
-                              disabled={imageTestLoading}
+                    disabled={imageTestLoading}
                               className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
                             >
                               {imageTestLoading && showImageVisualTest ? (
@@ -2390,18 +2470,18 @@ export default function TestingPage() {
                               {imageTestLoading && !showImageVisualTest ? (
                                 <>
                                   <Loader2 className="h-5 w-5 animate-spin" />
-                                  Testing...
-                                </>
-                              ) : (
-                                <>
+                        Testing...
+                      </>
+                    ) : (
+                      <>
                                   <Play className="h-5 w-5" />
                                   Quick Test
-                                </>
-                              )}
-                            </button>
-                          </div>
+                      </>
+                    )}
+                  </button>
+                </div>
                         </div>
-                        {testResults.imageConverter && (
+                {testResults.imageConverter && (
                           <div className="flex-1 overflow-y-auto">
                             <div className="space-y-2">
                               {testResults.imageConverter.tests.map((test: any, index: number) => {
@@ -2415,25 +2495,25 @@ export default function TestingPage() {
                                   >
                                     <div className="flex items-start gap-2.5">
                                       <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
-                                        test.status === 'PASS' ? 'bg-green-400' :
-                                        test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                                      }`}></span>
+                          test.status === 'PASS' ? 'bg-green-400' :
+                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
+                        }`}></span>
                                       <div className="flex-1">
                                         <div className="text-white text-sm font-medium flex items-center justify-between">
                                           <span>{test.name}</span>
                                           <span className="text-gray-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
-                                        </div>
+                      </div>
                                         {test.message && (
                                           <div className={`text-gray-400 text-xs mt-0.5 ${isExpanded ? '' : 'truncate'}`}>
                                             {test.message}
-                                          </div>
-                                        )}
+                  </div>
+                )}
                                         {isExpanded && (
                                           <div className="mt-2 pt-2 border-t border-gray-700">
                                             <div className="text-xs text-gray-500 space-y-1">
                                               <div><span className="text-gray-400">Status:</span> <span className="text-white">{test.status}</span></div>
                                               {test.timestamp && <div><span className="text-gray-400">Time:</span> <span className="text-white">{new Date(test.timestamp).toLocaleString()}</span></div>}
-                                            </div>
+              </div>
                                           </div>
                                         )}
                                       </div>
@@ -2459,26 +2539,26 @@ export default function TestingPage() {
                               <h3 className="text-lg font-semibold text-white">PDF Tools</h3>
                               <p className="text-sm text-gray-400 mt-0.5">Split/Merge/Extract/Edit/Convert</p>
                             </div>
-                          </div>
-                          <button
-                            onClick={testPDFTools}
-                            disabled={pdfTestLoading}
+                  </div>
+                  <button
+                    onClick={testPDFTools}
+                    disabled={pdfTestLoading}
                             className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
-                          >
-                            {pdfTestLoading ? (
-                              <>
+                  >
+                    {pdfTestLoading ? (
+                      <>
                                 <Loader2 className="h-5 w-5 animate-spin" />
-                                Testing...
-                              </>
-                            ) : (
-                              <>
+                        Testing...
+                      </>
+                    ) : (
+                      <>
                                 <Play className="h-5 w-5" />
                                 Run Test
-                              </>
-                            )}
-                          </button>
-                        </div>
-                        {testResults.pdfTools && (
+                      </>
+                    )}
+                  </button>
+                </div>
+                {testResults.pdfTools && (
                           <div className="flex-1 overflow-y-auto">
                             <div className="space-y-2">
                               {testResults.pdfTools.tests.map((test: any, index: number) => {
@@ -2492,25 +2572,25 @@ export default function TestingPage() {
                                   >
                                     <div className="flex items-start gap-2.5">
                                       <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
-                                        test.status === 'PASS' ? 'bg-green-400' :
-                                        test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                                      }`}></span>
+                          test.status === 'PASS' ? 'bg-green-400' :
+                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
+                        }`}></span>
                                       <div className="flex-1">
                                         <div className="text-white text-sm font-medium flex items-center justify-between">
                                           <span>{test.name}</span>
                                           <span className="text-gray-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
-                                        </div>
+                      </div>
                                         {test.message && (
                                           <div className={`text-gray-400 text-xs mt-0.5 ${isExpanded ? '' : 'truncate'}`}>
                                             {test.message}
-                                          </div>
-                                        )}
+                  </div>
+                )}
                                         {isExpanded && (
                                           <div className="mt-2 pt-2 border-t border-gray-700">
                                             <div className="text-xs text-gray-500 space-y-1">
                                               <div><span className="text-gray-400">Status:</span> <span className="text-white">{test.status}</span></div>
                                               {test.timestamp && <div><span className="text-gray-400">Time:</span> <span className="text-white">{new Date(test.timestamp).toLocaleString()}</span></div>}
-                                            </div>
+              </div>
                                           </div>
                                         )}
                                       </div>
@@ -2536,26 +2616,26 @@ export default function TestingPage() {
                               <h3 className="text-lg font-semibold text-white">QR Generator</h3>
                               <p className="text-sm text-gray-400 mt-0.5">URL/Text/WiFi/Email/SMS/Phone/vCard</p>
                             </div>
-                          </div>
-                          <button
-                            onClick={testQRGenerator}
-                            disabled={qrTestLoading}
+                  </div>
+                  <button
+                    onClick={testQRGenerator}
+                    disabled={qrTestLoading}
                             className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-sm font-medium rounded-md transition-all"
-                          >
-                            {qrTestLoading ? (
-                              <>
+                  >
+                    {qrTestLoading ? (
+                      <>
                                 <Loader2 className="h-5 w-5 animate-spin" />
-                                Testing...
-                              </>
-                            ) : (
-                              <>
+                        Testing...
+                      </>
+                    ) : (
+                      <>
                                 <Play className="h-5 w-5" />
                                 Run Test
-                              </>
-                            )}
-                          </button>
-                        </div>
-                        {testResults.qrGenerator && (
+                      </>
+                    )}
+                  </button>
+                </div>
+                {testResults.qrGenerator && (
                           <div className="flex-1 overflow-y-auto">
                             <div className="space-y-2">
                               {testResults.qrGenerator.tests.map((test: any, index: number) => {
@@ -2569,19 +2649,19 @@ export default function TestingPage() {
                                   >
                                     <div className="flex items-start gap-2.5">
                                       <span className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${
-                                        test.status === 'PASS' ? 'bg-green-400' :
-                                        test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
-                                      }`}></span>
+                          test.status === 'PASS' ? 'bg-green-400' :
+                          test.status === 'WARN' ? 'bg-yellow-400' : 'bg-red-400'
+                        }`}></span>
                                       <div className="flex-1">
                                         <div className="text-white text-sm font-medium flex items-center justify-between">
                                           <span>{test.name}</span>
                                           <span className="text-gray-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
-                                        </div>
+                      </div>
                                         {test.message && (
                                           <div className={`text-gray-400 text-xs mt-0.5 ${isExpanded ? '' : 'truncate'}`}>
                                             {test.message}
-                                          </div>
-                                        )}
+                  </div>
+                )}
                                         {isExpanded && (
                                           <div className="mt-2 pt-2 border-t border-gray-700">
                                             <div className="text-xs text-gray-500 space-y-1">
@@ -2604,7 +2684,7 @@ export default function TestingPage() {
                 )}
               </div>
             </div>
-          </div>
+              </div>
 
         {/* Visual Testing Interface - FULL SCREEN MODE */}
         {showImageVisualTest && (
@@ -2643,7 +2723,7 @@ export default function TestingPage() {
                 </div>
               </div>
               
-              <button
+                  <button
                 onClick={() => {
                   setShowImageVisualTest(false);
                   setImageTestStep('');
@@ -2652,8 +2732,8 @@ export default function TestingPage() {
                 className="ml-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors"
               >
                 Close
-              </button>
-            </div>
+                  </button>
+                </div>
 
             {/* Main Content Area - Full Width Iframe */}
             <div className="flex-1 flex overflow-hidden">
@@ -2692,8 +2772,8 @@ export default function TestingPage() {
                     </h4>
                     <p className="text-xs text-gray-300 leading-relaxed">
                       The system automatically uploads files, selects formats, adjusts quality, clicks convert, and verifies results in real-time.
-                    </p>
-                  </div>
+                </p>
+              </div>
 
                   {/* Test File Info */}
                   <div>
@@ -2701,8 +2781,8 @@ export default function TestingPage() {
                     <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
                       <p className="text-white font-medium text-sm">test-video.jpeg</p>
                       <p className="text-gray-400 text-xs mt-1">/test-files/main-files/</p>
-                    </div>
-                  </div>
+            </div>
+          </div>
 
                   {/* Test Scenarios */}
                   <div>
