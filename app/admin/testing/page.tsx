@@ -694,11 +694,12 @@ export default function TestingPage() {
                 // Set up tab detection before clicking
                 let adTabOpened = false;
                 let adTabWindow: Window | null | undefined = null;
+                let originalOpen: ((url?: string | URL, target?: string, features?: string) => Window | null) | null = null;
                 
                 // Intercept window.open in iframe to PREVENT new tab from opening during testing
                 const iframeWindow = iframe.contentWindow;
                 if (iframeWindow) {
-                  const originalOpen = iframeWindow.open.bind(iframeWindow);
+                  originalOpen = iframeWindow.open.bind(iframeWindow);
                   
                   Object.defineProperty(iframeWindow, 'open', {
                     value: function(url?: string | URL, target?: string, features?: string) {
@@ -820,7 +821,7 @@ export default function TestingPage() {
                 }
                 
                 // Clean up listeners immediately
-                if (iframeWindow && iframeWindow.open) {
+                if (iframeWindow && originalOpen) {
                   try {
                     iframeWindow.open = originalOpen;
                   } catch (e) {
