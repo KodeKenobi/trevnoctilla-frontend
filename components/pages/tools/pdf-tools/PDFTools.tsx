@@ -6,6 +6,7 @@ import { FileText, Loader2 } from "lucide-react";
 import { useNavigation } from "@/contexts/NavigationContext";
 // Monetization removed - using Google AdSense only
 import { getApiUrl } from "@/lib/config";
+import internalAnalytics from "@/lib/internalAnalytics";
 
 // Import individual tool components
 import { ExtractTextTool } from "./extract-text/ExtractTextTool";
@@ -79,6 +80,20 @@ export default function PDFTools() {
   const [showNotification, setShowNotification] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Map tool IDs to display names
+  const toolNameMap: Record<string, string> = {
+    "extract-text": "Extract Text",
+    "extract-images": "Extract Images",
+    "pdf-to-html": "PDF to HTML",
+    "html-to-pdf": "HTML to PDF",
+    "edit-pdf": "Edit PDF",
+    "edit-fill-sign": "Edit Fill Sign",
+    "add-signature": "Add Signature",
+    "add-watermark": "Add Watermark",
+    "split-pdf": "Split PDF",
+    "merge-pdfs": "Merge PDFs",
+  };
+
   // Detect mobile device
   useEffect(() => {
     const checkMobile = () => {
@@ -95,13 +110,46 @@ export default function PDFTools() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Reset state when tab changes
+  // Track initial tool on page load
+  useEffect(() => {
+    const toolName = toolNameMap[activeTab] || activeTab;
+    if (typeof document !== "undefined") {
+      document.title = `PDF Tools - ${toolName} | Trevnoctilla`;
+    }
+    
+    // Track initial tool view
+    internalAnalytics.track("pdf_tool_view", {
+      tool_id: activeTab,
+      tool_name: toolName,
+      page: typeof window !== "undefined" ? window.location.pathname : "/tools/pdf-tools",
+      timestamp: Date.now(),
+    });
+  }, []); // Only run on mount
+
+  // Reset state when tab changes and track tool change
   useEffect(() => {
     if (activeTab !== "add-signature") {
       setUploadedFile(null);
     }
     setUploadedFiles([]);
     setResult(null);
+    
+    // Track tool change and update page title
+    const toolName = toolNameMap[activeTab] || activeTab;
+    if (typeof document !== "undefined") {
+      document.title = `PDF Tools - ${toolName} | Trevnoctilla`;
+    }
+    
+    // Track tool change event
+    internalAnalytics.track("pdf_tool_change", {
+      tool_id: activeTab,
+      tool_name: toolName,
+      page: typeof window !== "undefined" ? window.location.pathname : "/tools/pdf-tools",
+      timestamp: Date.now(),
+    });
+    
+    // Track page view with updated title
+    internalAnalytics.trackPageView(undefined, `PDF Tools - ${toolName}`);
   }, [activeTab]);
 
   const handleFileUpload = (file: File) => {
