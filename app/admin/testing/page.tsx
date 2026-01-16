@@ -646,10 +646,12 @@ export default function TestingPage() {
           btn => btn.textContent?.includes('Download')
         );
         
-        const successMessage = iframeDoc.textContent?.toLowerCase().includes('successfully') ||
-                              iframeDoc.textContent?.toLowerCase().includes('converted successfully');
-
-        if (downloadButton || iframeDoc.textContent?.includes('successfully')) {
+        const textContent = iframeDoc.textContent || '';
+        const lowerText = textContent.toLowerCase();
+        const successMessage = lowerText.includes('successfully') ||
+                              lowerText.includes('converted successfully');
+        
+        if (downloadButton || successMessage) {
           conversionComplete = true;
           setImageTestProgress(90);
           setImageTestStep('Conversion completed! Verifying results...');
