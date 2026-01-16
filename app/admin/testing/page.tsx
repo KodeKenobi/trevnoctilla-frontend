@@ -600,11 +600,11 @@ export default function TestingPage() {
           .map(f => f.toLowerCase().replace(/\./g, ''));
       }
       
-      // Test multiple key formats: mp4, webm, avi, mov (up to 4 formats)
+      // Test multiple key formats: mp4, webm, avi, mov (test 2 formats to keep test time reasonable)
       const formatsToTest = ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'wmv'];
       const formatsToRun = formatsToTest
         .filter(f => availableFormats.some(af => af.includes(f.toLowerCase())))
-        .slice(0, 4); // Test up to 4 formats to keep test time reasonable
+        .slice(0, 2); // Test up to 2 formats to keep test time reasonable (each format can take 10+ minutes with heavy compression)
       
       if (formatsToRun.length === 0) {
         formatsToRun.push(availableFormats[0] || 'mp4');
@@ -1298,9 +1298,9 @@ export default function TestingPage() {
               resolve({ timeout: true, tests: [{
                 name: 'Automation Timeout',
                 status: 'WARN',
-                message: 'Automation exceeded 20 minutes timeout. Some tests may be incomplete. Video conversions can take longer, especially with heavy compression. Please try running the test again.'
+                message: 'Automation exceeded 15 minutes timeout. Some tests may be incomplete. Video conversions can take longer, especially with heavy compression. Testing 2 formats instead of 4 to reduce time. Please try running the test again.'
               }]});
-            }, 1200000); // 20 minute timeout for videos (allows multiple format conversions)
+            }, 900000); // 15 minute timeout for videos (allows 2 format conversions)
           });
           
           try {
