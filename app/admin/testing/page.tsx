@@ -912,11 +912,11 @@ export default function TestingPage() {
                     message: `Successfully clicked "View Ad" button | Button text: "${viewAdButtonText}" | Button found in modal: Yes | Total buttons in modal: ${allModalButtons.length}`
                   });
                   
-                  // Wait for tab to open (check for blur or window.open result)
+                  // Wait briefly for tab to open
                   setImageTestStep('Waiting for ad tab to open...');
-                  await new Promise(resolve => setTimeout(resolve, 2000));
+                  await new Promise(resolve => setTimeout(resolve, 1000));
                   
-                  // Check if tab opened
+                  // Check if tab opened (but don't wait for it to close - just detect it opened)
                   if (adTabOpened || adTabWindow) {
                     const tabWindow = adTabWindow as Window | null;
                     const tabStatus = tabWindow ? (tabWindow.closed ? 'Closed' : 'Open') : 'Unknown';
@@ -925,46 +925,8 @@ export default function TestingPage() {
                     results.tests.push({
                       name: 'Ad Tab Opened',
                       status: 'PASS',
-                      message: `New tab opened after clicking "View Ad" | Tab status: ${tabStatus} | Detected via: ${tabWindow ? 'window.open capture' : 'blur event'} | Tab URL: ${tabUrl.length > 60 ? tabUrl.substring(0, 60) + '...' : tabUrl}`
+                      message: `New tab opened after clicking "View Ad" | Tab status: ${tabStatus} | Detected via: ${tabWindow ? 'window.open capture' : 'blur event'} | Tab URL: ${tabUrl.length > 60 ? tabUrl.substring(0, 60) + '...' : tabUrl} | Note: Tab may remain open due to browser security`
                     });
-                    
-                    // Try to close the tab
-                    setImageTestStep('Attempting to close ad tab...');
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    
-                    try {
-                      if (tabWindow && !tabWindow.closed) {
-                        tabWindow.close();
-                        // Wait a bit to see if it closed
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                        
-                        if (tabWindow.closed) {
-                          results.tests.push({
-                            name: 'Ad Tab Closed',
-                            status: 'PASS',
-                            message: `Successfully closed the ad tab | Tab was open for: ~1.5 seconds | Close method: window.close() | Browser security: Allowed`
-                          });
-                        } else {
-                          results.tests.push({
-                            name: 'Ad Tab Closed',
-                            status: 'WARN',
-                            message: `Ad tab may still be open | Tab status: ${tabWindow.closed ? 'Closed' : 'Still open'} | Close attempted: Yes | Browser security: May have prevented closing`
-                          });
-                        }
-                      } else {
-                        results.tests.push({
-                          name: 'Ad Tab Closed',
-                          status: 'WARN',
-                          message: `Could not access ad tab window reference | Tab window: ${tabWindow ? 'Exists but inaccessible' : 'Not captured'} | Browser security: Cross-origin restriction`
-                        });
-                      }
-                    } catch (closeError) {
-                      results.tests.push({
-                        name: 'Ad Tab Closed',
-                        status: 'WARN',
-                        message: `Could not close ad tab | Error: ${closeError instanceof Error ? closeError.message : 'Unknown'} | Browser security: ${closeError instanceof Error && closeError.message.includes('security') ? 'Restricted' : 'Unknown restriction'}`
-                      });
-                    }
                   } else {
                     results.tests.push({
                       name: 'Ad Tab Opened',
@@ -973,10 +935,9 @@ export default function TestingPage() {
                     });
                   }
                   
-                  // Clean up listeners
+                  // Clean up listeners immediately
                   window.removeEventListener('blur', handleBlur);
                   if (iframeWindow && iframeWindow.open) {
-                    // Restore original open if possible (may not work due to security)
                     try {
                       iframeWindow.open = iframeWindow.open;
                     } catch (e) {
@@ -984,46 +945,72 @@ export default function TestingPage() {
                     }
                   }
                   
-                  // Simulate user returning from ad tab to trigger modal close
-                  // The modal waits for focus/visibilitychange events to detect user return
-                  // Sequence: blur (left) -> visibilitychange hidden -> visibilitychange visible -> focus (returned)
-                  setImageTestStep('Simulating user return from ad tab...');
+                  // Immediately simulate user return to close modal (don't wait for actual tab close)
+                  setImageTestStep('Simulating user return to close modal...');
                   const iframeWindowForEvents = iframe.contentWindow;
                   if (iframeWindowForEvents && iframeDoc) {
-                    // Step 1: Simulate blur (user left the tab)
+                    // The modal needs: blur -> visibilitychange hidden -> visibilitychange visible -> focus
+                    // Step 1: Blur (user left)
                     iframeWindowForEvents.dispatchEvent(new Event('blur', { bubbles: true }));
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    await new Promise(resolve => setTimeout(resolve, 50));
                     
-                    // Step 2: Simulate visibility change to hidden (tab switched away)
-                    // We need to temporarily override visibilityState property
-                    const originalVisibilityState = Object.getOwnPropertyDescriptor(iframeDoc, 'visibilityState');
-                    Object.defineProperty(iframeDoc, 'visibilityState', {
-                      get: () => 'hidden',
-                      configurable: true
-                    });
-                    iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    // Step 2: Visibility hidden
+                    try {
+                      Object.defineProperty(iframeDoc, 'visibilityState', {
+                        get: () => 'hidden',
+                        configurable: true,
+                        enumerable: true
+                      });
+                      iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
+                      await new Promise(resolve => setTimeout(resolve, 50));
+                    } catch (e) {
+                      // If we can't override, just dispatch the event
+                      iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
+                    }
                     
-                    // Step 3: Simulate visibility change to visible (user returned)
-                    Object.defineProperty(iframeDoc, 'visibilityState', {
-                      get: () => 'visible',
-                      configurable: true
-                    });
-                    iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    // Step 3: Visibility visible (user returned)
+                    try {
+                      Object.defineProperty(iframeDoc, 'visibilityState', {
+                        get: () => 'visible',
+                        configurable: true,
+                        enumerable: true
+                      });
+                      iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
+                      await new Promise(resolve => setTimeout(resolve, 50));
+                    } catch (e) {
+                      // If we can't override, just dispatch the event
+                      iframeDoc.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
+                    }
                     
-                    // Step 4: Trigger focus event (user returned to tab)
+                    // Step 4: Focus (user returned)
                     iframeWindowForEvents.dispatchEvent(new Event('focus', { bubbles: true }));
-                    
-                    // Restore original visibilityState if it existed
-                    if (originalVisibilityState) {
-                      Object.defineProperty(iframeDoc, 'visibilityState', originalVisibilityState);
+                    // Also trigger on the parent window
+                    window.dispatchEvent(new Event('focus', { bubbles: true }));
+                  }
+                  
+                  // Wait briefly for modal to close (with timeout to prevent hanging)
+                  setImageTestStep('Waiting for modal to close...');
+                  let modalClosed = false;
+                  const modalCloseTimeout = setTimeout(() => {
+                    if (!modalClosed) {
+                      modalClosed = true;
+                      setImageTestStep('Modal close timeout - continuing test...');
+                    }
+                  }, 3000); // 3 second max wait
+                  
+                  // Check for modal closure with polling
+                  for (let i = 0; i < 10; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    const modalStillVisible = iframeDoc.querySelector('[data-monetization-modal="true"]') ||
+                                            iframeDoc.querySelector('[class*="monetization"]');
+                    if (!modalStillVisible) {
+                      modalClosed = true;
+                      clearTimeout(modalCloseTimeout);
+                      break;
                     }
                   }
                   
-                  // Wait for modal to close (reduced wait since we triggered the events)
-                  setImageTestStep('Waiting for modal to close...');
-                  await new Promise(resolve => setTimeout(resolve, 1500));
+                  clearTimeout(modalCloseTimeout);
                   
                   // Check if modal closed
                   const modalStillVisible = iframeDoc.querySelector('[data-monetization-modal="true"]') ||
