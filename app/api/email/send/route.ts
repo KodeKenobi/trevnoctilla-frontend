@@ -12,7 +12,7 @@ function getResend() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { to, subject, html, text, attachments } = body;
+    const { to, cc, subject, html, text, attachments } = body;
 
     if (!to || !subject || !html) {
       return NextResponse.json(
@@ -49,6 +49,13 @@ export async function POST(request: NextRequest) {
       html,
       text,
     };
+    
+    // Add CC if provided
+    if (cc && Array.isArray(cc) && cc.length > 0) {
+      emailPayload.cc = cc;
+    } else if (cc && typeof cc === 'string') {
+      emailPayload.cc = [cc];
+    }
 
     // Add attachments if provided
     // Format: [{ filename: "invoice.pdf", content: base64String, contentType: "application/pdf" }]

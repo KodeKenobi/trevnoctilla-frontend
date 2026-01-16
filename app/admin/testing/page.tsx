@@ -1555,6 +1555,118 @@ export default function TestingPage() {
     // Always set results and stop loading, even if there were errors
     setTestResults(prev => ({ ...prev, imageConverter: results }));
     setImageTestLoading(false);
+    
+    // Check if test was successful and send email notification
+    const passedTests = results.tests.filter((t: any) => t.status === 'PASS').length;
+    const totalTests = results.tests.length;
+    const allPassed = results.tests.every((t: any) => t.status === 'PASS');
+    const hasFailures = results.tests.some((t: any) => t.status === 'FAIL');
+    
+    // Send email if test is successful (all tests passed, no failures)
+    if (allPassed && !hasFailures && totalTests > 0) {
+      try {
+        const testSummary = results.tests.map((t: any) => 
+          `• ${t.name}: ${t.status} - ${t.message}`
+        ).join('\n');
+        
+        const emailHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+              .content { background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; border-top: none; }
+              .test-summary { background: white; padding: 15px; border-radius: 4px; margin: 15px 0; }
+              .test-item { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+              .test-item:last-child { border-bottom: none; }
+              .status-pass { color: #10b981; font-weight: bold; }
+              .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>✅ Image Converter Test - All Tests Passed</h1>
+              </div>
+              <div class="content">
+                <p>Great news! The automated Image Converter test has completed successfully.</p>
+                
+                <div class="test-summary">
+                  <h3>Test Summary</h3>
+                  <p><strong>Total Tests:</strong> ${totalTests}</p>
+                  <p><strong>Passed:</strong> <span class="status-pass">${passedTests}</span></p>
+                  <p><strong>Failed:</strong> 0</p>
+                  <p><strong>Warnings:</strong> ${results.tests.filter((t: any) => t.status === 'WARN').length}</p>
+                </div>
+                
+                <div class="test-summary">
+                  <h3>Test Details</h3>
+                  <pre style="white-space: pre-wrap; font-size: 12px; background: #f3f4f6; padding: 10px; border-radius: 4px; overflow-x: auto;">${testSummary}</pre>
+                </div>
+                
+                <p><strong>Test completed at:</strong> ${new Date().toLocaleString()}</p>
+              </div>
+              <div class="footer">
+                <p>This is an automated notification from the Trevnoctilla Admin Dashboard</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+        
+        const emailText = `
+Image Converter Test - All Tests Passed
+
+Great news! The automated Image Converter test has completed successfully.
+
+Test Summary:
+- Total Tests: ${totalTests}
+- Passed: ${passedTests}
+- Failed: 0
+- Warnings: ${results.tests.filter((t: any) => t.status === 'WARN').length}
+
+Test Details:
+${testSummary}
+
+Test completed at: ${new Date().toLocaleString()}
+
+This is an automated notification from the Trevnoctilla Admin Dashboard
+        `;
+        
+        // Send email via API
+        const emailResponse = await fetch('/api/email/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: 'info@trevnoctilla.com',
+            cc: ['kodekenobi@gmail.com', 'rnkanunu@gmail.com'],
+            subject: `✅ Image Converter Test - All Tests Passed (${passedTests}/${totalTests})`,
+            html: emailHtml,
+            text: emailText,
+          }),
+        });
+        
+        if (emailResponse.ok) {
+          const emailData = await emailResponse.json();
+          if (emailData.success) {
+            console.log('✅ Test success email sent successfully');
+          } else {
+            console.warn('⚠️ Email send failed:', emailData.error);
+          }
+        } else {
+          console.warn('⚠️ Email API error:', emailResponse.status);
+        }
+      } catch (emailError) {
+        // Don't fail the test if email fails - just log it
+        console.error('❌ Error sending test success email:', emailError);
+      }
+    }
+    
     if (visualMode) {
       setImageTestProgress(100);
       setImageTestStep('Testing complete! Closing visual test to show results...');
