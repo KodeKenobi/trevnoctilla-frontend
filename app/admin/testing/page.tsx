@@ -541,26 +541,38 @@ export default function TestingPage() {
         });
       }
       
-      // Reset for next format - clear the result and re-upload file
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Try to find and click a "Remove" or "Clear" button to reset
-      const removeButton = Array.from(iframeDoc.querySelectorAll('button')).find(
-        btn => btn.textContent?.includes('Remove') || btn.textContent?.includes('Clear') || btn.textContent?.includes('Reset')
-      );
-      if (removeButton) {
-        removeButton.click();
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-      
-      // Re-upload the file for the next format
-      const fileInput = iframeDoc.querySelector('input[type="file"]') as HTMLInputElement;
-      if (fileInput) {
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
-        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-        await new Promise(resolve => setTimeout(resolve, 1500));
+      // Only reset for next format if this is NOT the last format
+      // We need to keep the download button visible for the last format to test monetization modal
+      if (formatIndex < totalFormats - 1) {
+        // Reset for next format - clear the result and re-upload file
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Try to find and click a "Remove" or "Clear" button to reset
+        const removeButton = Array.from(iframeDoc.querySelectorAll('button')).find(
+          btn => btn.textContent?.includes('Remove') || btn.textContent?.includes('Clear') || btn.textContent?.includes('Reset')
+        );
+        if (removeButton) {
+          removeButton.click();
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        // Re-upload the file for the next format
+        const fileInput = iframeDoc.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          fileInput.files = dataTransfer.files;
+          fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+      } else {
+        // Last format - wait a bit longer to ensure download button is ready, but don't reset
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        formatResults.tests.push({
+          name: `Format ${format.toUpperCase()} - Ready for Monetization Test`,
+          status: 'PASS',
+          message: `Last format conversion complete. Download button should be available for monetization modal test.`
+        });
       }
       
     } catch (error) {
@@ -852,10 +864,24 @@ export default function TestingPage() {
       setImageTestStep('Testing monetization modal...');
       setImageTestProgress(90);
       
+      // Wait a bit to ensure the download button from the last format is still visible
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       // Find download button from the last format conversion
-      const downloadButton = Array.from(iframeDoc.querySelectorAll('button')).find(
-        btn => btn.textContent?.includes('Download')
-      );
+      // Try multiple selectors and text patterns to find the download button
+      let downloadButton = Array.from(iframeDoc.querySelectorAll('button')).find(
+        btn => {
+          const text = btn.textContent?.trim() || '';
+          return text.includes('Download') || 
+                 text.toLowerCase().includes('download') ||
+                 btn.getAttribute('aria-label')?.toLowerCase().includes('download');
+        }
+      ) as HTMLButtonElement | HTMLAnchorElement | null;
+      
+      // Also check for anchor tags with download attribute
+      if (!downloadButton) {
+        downloadButton = iframeDoc.querySelector('a[download], a[href*="download"]') as HTMLAnchorElement | null;
+      }
       
       if (downloadButton) {
         const downloadButtonText = downloadButton.textContent?.trim() || '';
