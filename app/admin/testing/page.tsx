@@ -1532,8 +1532,13 @@ export default function TestingPage() {
     setImageTestLoading(false);
     if (visualMode) {
       setImageTestProgress(100);
-      setImageTestStep('Testing complete! Keep the window open to review results.');
-      // Don't auto-close - let user close manually
+      setImageTestStep('Testing complete! Closing visual test to show results...');
+      // Wait a moment to show completion message, then close visual test
+      setTimeout(() => {
+        setShowImageVisualTest(false);
+        setImageTestStep('');
+        setImageTestProgress(0);
+      }, 1500); // 1.5 second delay to show completion message
     }
   };
 
