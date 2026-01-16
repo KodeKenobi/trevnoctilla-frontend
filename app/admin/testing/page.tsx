@@ -444,13 +444,24 @@ export default function TestingPage() {
       setVideoTestStep('Loading test video file...');
       setVideoTestProgress(20);
 
-      // Fetch test video file
+      // Fetch test video file - try multiple locations
       let testVideoFile = await fetch('/test-files/test-video.mp4').catch(() => null);
       if (!testVideoFile || !testVideoFile.ok) {
         testVideoFile = await fetch('/test-files/main-files/test-video.mp4').catch(() => null);
       }
+      // If not in public, try backend endpoint (for large files that can't be in git)
       if (!testVideoFile || !testVideoFile.ok) {
-        throw new Error('Test video file not found');
+        try {
+          const backendUrl = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000' 
+            : '';
+          testVideoFile = await fetch(`${backendUrl}/test-files/main-files/test-video.mp4`).catch(() => null);
+        } catch (e) {
+          // Ignore
+        }
+      }
+      if (!testVideoFile || !testVideoFile.ok) {
+        throw new Error('Test video file not found. Please ensure test-video.mp4 exists in public/test-files/main-files/ or is served by the backend. Note: Files over 100MB cannot be committed to git.');
       }
 
       const blob = await testVideoFile.blob();
