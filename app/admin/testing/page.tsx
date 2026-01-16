@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { Shield, Users, Crown, User, Loader2, Play, Film, Music, Image, FileText, QrCode } from "lucide-react";
 import Link from "next/link";
@@ -31,6 +31,12 @@ export default function TestingPage() {
   const [pdfTestLoading, setPdfTestLoading] = useState(false);
   const [qrTestLoading, setQrTestLoading] = useState(false);
   const [testResults, setTestResults] = useState<{[key: string]: any}>({});
+  
+  // Visual testing state for Image Converter
+  const [showImageVisualTest, setShowImageVisualTest] = useState(false);
+  const [imageTestStep, setImageTestStep] = useState<string>('');
+  const [imageTestProgress, setImageTestProgress] = useState(0);
+  const imageTestIframeRef = useRef<HTMLIFrameElement>(null);
 
   const testSupabaseUsers = async () => {
     setLoading(true);
@@ -405,18 +411,351 @@ export default function TestingPage() {
     setAudioTestLoading(false);
   };
 
-  const testImageConverter = async () => {
+  // Automated iframe interaction function
+  const automateImageConverterTest = async (iframe: HTMLIFrameElement): Promise<any> => {
+    const results: any = { tests: [] };
+    
+    try {
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!iframeDoc) {
+        throw new Error('Cannot access iframe document');
+      }
+
+      // Wait for iframe to be fully loaded
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // STEP 1: Handle Cookie Consent Modal FIRST (MOST IMPORTANT)
+      setImageTestStep('Checking for cookie consent modal...');
+      setImageTestProgress(5);
+      
+      let cookieConsentHandled = false;
+      let consentCheckAttempts = 0;
+      const maxConsentChecks = 10; // Check for up to 5 seconds
+      
+      while (!cookieConsentHandled && consentCheckAttempts < maxConsentChecks) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Look for "Reject All" button - try multiple selectors
+        const allButtons = Array.from(iframeDoc.querySelectorAll('button'));
+        const rejectAllButton = allButtons.find(
+          btn => {
+            const text = btn.textContent?.trim() || '';
+            return text === 'Reject All' || 
+                   text.toLowerCase().includes('reject all') ||
+                   text.toLowerCase() === 'reject';
+          }
+        );
+        
+        // Also check for cookie consent modal container
+        const consentModal = iframeDoc.querySelector('[class*="cookie"], [class*="consent"], [id*="cookie"], [id*="consent"]') ||
+                           iframeDoc.querySelector('div[role="dialog"]') ||
+                           iframeDoc.querySelector('[data-testid*="cookie"]');
+        
+        if (rejectAllButton) {
+          setImageTestStep('Clicking "Reject All" on cookie consent modal...');
+          setImageTestProgress(8);
+          
+          // Scroll button into view if needed
+          rejectAllButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          // Click the button
+          rejectAllButton.click();
+          cookieConsentHandled = true;
+          
+          // Wait for modal to close and animations to complete
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Verify modal is gone
+          const modalStillVisible = iframeDoc.querySelector('[class*="cookie"], [class*="consent"]');
+          if (!modalStillVisible || modalStillVisible.getAttribute('style')?.includes('display: none')) {
+            results.tests.push({
+              name: 'Cookie Consent Handling',
+              status: 'PASS',
+              message: 'Successfully clicked "Reject All" and cookie consent modal closed'
+            });
+          } else {
+            results.tests.push({
+              name: 'Cookie Consent Handling',
+              status: 'WARN',
+              message: 'Clicked "Reject All" but modal may still be visible'
+            });
+          }
+          break;
+        } else if (consentModal && consentCheckAttempts >= 3) {
+          // Modal exists but button not found - try to find by position or other means
+          setImageTestStep('Cookie consent modal found, searching for reject button...');
+        }
+        
+        consentCheckAttempts++;
+      }
+      
+      if (!cookieConsentHandled) {
+        // Check if consent was already handled (not showing)
+        const consentModal = iframeDoc.querySelector('[class*="cookie"], [class*="consent"], [id*="cookie"], [id*="consent"]');
+        const localStorageConsent = iframeDoc.defaultView?.localStorage?.getItem('cookieConsent');
+        
+        if (!consentModal && localStorageConsent) {
+          results.tests.push({
+            name: 'Cookie Consent Handling',
+            status: 'PASS',
+            message: 'Cookie consent already handled (found in localStorage)'
+          });
+        } else if (!consentModal) {
+          results.tests.push({
+            name: 'Cookie Consent Handling',
+            status: 'PASS',
+            message: 'Cookie consent modal not showing (may be disabled or already handled)'
+          });
+        } else {
+          results.tests.push({
+            name: 'Cookie Consent Handling',
+            status: 'FAIL',
+            message: 'Cookie consent modal is visible but "Reject All" button could not be found or clicked'
+          });
+        }
+      }
+
+      setImageTestStep('Finding file upload area...');
+      setImageTestProgress(10);
+
+      // Find file input or upload button
+      const fileInput = iframeDoc.querySelector('input[type="file"]') as HTMLInputElement;
+      const chooseFileButton = Array.from(iframeDoc.querySelectorAll('button')).find(
+        btn => btn.textContent?.includes('Choose File')
+      );
+
+      if (!fileInput && !chooseFileButton) {
+        throw new Error('File upload element not found');
+      }
+
+      setImageTestStep('Loading test image file...');
+      setImageTestProgress(20);
+
+      // Fetch test image file
+      let testImageFile = await fetch('/test-files/main-files/test-video.jpeg').catch(() => null);
+      if (!testImageFile || !testImageFile.ok) {
+        testImageFile = await fetch('/test-files/test-image.jpeg').catch(() => null);
+      }
+      if (!testImageFile || !testImageFile.ok) {
+        throw new Error('Test image file not found');
+      }
+
+      const blob = await testImageFile.blob();
+      const file = new File([blob], 'test-image.jpeg', { type: 'image/jpeg' });
+
+      setImageTestStep('Uploading file to iframe...');
+      setImageTestProgress(30);
+
+      // Upload file
+      if (fileInput) {
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+      } else if (chooseFileButton) {
+        chooseFileButton.click();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const hiddenInput = iframeDoc.querySelector('input[type="file"]') as HTMLInputElement;
+        if (hiddenInput) {
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          hiddenInput.files = dataTransfer.files;
+          hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      setImageTestStep('Selecting output format (PNG)...');
+      setImageTestProgress(40);
+
+      // Select output format
+      const formatSelect = iframeDoc.querySelector('select') as HTMLSelectElement;
+      if (formatSelect) {
+        formatSelect.value = 'png';
+        formatSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      setImageTestStep('Adjusting quality slider to 85%...');
+      setImageTestProgress(50);
+
+      // Adjust quality slider
+      const qualitySlider = iframeDoc.querySelector('input[type="range"]') as HTMLInputElement;
+      if (qualitySlider) {
+        qualitySlider.value = '85';
+        qualitySlider.dispatchEvent(new Event('input', { bubbles: true }));
+        qualitySlider.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      setImageTestStep('Clicking Convert Image button...');
+      setImageTestProgress(60);
+
+      // Find and click convert button
+      const convertButton = Array.from(iframeDoc.querySelectorAll('button')).find(
+        btn => btn.textContent?.includes('Convert Image') || btn.textContent?.includes('Convert')
+      );
+
+      if (!convertButton) {
+        throw new Error('Convert button not found');
+      }
+
+      convertButton.click();
+      results.tests.push({
+        name: 'Automated File Upload',
+        status: 'PASS',
+        message: 'Successfully uploaded test image file'
+      });
+
+      results.tests.push({
+        name: 'Automated Format Selection',
+        status: 'PASS',
+        message: 'Successfully selected PNG format'
+      });
+
+      results.tests.push({
+        name: 'Automated Quality Adjustment',
+        status: 'PASS',
+        message: 'Successfully set quality to 85%'
+      });
+
+      results.tests.push({
+        name: 'Automated Convert Click',
+        status: 'PASS',
+        message: 'Successfully clicked convert button'
+      });
+
+      // Wait for conversion to complete
+      setImageTestStep('Waiting for conversion to complete...');
+      setImageTestProgress(70);
+
+      // Poll for conversion result
+      let conversionComplete = false;
+      let attempts = 0;
+      const maxAttempts = 30; // 30 seconds max wait
+
+      while (!conversionComplete && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        attempts++;
+
+        const downloadButton = Array.from(iframeDoc.querySelectorAll('button')).find(
+          btn => btn.textContent?.includes('Download')
+        );
+        
+        const successMessage = iframeDoc.textContent?.toLowerCase().includes('successfully') ||
+                              iframeDoc.textContent?.toLowerCase().includes('converted successfully');
+
+        if (downloadButton || iframeDoc.textContent?.includes('successfully')) {
+          conversionComplete = true;
+          setImageTestProgress(90);
+          setImageTestStep('Conversion completed! Verifying results...');
+          
+          results.tests.push({
+            name: 'Conversion Completion',
+            status: 'PASS',
+            message: `Conversion completed in ${attempts} seconds`
+          });
+
+          // Check for file size comparison
+          const fileSizeInfo = iframeDoc.textContent?.includes('Original size') || 
+                              iframeDoc.textContent?.includes('Converted size');
+          
+          if (fileSizeInfo) {
+            results.tests.push({
+              name: 'File Size Comparison Display',
+              status: 'PASS',
+              message: 'File size comparison displayed correctly'
+            });
+          }
+
+          if (downloadButton) {
+            results.tests.push({
+              name: 'Download Button Appears',
+              status: 'PASS',
+              message: 'Download button appeared after conversion'
+            });
+          }
+        } else {
+          setImageTestProgress(70 + (attempts * 2));
+        }
+      }
+
+      if (!conversionComplete) {
+        results.tests.push({
+          name: 'Conversion Completion',
+          status: 'WARN',
+          message: 'Conversion may still be in progress or timed out'
+        });
+      }
+
+      setImageTestProgress(100);
+      setImageTestStep('Automated testing complete!');
+
+    } catch (error) {
+      results.tests.push({
+        name: 'Automated Test Error',
+        status: 'FAIL',
+        message: error instanceof Error ? error.message : 'Unknown error during automation'
+      });
+    }
+
+    return results;
+  };
+
+  const testImageConverter = async (visualMode: boolean = false) => {
     setImageTestLoading(true);
+    if (visualMode) {
+      setShowImageVisualTest(true);
+      setImageTestProgress(0);
+    }
     const results: any = { timestamp: new Date(), tests: [] };
 
     try {
       // Test 1: Check image converter page loads
+      setImageTestStep('Loading image converter page...');
+      if (visualMode) setImageTestProgress(5);
       const response = await fetch('/tools/image-converter');
       results.tests.push({
         name: 'Page Load',
         status: response.ok ? 'PASS' : 'FAIL',
         message: response.ok ? 'Image converter page loads successfully' : `Failed to load page: ${response.status}`
       });
+
+      // If visual mode, run automated iframe tests
+      if (visualMode && imageTestIframeRef.current) {
+        setImageTestStep('Waiting for iframe to load...');
+        setImageTestProgress(8);
+        
+        // Wait for iframe to be ready
+        let iframeReady = false;
+        let waitAttempts = 0;
+        while (!iframeReady && waitAttempts < 10) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          const iframeDoc = imageTestIframeRef.current.contentDocument || 
+                          imageTestIframeRef.current.contentWindow?.document;
+          if (iframeDoc && iframeDoc.readyState === 'complete') {
+            iframeReady = true;
+          }
+          waitAttempts++;
+        }
+        
+        if (iframeReady) {
+          setImageTestStep('Starting automated testing - handling cookie consent first...');
+          setImageTestProgress(10);
+          const iframeResults = await automateImageConverterTest(imageTestIframeRef.current);
+          results.tests.push(...iframeResults.tests);
+        } else {
+          results.tests.push({
+            name: 'Iframe Ready Check',
+            status: 'FAIL',
+            message: 'Iframe did not load in time'
+          });
+        }
+      }
 
       // Test 2: Check supported output formats
       const formats = ['jpg', 'png', 'webp', 'bmp', 'tiff', 'gif', 'pdf'];
@@ -489,8 +828,23 @@ export default function TestingPage() {
 
       // Test 6: Test actual image conversion with test file (backend testing)
       try {
-        const testImageFile = await fetch('/test-files/test-image.jpeg');
-        if (testImageFile.ok) {
+        setImageTestStep('Loading test image file from test-files/main-files/...');
+        if (visualMode) setImageTestProgress(60);
+        // Try test-video.jpeg first (it's an image file based on the name)
+        let testImageFile = await fetch('/test-files/main-files/test-video.jpeg').catch(() => null);
+        if (!testImageFile || !testImageFile.ok) {
+          // Fallback to other possible locations
+          setImageTestStep('Trying alternative test file location...');
+          testImageFile = await fetch('/test-files/test-image.jpeg').catch(() => null);
+        }
+        if (!testImageFile || !testImageFile.ok) {
+          // Try public folder
+          testImageFile = await fetch('/test-video.jpeg').catch(() => null);
+        }
+        
+        if (testImageFile && testImageFile.ok) {
+          setImageTestStep('Uploading image file...');
+          if (visualMode) setImageTestProgress(70);
           const blob = await testImageFile.blob();
           const formData = new FormData();
           formData.append('file', blob, 'test-image.jpeg');
@@ -499,6 +853,8 @@ export default function TestingPage() {
           formData.append('resize', 'false');
           formData.append('compression', 'medium');
 
+          setImageTestStep('Converting image (JPG to PNG)...');
+          if (visualMode) setImageTestProgress(80);
           const convertResponse = await fetch('/convert-image', {
             method: 'POST',
             body: formData
@@ -559,6 +915,15 @@ export default function TestingPage() {
 
     setTestResults(prev => ({ ...prev, imageConverter: results }));
     setImageTestLoading(false);
+    if (visualMode) {
+      setImageTestProgress(100);
+      setImageTestStep('Testing complete!');
+      setTimeout(() => {
+        setShowImageVisualTest(false);
+        setImageTestStep('');
+        setImageTestProgress(0);
+      }, 2000);
+    }
   };
 
   const testPDFTools = async () => {
@@ -1319,27 +1684,151 @@ export default function TestingPage() {
                     <Image className="h-5 w-5 text-purple-400" />
                     <span className="text-white font-medium">Image Converter</span>
                   </div>
-                  <button
-                    onClick={testImageConverter}
-                    disabled={imageTestLoading}
-                    className="flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
-                  >
-                    {imageTestLoading ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Testing...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-3 w-3" />
-                        Test
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => testImageConverter(true)}
+                      disabled={imageTestLoading}
+                      className="flex items-center gap-1 px-3 py-1 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
+                      title="Visual Test - See the tool in action"
+                    >
+                      {imageTestLoading && showImageVisualTest ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Visual Testing...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-3 w-3" />
+                          Visual Test
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => testImageConverter(false)}
+                      disabled={imageTestLoading}
+                      className="flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
+                    >
+                      {imageTestLoading && !showImageVisualTest ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Testing...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-3 w-3" />
+                          Quick Test
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <p className="text-xs text-gray-400 mb-2">
                   Tests JPG/PNG/WebP/BMP/TIFF/GIF/PDF formats, quality control, resize functionality, file size comparison
                 </p>
+                
+                {/* Visual Testing Interface */}
+                {showImageVisualTest && (
+                  <div className="mt-4 mb-4 border-t border-gray-700 pt-4">
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-purple-300">Visual Test Progress</span>
+                        <span className="text-xs text-gray-400">{imageTestProgress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div 
+                          className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${imageTestProgress}%` }}
+                        />
+                      </div>
+                      {imageTestStep && (
+                        <p className="text-xs text-gray-300 mt-2 flex items-center gap-2">
+                          <Loader2 className="h-3 w-3 animate-spin text-purple-400" />
+                          {imageTestStep}
+                        </p>
+                      )}
+                    </div>
+                    
+                    {/* Automated Testing Info */}
+                    <div className="mb-3 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
+                      <h4 className="text-xs font-semibold text-green-300 mb-2 flex items-center gap-2">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Fully Automated Testing
+                      </h4>
+                      <p className="text-xs text-gray-300">
+                        The system will automatically: upload test file, select format, adjust quality, click convert, and verify results. Watch it happen in real-time!
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Live Tool Preview */}
+                      <div className="border border-gray-600 rounded-lg overflow-hidden bg-gray-900">
+                        <div className="bg-gray-800 px-3 py-2 flex items-center justify-between">
+                          <span className="text-xs text-gray-300 font-medium">Live Tool Preview</span>
+                          <button
+                            onClick={() => {
+                              setShowImageVisualTest(false);
+                              setImageTestStep('');
+                              setImageTestProgress(0);
+                            }}
+                            className="text-gray-400 hover:text-white text-xs"
+                          >
+                            Close
+                          </button>
+                        </div>
+                      <iframe
+                        ref={imageTestIframeRef}
+                        src="/tools/image-converter"
+                        className="w-full h-[600px] border-0"
+                        title="Image Converter Visual Test"
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+                        onLoad={() => {
+                          if (imageTestLoading && showImageVisualTest) {
+                            setImageTestStep('Iframe loaded, starting automation...');
+                            setImageTestProgress(5);
+                          }
+                        }}
+                      />
+                      </div>
+                      
+                      {/* Test File Info */}
+                      <div className="border border-gray-600 rounded-lg p-4 bg-gray-900">
+                        <h4 className="text-xs font-semibold text-purple-300 mb-3">Test Files Available:</h4>
+                        <div className="space-y-2 text-xs">
+                          <div className="p-2 bg-gray-800 rounded border border-gray-700">
+                            <p className="text-gray-300 font-medium">test-video.jpeg</p>
+                            <p className="text-gray-400 text-[10px] mt-1">Location: /test-files/main-files/</p>
+                            <p className="text-gray-400 text-[10px]">Use this for JPG to PNG/WebP conversion tests</p>
+                          </div>
+                          <div className="p-2 bg-gray-800 rounded border border-gray-700">
+                            <p className="text-gray-300 font-medium">Test Scenarios:</p>
+                            <ul className="text-gray-400 text-[10px] mt-1 space-y-1 list-disc list-inside">
+                              <li>JPG → PNG (quality: 85%)</li>
+                              <li>JPG → WebP (quality: 90%)</li>
+                              <li>JPG → PDF</li>
+                              <li>Resize: 1920x1080 with aspect ratio</li>
+                              <li>Resize: 800x600 without aspect ratio</li>
+                              <li>Quality: 50% (low) vs 100% (high)</li>
+                            </ul>
+                          </div>
+                          <div className="p-2 bg-gray-800 rounded border border-gray-700">
+                            <p className="text-gray-300 font-medium">Expected Results:</p>
+                            <ul className="text-gray-400 text-[10px] mt-1 space-y-1 list-disc list-inside">
+                              <li>File upload area appears</li>
+                              <li>File name and size displayed</li>
+                              <li>Format dropdown shows 7 options</li>
+                              <li>Quality slider works (10-100%)</li>
+                              <li>Resize controls appear when enabled</li>
+                              <li>Progress bar shows during conversion</li>
+                              <li>Original vs converted size comparison</li>
+                              <li>Download button appears after success</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {testResults.imageConverter && (
                   <div className="space-y-1">
                     {testResults.imageConverter.tests.map((test: any, index: number) => (

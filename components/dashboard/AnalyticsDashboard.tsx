@@ -89,26 +89,25 @@ interface EventsListData {
 }
 
 // Helper function to format duration
-const formatDuration = (seconds: number): string => {
+const formatDuration = (seconds: number | null | undefined): string => {
+  if (seconds === null || seconds === undefined || isNaN(seconds)) {
+    return 'N/A';
+  }
   if (seconds < 60) {
-    return `${Math.round(seconds)} seconds`;
+    return `${Math.round(seconds)}s`;
   }
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.round(seconds % 60);
   if (minutes < 60) {
-    return `${minutes} minute${minutes !== 1 ? "s" : ""} ${
-      remainingSeconds > 0
-        ? `${remainingSeconds} second${remainingSeconds !== 1 ? "s" : ""}`
-        : ""
-    }`;
+    return remainingSeconds > 0
+      ? `${minutes}m ${remainingSeconds}s`
+      : `${minutes}m`;
   }
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
-  return `${hours} hour${hours !== 1 ? "s" : ""} ${
-    remainingMinutes > 0
-      ? `${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`
-      : ""
-  }`;
+  return remainingMinutes > 0
+    ? `${hours}h ${remainingMinutes}m`
+    : `${hours}h`;
 };
 
 // Helper function to format numbers with proper labels
@@ -127,6 +126,44 @@ const formatPageUrl = (url: string): string => {
   } catch {
     return url.length > 50 ? url.substring(0, 50) + "..." : url;
   }
+};
+
+// Helper function to get relative time ago
+const getTimeAgo = (date: Date): string => {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} second${diffInSeconds !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  if (diffInWeeks < 4) {
+    return `${diffInWeeks} week${diffInWeeks !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) {
+    return `${diffInMonths} month${diffInMonths !== 1 ? 's' : ''} ago`;
+  }
+  
+  const diffInYears = Math.floor(diffInDays / 365);
+  return `${diffInYears} year${diffInYears !== 1 ? 's' : ''} ago`;
 };
 
 interface DetailedMetrics {
@@ -1901,28 +1938,67 @@ export default function AnalyticsDashboard() {
                               <div className="text-xs text-gray-400 mb-2">
                                 Pages Visited:
                               </div>
-                              <div className="space-y-1">
+                              <div className="space-y-2">
                                 {session.pages_visited
                                   .slice(0, 5)
-                                  .map((page, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="text-xs text-gray-300 flex items-center gap-2"
-                                    >
-                                      <LinkIcon className="w-3 h-3" />
-                                      <span className="truncate">
-                                        {formatPageUrl(page.url)}
-                                      </span>
-                                      {page.title && (
-                                        <span className="text-gray-500">
-                                          - {page.title}
-                                        </span>
-                                      )}
-                                    </div>
-                                  ))}
+                                  .map((page, idx) => {
+                                    const pageTimestamp = page.timestamp 
+                                      ? new Date(page.timestamp) 
+                                      : null;
+                                    const timeAgo = pageTimestamp 
+                                      ? getTimeAgo(pageTimestamp) 
+                                      : 'Unknown time';
+                                    const pageDuration = page.duration 
+                                      ? formatDuration(page.duration) 
+                                      : 'N/A';
+                                    
+                                    return (
+                                      <div
+                                        key={idx}
+                                        className="text-xs bg-gray-800/50 rounded p-2 border border-gray-700/50"
+                                      >
+                                        <div className="flex items-start gap-2 mb-1">
+                                          <LinkIcon className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                              <span className="text-gray-300 font-medium truncate">
+                                                {formatPageUrl(page.url)}
+                                              </span>
+                                              {page.title && (
+                                                <span className="text-gray-500 truncate">
+                                                  - {page.title}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-gray-700/30">
+                                          <div className="flex items-center gap-1.5">
+                                            <Clock className="w-3 h-3 text-gray-500" />
+                                            <span className="text-gray-400">Visited:</span>
+                                            <span className="text-gray-300" title={pageTimestamp ? pageTimestamp.toLocaleString() : ''}>
+                                              {timeAgo}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-1.5">
+                                            <Timer className="w-3 h-3 text-gray-500" />
+                                            <span className="text-gray-400">Duration:</span>
+                                            <span className="text-gray-300">
+                                              {pageDuration}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        {pageTimestamp && (
+                                          <div className="text-[10px] text-gray-500 mt-1">
+                                            {pageTimestamp.toLocaleString()}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
                                 {session.pages_visited.length > 5 && (
-                                  <div className="text-xs text-gray-500">
-                                    +{session.pages_visited.length - 5} more
+                                  <div className="text-xs text-gray-500 text-center pt-1">
+                                    +{session.pages_visited.length - 5} more pages
                                   </div>
                                 )}
                               </div>
