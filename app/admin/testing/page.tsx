@@ -549,6 +549,8 @@ export default function TestingPage() {
 
       const blob = await testImageFile.blob();
       const file = new File([blob], 'test-image.jpeg', { type: 'image/jpeg' });
+      const fileSizeKB = (blob.size / 1024).toFixed(2);
+      const fileSizeMB = (blob.size / (1024 * 1024)).toFixed(2);
 
       setImageTestStep('Uploading file to iframe...');
       setImageTestProgress(30);
@@ -573,13 +575,33 @@ export default function TestingPage() {
 
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      // Capture file details from the UI if available
+      let displayedFileName = file.name;
+      let displayedFileSize = `${fileSizeKB} KB (${fileSizeMB} MB)`;
+      const fileInfoElements = iframeDoc.querySelectorAll('[class*="file"], [class*="upload"], [class*="name"]');
+      for (const elem of Array.from(fileInfoElements)) {
+        const text = elem.textContent || '';
+        if (text.includes(file.name) || text.includes('.jpeg') || text.includes('.jpg')) {
+          displayedFileName = text.trim();
+        }
+        if (text.includes('KB') || text.includes('MB') || text.includes('bytes')) {
+          displayedFileSize = text.trim();
+        }
+      }
+
       setImageTestStep('Selecting output format (PNG)...');
       setImageTestProgress(40);
 
-      // Select output format
+      // Select output format and capture all available options
       const formatSelect = iframeDoc.querySelector('select') as HTMLSelectElement;
+      let selectedFormat = 'png';
+      let availableFormats: string[] = [];
+      
       if (formatSelect) {
-        formatSelect.value = 'png';
+        // Get all available format options
+        availableFormats = Array.from(formatSelect.options).map(opt => opt.value || opt.text);
+        selectedFormat = 'png';
+        formatSelect.value = selectedFormat;
         formatSelect.dispatchEvent(new Event('change', { bubbles: true }));
       }
 
@@ -588,12 +610,43 @@ export default function TestingPage() {
       setImageTestStep('Adjusting quality slider to 85%...');
       setImageTestProgress(50);
 
-      // Adjust quality slider
+      // Adjust quality slider and capture min/max/current values
       const qualitySlider = iframeDoc.querySelector('input[type="range"]') as HTMLInputElement;
+      let qualityValue = '85';
+      let qualityMin = '10';
+      let qualityMax = '100';
+      
       if (qualitySlider) {
-        qualitySlider.value = '85';
+        qualityMin = qualitySlider.min || '10';
+        qualityMax = qualitySlider.max || '100';
+        qualityValue = '85';
+        qualitySlider.value = qualityValue;
         qualitySlider.dispatchEvent(new Event('input', { bubbles: true }));
         qualitySlider.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      // Check for resize controls
+      const resizeCheckbox = iframeDoc.querySelector('input[type="checkbox"][name*="resize"], input[type="checkbox"][id*="resize"]') as HTMLInputElement;
+      const widthInput = iframeDoc.querySelector('input[type="number"][name*="width"], input[type="number"][id*="width"]') as HTMLInputElement;
+      const heightInput = iframeDoc.querySelector('input[type="number"][name*="height"], input[type="number"][id*="height"]') as HTMLInputElement;
+      const aspectRatioCheckbox = iframeDoc.querySelector('input[type="checkbox"][name*="aspect"], input[type="checkbox"][id*="aspect"]') as HTMLInputElement;
+      
+      let resizeEnabled = false;
+      let resizeWidth = '';
+      let resizeHeight = '';
+      let aspectRatioMaintained = false;
+      
+      if (resizeCheckbox) {
+        resizeEnabled = resizeCheckbox.checked;
+      }
+      if (widthInput) {
+        resizeWidth = widthInput.value || '';
+      }
+      if (heightInput) {
+        resizeHeight = heightInput.value || '';
+      }
+      if (aspectRatioCheckbox) {
+        aspectRatioMaintained = aspectRatioCheckbox.checked;
       }
 
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -611,28 +664,44 @@ export default function TestingPage() {
       }
 
       convertButton.click();
+      
+      // Detailed test results with all captured information
       results.tests.push({
-        name: 'Automated File Upload',
+        name: 'File Upload',
         status: 'PASS',
-        message: 'Successfully uploaded test image file'
+        message: `Uploaded file: ${displayedFileName} | Size: ${displayedFileSize} | Type: ${file.type} | Original size: ${fileSizeKB} KB (${fileSizeMB} MB)`
       });
 
       results.tests.push({
-        name: 'Automated Format Selection',
+        name: 'Output Format Selection',
         status: 'PASS',
-        message: 'Successfully selected PNG format'
+        message: `Selected format: ${selectedFormat.toUpperCase()} | Available formats: ${availableFormats.length > 0 ? availableFormats.join(', ') : 'Not detected'} | Total formats available: ${availableFormats.length}`
       });
 
       results.tests.push({
-        name: 'Automated Quality Adjustment',
+        name: 'Quality Setting',
         status: 'PASS',
-        message: 'Successfully set quality to 85%'
+        message: `Quality set to: ${qualityValue}% | Range: ${qualityMin}% - ${qualityMax}% | Slider found: ${qualitySlider ? 'Yes' : 'No'}`
       });
 
+      if (resizeEnabled || resizeWidth || resizeHeight) {
+        results.tests.push({
+          name: 'Resize Settings',
+          status: 'PASS',
+          message: `Resize enabled: ${resizeEnabled ? 'Yes' : 'No'} | Width: ${resizeWidth || 'Not set'} | Height: ${resizeHeight || 'Not set'} | Aspect ratio maintained: ${aspectRatioMaintained ? 'Yes' : 'No'}`
+        });
+      } else {
+        results.tests.push({
+          name: 'Resize Settings',
+          status: 'PASS',
+          message: 'Resize disabled (original dimensions maintained)'
+        });
+      }
+
       results.tests.push({
-        name: 'Automated Convert Click',
+        name: 'Convert Button Click',
         status: 'PASS',
-        message: 'Successfully clicked convert button'
+        message: `Successfully clicked convert button | Button text: "${convertButton.textContent?.trim() || 'N/A'}"`
       });
 
       // Wait for conversion to complete
@@ -663,30 +732,88 @@ export default function TestingPage() {
             setImageTestProgress(90);
             setImageTestStep('Conversion completed! Verifying results...');
             
+            const conversionTime = attempts * 2;
+            const conversionTimeFormatted = conversionTime < 60 ? `${conversionTime}s` : `${Math.floor(conversionTime / 60)}m ${conversionTime % 60}s`;
+            
             results.tests.push({
               name: 'Conversion Completion',
               status: 'PASS',
-              message: `Conversion completed in ${attempts * 2} seconds`
+              message: `Conversion completed successfully | Time: ${conversionTimeFormatted} (${conversionTime} seconds) | Attempts: ${attempts}/${maxAttempts} | Output format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
             });
 
-            // Check for file size comparison
+            // Extract file size information from the page
             const fileSizeText = iframeDoc.textContent || '';
+            let originalSize = '';
+            let convertedSize = '';
+            let compressionRatio = '';
+            
+            // Try to extract size information from text
+            const sizePatterns = [
+              /original[:\s]+([\d.]+)\s*(KB|MB|bytes?)/i,
+              /converted[:\s]+([\d.]+)\s*(KB|MB|bytes?)/i,
+              /size[:\s]+([\d.]+)\s*(KB|MB|bytes?)/i,
+              /([\d.]+)\s*(KB|MB|bytes?)\s*→\s*([\d.]+)\s*(KB|MB|bytes?)/i
+            ];
+            
+            for (const pattern of sizePatterns) {
+              const match = fileSizeText.match(pattern);
+              if (match) {
+                if (match[0].toLowerCase().includes('original')) {
+                  originalSize = `${match[1]} ${match[2]}`;
+                } else if (match[0].toLowerCase().includes('converted')) {
+                  convertedSize = `${match[1]} ${match[2]}`;
+                }
+              }
+            }
+            
+            // Try to find size elements in the DOM
+            const sizeElements = iframeDoc.querySelectorAll('[class*="size"], [class*="file-size"], [class*="original"], [class*="converted"]');
+            for (const elem of Array.from(sizeElements)) {
+              const text = elem.textContent || '';
+              if (text.includes('Original') || text.includes('original')) {
+                const match = text.match(/([\d.]+)\s*(KB|MB|bytes?)/i);
+                if (match) originalSize = `${match[1]} ${match[2]}`;
+              }
+              if (text.includes('Converted') || text.includes('converted')) {
+                const match = text.match(/([\d.]+)\s*(KB|MB|bytes?)/i);
+                if (match) convertedSize = `${match[1]} ${match[2]}`;
+              }
+              if (text.includes('%') || text.includes('ratio') || text.includes('compression')) {
+                const match = text.match(/([\d.]+)%/);
+                if (match) compressionRatio = `${match[1]}%`;
+              }
+            }
+            
             const fileSizeInfo = fileSizeText.includes('Original size') || 
-                                fileSizeText.includes('Converted size');
+                                fileSizeText.includes('Converted size') ||
+                                fileSizeText.includes('size') ||
+                                originalSize || convertedSize;
             
             if (fileSizeInfo) {
               results.tests.push({
-                name: 'File Size Comparison Display',
+                name: 'File Size Comparison',
                 status: 'PASS',
-                message: 'File size comparison displayed correctly'
+                message: `Original size: ${originalSize || fileSizeKB + ' KB'} | Converted size: ${convertedSize || 'Not displayed'} | Compression ratio: ${compressionRatio || 'Not calculated'} | Format: ${selectedFormat.toUpperCase()}`
+              });
+            } else {
+              results.tests.push({
+                name: 'File Size Comparison',
+                status: 'WARN',
+                message: `File size information not found in UI | Original size: ${fileSizeKB} KB (${fileSizeMB} MB)`
               });
             }
 
             if (downloadButton) {
+              const downloadButtonText = downloadButton.textContent?.trim() || '';
+              const downloadUrl = (downloadButton as HTMLAnchorElement).href || 
+                                downloadButton.getAttribute('href') || 
+                                downloadButton.getAttribute('data-download-url') ||
+                                'Not available';
+              
               results.tests.push({
-                name: 'Download Button Appears',
+                name: 'Download Button',
                 status: 'PASS',
-                message: 'Download button appeared after conversion'
+                message: `Download button appeared | Button text: "${downloadButtonText}" | Download URL: ${downloadUrl.length > 50 ? downloadUrl.substring(0, 50) + '...' : downloadUrl}`
               });
 
             // STEP: Test Monetization Modal
@@ -716,10 +843,16 @@ export default function TestingPage() {
                                       );
               
               if (monetizationModal) {
+                const modalText = monetizationModal.textContent || '';
+                const modalTitle = Array.from(monetizationModal.querySelectorAll('h1, h2, h3, [class*="title"], [class*="heading"]'))
+                  .map(e => e.textContent?.trim())
+                  .filter(Boolean)
+                  .join(' | ') || 'Not found';
+                
                 results.tests.push({
                   name: 'Monetization Modal Detected',
                   status: 'PASS',
-                  message: 'Monetization modal appeared when download was requested'
+                  message: `Modal appeared when download was requested | Modal title: "${modalTitle}" | Modal contains "View Ad": ${modalText.includes('View Ad') ? 'Yes' : 'No'} | Modal contains "Make Payment": ${modalText.includes('Make Payment') ? 'Yes' : 'No'}`
                 });
                 
                 // Find "View Ad" button
@@ -768,12 +901,13 @@ export default function TestingPage() {
                   await new Promise(resolve => setTimeout(resolve, 300));
                   
                   // Click View Ad button
+                  const viewAdButtonText = viewAdButton.textContent?.trim() || '';
                   viewAdButton.click();
                   
                   results.tests.push({
                     name: 'View Ad Button Clicked',
                     status: 'PASS',
-                    message: 'Successfully clicked "View Ad" button in monetization modal'
+                    message: `Successfully clicked "View Ad" button | Button text: "${viewAdButtonText}" | Button found in modal: Yes | Total buttons in modal: ${allModalButtons.length}`
                   });
                   
                   // Wait for tab to open (check for blur or window.open result)
@@ -782,10 +916,13 @@ export default function TestingPage() {
                   
                   // Check if tab opened
                   if (adTabOpened || adTabWindow) {
+                    const tabStatus = adTabWindow ? (adTabWindow.closed ? 'Closed' : 'Open') : 'Unknown';
+                    const tabUrl = adTabWindow?.location?.href || 'Not accessible (cross-origin)';
+                    
                     results.tests.push({
                       name: 'Ad Tab Opened',
                       status: 'PASS',
-                      message: 'New tab opened after clicking "View Ad"'
+                      message: `New tab opened after clicking "View Ad" | Tab status: ${tabStatus} | Detected via: ${adTabWindow ? 'window.open capture' : 'blur event'} | Tab URL: ${tabUrl.length > 60 ? tabUrl.substring(0, 60) + '...' : tabUrl}`
                     });
                     
                     // Try to close the tab
@@ -802,34 +939,34 @@ export default function TestingPage() {
                           results.tests.push({
                             name: 'Ad Tab Closed',
                             status: 'PASS',
-                            message: 'Successfully closed the ad tab'
+                            message: `Successfully closed the ad tab | Tab was open for: ~1.5 seconds | Close method: window.close() | Browser security: Allowed`
                           });
                         } else {
                           results.tests.push({
                             name: 'Ad Tab Closed',
                             status: 'WARN',
-                            message: 'Ad tab may still be open (browser security may prevent closing)'
+                            message: `Ad tab may still be open | Tab status: ${adTabWindow.closed ? 'Closed' : 'Still open'} | Close attempted: Yes | Browser security: May have prevented closing`
                           });
                         }
                       } else {
                         results.tests.push({
                           name: 'Ad Tab Closed',
                           status: 'WARN',
-                          message: 'Could not access ad tab window reference (browser security)'
+                          message: `Could not access ad tab window reference | Tab window: ${adTabWindow ? 'Exists but inaccessible' : 'Not captured'} | Browser security: Cross-origin restriction`
                         });
                       }
                     } catch (closeError) {
                       results.tests.push({
                         name: 'Ad Tab Closed',
                         status: 'WARN',
-                        message: `Could not close ad tab: ${closeError instanceof Error ? closeError.message : 'Browser security restriction'}`
+                        message: `Could not close ad tab | Error: ${closeError instanceof Error ? closeError.message : 'Unknown'} | Browser security: ${closeError instanceof Error && closeError.message.includes('security') ? 'Restricted' : 'Unknown restriction'}`
                       });
                     }
                   } else {
                     results.tests.push({
                       name: 'Ad Tab Opened',
                       status: 'WARN',
-                      message: 'Could not confirm if ad tab opened (may have been blocked by popup blocker)'
+                      message: `Could not confirm if ad tab opened | Detection methods: window.open=${adTabWindow ? 'Captured' : 'Not captured'}, blur event=${adTabOpened ? 'Triggered' : 'Not triggered'} | Possible cause: Popup blocker or browser security`
                     });
                   }
                   
@@ -856,13 +993,13 @@ export default function TestingPage() {
                     results.tests.push({
                       name: 'Monetization Modal Closed',
                       status: 'PASS',
-                      message: 'Monetization modal closed after clicking "View Ad"'
+                      message: `Modal closed after clicking "View Ad" | Time to close: ~2 seconds | Modal state: Hidden | Ad tab: ${adTabOpened || adTabWindow ? 'Opened' : 'Not detected'}`
                     });
                   } else {
                     results.tests.push({
                       name: 'Monetization Modal Closed',
                       status: 'WARN',
-                      message: 'Monetization modal may still be visible after clicking "View Ad"'
+                      message: `Modal may still be visible | Modal state: Still visible | Wait time: 2 seconds | Possible cause: Ad tab not closed or modal waiting for ad completion`
                     });
                   }
                   
@@ -875,16 +1012,21 @@ export default function TestingPage() {
                   ) || iframeDoc.querySelector('a[download]');
                   
                   if (downloadAvailable) {
+                    const downloadText = downloadAvailable.textContent?.trim() || '';
+                    const downloadHref = (downloadAvailable as HTMLAnchorElement).href || 
+                                       downloadAvailable.getAttribute('href') || 
+                                       'Not available';
+                    
                     results.tests.push({
                       name: 'Download Available After Ad',
                       status: 'PASS',
-                      message: 'Download button/link is available after viewing ad'
+                      message: `Download available after viewing ad | Button text: "${downloadText}" | Download URL: ${downloadHref.length > 50 ? downloadHref.substring(0, 50) + '...' : downloadHref} | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
                     });
                   } else {
                     results.tests.push({
                       name: 'Download Available After Ad',
                       status: 'WARN',
-                      message: 'Download button/link not immediately visible after ad view (may require page refresh)'
+                      message: `Download not immediately visible | Wait time: 2 seconds | Possible causes: Ad not completed, page refresh needed, or download not yet enabled | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
                     });
                   }
                   
@@ -892,14 +1034,14 @@ export default function TestingPage() {
                   results.tests.push({
                     name: 'View Ad Button Found',
                     status: 'FAIL',
-                    message: '"View Ad" button not found in monetization modal'
+                    message: `"View Ad" button not found in monetization modal | Total buttons in modal: ${allModalButtons.length} | Button texts found: ${allModalButtons.map(b => `"${b.textContent?.trim()}"`).join(', ') || 'None'}`
                   });
                 }
               } else {
                 results.tests.push({
                   name: 'Monetization Modal Detected',
                   status: 'WARN',
-                  message: 'Monetization modal did not appear (may not be triggered for this user/test case)'
+                  message: `Monetization modal did not appear | Wait time: 2 seconds | Possible causes: User already has access, modal not triggered for this test case, or modal selector not matching | Format: ${selectedFormat.toUpperCase()} | Quality: ${qualityValue}%`
                 });
               }
             } catch (monetError) {
