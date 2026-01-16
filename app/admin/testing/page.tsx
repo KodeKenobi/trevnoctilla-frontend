@@ -918,13 +918,14 @@ export default function TestingPage() {
                   
                   // Check if tab opened
                   if (adTabOpened || adTabWindow) {
-                    const tabStatus = adTabWindow ? (adTabWindow.closed ? 'Closed' : 'Open') : 'Unknown';
-                    const tabUrl = adTabWindow?.location?.href || 'Not accessible (cross-origin)';
+                    const tabWindow = adTabWindow as Window | null;
+                    const tabStatus = tabWindow ? (tabWindow.closed ? 'Closed' : 'Open') : 'Unknown';
+                    const tabUrl = tabWindow?.location?.href || 'Not accessible (cross-origin)';
                     
                     results.tests.push({
                       name: 'Ad Tab Opened',
                       status: 'PASS',
-                      message: `New tab opened after clicking "View Ad" | Tab status: ${tabStatus} | Detected via: ${adTabWindow ? 'window.open capture' : 'blur event'} | Tab URL: ${tabUrl.length > 60 ? tabUrl.substring(0, 60) + '...' : tabUrl}`
+                      message: `New tab opened after clicking "View Ad" | Tab status: ${tabStatus} | Detected via: ${tabWindow ? 'window.open capture' : 'blur event'} | Tab URL: ${tabUrl.length > 60 ? tabUrl.substring(0, 60) + '...' : tabUrl}`
                     });
                     
                     // Try to close the tab
@@ -932,12 +933,12 @@ export default function TestingPage() {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     
                     try {
-                      if (adTabWindow && !adTabWindow.closed) {
-                        adTabWindow.close();
+                      if (tabWindow && !tabWindow.closed) {
+                        tabWindow.close();
                         // Wait a bit to see if it closed
                         await new Promise(resolve => setTimeout(resolve, 500));
                         
-                        if (adTabWindow.closed) {
+                        if (tabWindow.closed) {
                           results.tests.push({
                             name: 'Ad Tab Closed',
                             status: 'PASS',
@@ -947,14 +948,14 @@ export default function TestingPage() {
                           results.tests.push({
                             name: 'Ad Tab Closed',
                             status: 'WARN',
-                            message: `Ad tab may still be open | Tab status: ${adTabWindow.closed ? 'Closed' : 'Still open'} | Close attempted: Yes | Browser security: May have prevented closing`
+                            message: `Ad tab may still be open | Tab status: ${tabWindow.closed ? 'Closed' : 'Still open'} | Close attempted: Yes | Browser security: May have prevented closing`
                           });
                         }
                       } else {
                         results.tests.push({
                           name: 'Ad Tab Closed',
                           status: 'WARN',
-                          message: `Could not access ad tab window reference | Tab window: ${adTabWindow ? 'Exists but inaccessible' : 'Not captured'} | Browser security: Cross-origin restriction`
+                          message: `Could not access ad tab window reference | Tab window: ${tabWindow ? 'Exists but inaccessible' : 'Not captured'} | Browser security: Cross-origin restriction`
                         });
                       }
                     } catch (closeError) {
