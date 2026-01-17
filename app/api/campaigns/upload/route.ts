@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
 
       const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
       
-      // Validate required columns
-      const requiredColumns = ['company_name', 'website_url'];
+      // Validate required columns (only website_url is required now)
+      const requiredColumns = ['website_url'];
       const missingColumns = requiredColumns.filter(col => 
         !headers.some(h => h.toLowerCase().includes(col.replace('_', ' ')) || h.toLowerCase().includes(col))
       );
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       if (missingColumns.length > 0) {
         return NextResponse.json(
           { 
-            error: `Missing required columns: ${missingColumns.join(', ')}. Required: company_name, website_url`,
+            error: `Missing required column: website_url. This is the only required column - company names will be auto-detected.`,
             headers
           },
           { status: 400 }
@@ -102,6 +102,21 @@ export async function POST(request: NextRequest) {
           row.website_url = 'https://' + row.website_url;
         }
 
+        // Auto-generate company name from domain if missing
+        if (!row.company_name || row.company_name.trim() === '') {
+          try {
+            const url = new URL(row.website_url.startsWith('http') ? row.website_url : `https://${row.website_url}`);
+            let domain = url.hostname.replace(/^www\./i, '');
+            const domainParts = domain.split('.');
+            let companyName = domainParts[0];
+            // Capitalize
+            companyName = companyName.charAt(0).toUpperCase() + companyName.slice(1);
+            row.company_name = companyName;
+          } catch (e) {
+            row.company_name = row.website_url;
+          }
+        }
+
         rows.push(row);
       }
     } else {
@@ -113,13 +128,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate rows
-    const validRows = rows.filter(row => row.company_name && row.website_url);
+    // Validate rows (only website_url is required)
+    const validRows = rows.filter(row => row.website_url && row.website_url.trim() !== '');
     const invalidRows = rows.length - validRows.length;
 
     if (validRows.length === 0) {
       return NextResponse.json(
-        { error: 'No valid rows found. Each row must have company_name and website_url' },
+        { error: 'No valid rows found. Each row must have a website_url' },
         { status: 400 }
       );
     }

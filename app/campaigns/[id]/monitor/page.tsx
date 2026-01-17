@@ -240,8 +240,8 @@ export default function CampaignMonitorPage() {
                   <Eye className="h-16 w-16 mx-auto mb-4 opacity-50" />
                   <p>Click "Start Monitoring" to watch automation in real-time</p>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Right Sidebar - Logs */}

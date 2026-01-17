@@ -114,6 +114,81 @@ export class CampaignScraper {
   }
 
   /**
+   * Take a screenshot of the current page
+   */
+  private async takeScreenshot(page: Page, filename: string): Promise<string | null> {
+    try {
+      if (!this.options.recordScreenshots) {
+        return null;
+      }
+
+      const screenshotPath = `./screenshots/${filename}_${Date.now()}.png`;
+      await page.screenshot({
+        path: screenshotPath,
+        fullPage: true,
+      });
+
+      // Notify monitoring callback
+      if (this.options.monitoring?.onScreenshot) {
+        const screenshotBuffer = await page.screenshot({ fullPage: true });
+        this.options.monitoring.onScreenshot(screenshotBuffer);
+      }
+
+      return screenshotPath;
+    } catch (error) {
+      console.error('Failed to take screenshot:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Start video recording of the page
+   * Note: This requires puppeteer-screen-recorder package
+   */
+  private async startVideoRecording(page: Page): Promise<any> {
+    try {
+      if (!this.options.recordVideo) {
+        return null;
+      }
+
+      // This would require installing puppeteer-screen-recorder
+      // For now, we'll log that video recording is enabled
+      console.log('[VIDEO] Recording started (requires puppeteer-screen-recorder)');
+      
+      // TODO: Implement actual video recording
+      // const recorder = new PuppeteerScreenRecorder(page);
+      // await recorder.start('./videos/recording.mp4');
+      // return recorder;
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to start video recording:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Stop video recording
+   */
+  private async stopVideoRecording(recorder: any): Promise<string | null> {
+    try {
+      if (!recorder) {
+        return null;
+      }
+
+      // TODO: Implement actual video stopping
+      // await recorder.stop();
+      // return recorder.getVideoPath();
+      
+      console.log('[VIDEO] Recording stopped');
+      return null;
+    } catch (error) {
+      console.error('Failed to stop video recording:', error);
+      return null;
+    }
+  }
+
+  /**
    * Close the browser
    */
   async close() {
