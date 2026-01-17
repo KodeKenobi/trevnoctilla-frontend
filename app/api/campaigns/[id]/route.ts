@@ -1,33 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/campaigns/:id
- * Get a specific campaign with details
+ * Get a specific campaign with details (public endpoint)
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const { id } = await params;
 
     // Fetch campaign from backend
     const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
     const response = await fetch(
-      `${backendUrl}/api/campaigns/${id}?email=${session.user.email}`,
+      `${backendUrl}/api/campaigns/${id}`,
       {
         method: 'GET',
         headers: {
@@ -58,21 +48,13 @@ export async function GET(
 
 /**
  * PATCH /api/campaigns/:id
- * Update a campaign (e.g., pause, resume, update message)
+ * Update a campaign (e.g., pause, resume, update message) (public endpoint)
  */
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const { id } = await params;
     const body = await request.json();
 
@@ -83,10 +65,7 @@ export async function PATCH(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        email: session.user.email,
-        ...body
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -111,27 +90,19 @@ export async function PATCH(
 
 /**
  * DELETE /api/campaigns/:id
- * Delete a campaign
+ * Delete a campaign (public endpoint)
  */
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const { id } = await params;
 
     // Delete campaign in backend
     const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
     const response = await fetch(
-      `${backendUrl}/api/campaigns/${id}?email=${session.user.email}`,
+      `${backendUrl}/api/campaigns/${id}`,
       {
         method: 'DELETE',
         headers: {
