@@ -36,6 +36,16 @@ export default function CampaignMonitorPage() {
     fetchCampaign();
   }, [campaignId]);
 
+  // Auto-start monitoring when company is selected
+  useEffect(() => {
+    if (selectedCompany && !isMonitoring && !loading) {
+      // Small delay to ensure UI is ready
+      setTimeout(() => {
+        startMonitoring();
+      }, 500);
+    }
+  }, [selectedCompany, loading]);
+
   const fetchCampaign = async () => {
     try {
       setLoading(true);
