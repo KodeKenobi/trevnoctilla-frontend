@@ -166,6 +166,7 @@ export default function UniversalHeader() {
               href: "/tools/qr-generator",
               anchor: "Free QR Code Generator",
             },
+            { label: "Campaigns", href: "/campaigns", anchor: "Contact Form Automation" },
             { label: "API", href: "/api-docs", anchor: "PDF Processing API" },
           ].map((item) => (
             <div key={item.label} className="mx-1">
@@ -506,6 +507,7 @@ export default function UniversalHeader() {
                 href: "/tools/qr-generator",
                 anchor: "Free QR Code Generator",
               },
+              { label: "Campaigns", href: "/campaigns", anchor: "Contact Form Automation" },
               { label: "API", href: "/api-docs", anchor: "PDF Processing API" },
             ].map((item) => (
               <Link

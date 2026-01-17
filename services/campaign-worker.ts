@@ -84,7 +84,7 @@ class CampaignWorker {
    */
   private async fetchQueuedCampaigns(): Promise<Campaign[]> {
     try {
-      const response = await fetch(`${this.backendUrl}/api/campaigns?status=queued`);
+      const response = await fetch(`${this.backendUrl}/api/campaigns/internal/queued`);
       const data = await response.json();
 
       if (!response.ok) {
