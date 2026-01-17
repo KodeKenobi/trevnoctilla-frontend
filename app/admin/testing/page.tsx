@@ -1957,6 +1957,9 @@ This is an automated notification from the Trevnoctilla Admin Dashboard
         
         // Add format-specific tests to results
         results.tests.push(...formatTestResults.tests);
+        
+        // Update UI in real-time after each format completes
+        setTestResults(prev => ({ ...prev, imageConverter: { ...results } }));
       }
       
       // Add summary
