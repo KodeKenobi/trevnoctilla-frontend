@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/contexts/UserContext";
 import { motion } from "framer-motion";
 import {
   Upload,
@@ -26,17 +25,10 @@ interface UploadedData {
 
 export default function CampaignUploadPage() {
   const router = useRouter();
-  const { user, loading: userLoading } = useUser();
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Redirect if not logged in
-  if (!userLoading && !user) {
-    router.push("/auth/login?redirect=/campaigns/upload");
-    return null;
-  }
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -104,14 +96,6 @@ export default function CampaignUploadPage() {
     setUploadedData(null);
     setError(null);
   };
-
-  if (userLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A]">
-        <Loader className="w-8 h-8 animate-spin text-purple-500" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pt-24 py-6 px-4 sm:py-12 sm:px-6 lg:px-8">

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/contexts/UserContext";
 import { motion } from "framer-motion";
 import {
   MessageSquare,
@@ -17,13 +16,13 @@ import {
 
 export default function CreateCampaignPage() {
   const router = useRouter();
-  const { user, loading: userLoading } = useUser();
   const [campaignName, setCampaignName] = useState("");
   const [messageTemplate, setMessageTemplate] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadData, setUploadData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   // Load upload data from session storage
   useEffect(() => {
@@ -34,13 +33,8 @@ export default function CreateCampaignPage() {
       // Redirect back to upload if no data
       router.push("/campaigns/upload");
     }
+    setLoading(false);
   }, [router]);
-
-  // Redirect if not logged in
-  if (!userLoading && !user) {
-    router.push("/auth/login?redirect=/campaigns/create");
-    return null;
-  }
 
   const handleBack = () => {
     router.push("/campaigns/upload");
@@ -82,6 +76,7 @@ export default function CreateCampaignPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          email: "demo@example.com", // Public campaign - no user email needed
           name: campaignName,
           message_template: messageTemplate,
           companies: uploadData.rows,
@@ -106,7 +101,7 @@ export default function CreateCampaignPage() {
     }
   };
 
-  if (userLoading || !uploadData) {
+  if (loading || !uploadData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-blue-50">
         <Loader className="w-8 h-8 animate-spin text-purple-600" />
