@@ -62,33 +62,61 @@ export async function POST(request: NextRequest) {
     // Parse CSV (simple implementation - you may want to use a library like papaparse)
     if (file.name.endsWith('.csv')) {
       const lines = text.split('\n').filter(line => line.trim());
-      if (lines.length < 2) {
+      if (lines.length < 1) {
         return NextResponse.json(
-          { error: 'Spreadsheet must contain at least a header row and one data row' },
+          { error: 'Spreadsheet is empty' },
           { status: 400 }
         );
       }
 
-      const headers = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
+      const firstLine = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
       
-      // Validate required columns (only website_url is required now)
-      const requiredColumns = ['website_url'];
-      const missingColumns = requiredColumns.filter(col => 
-        !headers.some(h => h.toLowerCase().includes(col.replace('_', ' ')) || h.toLowerCase().includes(col))
-      );
-
-      if (missingColumns.length > 0) {
-        return NextResponse.json(
-          { 
-            error: `Missing required column: website_url. This is the only required column - company names will be auto-detected.`,
-            headers
-          },
-          { status: 400 }
+      // Detect if first row is headers or data
+      // If any column looks like a URL or domain, treat it as data without headers
+      const hasUrlInFirstRow = firstLine.some(value => {
+        const lower = value.toLowerCase();
+        return lower.includes('http') || 
+               lower.includes('.com') || 
+               lower.includes('.net') || 
+               lower.includes('.org') || 
+               lower.includes('.io') ||
+               lower.includes('.co') ||
+               lower.includes('www.');
+      });
+      
+      const hasHeaders = !hasUrlInFirstRow;
+      
+      let headers: string[];
+      let startRow: number;
+      
+      if (hasHeaders) {
+        headers = firstLine;
+        startRow = 1;
+        
+        // Validate required columns
+        const hasWebsiteUrl = headers.some(h => 
+          h.toLowerCase().includes('website') || 
+          h.toLowerCase().includes('url') ||
+          h.toLowerCase().includes('site')
         );
+        
+        if (!hasWebsiteUrl) {
+          return NextResponse.json(
+            { 
+              error: `Missing required column: website_url. This is the only required column - company names will be auto-detected.`,
+              headers
+            },
+            { status: 400 }
+          );
+        }
+      } else {
+        // No headers - assume columns in order: company_name, website_url, contact_email, phone
+        headers = ['company_name', 'website_url', 'contact_email', 'phone'];
+        startRow = 0;
       }
 
       // Parse data rows
-      for (let i = 1; i < lines.length; i++) {
+      for (let i = startRow; i < lines.length; i++) {
         const values = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
         const row: any = {};
         

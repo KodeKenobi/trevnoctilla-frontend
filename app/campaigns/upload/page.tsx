@@ -193,13 +193,13 @@ export default function CampaignUploadPage() {
                 <li className="flex items-start">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                   <span>
-                    Required columns: <strong>website_url</strong>
+                    Required: At least one <strong>website URL</strong> per row
                   </span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                   <span>
-                    Optional columns: company_name, contact_email, contact_person, phone
+                    Headers optional - auto-detected or use: company_name, website_url, contact_email, phone
                   </span>
                 </li>
                 <li className="flex items-start">
@@ -208,7 +208,7 @@ export default function CampaignUploadPage() {
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>UTF-8 encoding recommended</span>
+                  <span>Example: Acme Inc,acme.com,hello@acme.com,123-456-7890</span>
                 </li>
               </ul>
             </div>
