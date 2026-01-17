@@ -224,9 +224,9 @@ export default function TestingPage() {
       setVideoTestStep(`Format ${formatIndex + 1}/${totalFormats}: Uploading ${format.toUpperCase()}...`);
       let uploadComplete = false;
       let uploadAttempts = 0;
-      const maxUploadAttempts = 60; // 2 minutes max for upload (60 * 2 seconds)
+      // No arbitrary timeout - monitor until upload completes (global timeout will catch if stuck)
       
-      while (!uploadComplete && uploadAttempts < maxUploadAttempts) {
+      while (!uploadComplete) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         uploadAttempts++;
         
@@ -262,26 +262,18 @@ export default function TestingPage() {
         }
       }
       
-      if (!uploadComplete) {
-        formatResults.tests.push({
-          name: `Format ${format.toUpperCase()} - Upload Complete`,
-          status: 'WARN',
-          message: `Upload timeout after ${maxUploadAttempts * 2}s, assuming upload complete and continuing with conversion check`
-        });
-      } else {
-        formatResults.tests.push({
-          name: `Format ${format.toUpperCase()} - Upload Complete`,
-          status: 'PASS',
-          message: `File upload completed in ~${uploadAttempts * 2}s, conversion started`
-        });
-      }
+      formatResults.tests.push({
+        name: `Format ${format.toUpperCase()} - Upload Complete`,
+        status: 'PASS',
+        message: `File upload completed in ~${uploadAttempts * 2}s, conversion started`
+      });
       
       // STEP 2: Wait for conversion to complete (check for loading=false, conversionResult set, download button)
       let conversionComplete = false;
       let attempts = 0;
-      const maxAttempts = 300; // 10 minutes max for conversion (300 * 2 seconds = 10 minutes)
+      // No arbitrary timeout - monitor until conversion completes (global timeout will catch if stuck)
       
-      while (!conversionComplete && attempts < maxAttempts) {
+      while (!conversionComplete) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         attempts++;
         
@@ -600,11 +592,10 @@ export default function TestingPage() {
           .map(f => f.toLowerCase().replace(/\./g, ''));
       }
       
-      // Test multiple key formats: mp4, webm, avi, mov (test 2 formats to keep test time reasonable)
+      // Test all available video formats
       const formatsToTest = ['mp4', 'webm', 'avi', 'mov', 'mkv', 'flv', 'wmv'];
       const formatsToRun = formatsToTest
-        .filter(f => availableFormats.some(af => af.includes(f.toLowerCase())))
-        .slice(0, 2); // Test up to 2 formats to keep test time reasonable (each format can take 10+ minutes with heavy compression)
+        .filter(f => availableFormats.some(af => af.includes(f.toLowerCase()))); // Test ALL available formats
       
       if (formatsToRun.length === 0) {
         formatsToRun.push(availableFormats[0] || 'mp4');
@@ -1289,18 +1280,17 @@ export default function TestingPage() {
           setVideoTestStep('Starting automated testing - handling cookie consent first...');
           setVideoTestProgress(10);
           
-          // Add timeout wrapper to prevent infinite hanging (20 minutes max for videos - allows for multiple format conversions)
-          // Each format: ~2 min upload + ~10 min conversion = ~12 min per format
-          // 4 formats = ~48 min max, but we'll set to 20 min to be reasonable
+          // Add safety timeout to prevent infinite hanging if something goes wrong (60 minutes)
+          // This is a safety net only - the script monitors progress and should complete naturally
           const automationPromise = automateVideoConverterTest(videoTestIframeRef.current);
           const timeoutPromise = new Promise((resolve) => {
             setTimeout(() => {
               resolve({ timeout: true, tests: [{
                 name: 'Automation Timeout',
                 status: 'WARN',
-                message: 'Automation exceeded 15 minutes timeout. Some tests may be incomplete. Video conversions can take longer, especially with heavy compression. Testing 2 formats instead of 4 to reduce time. Please try running the test again.'
+                message: 'Automation exceeded 60 minutes safety timeout. The test may have gotten stuck. Check the backend logs to see if conversions are still processing.'
               }]});
-            }, 900000); // 15 minute timeout for videos (allows 2 format conversions)
+            }, 3600000); // 60 minute safety timeout
           });
           
           try {
