@@ -210,7 +210,7 @@ export default function CampaignDetailPage() {
       : companies.filter((c) => c.status === filterStatus);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-6 px-4 sm:py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pt-24 pb-6 px-4 sm:pb-12 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
