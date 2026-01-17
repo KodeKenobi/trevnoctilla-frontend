@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@/contexts/UserContext";
 import { motion } from "framer-motion";
 import {
   Plus,
@@ -36,22 +35,13 @@ interface Campaign {
 
 export default function CampaignsPage() {
   const router = useRouter();
-  const { user, loading: userLoading } = useUser();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Redirect if not logged in
-  if (!userLoading && !user) {
-    router.push("/auth/login?redirect=/campaigns");
-    return null;
-  }
-
   useEffect(() => {
-    if (user) {
-      fetchCampaigns();
-    }
-  }, [user]);
+    fetchCampaigns();
+  }, []);
 
   const fetchCampaigns = async () => {
     try {
@@ -129,9 +119,9 @@ export default function CampaignsPage() {
     }
   };
 
-  if (userLoading || loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950 pt-16">
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A] pt-16">
         <Loader className="w-8 h-8 animate-spin text-purple-500" />
       </div>
     );
