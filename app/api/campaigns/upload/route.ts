@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/campaigns/upload
  * Upload and validate spreadsheet for contact automation campaign
  * Public endpoint - no authentication required
+ * Version: 1.0
  */
 export async function POST(request: NextRequest) {
   try {
