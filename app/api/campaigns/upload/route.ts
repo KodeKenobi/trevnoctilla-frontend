@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
           });
         }
         
-        // Assign column types based on patterns
+        // Assign column types based on patterns (already normalized)
         headers = [];
         let urlColumnFound = false;
         
@@ -155,14 +155,14 @@ export async function POST(request: NextRequest) {
           const patterns = columnPatterns[col];
           
           if (patterns.isUrl > 0 && !urlColumnFound) {
-            headers.push('website_url');
+            headers.push('website_url'); // Already normalized
             urlColumnFound = true;
           } else if (patterns.isEmail > 0) {
-            headers.push('contact_email');
+            headers.push('contact_email'); // Already normalized
           } else if (patterns.isPhone > 0) {
-            headers.push('phone');
+            headers.push('phone'); // Already normalized
           } else if (patterns.isText > 0) {
-            headers.push('company_name');
+            headers.push('company_name'); // Already normalized
           } else {
             headers.push(`column_${col}`);
           }
@@ -184,16 +184,53 @@ export async function POST(request: NextRequest) {
       console.log('[CSV Debug] Start row:', startRow);
       console.log('[CSV Debug] Total lines:', lines.length);
 
+      // Normalize header names to standard field names
+      const normalizeHeader = (header: string): string => {
+        const lower = header.toLowerCase().replace(/\s+/g, '_');
+        
+        // Map various URL field names to website_url
+        if (lower.includes('website') || lower.includes('url') || lower === 'site') {
+          return 'website_url';
+        }
+        // Map various company name fields
+        if (lower.includes('company') || lower === 'name' || lower === 'business') {
+          return 'company_name';
+        }
+        // Map email fields
+        if (lower.includes('email') || lower.includes('mail')) {
+          return 'contact_email';
+        }
+        // Map phone fields
+        if (lower.includes('phone') || lower.includes('mobile') || lower.includes('tel')) {
+          return 'phone';
+        }
+        // Map contact person fields
+        if (lower.includes('contact') && (lower.includes('person') || lower.includes('name'))) {
+          return 'contact_person';
+        }
+        
+        return lower;
+      };
+
       // Parse data rows
       for (let i = startRow; i < lines.length; i++) {
         const values = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
+        
+        // Skip empty rows
+        const hasData = values.some(v => v && v.trim() !== '');
+        if (!hasData) {
+          console.log(`[CSV Debug] Row ${i} is empty, skipping`);
+          continue;
+        }
+        
         const row: any = {};
         
         console.log(`[CSV Debug] Row ${i} values:`, values);
         
         headers.forEach((header, index) => {
           const value = values[index] || '';
-          row[header.toLowerCase().replace(/\s+/g, '_')] = value;
+          const normalizedHeader = normalizeHeader(header);
+          row[normalizedHeader] = value;
         });
 
         console.log(`[CSV Debug] Row ${i} object:`, row);

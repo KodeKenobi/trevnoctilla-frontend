@@ -199,7 +199,7 @@ export default function CampaignUploadPage() {
                 <li className="flex items-start">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                   <span>
-                    Columns auto-detected - any order works! URLs, emails, phones identified automatically
+                    Flexible headers: website/url/site, name/company, email, phone - all recognized
                   </span>
                 </li>
                 <li className="flex items-start">
@@ -208,7 +208,7 @@ export default function CampaignUploadPage() {
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Works with: Acme,acme.com OR hello@acme.com,Acme,555-1234,acme.com</span>
+                  <span>Example: name,website,email,phone OR Acme,acme.com,hello@acme.com,555-1234</span>
                 </li>
               </ul>
             </div>
