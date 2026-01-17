@@ -39,12 +39,22 @@ export default function CampaignMonitorPage() {
   // Auto-start monitoring when company is selected
   useEffect(() => {
     if (selectedCompany && !isMonitoring && !loading) {
+      console.log('[Auto-Start] Conditions met, starting monitoring in 1 second...');
+      console.log('[Auto-Start] selectedCompany:', selectedCompany);
+      console.log('[Auto-Start] isMonitoring:', isMonitoring);
+      console.log('[Auto-Start] loading:', loading);
+      
       // Small delay to ensure UI is ready
-      setTimeout(() => {
+      const timer = setTimeout(() => {
+        console.log('[Auto-Start] Calling startMonitoring()...');
         startMonitoring();
-      }, 500);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    } else {
+      console.log('[Auto-Start] Conditions not met:', { selectedCompany: !!selectedCompany, isMonitoring, loading });
     }
-  }, [selectedCompany, loading]);
+  }, [selectedCompany, loading, isMonitoring]);
 
   const fetchCampaign = async () => {
     try {
