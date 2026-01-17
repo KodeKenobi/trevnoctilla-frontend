@@ -17,6 +17,7 @@ import {
   Trash2,
   Shield,
 } from "lucide-react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface Campaign {
   id: number;
@@ -38,6 +39,8 @@ export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [campaignToDelete, setCampaignToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCampaigns();
@@ -65,11 +68,16 @@ export default function CampaignsPage() {
     }
   };
 
-  const handleDeleteCampaign = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this campaign?")) return;
+  const openDeleteDialog = (id: number) => {
+    setCampaignToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCampaign = async () => {
+    if (!campaignToDelete) return;
 
     try {
-      const response = await fetch(`/api/campaigns/${id}`, {
+      const response = await fetch(`/api/campaigns/${campaignToDelete}`, {
         method: "DELETE",
       });
 
@@ -80,8 +88,10 @@ export default function CampaignsPage() {
 
       // Refresh campaigns
       fetchCampaigns();
+      setCampaignToDelete(null);
     } catch (err: any) {
-      alert(err.message || "Failed to delete campaign");
+      console.error("Failed to delete campaign:", err);
+      setError(err.message || "Failed to delete campaign");
     }
   };
 
@@ -232,7 +242,7 @@ export default function CampaignsPage() {
                       <Eye className="w-4 h-4 text-gray-400" />
                     </button>
                     <button
-                      onClick={() => handleDeleteCampaign(campaign.id)}
+                      onClick={() => openDeleteDialog(campaign.id)}
                       className="p-2 hover:bg-red-900/30 rounded-lg transition-colors"
                       title="Delete"
                     >
@@ -310,6 +320,21 @@ export default function CampaignsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setCampaignToDelete(null);
+        }}
+        onConfirm={handleDeleteCampaign}
+        title="Delete Campaign"
+        message="Are you sure you want to delete this campaign? This action cannot be undone and will remove all associated data."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }
