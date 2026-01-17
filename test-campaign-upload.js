@@ -12,21 +12,8 @@ const path = require('path');
 const BASE_URL = process.env.TEST_URL || 'https://www.trevnoctilla.com';
 const CSV_FILE_PATH = path.join(__dirname, 'sample_companies.csv');
 
-// Test credentials - MUST be set via environment variables
-const TEST_EMAIL = process.env.TEST_EMAIL;
-const TEST_PASSWORD = process.env.TEST_PASSWORD;
-
-if (!TEST_EMAIL || !TEST_PASSWORD) {
-  console.error('\n' + colors.red + 'ERROR: Test credentials not provided!' + colors.reset);
-  console.error(colors.yellow + '\nUsage:' + colors.reset);
-  console.error('  TEST_EMAIL=your@email.com TEST_PASSWORD=yourpass node test-campaign-upload.js');
-  console.error('\nOr on Windows PowerShell:');
-  console.error('  $env:TEST_EMAIL="your@email.com"; $env:TEST_PASSWORD="yourpass"; node test-campaign-upload.js');
-  process.exit(1);
-}
-
 // You can override the URL by setting TEST_URL environment variable:
-// TEST_URL=https://your-domain.com TEST_EMAIL=your@email.com TEST_PASSWORD=yourpass node test-campaign-upload.js
+// TEST_URL=https://your-domain.com node test-campaign-upload.js
 
 // ANSI color codes for console output
 const colors = {
@@ -50,47 +37,10 @@ function logSection(title) {
   console.log('='.repeat(60) + '\n');
 }
 
-async function login() {
-  log('Authenticating...', 'cyan');
-  log(`Email: ${TEST_EMAIL}`, 'blue');
-  
-  const response = await fetch(`${BASE_URL}/api/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: TEST_EMAIL,
-      password: TEST_PASSWORD,
-    }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Login failed: ${error.error || response.statusText}`);
-  }
-
-  const data = await response.json();
-  
-  if (!data.token) {
-    throw new Error('No token received from login');
-  }
-
-  log('Login successful!', 'green');
-  return data.token;
-}
-
 async function testCampaignUpload() {
   logSection('Campaign CSV Upload Test');
 
-  let authToken;
-
   try {
-    // Step 0: Authenticate
-    log('Step 0: Authenticating...', 'cyan');
-    authToken = await login();
-    console.log('');
-
     // Step 1: Check if CSV file exists
     log('Step 1: Checking CSV file...', 'cyan');
     if (!fs.existsSync(CSV_FILE_PATH)) {
@@ -118,9 +68,6 @@ async function testCampaignUpload() {
     
     const response = await fetch(`${BASE_URL}/api/campaigns/upload`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authToken}`,
-      },
       body: formData,
     });
 
