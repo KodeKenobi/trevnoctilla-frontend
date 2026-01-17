@@ -101,12 +101,8 @@ RUN if [ -f "/tmp/repo/package.json" ]; then \
         cp -r /tmp/repo/node_modules /app/ 2>/dev/null || true; \
     fi
 
-# Copy and make start-all script executable
-COPY start-all.sh /app/start-all.sh
-RUN chmod +x /app/start-all.sh
+# Expose port (Next.js)
+EXPOSE 3000
 
-# Expose ports (Frontend and Backend)
-EXPOSE 3000 5000
-
-# Run both frontend and backend
-CMD ["/app/start-all.sh"]
+# Run Next.js only (backend is deployed separately)
+CMD ["npm", "start"]

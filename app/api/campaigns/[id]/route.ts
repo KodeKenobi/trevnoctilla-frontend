@@ -25,7 +25,7 @@ export async function GET(
     const { id } = await params;
 
     // Fetch campaign from backend
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
     const response = await fetch(
       `${backendUrl}/api/campaigns/${id}?email=${session.user.email}`,
       {
@@ -77,7 +77,7 @@ export async function PATCH(
     const body = await request.json();
 
     // Update campaign in backend
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
     const response = await fetch(`${backendUrl}/api/campaigns/${id}`, {
       method: 'PATCH',
       headers: {
@@ -129,7 +129,7 @@ export async function DELETE(
     const { id } = await params;
 
     // Delete campaign in backend
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
     const response = await fetch(
       `${backendUrl}/api/campaigns/${id}?email=${session.user.email}`,
       {

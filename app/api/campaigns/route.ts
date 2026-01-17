@@ -19,8 +19,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get user's backend token
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+    // Get backend URL
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
     const email = session.user.email;
 
     // Fetch campaigns from backend
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create campaign in backend
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
     const response = await fetch(`${backendUrl}/api/campaigns`, {
       method: 'POST',
       headers: {
