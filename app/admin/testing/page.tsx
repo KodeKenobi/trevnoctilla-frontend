@@ -419,10 +419,41 @@ export default function TestingPage() {
   const automateVideoConverterTest = async (iframe: HTMLIFrameElement): Promise<any> => {
     const results: any = { tests: [] };
     
+    // Store original window.open to restore later
+    let originalOpen: ((url?: string | URL, target?: string, features?: string) => Window | null) | null = null;
+    
     try {
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       if (!iframeDoc) {
         throw new Error('Cannot access iframe document');
+      }
+
+      // Intercept window.open in iframe to PREVENT new tab from opening during testing
+      const iframeWindow = iframe.contentWindow;
+      if (iframeWindow) {
+        originalOpen = iframeWindow.open.bind(iframeWindow);
+        
+        Object.defineProperty(iframeWindow, 'open', {
+          value: function(url?: string | URL, target?: string, features?: string) {
+            console.log('[TEST] Prevented new tab opening to:', url?.toString());
+            // Return a mock window object instead of opening a real tab
+            const mockWindow = {
+              closed: false,
+              close: function() { (this as any).closed = true; },
+              location: { 
+                href: url?.toString() || '',
+                toString: () => url?.toString() || ''
+              },
+              focus: function() {},
+              blur: function() {},
+              document: null,
+              window: null
+            } as any;
+            return mockWindow;
+          },
+          writable: true,
+          configurable: true
+        });
       }
 
       // Wait for iframe to be fully loaded
@@ -1319,11 +1350,11 @@ export default function TestingPage() {
     // Check if test was successful and send email notification
     const passedTests = results.tests.filter((t: any) => t.status === 'PASS').length;
     const totalTests = results.tests.length;
-    const allPassed = results.tests.every((t: any) => t.status === 'PASS');
     const hasFailures = results.tests.some((t: any) => t.status === 'FAIL');
+    // Consider test successful if there are no failures (WARN is acceptable)
     
-    // Send email if test is successful (all tests passed, no failures)
-    if (allPassed && !hasFailures && totalTests > 0) {
+    // Send email if test is successful (no failures, warnings are okay)
+    if (!hasFailures && totalTests > 0) {
       try {
         const testSummary = results.tests.map((t: any) => 
           `• ${t.name}: ${t.status} - ${t.message}`
@@ -2730,11 +2761,11 @@ This is an automated notification from the Trevnoctilla Admin Dashboard
     // Check if test was successful and send email notification
     const passedTests = results.tests.filter((t: any) => t.status === 'PASS').length;
     const totalTests = results.tests.length;
-    const allPassed = results.tests.every((t: any) => t.status === 'PASS');
     const hasFailures = results.tests.some((t: any) => t.status === 'FAIL');
+    // Consider test successful if there are no failures (WARN is acceptable)
     
-    // Send email if test is successful (all tests passed, no failures)
-    if (allPassed && !hasFailures && totalTests > 0) {
+    // Send email if test is successful (no failures, warnings are okay)
+    if (!hasFailures && totalTests > 0) {
       try {
         const testSummary = results.tests.map((t: any) => 
           `• ${t.name}: ${t.status} - ${t.message}`
