@@ -64,7 +64,7 @@ RUN cp -r /tmp/repo/trevnoctilla-backend/* . && \
 # Create necessary directories
 RUN mkdir -p uploads edited saved_html converted_videos converted_audio
 
-# Make start script executable
+# Make start scripts executable
 RUN chmod +x start.sh
 
 # Install Node.js dependencies and build Next.js frontend
@@ -101,8 +101,12 @@ RUN if [ -f "/tmp/repo/package.json" ]; then \
         cp -r /tmp/repo/node_modules /app/ 2>/dev/null || true; \
     fi
 
-# Expose port (Next.js default is 3000, but Railway will set PORT env var)
-EXPOSE 3000
+# Copy and make start-all script executable
+COPY start-all.sh /app/start-all.sh
+RUN chmod +x /app/start-all.sh
 
-# Run Next.js (Railway Procfile expects npm start)
-CMD ["npm", "start"]
+# Expose ports (Frontend and Backend)
+EXPOSE 3000 5000
+
+# Run both frontend and backend
+CMD ["/app/start-all.sh"]
