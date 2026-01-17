@@ -74,10 +74,14 @@ export default function CampaignMonitorPage() {
       
       // Connect to WebSocket for live streaming
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsHost = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/https?:\/\//, '') || 'web-production-737b.up.railway.app';
-      const ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/campaign/${campaignId}/monitor/${selectedCompany.id}`);
+      const backendUrl = 'web-production-737b.up.railway.app';
+      const wsUrl = `${wsProtocol}//${backendUrl}/ws/campaign/${campaignId}/monitor/${selectedCompany.id}`;
+      
+      console.log('[WebSocket] Attempting to connect:', wsUrl);
+      const ws = new WebSocket(wsUrl);
       
       ws.onopen = () => {
+        console.log('[WebSocket] Connection opened successfully');
         addLog('success', 'Connected', 'Connected to live scraper');
       };
       
@@ -121,12 +125,16 @@ export default function CampaignMonitorPage() {
       };
       
       ws.onerror = (error) => {
-        addLog('failed', 'WebSocket Error', 'Connection error');
+        console.error('[WebSocket] Error:', error);
+        addLog('failed', 'WebSocket Error', `Connection failed. Check console for details.`);
         setIsMonitoring(false);
       };
       
-      ws.onclose = () => {
-        addLog('warning', 'Disconnected', 'Connection closed');
+      ws.onclose = (event) => {
+        console.log('[WebSocket] Connection closed:', event.code, event.reason);
+        if (event.code !== 1000) {
+          addLog('warning', 'Disconnected', `Connection closed (Code: ${event.code})`);
+        }
         setIsMonitoring(false);
       };
     }
