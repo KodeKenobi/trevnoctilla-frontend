@@ -149,14 +149,6 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
     };
   }, [isBackendProcessing, currentBackendMessages.length]);
 
-  // Cancel conversion when output parameters change during conversion
-  useEffect(() => {
-    // If a conversion is running and output parameters change, cancel it
-    if (loading && currentConversionId) {
-      cancelConversion();
-    }
-  }, [outputFormat, quality, compression]); // Watch for parameter changes
-
   // Handle page refresh/unload - cancel any running conversion
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -176,6 +168,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [currentConversionId, loading]);
+  
   const [outputFormat, setOutputFormat] = useState("mp4");
   const [quality, setQuality] = useState(80);
   const [compression, setCompression] = useState("medium");
