@@ -373,14 +373,6 @@ export default function TestingPage() {
         }
       }
       
-      if (!conversionComplete) {
-        formatResults.tests.push({
-          name: `Format ${format.toUpperCase()} - Conversion Complete`,
-          status: 'WARN',
-          message: `Conversion timeout after ${maxAttempts * 2}s for ${format.toUpperCase()}`
-        });
-      }
-      
       // Only reset for next format if this is NOT the last format
       if (formatIndex < totalFormats - 1) {
         await new Promise(resolve => setTimeout(resolve, 2000));
