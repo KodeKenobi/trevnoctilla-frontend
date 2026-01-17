@@ -177,6 +177,14 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
     null
   );
 
+  // Cancel conversion when output parameters change during conversion
+  useEffect(() => {
+    // If a conversion is running and output parameters change, cancel it
+    if (loading && currentConversionId) {
+      cancelConversion();
+    }
+  }, [outputFormat, quality, compression]); // Watch for parameter changes
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       const videoFile = acceptedFiles[0];
