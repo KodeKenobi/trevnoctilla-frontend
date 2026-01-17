@@ -232,6 +232,7 @@ export class CampaignScraper {
         action: 'visit_homepage',
         status: 'success',
         message: `Visiting ${company.website_url}`,
+        timestamp: new Date(),
       });
 
       await page.goto(company.website_url, {
@@ -249,6 +250,7 @@ export class CampaignScraper {
           action: 'find_contact_page',
           status: 'failed',
           message: 'No contact page link found',
+          timestamp: new Date(),
         });
         return result;
       }
@@ -259,6 +261,7 @@ export class CampaignScraper {
         action: 'find_contact_page',
         status: 'success',
         message: `Found contact page: ${contactPageUrl}`,
+        timestamp: new Date(),
       });
 
       // Step 3: Navigate to contact page
@@ -278,6 +281,7 @@ export class CampaignScraper {
           action: 'detect_captcha',
           status: 'warning',
           message: 'CAPTCHA detected',
+          timestamp: new Date(),
         });
         return result;
       }
@@ -292,6 +296,7 @@ export class CampaignScraper {
           action: 'fill_form',
           status: 'failed',
           message: 'No suitable form found',
+          timestamp: new Date(),
         });
         return result;
       }
@@ -301,6 +306,7 @@ export class CampaignScraper {
         action: 'fill_form',
         status: 'success',
         message: 'Form filled successfully',
+        timestamp: new Date(),
       });
 
       // Step 6: Submit form (optional - can be disabled for testing)
@@ -317,6 +323,7 @@ export class CampaignScraper {
         action: 'submit_form',
         status: 'success',
         message: 'Form submission completed',
+        timestamp: new Date(),
       });
 
     } catch (error: any) {
@@ -327,6 +334,7 @@ export class CampaignScraper {
         status: 'failed',
         message: error.message || 'Unknown error',
         details: error.stack,
+        timestamp: new Date(),
       });
     } finally {
       if (page) {
