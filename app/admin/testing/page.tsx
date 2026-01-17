@@ -213,6 +213,33 @@ export default function TestingPage() {
         return formatResults;
       }
       
+      // If this is not the first format, wait for any previous conversion to fully complete
+      if (formatIndex > 0) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Check if there's a "Remove" or "Reset" button and click it to clear previous conversion
+        const removeButton = Array.from(iframeDoc.querySelectorAll('button')).find(
+          btn => {
+            const text = btn.textContent?.trim().toLowerCase() || '';
+            return text.includes('remove') || text.includes('reset') || text.includes('clear');
+          }
+        );
+        if (removeButton) {
+          removeButton.click();
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Re-upload the file
+          const fileInput = iframeDoc.querySelector('input[type="file"]') as HTMLInputElement;
+          if (fileInput) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+      }
+      
       convertButton.click();
       formatResults.tests.push({
         name: `Format ${format.toUpperCase()} - Conversion Started`,
@@ -658,6 +685,12 @@ export default function TestingPage() {
         
         // Update UI in real-time after each format completes
         setTestResults(prev => ({ ...prev, videoConverter: { ...results } }));
+        
+        // Add 3-second delay between format conversions to prevent backend overload
+        if (i < testCombinations.length - 1) {
+          setVideoTestStep(`Waiting before next format test (${i + 2}/${testCombinations.length})...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
       }
       
       // Add summary

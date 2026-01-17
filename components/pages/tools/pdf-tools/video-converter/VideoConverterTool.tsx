@@ -461,6 +461,9 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         xhrInstance = xhr;
         setCurrentXhr(xhr);
 
+        // Set timeout to 10 minutes for large video uploads
+        xhr.timeout = 600000; // 10 minutes in milliseconds
+
         // Track upload progress
         xhr.upload.addEventListener("progress", (event) => {
           if (event.lengthComputable) {
@@ -485,6 +488,11 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
         xhr.addEventListener("error", () => {
           setCurrentXhr(null);
           reject(new Error("Network error"));
+        });
+
+        xhr.addEventListener("timeout", () => {
+          setCurrentXhr(null);
+          reject(new Error("Upload timeout - file is too large or network is too slow"));
         });
 
         xhr.addEventListener("abort", () => {
