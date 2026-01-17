@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Play, StopCircle, Eye, Loader } from "lucide-react";
 
 /**
@@ -19,7 +19,9 @@ interface Company {
 export default function CampaignMonitorPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const campaignId = params.id as string;
+  const companyIdParam = searchParams.get('company');
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [campaign, setCampaign] = useState<any>(null);
@@ -48,9 +50,14 @@ export default function CampaignMonitorPage() {
         const companiesData = await companiesResponse.json();
         setCompanies(companiesData.companies || []);
         
-        // Auto-select first company
+        // Auto-select company from query param or first company
         if (companiesData.companies && companiesData.companies.length > 0) {
-          setSelectedCompany(companiesData.companies[0]);
+          if (companyIdParam) {
+            const targetCompany = companiesData.companies.find((c: Company) => c.id === parseInt(companyIdParam));
+            setSelectedCompany(targetCompany || companiesData.companies[0]);
+          } else {
+            setSelectedCompany(companiesData.companies[0]);
+          }
         }
       }
     } catch (error) {

@@ -250,6 +250,13 @@ export default function CampaignDetailPage() {
                   }`}
                 />
               </button>
+              <button
+                onClick={() => router.push(`/campaigns/${campaignId}/monitor`)}
+                className="inline-flex items-center px-5 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                <Eye className="w-5 h-5 mr-2" />
+                Monitor Live
+              </button>
               {campaign.status === "draft" && (
                 <button
                   onClick={handleStartCampaign}
@@ -369,6 +376,9 @@ export default function CampaignDetailPage() {
                     <th className="text-left py-3 px-4 font-medium text-gray-700 hidden md:table-cell">
                       Details
                     </th>
+                    <th className="text-right py-3 px-4 font-medium text-gray-700">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -418,6 +428,16 @@ export default function CampaignDetailPage() {
                             <span className="text-gray-500">Pending</span>
                           )}
                         </div>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          onClick={() => router.push(`/campaigns/${campaignId}/monitor?company=${company.id}`)}
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          title="Monitor this company"
+                        >
+                          <Eye className="w-4 h-4 mr-1.5" />
+                          Monitor
+                        </button>
                       </td>
                     </tr>
                   ))}
