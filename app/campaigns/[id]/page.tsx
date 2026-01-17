@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useUser } from "@/contexts/UserContext";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -53,7 +52,6 @@ interface Company {
 export default function CampaignDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { user, loading: userLoading } = useUser();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,14 +61,8 @@ export default function CampaignDetailPage() {
 
   const campaignId = params?.id as string;
 
-  // Redirect if not logged in
-  if (!userLoading && !user) {
-    router.push("/auth/login");
-    return null;
-  }
-
   useEffect(() => {
-    if (user && campaignId) {
+    if (campaignId) {
       fetchCampaignDetails();
       fetchCompanies();
 
@@ -84,7 +76,7 @@ export default function CampaignDetailPage() {
 
       return () => clearInterval(interval);
     }
-  }, [user, campaignId, campaign?.status]);
+  }, [campaignId, campaign?.status]);
 
   const fetchCampaignDetails = async (silent = false) => {
     try {
