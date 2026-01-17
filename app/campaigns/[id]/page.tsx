@@ -169,7 +169,7 @@ export default function CampaignDetailPage() {
     }
   };
 
-  if (userLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-blue-50">
         <Loader className="w-8 h-8 animate-spin text-purple-600" />
