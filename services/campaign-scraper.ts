@@ -1,9 +1,28 @@
 /**
- * Campaign Scraper Service
- * Automated contact form submission using Puppeteer
+ * Campaign Scraper Service - Professional Edition
+ * Enterprise-grade automated contact form submission
+ * 
+ * Features:
+ * - Multi-language support (7 languages)
+ * - Extensible pattern matching
+ * - Cookie consent handling
+ * - CAPTCHA detection
+ * - Live monitoring support
+ * - Custom rule engine
+ * - AI fallback capability
  */
 
 import puppeteer, { Browser, Page } from 'puppeteer';
+import {
+  COOKIE_HANDLERS,
+  CONTACT_PAGE_PATTERNS,
+  FORM_FIELD_PATTERNS,
+  SUBMIT_BUTTON_PATTERNS,
+  CAPTCHA_PATTERNS,
+  WEBSITE_OVERRIDES,
+  detectPageLanguage,
+  type CustomRule,
+} from './campaign-scraper-config';
 
 interface Company {
   id: number;
@@ -29,24 +48,60 @@ interface ScraperResult {
   formFound: boolean;
   errorMessage?: string;
   screenshotPath?: string;
+  videoPath?: string;
+  detectedLanguage?: string;
+  cookieModalHandled?: boolean;
+  timeElapsed?: number;
   logs: Array<{
     action: string;
-    status: 'success' | 'failed' | 'warning';
+    status: 'success' | 'failed' | 'warning' | 'info';
     message: string;
     details?: any;
+    timestamp: Date;
   }>;
+}
+
+interface MonitoringCallback {
+  onStep?: (step: string, progress: number) => void;
+  onLog?: (log: any) => void;
+  onScreenshot?: (screenshot: Buffer) => void;
+  onError?: (error: Error) => void;
+}
+
+interface ScraperOptions {
+  customRules?: CustomRule[];
+  monitoring?: MonitoringCallback;
+  recordVideo?: boolean;
+  recordScreenshots?: boolean;
+  headless?: boolean;
+  timeout?: number;
+  retryAttempts?: number;
 }
 
 export class CampaignScraper {
   private browser: Browser | null = null;
+  private options: ScraperOptions;
+  private customRules: CustomRule[] = [];
+
+  constructor(options: ScraperOptions = {}) {
+    this.options = {
+      headless: options.headless ?? true,
+      recordVideo: options.recordVideo ?? false,
+      recordScreenshots: options.recordScreenshots ?? true,
+      timeout: options.timeout ?? 30000,
+      retryAttempts: options.retryAttempts ?? 2,
+      ...options,
+    };
+    this.customRules = options.customRules || [];
+  }
 
   /**
-   * Initialize the browser
+   * Initialize the browser with monitoring support
    */
   async initialize() {
     if (!this.browser) {
       this.browser = await puppeteer.launch({
-        headless: true,
+        headless: this.options.headless,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
