@@ -14,7 +14,7 @@ export default withAuth(
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' blob: https://*.railway.app https://*.trevnoctilla.com https://www.payfast.co.za https://sandbox.payfast.co.za https://www.googletagmanager.com https://www.google-analytics.com https://fonts.googleapis.com https://fonts.gstatic.com https://g.ezoic.net https://cdn.id5-sync.com https://api.rlcdn.com https://privacy.gatekeeperconsent.com https://googleads.g.doubleclick.net https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google https://lbs.eu-1-id5-sync.com https://lb.eu-1-id5-sync.com https://id5-sync.com https://api.rlcdn.com",
+      "connect-src 'self' blob: https://*.railway.app wss://*.railway.app https://*.trevnoctilla.com wss://*.trevnoctilla.com https://www.payfast.co.za https://sandbox.payfast.co.za https://www.googletagmanager.com https://www.google-analytics.com https://fonts.googleapis.com https://fonts.gstatic.com https://g.ezoic.net https://cdn.id5-sync.com https://api.rlcdn.com https://privacy.gatekeeperconsent.com https://googleads.g.doubleclick.net https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google https://lbs.eu-1-id5-sync.com https://lb.eu-1-id5-sync.com https://id5-sync.com https://api.rlcdn.com",
       "frame-src 'self' blob: https://www.payfast.co.za https://sandbox.payfast.co.za https://www.google.com https://googleads.g.doubleclick.net",
       "object-src 'none'",
       "base-uri 'self'",
