@@ -63,12 +63,65 @@ export default function CampaignMonitorPage() {
   const startMonitoring = () => {
     if (selectedCompany) {
       setIsMonitoring(true);
-      addLog('info', 'Started monitoring', `Loading ${selectedCompany.website_url}`);
+      addLog('info', 'Started monitoring', `Connecting to live scraper...`);
       
-      // Update iframe to load the company website
-      if (iframeRef.current) {
-        iframeRef.current.src = selectedCompany.website_url;
-      }
+      // Connect to WebSocket for live streaming
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsHost = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/https?:\/\//, '') || 'web-production-737b.up.railway.app';
+      const ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/campaign/${campaignId}/monitor/${selectedCompany.id}`);
+      
+      ws.onopen = () => {
+        addLog('success', 'Connected', 'Connected to live scraper');
+      };
+      
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        
+        if (message.type === 'log') {
+          const log = message.data;
+          addLog(log.status, log.action, log.message);
+        } else if (message.type === 'screenshot') {
+          // Update iframe with screenshot
+          if (iframeRef.current && message.data.image) {
+            const doc = iframeRef.current.contentDocument;
+            if (doc) {
+              doc.open();
+              doc.write(`
+                <html>
+                  <head>
+                    <style>
+                      body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; background: #000; }
+                      img { max-width: 100%; max-height: 100vh; object-fit: contain; }
+                    </style>
+                  </head>
+                  <body>
+                    <img src="${message.data.image}" alt="Live Browser View" />
+                  </body>
+                </html>
+              `);
+              doc.close();
+            }
+          }
+        } else if (message.type === 'completed') {
+          addLog('success', 'Completed', 'Scraping completed!');
+          setIsMonitoring(false);
+          ws.close();
+        } else if (message.type === 'error') {
+          addLog('failed', 'Error', message.data.message);
+          setIsMonitoring(false);
+          ws.close();
+        }
+      };
+      
+      ws.onerror = (error) => {
+        addLog('failed', 'WebSocket Error', 'Connection error');
+        setIsMonitoring(false);
+      };
+      
+      ws.onclose = () => {
+        addLog('warning', 'Disconnected', 'Connection closed');
+        setIsMonitoring(false);
+      };
     }
   };
 
