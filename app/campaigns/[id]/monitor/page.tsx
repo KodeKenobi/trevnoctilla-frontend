@@ -2,26 +2,18 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Play, Pause, StopCircle, Eye, Activity, Globe, Cookie, FileText, CheckCircle, XCircle, AlertCircle, Loader } from "lucide-react";
+import { Play, StopCircle, Eye, Loader } from "lucide-react";
 
 /**
- * Live Campaign Monitoring View
- * Watch scraping automation happen in real-time (like image converter testing)
+ * Live Campaign Monitoring View  
+ * Watch company websites being visited in real-time (like image converter testing)
  */
 
-interface ScrapingSession {
+interface Company {
   id: number;
+  company_name: string;
+  website_url: string;
   status: string;
-  current_step: string;
-  progress_percentage: number;
-  detected_language?: string;
-  contact_page_url?: string;
-  contact_page_found: boolean;
-  cookie_modal_handled: boolean;
-  captcha_detected: boolean;
-  form_found: boolean;
-  current_url: string;
-  current_screenshot_url?: string;
 }
 
 export default function CampaignMonitorPage() {
@@ -30,161 +22,125 @@ export default function CampaignMonitorPage() {
   const campaignId = params.id as string;
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const [session, setSession] = useState<ScrapingSession | null>(null);
+  const [campaign, setCampaign] = useState<any>(null);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
-  const [selectedCompany, setSelectedCompany] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Poll for session updates
+  // Fetch campaign and companies
   useEffect(() => {
-    if (!isMonitoring) return;
+    fetchCampaign();
+  }, [campaignId]);
 
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/campaigns/${campaignId}/monitor`);
-        const data = await response.json();
-        
-        if (data.session) {
-          setSession(data.session);
-          if (data.logs) {
-            setLogs(prev => [...prev, ...data.logs]);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch monitoring data:', error);
-      }
-    }, 2000); // Update every 2 seconds
-
-    return () => clearInterval(interval);
-  }, [isMonitoring, campaignId]);
-
-  const startMonitoring = async (companyId: number) => {
+  const fetchCampaign = async () => {
     try {
-      const response = await fetch(`/api/campaigns/${campaignId}/monitor/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ company_id: companyId }),
-      });
-
-      if (response.ok) {
-        setIsMonitoring(true);
+      setLoading(true);
+      const response = await fetch(`/api/campaigns/${campaignId}`);
+      const data = await response.json();
+      
+      if (data.campaign) {
+        setCampaign(data.campaign);
+        
+        // Fetch companies
+        const companiesResponse = await fetch(`/api/campaigns/${campaignId}/companies`);
+        const companiesData = await companiesResponse.json();
+        setCompanies(companiesData.companies || []);
+        
+        // Auto-select first company
+        if (companiesData.companies && companiesData.companies.length > 0) {
+          setSelectedCompany(companiesData.companies[0]);
+        }
       }
     } catch (error) {
-      console.error('Failed to start monitoring:', error);
+      console.error('Failed to fetch campaign:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const stopMonitoring = async () => {
-    setIsMonitoring(false);
-    setSession(null);
+  const startMonitoring = () => {
+    if (selectedCompany) {
+      setIsMonitoring(true);
+      addLog('info', 'Started monitoring', `Loading ${selectedCompany.website_url}`);
+      
+      // Update iframe to load the company website
+      if (iframeRef.current) {
+        iframeRef.current.src = selectedCompany.website_url;
+      }
+    }
   };
+
+  const stopMonitoring = () => {
+    setIsMonitoring(false);
+    addLog('warning', 'Stopped monitoring', 'Monitoring stopped by user');
+  };
+
+  const addLog = (status: string, action: string, message: string) => {
+    setLogs(prev => [...prev, {
+      status,
+      action,
+      message,
+      timestamp: new Date().toISOString()
+    }]);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 pt-24 flex items-center justify-center">
+        <Loader className="w-8 h-8 animate-spin text-purple-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 pt-24 pb-12 px-4">
       <div className="max-w-[1800px] mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white mb-2">Live Campaign Monitoring</h1>
-          <p className="text-gray-400">Watch automation happen in real-time</p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Live Website Monitor</h1>
+            <p className="text-gray-400">Watch company websites being visited - just like the converter tests</p>
+          </div>
+          <button
+            onClick={() => router.push(`/campaigns/${campaignId}`)}
+            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 border border-gray-700"
+          >
+            Back to Campaign
+          </button>
         </div>
 
-        {/* Main Layout: Sidebar + Iframe + Logs */}
-        <div className="flex gap-6 min-h-[800px]">
-          {/* Left Sidebar - Session Info */}
+        {/* Main Layout: Company Selector + Iframe + Logs */}
+        <div className="flex gap-4 h-[calc(100vh-200px)]">
+          {/* Left Sidebar - Company Selector & Controls */}
           <div className="w-80 space-y-4">
-            {/* Progress Card */}
-            {session && (
-              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-white font-semibold">Current Progress</h3>
-                  <div className={`w-2 h-2 rounded-full ${
-                    session.status === 'active' ? 'bg-green-400 animate-pulse' : 'bg-gray-500'
-                  }`} />
+            {/* Company Selector */}
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+              <h3 className="text-white font-semibold mb-3">Select Company</h3>
+              <select
+                value={selectedCompany?.id || ''}
+                onChange={(e) => {
+                  const company = companies.find(c => c.id === parseInt(e.target.value));
+                  setSelectedCompany(company || null);
+                  if (isMonitoring) {
+                    setIsMonitoring(false);
+                  }
+                }}
+                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+              >
+                {companies.map(company => (
+                  <option key={company.id} value={company.id}>
+                    {company.company_name}
+                  </option>
+                ))}
+              </select>
+              {selectedCompany && (
+                <div className="mt-2 text-xs text-gray-400 break-all">
+                  {selectedCompany.website_url}
                 </div>
-
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-gray-400">Progress</span>
-                    <span className="text-white font-medium">{session.progress_percentage}%</span>
-                  </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div
-                      className="bg-purple-600 h-2 rounded-full transition-all"
-                      style={{ width: `${session.progress_percentage}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Current Step */}
-                <div className="text-sm">
-                  <span className="text-gray-400">Current Step:</span>
-                  <p className="text-white mt-1">{session.current_step || 'Initializing...'}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Detection Status */}
-            {session && (
-              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                <h3 className="text-white font-semibold mb-3">Detection Status</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-300">Language</span>
-                    </div>
-                    <span className="text-white font-medium">{session.detected_language?.toUpperCase() || 'N/A'}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <Cookie className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-300">Cookie Modal</span>
-                    </div>
-                    {session.cookie_modal_handled ? (
-                      <CheckCircle className="h-4 w-4 text-green-400" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-gray-600" />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-300">Contact Page</span>
-                    </div>
-                    {session.contact_page_found ? (
-                      <CheckCircle className="h-4 w-4 text-green-400" />
-                    ) : (
-                      <Loader className="h-4 w-4 text-yellow-400 animate-spin" />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-300">Form Found</span>
-                    </div>
-                    {session.form_found ? (
-                      <CheckCircle className="h-4 w-4 text-green-400" />
-                    ) : session.contact_page_found ? (
-                      <Loader className="h-4 w-4 text-yellow-400 animate-spin" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-gray-600" />
-                    )}
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-300">CAPTCHA</span>
-                    </div>
-                    {session.captcha_detected ? (
-                      <AlertCircle className="h-4 w-4 text-red-400" />
-                    ) : (
-                      <CheckCircle className="h-4 w-4 text-green-400" />
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Controls */}
             <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
@@ -192,11 +148,12 @@ export default function CampaignMonitorPage() {
               <div className="space-y-2">
                 {!isMonitoring ? (
                   <button
-                    onClick={() => startMonitoring(1)} // TODO: Get company ID
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                    onClick={startMonitoring}
+                    disabled={!selectedCompany}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Play className="h-4 w-4" />
-                    Start Monitoring
+                    Load Website
                   </button>
                 ) : (
                   <button
@@ -204,7 +161,7 @@ export default function CampaignMonitorPage() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                   >
                     <StopCircle className="h-4 w-4" />
-                    Stop Monitoring
+                    Stop
                   </button>
                 )}
               </div>
@@ -216,60 +173,67 @@ export default function CampaignMonitorPage() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
               <div className="flex items-center gap-2">
                 <Eye className="h-5 w-5 text-purple-400" />
-                <span className="text-white font-semibold">Live View</span>
+                <span className="text-white font-semibold">Website View</span>
               </div>
-              {session && (
+              {isMonitoring && selectedCompany && (
                 <div className="flex items-center gap-2 text-xs text-gray-400">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span>Connected</span>
+                  <span>Live</span>
                 </div>
               )}
             </div>
             
-            {isMonitoring && session ? (
+            {isMonitoring && selectedCompany ? (
               <iframe
                 ref={iframeRef}
-                src={session.current_url}
+                src={selectedCompany.website_url}
                 className="flex-1 w-full border-0 bg-white"
-                title="Live Scraping View"
-                sandbox="allow-same-origin allow-scripts allow-forms"
+                title="Company Website View"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                onLoad={() => addLog('success', 'Loaded', `Successfully loaded ${selectedCompany.website_url}`)}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center text-gray-500">
                 <div className="text-center">
                   <Eye className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <p>Click "Start Monitoring" to watch automation in real-time</p>
+                  <p>Select a company and click "Load Website" to view</p>
                 </div>
               </div>
             )}
           </div>
 
           {/* Right Sidebar - Logs */}
-          <div className="w-80 bg-gray-800/50 border border-gray-700 rounded-lg flex flex-col">
+          <div className="w-80 bg-gray-800/50 border border-gray-700 rounded-lg flex-col">
             <div className="px-4 py-3 border-b border-gray-700">
               <h3 className="text-white font-semibold">Activity Log</h3>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {logs.map((log, index) => (
-                <div
-                  key={index}
-                  className={`p-2 rounded text-xs border ${
-                    log.status === 'success'
-                      ? 'bg-green-900/20 border-green-500/30 text-green-300'
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[calc(100vh-300px)]">
+              {logs.length === 0 ? (
+                <div className="text-center text-gray-500 text-sm pt-8">
+                  No activity yet
+                </div>
+              ) : (
+                logs.map((log, index) => (
+                  <div
+                    key={index}
+                    className={`p-2 rounded text-xs border ${
+                      log.status === 'success'
+                        ? 'bg-green-900/20 border-green-500/30 text-green-300'
                       : log.status === 'failed'
                       ? 'bg-red-900/20 border-red-500/30 text-red-300'
                       : log.status === 'warning'
                       ? 'bg-yellow-900/20 border-yellow-500/30 text-yellow-300'
-                      : 'bg-gray-700/30 border-gray-600/30 text-gray-300'
-                  }`}
-                >
-                  <div className="font-semibold mb-1">{log.action}</div>
-                  <div className="opacity-75">{log.message}</div>
-                  <div className="text-xs opacity-50 mt-1">
-                    {new Date(log.timestamp).toLocaleTimeString()}
+                      : 'bg-blue-900/20 border-blue-500/30 text-blue-300'
+                    }`}
+                  >
+                    <div className="font-semibold mb-1">{log.action}</div>
+                    <div className="opacity-75">{log.message}</div>
+                    <div className="text-xs opacity-50 mt-1">
+                      {new Date(log.timestamp).toLocaleTimeString()}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
