@@ -492,7 +492,7 @@ export const VideoConverterTool: React.FC<VideoConverterToolProps> = ({
           reject(new Error("Request cancelled"));
         });
 
-        xhr.open("POST", getDirectBackendUrl("/api/v1/convert/video"));
+        xhr.open("POST", getDirectBackendUrl("/convert-video"));
         xhr.send(formData);
       });
 
