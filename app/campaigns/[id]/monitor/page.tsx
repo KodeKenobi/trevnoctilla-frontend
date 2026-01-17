@@ -36,23 +36,6 @@ export default function CampaignMonitorPage() {
     fetchCampaign();
   }, [campaignId]);
 
-  // Auto-start monitoring when company is selected (only once)
-  const hasStartedRef = useRef(false);
-  
-  useEffect(() => {
-    if (selectedCompany && !hasStartedRef.current && !loading) {
-      console.log('[Auto-Start] Starting monitoring for:', selectedCompany.company_name);
-      hasStartedRef.current = true;
-      
-      // Small delay to ensure UI is ready
-      const timer = setTimeout(() => {
-        startMonitoring();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [selectedCompany, loading]);
-
   const fetchCampaign = async () => {
     try {
       setLoading(true);
