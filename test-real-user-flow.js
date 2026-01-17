@@ -150,29 +150,33 @@ async function testRealUserFlow() {
             };
         });
 
-        // Try to start monitoring
-        console.log(`\x1b[33mLooking for Start Monitoring button...\x1b[0m`);
+        // Click "Load Website" button
+        console.log(`\x1b[33mLooking for "Load Website" button...\x1b[0m`);
         
         try {
-            await page.waitForTimeout(2000);
-            const hasStartButton = await page.evaluate(() => {
+            await page.waitForTimeout(3000); // Give page time to load
+            
+            const clicked = await page.evaluate(() => {
                 const buttons = Array.from(document.querySelectorAll('button'));
-                const startBtn = buttons.find(btn => btn.textContent.includes('Start'));
-                if (startBtn) {
-                    startBtn.click();
+                const loadBtn = buttons.find(btn => 
+                    btn.textContent.includes('Load Website') || 
+                    btn.textContent.includes('Start')
+                );
+                if (loadBtn && !loadBtn.disabled) {
+                    loadBtn.click();
                     return true;
                 }
                 return false;
             });
             
-            if (hasStartButton) {
-                console.log(`\x1b[32m✓ Found Start button, clicked it\x1b[0m`);
-                await page.waitForTimeout(3000); // Wait for WebSocket connection
+            if (clicked) {
+                console.log(`\x1b[32m✓ Clicked "Load Website" button\x1b[0m`);
+                await page.waitForTimeout(5000); // Wait for WebSocket and scraping
             } else {
-                console.log(`\x1b[33m⚠ No Start button found (might auto-start)\x1b[0m`);
+                console.log(`\x1b[33m⚠ Load Website button not found or disabled\x1b[0m`);
             }
         } catch (e) {
-            console.log(`\x1b[33m⚠ Error looking for Start button: ${e.message}\x1b[0m`);
+            console.log(`\x1b[33m⚠ Error clicking button: ${e.message}\x1b[0m`);
         }
 
         // Check WebSocket status

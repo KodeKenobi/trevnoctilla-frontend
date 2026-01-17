@@ -179,13 +179,12 @@ export default function CampaignMonitorPage() {
           </button>
         </div>
 
-        {/* Main Layout: Company Selector + Iframe + Logs */}
-        <div className="flex gap-4 h-[calc(100vh-200px)]">
-          {/* Left Sidebar - Company Selector & Controls */}
-          <div className="w-80 space-y-4">
+        {/* Top Control Bar */}
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-4">
             {/* Company Selector */}
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-              <h3 className="text-white font-semibold mb-3">Select Company</h3>
+            <div className="flex items-center gap-3 flex-1">
+              <Eye className="h-5 w-5 text-purple-400" />
               <select
                 value={selectedCompany?.id || ''}
                 onChange={(e) => {
@@ -195,115 +194,86 @@ export default function CampaignMonitorPage() {
                     setIsMonitoring(false);
                   }
                 }}
-                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+                className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
               >
                 {companies.map(company => (
                   <option key={company.id} value={company.id}>
-                    {company.company_name}
+                    {company.company_name} - {company.website_url}
                   </option>
                 ))}
               </select>
-              {selectedCompany && (
-                <div className="mt-2 text-xs text-gray-400 break-all">
-                  {selectedCompany.website_url}
-                </div>
+            </div>
+
+            {/* Control Button */}
+            <div>
+              {!isMonitoring ? (
+                <button
+                  onClick={startMonitoring}
+                  disabled={!selectedCompany}
+                  className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Play className="h-4 w-4" />
+                  Load Website
+                </button>
+              ) : (
+                <button
+                  onClick={stopMonitoring}
+                  className="flex items-center gap-2 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <StopCircle className="h-4 w-4" />
+                  Stop
+                </button>
               )}
             </div>
 
-            {/* Controls */}
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-              <h3 className="text-white font-semibold mb-3">Controls</h3>
-              <div className="space-y-2">
-                {!isMonitoring ? (
-                  <button
-                    onClick={startMonitoring}
-                    disabled={!selectedCompany}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Play className="h-4 w-4" />
-                    Load Website
-                  </button>
-                ) : (
-                  <button
-                    onClick={stopMonitoring}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                  >
-                    <StopCircle className="h-4 w-4" />
-                    Stop
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Center - Live Iframe */}
-          <div className="flex-1 bg-gray-800/50 border border-gray-700 rounded-lg flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-              <div className="flex items-center gap-2">
-                <Eye className="h-5 w-5 text-purple-400" />
-                <span className="text-white font-semibold">Website View</span>
-              </div>
-              {isMonitoring && selectedCompany && (
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span>Live</span>
-                </div>
-              )}
-            </div>
-            
-            {isMonitoring && selectedCompany ? (
-              <iframe
-                ref={iframeRef}
-                src={selectedCompany.website_url}
-                className="flex-1 w-full border-0 bg-white"
-                title="Company Website View"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                onLoad={() => addLog('success', 'Loaded', `Successfully loaded ${selectedCompany.website_url}`)}
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-500">
-                <div className="text-center">
-                  <Eye className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <p>Select a company and click "Load Website" to view</p>
-                </div>
+            {/* Live Status Indicator */}
+            {isMonitoring && selectedCompany && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-900/30 border border-green-500/30 rounded-lg">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-300 text-sm font-medium">Live</span>
               </div>
             )}
           </div>
 
-          {/* Right Sidebar - Logs */}
-          <div className="w-80 bg-gray-800/50 border border-gray-700 rounded-lg flex-col">
-            <div className="px-4 py-3 border-b border-gray-700">
-              <h3 className="text-white font-semibold">Activity Log</h3>
+          {/* Latest Activity */}
+          {logs.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-gray-700">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-400">Latest:</span>
+                <span className={`font-medium ${
+                  logs[logs.length - 1].status === 'success' ? 'text-green-400' :
+                  logs[logs.length - 1].status === 'failed' ? 'text-red-400' :
+                  logs[logs.length - 1].status === 'warning' ? 'text-yellow-400' :
+                  'text-blue-400'
+                }`}>
+                  {logs[logs.length - 1].action}
+                </span>
+                <span className="text-gray-500">-</span>
+                <span className="text-gray-300">{logs[logs.length - 1].message}</span>
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[calc(100vh-300px)]">
-              {logs.length === 0 ? (
-                <div className="text-center text-gray-500 text-sm pt-8">
-                  No activity yet
-                </div>
-              ) : (
-                logs.map((log, index) => (
-                  <div
-                    key={index}
-                    className={`p-2 rounded text-xs border ${
-                      log.status === 'success'
-                        ? 'bg-green-900/20 border-green-500/30 text-green-300'
-                      : log.status === 'failed'
-                      ? 'bg-red-900/20 border-red-500/30 text-red-300'
-                      : log.status === 'warning'
-                      ? 'bg-yellow-900/20 border-yellow-500/30 text-yellow-300'
-                      : 'bg-blue-900/20 border-blue-500/30 text-blue-300'
-                    }`}
-                  >
-                    <div className="font-semibold mb-1">{log.action}</div>
-                    <div className="opacity-75">{log.message}</div>
-                    <div className="text-xs opacity-50 mt-1">
-                      {new Date(log.timestamp).toLocaleTimeString()}
-                    </div>
-                  </div>
-                ))
-              )}
+          )}
+        </div>
+
+        {/* Full Width Website View */}
+        <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 280px)' }}>
+          {isMonitoring && selectedCompany ? (
+            <iframe
+              ref={iframeRef}
+              src={selectedCompany.website_url}
+              className="w-full h-full border-0 bg-white"
+              title="Company Website View"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+              onLoad={() => addLog('success', 'Loaded', `Successfully loaded ${selectedCompany.website_url}`)}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-500">
+              <div className="text-center">
+                <Eye className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <p className="text-lg">Select a company and click "Load Website" to start monitoring</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
