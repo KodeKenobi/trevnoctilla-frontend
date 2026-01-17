@@ -1,27 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/campaigns
- * Get all campaigns for the current user
+ * Get all campaigns (public endpoint)
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     // Get backend URL
     const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
-    const email = session.user.email;
+    
+    // Get email from query params for public access
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get('email') || 'demo@example.com';
 
     // Fetch campaigns from backend
     const response = await fetch(`${backendUrl}/api/campaigns?email=${email}`, {
@@ -57,16 +50,8 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
-    const { name, message_template, companies } = body;
+    const { name, message_template, companies, email } = body;
 
     // Validate input
     if (!name || !message_template || !companies || companies.length === 0) {
@@ -84,7 +69,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email: session.user.email,
+        email: email || 'demo@example.com',
         name,
         message_template,
         companies
