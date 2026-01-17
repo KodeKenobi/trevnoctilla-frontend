@@ -180,15 +180,23 @@ export async function POST(request: NextRequest) {
         startRow = 0;
       }
 
+      console.log('[CSV Debug] Headers detected:', headers);
+      console.log('[CSV Debug] Start row:', startRow);
+      console.log('[CSV Debug] Total lines:', lines.length);
+
       // Parse data rows
       for (let i = startRow; i < lines.length; i++) {
         const values = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
         const row: any = {};
         
+        console.log(`[CSV Debug] Row ${i} values:`, values);
+        
         headers.forEach((header, index) => {
           const value = values[index] || '';
           row[header.toLowerCase().replace(/\s+/g, '_')] = value;
         });
+
+        console.log(`[CSV Debug] Row ${i} object:`, row);
 
         // Validate website URL
         if (row.website_url && !row.website_url.startsWith('http')) {
@@ -222,8 +230,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate rows (only website_url is required)
+    console.log('[CSV Debug] Total rows before validation:', rows.length);
+    console.log('[CSV Debug] All rows:', rows);
+    
     const validRows = rows.filter(row => row.website_url && row.website_url.trim() !== '');
     const invalidRows = rows.length - validRows.length;
+
+    console.log('[CSV Debug] Valid rows:', validRows.length);
+    console.log('[CSV Debug] Invalid rows:', invalidRows);
 
     if (validRows.length === 0) {
       return NextResponse.json(
