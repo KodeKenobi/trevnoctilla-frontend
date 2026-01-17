@@ -655,6 +655,9 @@ export default function TestingPage() {
         
         // Add format-specific tests to results
         results.tests.push(...formatTestResults.tests);
+        
+        // Update UI in real-time after each format completes
+        setTestResults(prev => ({ ...prev, videoConverter: { ...results } }));
       }
       
       // Add summary
