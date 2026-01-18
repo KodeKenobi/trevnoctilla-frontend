@@ -236,30 +236,50 @@ export default function CampaignDetailPage() {
   const processNextPending = () => {
     // Find next pending company and auto-process it
     const nextPending = companies.find((c) => c.status === "pending");
+    
+    // Only process if there's a pending company AND no other company is currently processing
     if (nextPending && processingCompanyId === null) {
+      console.log("[Auto-process] Processing next pending company:", nextPending.company_name);
       setTimeout(() => {
         handleRapidProcess(nextPending.id);
       }, 1000); // Small delay between companies
+    } else if (!nextPending) {
+      // No more pending companies - campaign is complete
+      console.log("[Auto-process] All companies processed. Campaign complete.");
     }
   };
 
-  // Auto-start rapid processing for new campaigns
+  // Auto-start rapid processing for new campaigns (ONLY if draft and has pending companies)
   useEffect(() => {
+    if (!campaign || !companies.length) return;
+    
+    // Check localStorage to see if this campaign was already auto-started
+    const autoStartKey = `campaign_${campaignId}_autostarted`;
+    const wasAutoStarted = localStorage.getItem(autoStartKey);
+    
+    // Only auto-start if:
+    // 1. Campaign is in draft status (newly created)
+    // 2. Has pending companies
+    // 3. Hasn't been auto-started before (checked via localStorage)
+    // 4. Campaign is NOT completed or processing already
     if (
-      campaign &&
-      companies.length > 0 &&
+      campaign.status === "draft" &&
+      !wasAutoStarted &&
       !autoStarted &&
-      campaign.status === "draft"
+      campaign.status !== "completed" &&
+      campaign.status !== "processing"
     ) {
       const pendingCompany = companies.find((c) => c.status === "pending");
       if (pendingCompany) {
+        console.log("[Auto-start] Starting rapid processing for campaign", campaignId);
         setAutoStarted(true);
+        localStorage.setItem(autoStartKey, "true");
         setTimeout(() => {
           handleRapidProcess(pendingCompany.id);
         }, 1000);
       }
     }
-  }, [campaign, companies, autoStarted]);
+  }, [campaign, companies, autoStarted, campaignId]);
 
   const filteredCompanies = companies.filter((company) =>
     filterStatus === "all" ? true : company.status === filterStatus
@@ -569,7 +589,9 @@ export default function CampaignDetailPage() {
                     ) : company.status === "processing" ? (
                       <span className="text-blue-400">In progress...</span>
                     ) : company.contact_page_found ? (
-                      <span className="text-white/60">Contact form detected</span>
+                      <span className="text-white/60">
+                        Contact form detected
+                      </span>
                     ) : (
                       <span className="text-white/40">—</span>
                     )}
