@@ -8,9 +8,12 @@ import {
   ArrowLeft,
   ArrowRight,
   Sparkles,
-  Eye,
-  Copy,
-  Check,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  FileText,
+  MessageSquare,
 } from "lucide-react";
 
 export default function CreateCampaignPage() {
@@ -18,10 +21,16 @@ export default function CreateCampaignPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [campaignName, setCampaignName] = useState("");
-  const [messageTemplate, setMessageTemplate] = useState("");
   const [uploadedData, setUploadedData] = useState<any>(null);
-  const [showPreview, setShowPreview] = useState(false);
-  const [copiedVariable, setCopiedVariable] = useState<string | null>(null);
+  
+  // Form field values
+  const [senderName, setSenderName] = useState("");
+  const [senderEmail, setSenderEmail] = useState("");
+  const [senderPhone, setSenderPhone] = useState("");
+  const [senderAddress, setSenderAddress] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [newsletter, setNewsletter] = useState<"yes" | "no" | "skip">("skip");
 
   useEffect(() => {
     const data = localStorage.getItem("uploadedCampaignData");
@@ -32,66 +41,6 @@ export default function CreateCampaignPage() {
     setUploadedData(JSON.parse(data));
   }, [router]);
 
-  const copyVariable = (variable: string) => {
-    navigator.clipboard.writeText(`{${variable}}`);
-    setCopiedVariable(variable);
-    setTimeout(() => setCopiedVariable(null), 2000);
-  };
-
-  const getPreviewMessage = () => {
-    if (!uploadedData || !uploadedData.rows || uploadedData.rows.length === 0) {
-      return messageTemplate;
-    }
-
-    const sampleCompany = uploadedData.rows[0];
-    let preview = messageTemplate;
-
-    // Replace all possible variables with sample data
-    const replacements: { [key: string]: string } = {
-      // Names
-      full_name: sampleCompany.company_name || "John Doe",
-      first_name: (sampleCompany.company_name || "John").split(" ")[0],
-      last_name: "Doe",
-      name: sampleCompany.company_name || "John Doe",
-      
-      // Contact
-      email: sampleCompany.contact_email || "contact@example.com",
-      phone: sampleCompany.phone || "+1 555-123-4567",
-      mobile: sampleCompany.phone || "+1 555-123-4567",
-      
-      // Company
-      company: sampleCompany.company_name || "Example Company",
-      company_name: sampleCompany.company_name || "Example Company",
-      organization: sampleCompany.company_name || "Example Organization",
-      business: sampleCompany.company_name || "Example Business",
-      
-      // Website
-      website: sampleCompany.website_url || "https://example.com",
-      website_url: sampleCompany.website_url || "https://example.com",
-      url: sampleCompany.website_url || "https://example.com",
-      
-      // Address
-      address: sampleCompany.address || "123 Business St",
-      street: sampleCompany.address || "123 Business St",
-      city: sampleCompany.city || "New York",
-      state: sampleCompany.state || "NY",
-      zip: sampleCompany.zip || "10001",
-      country: sampleCompany.country || "United States",
-      
-      // Message parts
-      subject: "Business Partnership Inquiry",
-      topic: "Partnership Opportunity",
-    };
-
-    // Replace all variables in the template
-    for (const [key, value] of Object.entries(replacements)) {
-      const regex = new RegExp(`\\{${key}\\}`, 'gi');
-      preview = preview.replace(regex, value);
-    }
-
-    return preview;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -100,8 +49,8 @@ export default function CreateCampaignPage() {
       return;
     }
 
-    if (!messageTemplate.trim()) {
-      setError("Message template is required");
+    if (!message.trim()) {
+      setError("Message is required");
       return;
     }
 
@@ -109,12 +58,23 @@ export default function CreateCampaignPage() {
       setLoading(true);
       setError(null);
 
+      // Combine all form data into the message template
+      const formData = {
+        sender_name: senderName || "Sender",
+        sender_email: senderEmail || "sender@example.com",
+        sender_phone: senderPhone || "+1 555-0000",
+        sender_address: senderAddress || "",
+        subject: subject || "Inquiry",
+        message: message,
+        newsletter: newsletter,
+      };
+
       const response = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: campaignName,
-          message_template: messageTemplate,
+          message_template: JSON.stringify(formData), // Store form data as JSON
           companies: uploadedData.rows,
         }),
       });
@@ -199,109 +159,174 @@ export default function CreateCampaignPage() {
             />
           </div>
 
-          {/* Available Variables */}
-          <div className="border border-white/20 rounded-lg p-5 bg-white/[0.02]">
-            <h3 className="text-sm font-medium text-white mb-4">📋 Available Variables</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {[
-                { var: 'name', label: 'Full Name', cat: 'Name' },
-                { var: 'first_name', label: 'First Name', cat: 'Name' },
-                { var: 'last_name', label: 'Last Name', cat: 'Name' },
-                { var: 'email', label: 'Email', cat: 'Contact' },
-                { var: 'phone', label: 'Phone Number', cat: 'Contact' },
-                { var: 'mobile', label: 'Mobile', cat: 'Contact' },
-                { var: 'company', label: 'Company Name', cat: 'Company' },
-                { var: 'organization', label: 'Organization', cat: 'Company' },
-                { var: 'website', label: 'Website URL', cat: 'Company' },
-                { var: 'address', label: 'Address', cat: 'Location' },
-                { var: 'city', label: 'City', cat: 'Location' },
-                { var: 'state', label: 'State', cat: 'Location' },
-                { var: 'zip', label: 'ZIP Code', cat: 'Location' },
-                { var: 'country', label: 'Country', cat: 'Location' },
-                { var: 'subject', label: 'Subject', cat: 'Message' },
-                { var: 'topic', label: 'Topic', cat: 'Message' },
-              ].map(({ var: variable, label }) => (
-                <button
-                  key={variable}
-                  type="button"
-                  onClick={() => copyVariable(variable)}
-                  className="group relative flex items-center justify-between px-3 py-2 bg-black border border-white/10 hover:border-white/30 text-left transition-colors rounded text-xs"
-                  title={`Click to copy {${variable}}`}
-                >
-                  <span className="text-white font-mono">{`{${variable}}`}</span>
-                  {copiedVariable === variable ? (
-                    <Check className="w-3 h-3 text-green-400" />
-                  ) : (
-                    <Copy className="w-3 h-3 text-white/40 group-hover:text-white/70" />
-                  )}
-                </button>
-              ))}
+          {/* Form Data Section */}
+          <div className="border border-white/20 rounded-lg p-6 bg-white/[0.02]">
+            <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              Form Data (Will be filled into contact forms)
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Your Name */}
+              <div>
+                <label className="block text-xs text-white mb-2 flex items-center gap-2">
+                  <User className="w-3.5 h-3.5" />
+                  Your Name
+                </label>
+                <input
+                  type="text"
+                  value={senderName}
+                  onChange={(e) => setSenderName(e.target.value)}
+                  className="w-full px-3 py-2 bg-black border border-white/10 text-sm text-white 
+                           focus:border-white/30 focus:outline-none transition-colors rounded
+                           hover:border-white/20 placeholder:text-gray-600"
+                  placeholder="John Doe"
+                />
+                <p className="text-[10px] text-white/40 mt-1">Used for: Name, First Name, Last Name fields</p>
+              </div>
+
+              {/* Your Email */}
+              <div>
+                <label className="block text-xs text-white mb-2 flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5" />
+                  Your Email
+                </label>
+                <input
+                  type="email"
+                  value={senderEmail}
+                  onChange={(e) => setSenderEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-black border border-white/10 text-sm text-white 
+                           focus:border-white/30 focus:outline-none transition-colors rounded
+                           hover:border-white/20 placeholder:text-gray-600"
+                  placeholder="john@example.com"
+                />
+                <p className="text-[10px] text-white/40 mt-1">Used for: Email, Contact Email fields</p>
+              </div>
+
+              {/* Your Phone */}
+              <div>
+                <label className="block text-xs text-white mb-2 flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5" />
+                  Your Phone
+                </label>
+                <input
+                  type="tel"
+                  value={senderPhone}
+                  onChange={(e) => setSenderPhone(e.target.value)}
+                  className="w-full px-3 py-2 bg-black border border-white/10 text-sm text-white 
+                           focus:border-white/30 focus:outline-none transition-colors rounded
+                           hover:border-white/20 placeholder:text-gray-600"
+                  placeholder="+1 555-123-4567"
+                />
+                <p className="text-[10px] text-white/40 mt-1">Used for: Phone, Mobile, Telephone fields</p>
+              </div>
+
+              {/* Your Address */}
+              <div>
+                <label className="block text-xs text-white mb-2 flex items-center gap-2">
+                  <MapPin className="w-3.5 h-3.5" />
+                  Your Address
+                </label>
+                <input
+                  type="text"
+                  value={senderAddress}
+                  onChange={(e) => setSenderAddress(e.target.value)}
+                  className="w-full px-3 py-2 bg-black border border-white/10 text-sm text-white 
+                           focus:border-white/30 focus:outline-none transition-colors rounded
+                           hover:border-white/20 placeholder:text-gray-600"
+                  placeholder="123 Main St, New York, NY 10001"
+                />
+                <p className="text-[10px] text-white/40 mt-1">Used for: Address, Location, City, State fields</p>
+              </div>
+
+              {/* Subject */}
+              <div className="md:col-span-2">
+                <label className="block text-xs text-white mb-2 flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5" />
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  className="w-full px-3 py-2 bg-black border border-white/10 text-sm text-white 
+                           focus:border-white/30 focus:outline-none transition-colors rounded
+                           hover:border-white/20 placeholder:text-gray-600"
+                  placeholder="Business Inquiry"
+                />
+                <p className="text-[10px] text-white/40 mt-1">Used for: Subject, Topic, Inquiry Type fields</p>
+              </div>
+
+              {/* Newsletter */}
+              <div className="md:col-span-2">
+                <label className="block text-xs text-white mb-2">
+                  Newsletter / Mailing List Subscription
+                </label>
+                <div className="flex gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="yes"
+                      checked={newsletter === "yes"}
+                      onChange={(e) => setNewsletter(e.target.value as "yes" | "no" | "skip")}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm text-white">Yes, subscribe</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="no"
+                      checked={newsletter === "no"}
+                      onChange={(e) => setNewsletter(e.target.value as "yes" | "no" | "skip")}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm text-white">No, don't subscribe</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      value="skip"
+                      checked={newsletter === "skip"}
+                      onChange={(e) => setNewsletter(e.target.value as "yes" | "no" | "skip")}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm text-white">Skip (leave unchecked)</span>
+                  </label>
+                </div>
+                <p className="text-[10px] text-white/40 mt-1">Used for: Newsletter, Mailing List, Consent checkboxes/radio buttons</p>
+              </div>
             </div>
-            <p className="text-xs text-white/60 mt-4">
-              ℹ️ Click any variable to copy. These will be automatically replaced with actual data when forms are filled.
-              <br />
-              💡 If a form doesn't have a field, that variable will use a default value or be skipped.
-            </p>
           </div>
 
-          {/* Message Template */}
+          {/* Message */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <label htmlFor="messageTemplate" className="block text-sm text-white font-medium">
-                Message Template
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowPreview(!showPreview)}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs text-white hover:text-white hover:bg-white/5 transition-colors border border-white/20 rounded"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                {showPreview ? "Hide" : "Show"} Preview
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-4">
-              {/* Template Editor */}
-              <div>
-                <textarea
-                  id="messageTemplate"
-                  value={messageTemplate}
-                  onChange={(e) => setMessageTemplate(e.target.value)}
-                  rows={14}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-800 text-base text-white leading-relaxed
-                           focus:border-white focus:outline-none transition-colors resize-none rounded-lg
-                           hover:border-gray-700 font-mono placeholder:text-gray-600"
-                  placeholder={`Hello {name},
+            <label htmlFor="message" className="block text-sm text-white font-medium mb-3 flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Message
+            </label>
+            <textarea
+              id="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={10}
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-800 text-base text-white leading-relaxed
+                       focus:border-white focus:outline-none transition-colors resize-none rounded-lg
+                       hover:border-gray-700 placeholder:text-gray-600"
+              placeholder={`Hello,
 
-I hope this message finds you well. I came across {company} and was impressed by your work.
+I hope this message finds you well. I came across your website and was impressed by your work.
 
-I'd love to discuss potential collaboration opportunities that could benefit both {company} and our organization.
-
-You can reach me at {email} or {phone}.
+I'd love to discuss potential collaboration opportunities.
 
 Looking forward to connecting!
 
 Best regards`}
-                  required
-                />
-                <p className="text-xs text-white mt-2 font-mono">
-                  💬 Use variables like {`{name}`}, {`{email}`}, {`{company}`} in your template
-                </p>
-              </div>
-
-              {/* Preview */}
-              {showPreview && (
-                <div className="border border-emerald-500/30 bg-emerald-500/5 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="w-4 h-4 text-emerald-400" />
-                    <h4 className="text-sm font-medium text-emerald-300">Preview with Sample Data</h4>
-                  </div>
-                  <div className="bg-black/40 border border-white/10 rounded p-4 text-sm text-white leading-relaxed whitespace-pre-wrap font-mono">
-                    {getPreviewMessage() || <span className="text-white/40">Type your message template above to see preview...</span>}
-                  </div>
-                </div>
-              )}
-            </div>
+              required
+            />
+            <p className="text-xs text-white mt-2 font-mono">
+              💬 This message will be filled into Message, Comments, or Inquiry fields on contact forms
+            </p>
           </div>
 
           {/* Submit */}
