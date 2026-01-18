@@ -273,9 +273,9 @@ export default function CampaignDetailPage() {
           ].map((stat, idx) => (
             <div
               key={idx}
-              className="relative border border-gray-900 p-4 hover:border-gray-800 transition-colors overflow-hidden group"
+              className="relative border border-white/30 p-4 hover:border-white/50 transition-colors overflow-hidden group"
             >
-              <div 
+              <div
                 className="absolute inset-0 bg-cover bg-center opacity-20 group-hover:opacity-30 transition-opacity"
                 style={{ backgroundImage: `url(${stat.bg})` }}
               />
@@ -313,16 +313,29 @@ export default function CampaignDetailPage() {
             </select>
           </div>
 
-          {/* Column Headers */}
-          <div className="grid grid-cols-[1fr_140px_200px_80px_200px] gap-4 px-4 py-2 border-b border-gray-900 mb-2">
-            <div className="text-[10px] text-white uppercase tracking-wider">Company</div>
-            <div className="text-[10px] text-white uppercase tracking-wider">Status</div>
-            <div className="text-[10px] text-white uppercase tracking-wider">Details</div>
-            <div className="text-[10px] text-white uppercase tracking-wider text-center">Screenshot</div>
-            <div className="text-[10px] text-white uppercase tracking-wider text-center">Actions</div>
-          </div>
+          {/* Table Container */}
+          <div className="border border-white/20 rounded-lg overflow-hidden">
+            {/* Column Headers */}
+            <div className="grid grid-cols-[1fr_140px_200px_80px_200px] gap-4 px-4 py-3 bg-white/5 border-b border-white/10">
+              <div className="text-[10px] text-white uppercase tracking-wider">
+                Company
+              </div>
+              <div className="text-[10px] text-white uppercase tracking-wider">
+                Status
+              </div>
+              <div className="text-[10px] text-white uppercase tracking-wider">
+                Details
+              </div>
+              <div className="text-[10px] text-white uppercase tracking-wider text-center">
+                Screenshot
+              </div>
+              <div className="text-[10px] text-white uppercase tracking-wider text-center">
+                Actions
+              </div>
+            </div>
 
-          <div className="space-y-2">
+            {/* Table Rows */}
+            <div>
             {filteredCompanies.map((company, idx) => (
               <div
                 key={company.id}
@@ -330,18 +343,14 @@ export default function CampaignDetailPage() {
                 onMouseLeave={() => setHoveredRow(null)}
                 className={`
                   group relative grid grid-cols-[1fr_140px_200px_80px_200px] gap-4 items-center
-                  px-4 py-3 transition-all duration-150
-                  ${
-                    hoveredRow === company.id
-                      ? "bg-black/50 border-gray-800"
-                      : "border-transparent"
-                  }
-                  ${idx === 0 ? "" : "border-t border-gray-900"}
+                  px-4 py-4 transition-all duration-150
+                  ${idx % 2 === 0 ? "bg-white/[0.02]" : "bg-transparent"}
+                  ${hoveredRow === company.id ? "bg-white/[0.05]" : ""}
+                  ${idx === 0 ? "" : "border-t border-white/5"}
                 `}
               >
                 {/* Company */}
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-1.5 h-1.5 rounded-full bg-gray-800 flex-shrink-0 group-hover:bg-white transition-colors" />
                   <div className="min-w-0">
                     <div className="text-sm text-white truncate group-hover:text-white transition-colors">
                       {company.company_name}
@@ -417,14 +426,9 @@ export default function CampaignDetailPage() {
                   </button>
                 </div>
 
-                {/* Hover indicator */}
-                <div
-                  className={`absolute left-0 top-0 bottom-0 w-0.5 bg-white transition-opacity ${
-                    hoveredRow === company.id ? "opacity-100" : "opacity-0"
-                  }`}
-                />
               </div>
             ))}
+            </div>
           </div>
         </div>
       </div>
