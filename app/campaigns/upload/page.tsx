@@ -64,11 +64,25 @@ export default function CampaignUploadPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
+        let errorMsg = "Upload failed";
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch (e) {
+          // If JSON parsing fails, use text
+          const errorText = await response.text();
+          errorMsg = errorText || errorMsg;
+        }
+        throw new Error(errorMsg);
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        throw new Error("Invalid response from server. Please try again.");
+      }
+
       console.log('[Upload] API Response:', data);
 
       setUploadedData({
@@ -100,24 +114,24 @@ export default function CampaignUploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black pt-20 pb-12 px-8">
+    <div className="min-h-screen bg-gray-950 pt-20 pb-12 px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8 pb-6 border-b border-gray-900">
+        <div className="mb-8 pb-6 border-b border-gray-800">
           <button
             onClick={() => router.push("/campaigns")}
-            className="group flex items-center gap-2 text-gray-600 hover:text-white text-xs mb-4 transition-colors"
+            className="group flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-4 transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             Back to campaigns
           </button>
-          <h1 className="text-sm font-medium text-white tracking-tight mb-1">Upload Companies</h1>
-          <p className="text-[11px] text-gray-600 font-mono">CSV with company websites</p>
+          <h1 className="text-xl font-medium text-white tracking-tight mb-2">Upload Companies</h1>
+          <p className="text-sm text-gray-400 font-mono">CSV with company websites</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-rose-500/5 border border-rose-500/20 text-rose-400 text-xs flex items-start gap-3">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm flex items-start gap-3 rounded-lg">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
@@ -133,23 +147,23 @@ export default function CampaignUploadPage() {
               onDrop={handleDrop}
             >
               <div className={`
-                relative border-2 border-dashed py-20 text-center transition-all duration-200
-                ${isDragging ? 'border-white bg-white/5' : 'border-gray-800 hover:border-gray-700'}
+                relative border-2 border-dashed py-24 text-center transition-all duration-200 rounded-xl
+                ${isDragging ? 'border-white bg-white/5' : 'border-gray-700 hover:border-gray-600'}
                 ${uploading ? 'pointer-events-none opacity-50' : ''}
               `}>
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gray-900 group-hover:bg-gray-800 flex items-center justify-center transition-colors">
+                <div className="flex flex-col items-center gap-5">
+                  <div className="w-16 h-16 rounded-full bg-gray-900 group-hover:bg-gray-800 flex items-center justify-center transition-colors">
                     {uploading ? (
-                      <Loader className="w-5 h-5 text-white animate-spin" />
+                      <Loader className="w-7 h-7 text-white animate-spin" />
                     ) : (
-                      <Upload className="w-5 h-5 text-gray-600 group-hover:text-white transition-colors" />
+                      <Upload className="w-7 h-7 text-gray-500 group-hover:text-white transition-colors" />
                     )}
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400 mb-1">
+                    <p className="text-base text-gray-300 mb-2">
                       {uploading ? "Processing..." : "Drop CSV file or click to browse"}
                     </p>
-                    <p className="text-xs text-gray-700">Must include website_url column</p>
+                    <p className="text-sm text-gray-500">Must include website_url column</p>
                   </div>
                 </div>
               </div>
@@ -164,17 +178,17 @@ export default function CampaignUploadPage() {
             </label>
 
             {/* Format Info */}
-            <div className="border border-gray-900 p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <FileText className="w-4 h-4 text-gray-600" />
-                <span className="text-xs text-gray-500 font-medium">Required Format</span>
+            <div className="border border-gray-800 p-6 rounded-xl">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-5 h-5 text-gray-500" />
+                <span className="text-sm text-gray-300 font-medium">Required Format</span>
               </div>
-              <pre className="text-[11px] font-mono text-gray-600 bg-black p-4 border border-gray-900 overflow-x-auto">
+              <pre className="text-sm font-mono text-gray-400 bg-gray-900 p-4 border border-gray-800 overflow-x-auto rounded-lg">
 {`website_url,company_name,contact_email,phone
 https://example.com,Example Inc,hello@example.com,+1234567890
 https://another.com,Another Co,hi@another.com,+0987654321`}
               </pre>
-              <p className="text-[10px] text-gray-700 mt-3">
+              <p className="text-xs text-gray-500 mt-4">
                 Only website_url is required • Max 1000 rows
               </p>
             </div>
@@ -182,23 +196,23 @@ https://another.com,Another Co,hi@another.com,+0987654321`}
         ) : (
           <div className="space-y-6">
             {/* Success Banner */}
-            <div className="border border-emerald-500/20 bg-emerald-500/5 p-4">
+            <div className="border border-emerald-500/30 bg-emerald-500/10 p-5 rounded-xl">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-emerald-400" />
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-emerald-400" />
                   </div>
                   <div>
-                    <div className="text-sm text-emerald-400 font-medium mb-0.5">Upload Complete</div>
-                    <div className="text-xs text-emerald-400/60 font-mono">{uploadedData.filename}</div>
+                    <div className="text-base text-emerald-300 font-medium mb-1">Upload Complete</div>
+                    <div className="text-sm text-emerald-400/70 font-mono">{uploadedData.filename}</div>
                   </div>
                 </div>
                 <button
                   onClick={handleContinue}
-                  className="group flex items-center gap-2 px-4 py-2 bg-white text-black text-xs font-medium hover:bg-gray-100 transition-colors"
+                  className="group flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-medium hover:bg-gray-100 transition-colors rounded-lg"
                 >
                   Continue
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
             </div>
@@ -206,47 +220,47 @@ https://another.com,Another Co,hi@another.com,+0987654321`}
             {/* Stats Grid */}
             <div className="grid grid-cols-4 gap-4">
               {[
-                { label: 'Total', value: uploadedData.totalRows, color: 'text-gray-400' },
+                { label: 'Total', value: uploadedData.totalRows, color: 'text-gray-300' },
                 { label: 'Valid', value: uploadedData.validRows, color: 'text-emerald-400' },
                 { label: 'Invalid', value: uploadedData.invalidRows, color: 'text-rose-400' },
-                { label: 'Size', value: `${(uploadedData.size / 1024).toFixed(1)}KB`, color: 'text-gray-400' },
+                { label: 'Size', value: `${(uploadedData.size / 1024).toFixed(1)}KB`, color: 'text-gray-300' },
               ].map((stat, idx) => (
-                <div key={idx} className="border border-gray-900 p-4">
-                  <div className="text-[10px] text-gray-700 mb-2 uppercase tracking-wider">{stat.label}</div>
-                  <div className={`text-xl font-mono ${stat.color}`}>{stat.value}</div>
+                <div key={idx} className="border border-gray-800 p-5 rounded-xl">
+                  <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider">{stat.label}</div>
+                  <div className={`text-2xl font-mono ${stat.color}`}>{stat.value}</div>
                 </div>
               ))}
             </div>
 
             {/* Preview */}
-            <div className="border border-gray-900">
-              <div className="px-4 py-3 border-b border-gray-900 flex items-center justify-between">
-                <span className="text-xs text-gray-500 font-medium">Preview</span>
-                <span className="text-[10px] text-gray-700 font-mono">First 10 rows</span>
+            <div className="border border-gray-800 rounded-xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/50">
+                <span className="text-sm text-gray-300 font-medium">Preview</span>
+                <span className="text-xs text-gray-500 font-mono">First 10 rows</span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="border-b border-gray-900 bg-black">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-gray-800 bg-gray-900">
                     <tr>
-                      <th className="text-left py-2 px-4 font-medium text-gray-600 w-12">#</th>
-                      <th className="text-left py-2 px-4 font-medium text-gray-600">Website</th>
-                      <th className="text-left py-2 px-4 font-medium text-gray-600">Company</th>
-                      <th className="text-left py-2 px-4 font-medium text-gray-600">Email</th>
-                      <th className="text-left py-2 px-4 font-medium text-gray-600">Phone</th>
+                      <th className="text-left py-3 px-5 font-medium text-gray-400 w-12">#</th>
+                      <th className="text-left py-3 px-5 font-medium text-gray-400">Website</th>
+                      <th className="text-left py-3 px-5 font-medium text-gray-400">Company</th>
+                      <th className="text-left py-3 px-5 font-medium text-gray-400">Email</th>
+                      <th className="text-left py-3 px-5 font-medium text-gray-400">Phone</th>
                     </tr>
                   </thead>
                   <tbody>
                     {uploadedData.rows.slice(0, 10).map((row, idx) => (
-                      <tr key={idx} className="border-b border-gray-900 hover:bg-gray-950/50 transition-colors">
-                        <td className="py-2 px-4 text-gray-700 font-mono">{idx + 1}</td>
-                        <td className="py-2 px-4 text-blue-400 font-mono text-[11px] truncate max-w-xs">
+                      <tr key={idx} className="border-b border-gray-800 hover:bg-gray-900/30 transition-colors">
+                        <td className="py-3 px-5 text-gray-500 font-mono">{idx + 1}</td>
+                        <td className="py-3 px-5 text-blue-400 font-mono text-sm truncate max-w-xs">
                           {row.website_url}
                         </td>
-                        <td className="py-2 px-4 text-gray-400">{row.company_name || '-'}</td>
-                        <td className="py-2 px-4 text-gray-500 font-mono text-[11px]">
+                        <td className="py-3 px-5 text-gray-300">{row.company_name || '-'}</td>
+                        <td className="py-3 px-5 text-gray-400 font-mono text-sm">
                           {row.contact_email || '-'}
                         </td>
-                        <td className="py-2 px-4 text-gray-500 font-mono text-[11px]">
+                        <td className="py-3 px-5 text-gray-400 font-mono text-sm">
                           {row.phone || '-'}
                         </td>
                       </tr>
@@ -255,7 +269,7 @@ https://another.com,Another Co,hi@another.com,+0987654321`}
                 </table>
               </div>
               {uploadedData.rows.length > 10 && (
-                <div className="px-4 py-2 border-t border-gray-900 bg-black text-[10px] text-gray-700 font-mono">
+                <div className="px-5 py-3 border-t border-gray-800 bg-gray-900/50 text-xs text-gray-500 font-mono">
                   +{uploadedData.rows.length - 10} more rows
                 </div>
               )}
