@@ -58,7 +58,10 @@ export default function CampaignDetailPage() {
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [processingCompanyId, setProcessingCompanyId] = useState<number | null>(null);
+  const [processingCompanyId, setProcessingCompanyId] = useState<number | null>(
+    null
+  );
+  const [autoStarted, setAutoStarted] = useState(false);
 
   const campaignId = params?.id as string;
 
@@ -132,7 +135,7 @@ export default function CampaignDetailPage() {
   const handleRapidProcess = async (companyId: number) => {
     try {
       setProcessingCompanyId(companyId);
-      
+
       // Update company status to processing
       const response = await fetch(`/api/campaigns/companies/${companyId}`, {
         method: "PATCH",
@@ -146,33 +149,62 @@ export default function CampaignDetailPage() {
 
       // Start processing in background via WebSocket (but don't navigate to monitor page)
       // The backend will handle it and update the status
-      const wsUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace('http', 'ws') || 'ws://localhost:5000';
-      const ws = new WebSocket(`${wsUrl}/ws/campaign/${campaignId}/monitor/${companyId}`);
-      
+      const wsUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL?.replace("http", "ws") ||
+        "ws://localhost:5000";
+      const ws = new WebSocket(
+        `${wsUrl}/ws/campaign/${campaignId}/monitor/${companyId}`
+      );
+
       ws.onopen = () => {
         console.log(`[Rapid] Started processing company ${companyId}`);
       };
-      
+
       ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
-        if (message.type === 'completed' || message.type === 'error') {
+        if (message.type === "completed" || message.type === "error") {
           ws.close();
           setProcessingCompanyId(null);
           fetchCampaignDetails(); // Refresh to show updated status
+          
+          // Auto-process next pending company
+          processNextPending();
         }
       };
-      
+
       ws.onerror = () => {
         setProcessingCompanyId(null);
         alert("Failed to process company");
       };
-      
     } catch (error: any) {
       console.error("Failed to start rapid processing:", error);
       alert(`Failed to start processing: ${error.message}`);
       setProcessingCompanyId(null);
     }
   };
+
+  const processNextPending = () => {
+    // Find next pending company and auto-process it
+    const nextPending = companies.find(c => c.status === 'pending');
+    if (nextPending && processingCompanyId === null) {
+      setTimeout(() => {
+        handleRapidProcess(nextPending.id);
+      }, 1000); // Small delay between companies
+    }
+  };
+
+  // Auto-start rapid processing for new campaigns
+  useEffect(() => {
+    if (campaign && companies.length > 0 && !autoStarted && campaign.status === 'draft') {
+      const pendingCompany = companies.find(c => c.status === 'pending');
+      if (pendingCompany) {
+        setAutoStarted(true);
+        setTimeout(() => {
+          handleRapidProcess(pendingCompany.id);
+        }, 1000);
+      }
+    }
+  }, [campaign, companies, autoStarted]);
 
   const filteredCompanies = companies.filter((company) =>
     filterStatus === "all" ? true : company.status === filterStatus
@@ -190,6 +222,17 @@ export default function CampaignDetailPage() {
         return "text-amber-400";
       default:
         return "text-white";
+    }
+  };
+
+  const getStatusDotColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-emerald-400";
+      case "failed":
+        return "bg-rose-400";
+      default:
+        return "bg-amber-400"; // pending, processing, queued, etc.
     }
   };
 
@@ -458,33 +501,54 @@ export default function CampaignDetailPage() {
                     )}
                   </div>
 
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-2">
-                  <button
-                    onClick={() =>
-                      router.push(
-                        `/campaigns/${campaignId}/monitor?company=${company.id}`
-                      )
-                    }
-                    disabled={processingCompanyId === company.id}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white hover:text-white hover:bg-white/10 transition-colors border border-white/20 hover:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    View
-                  </button>
-                  <button
-                    onClick={() => handleRapidProcess(company.id)}
-                    disabled={processingCompanyId === company.id || company.status === 'processing' || company.status === 'completed'}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-black bg-white hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-600"
-                  >
-                    {processingCompanyId === company.id ? (
-                      <Loader className="w-3.5 h-3.5 animate-spin" />
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-3">
+                    {company.status === "completed" ? (
+                      // Completed: Show non-clickable Complete button
+                      <>
+                        <button
+                          disabled
+                          className="flex items-center gap-1.5 px-4 py-1.5 text-xs text-emerald-400 bg-emerald-400/10 border border-emerald-400/30 cursor-default"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          Complete
+                        </button>
+                        <div className={`w-2 h-2 rounded-full ${getStatusDotColor(company.status)}`} />
+                      </>
                     ) : (
-                      <Zap className="w-3.5 h-3.5" />
+                      // Not completed: Show View and Rapid buttons
+                      <>
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/campaigns/${campaignId}/monitor?company=${company.id}`
+                            )
+                          }
+                          disabled={processingCompanyId !== null && processingCompanyId !== company.id}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white hover:text-white hover:bg-white/10 transition-colors border border-white/20 hover:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleRapidProcess(company.id)}
+                          disabled={
+                            processingCompanyId !== null ||
+                            company.status === "processing"
+                          }
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-black bg-white hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-600"
+                        >
+                          {processingCompanyId === company.id ? (
+                            <Loader className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Zap className="w-3.5 h-3.5" />
+                          )}
+                          Rapid
+                        </button>
+                        <div className={`w-2 h-2 rounded-full ${getStatusDotColor(company.status)}`} />
+                      </>
                     )}
-                    Rapid
-                  </button>
-                </div>
+                  </div>
                 </div>
               ))}
             </div>
