@@ -1,8 +1,6 @@
 FROM python:3.11-slim
 
-# Install system dependencies including FFmpeg, git, Node.js, and build tools for pycairo
-# Updated for Railway build context - using justpdf-backend/ prefix
-# Force rebuild - Railway cache issue
+# Install system dependencies including FFmpeg, git, Node.js, Playwright dependencies, and build tools
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     git \
@@ -10,12 +8,30 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     pkg-config \
     libcairo2-dev \
-    libnspr4 \
-    libnss3 \
     curl \
+    wget \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g pnpm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Playwright system dependencies (required for Chromium to run)
+RUN apt-get update && apt-get install -y \
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -47,8 +63,8 @@ RUN if [ ! -f "/tmp/repo/trevnoctilla-backend/requirements.txt" ]; then \
     cp /tmp/repo/trevnoctilla-backend/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright browsers (needed for HTML to PDF conversion)
-RUN playwright install chromium || true
+# Install Playwright browsers with dependencies (required for automation)
+RUN playwright install --with-deps chromium
 
 # Copy application code
 RUN cp -r /tmp/repo/trevnoctilla-backend/* . && \
