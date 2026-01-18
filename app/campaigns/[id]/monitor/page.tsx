@@ -162,10 +162,14 @@ export default function CampaignMonitorPage() {
               iframeRef.current.src = log.details.url;
             }
           }
-        } else if (message.type === 'form_preview') {
+        } else if (message.type === 'form_preview' || message.type === 'screenshot_ready') {
+          // Handle both old form_preview (base64) and new screenshot_ready (URL)
           if (message.data?.image) {
             setFormPreview(message.data.image);
-            setCurrentStep('✓ Form filled - Review before submission');
+            setCurrentStep('✓ Form filled - Review screenshot');
+          } else if (message.data?.url) {
+            setFormPreview(message.data.url);
+            setCurrentStep('✓ Form filled - Review screenshot');
           }
         } else if (message.type === 'completed') {
           setStatus('success');
