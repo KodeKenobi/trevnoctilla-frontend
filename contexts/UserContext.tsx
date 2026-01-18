@@ -57,8 +57,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // Always try to get fresh user data from backend profile endpoint
-      // This ensures we get subscription_tier and other backend-specific fields
+      // Check for token first - don't make API calls if no token exists
       const token = localStorage.getItem("auth_token");
 
       if (token) {
@@ -77,6 +76,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             // Store fresh user data
             localStorage.setItem("user_data", JSON.stringify(userData));
             setUser(userData);
+            setLoading(false);
+            return;
+          } else if (response.status === 401) {
+            // Unauthorized - token is invalid, clear it
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("user_data");
+            setUser(null);
             setLoading(false);
             return;
           } else if (response.status === 404) {

@@ -70,73 +70,12 @@ export default function CampaignMonitorPage() {
   const startMonitoring = () => {
     if (selectedCompany) {
       setIsMonitoring(true);
-      addLog('info', 'Started monitoring', `Connecting to live scraper...`);
+      addLog('info', 'Started monitoring', `Loading ${selectedCompany.company_name}...`);
       
-      // Connect to WebSocket for live streaming
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const backendUrl = 'web-production-737b.up.railway.app';
-      const wsUrl = `${wsProtocol}//${backendUrl}/ws/campaign/${campaignId}/monitor/${selectedCompany.id}`;
-      
-      console.log('[WebSocket] Attempting to connect:', wsUrl);
-      const ws = new WebSocket(wsUrl);
-      
-      ws.onopen = () => {
-        console.log('[WebSocket] Connection opened successfully');
-        addLog('success', 'Connected', 'Connected to live scraper');
-      };
-      
-      ws.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        
-        if (message.type === 'log') {
-          const log = message.data;
-          addLog(log.status, log.action, log.message);
-        } else if (message.type === 'screenshot') {
-          // Update iframe with screenshot
-          if (iframeRef.current && message.data.image) {
-            const doc = iframeRef.current.contentDocument;
-            if (doc) {
-              doc.open();
-              doc.write(`
-                <html>
-                  <head>
-                    <style>
-                      body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; background: #000; }
-                      img { max-width: 100%; max-height: 100vh; object-fit: contain; }
-                    </style>
-                  </head>
-                  <body>
-                    <img src="${message.data.image}" alt="Live Browser View" />
-                  </body>
-                </html>
-              `);
-              doc.close();
-            }
-          }
-        } else if (message.type === 'completed') {
-          addLog('success', 'Completed', 'Scraping completed!');
-          setIsMonitoring(false);
-          ws.close();
-        } else if (message.type === 'error') {
-          addLog('failed', 'Error', message.data.message);
-          setIsMonitoring(false);
-          ws.close();
-        }
-      };
-      
-      ws.onerror = (error) => {
-        console.error('[WebSocket] Error:', error);
-        addLog('failed', 'WebSocket Error', `Connection failed. Check console for details.`);
-        setIsMonitoring(false);
-      };
-      
-      ws.onclose = (event) => {
-        console.log('[WebSocket] Connection closed:', event.code, event.reason);
-        if (event.code !== 1000) {
-          addLog('warning', 'Disconnected', `Connection closed (Code: ${event.code})`);
-        }
-        setIsMonitoring(false);
-      };
+      // Load website directly in iframe
+      if (iframeRef.current) {
+        iframeRef.current.src = selectedCompany.website_url;
+      }
     }
   };
 
@@ -257,14 +196,24 @@ export default function CampaignMonitorPage() {
 
         {/* Full Width Website View */}
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 280px)' }}>
-          {isMonitoring && selectedCompany ? (
+          {selectedCompany ? (
             <iframe
               ref={iframeRef}
-              src={selectedCompany.website_url}
+              src={isMonitoring ? selectedCompany.website_url : 'about:blank'}
               className="w-full h-full border-0 bg-white"
               title="Company Website View"
-              sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-              onLoad={() => addLog('success', 'Loaded', `Successfully loaded ${selectedCompany.website_url}`)}
+              sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+              onLoad={() => {
+                if (isMonitoring) {
+                  addLog('success', 'Loaded', `Successfully loaded ${selectedCompany.website_url}`);
+                }
+              }}
+              onError={() => {
+                if (isMonitoring) {
+                  addLog('failed', 'Load Error', `Failed to load ${selectedCompany.website_url}`);
+                  setIsMonitoring(false);
+                }
+              }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-500">

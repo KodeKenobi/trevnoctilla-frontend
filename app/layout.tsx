@@ -279,7 +279,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Critical Resource Hints - Limited to 4 most important for performance */}
         <link
@@ -298,6 +298,13 @@ export default function RootLayout({
         />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
+
+        {/* Google AdSense - in head to avoid data-nscript warning */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3267907607581065"
+          crossOrigin="anonymous"
+        />
 
         {/* Favicon links */}
         <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
@@ -357,7 +364,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <AuthProvider>
           <UserProvider>
             <ViewProvider>
@@ -393,13 +400,6 @@ export default function RootLayout({
           data-cfasync="false"
         />
         <Script src="//www.ezojs.com/ezoic/sa.min.js" strategy="lazyOnload" />
-
-        {/* Google AdSense - lazyOnload */}
-        <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3267907607581065"
-          strategy="lazyOnload"
-          crossOrigin="anonymous"
-        />
 
         {/* Google Analytics - afterInteractive for better tracking accuracy */}
         <Script
