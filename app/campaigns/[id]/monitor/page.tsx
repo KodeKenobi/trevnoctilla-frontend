@@ -30,6 +30,7 @@ export default function CampaignMonitorPage() {
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'connecting' | 'processing' | 'success' | 'failed' | 'cancelled'>('connecting');
+  const [hasCompleted, setHasCompleted] = useState(false); // Track if monitoring completed for this company
 
   // Fetch campaign and companies
   useEffect(() => {
@@ -42,9 +43,9 @@ export default function CampaignMonitorPage() {
     };
   }, [campaignId]);
 
-  // Auto-start monitoring when company is selected
+  // Auto-start monitoring when company is selected (but NOT after completion)
   useEffect(() => {
-    if (selectedCompany && !isMonitoring && !wsConnection) {
+    if (selectedCompany && !isMonitoring && !wsConnection && !hasCompleted) {
       console.log('[Monitor] Auto-starting monitoring for:', selectedCompany.company_name);
       // Small delay to ensure UI is ready
       const timer = setTimeout(() => {
@@ -54,10 +55,11 @@ export default function CampaignMonitorPage() {
     } else if (selectedCompany) {
       console.log('[Monitor] Company selected but not starting:', {
         isMonitoring,
-        hasWsConnection: !!wsConnection
+        hasWsConnection: !!wsConnection,
+        hasCompleted
       });
     }
-  }, [selectedCompany, isMonitoring, wsConnection]);
+  }, [selectedCompany, isMonitoring, wsConnection, hasCompleted]);
 
   const fetchCampaign = async () => {
     try {
@@ -79,6 +81,7 @@ export default function CampaignMonitorPage() {
           } else {
             setSelectedCompany(companiesData.companies[0]);
           }
+          setHasCompleted(false); // Reset completion flag for new company
         }
       }
     } catch (error) {
@@ -176,6 +179,7 @@ export default function CampaignMonitorPage() {
           setCurrentStep('✓ Campaign completed successfully!');
           setProgress(100);
           setIsMonitoring(false);
+          setHasCompleted(true); // Prevent auto-restart
           // Close with normal code
           ws.close(1000, 'Completed');
         } else if (message.type === 'error') {
@@ -258,6 +262,7 @@ export default function CampaignMonitorPage() {
                     setSelectedCompany(company || null);
                     setFormPreview('');
                     setProgress(0);
+                    setHasCompleted(false); // Reset completion flag for new company
                     if (wsConnection) {
                       wsConnection.close();
                       setWsConnection(null);
