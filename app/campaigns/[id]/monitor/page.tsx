@@ -45,9 +45,19 @@ export default function CampaignMonitorPage() {
   // Auto-start monitoring when company is selected
   useEffect(() => {
     if (selectedCompany && !isMonitoring && !wsConnection) {
-      startMonitoring();
+      console.log('[Monitor] Auto-starting monitoring for:', selectedCompany.company_name);
+      // Small delay to ensure UI is ready
+      const timer = setTimeout(() => {
+        startMonitoring();
+      }, 500);
+      return () => clearTimeout(timer);
+    } else if (selectedCompany) {
+      console.log('[Monitor] Company selected but not starting:', {
+        isMonitoring,
+        hasWsConnection: !!wsConnection
+      });
     }
-  }, [selectedCompany]);
+  }, [selectedCompany, isMonitoring, wsConnection]);
 
   const fetchCampaign = async () => {
     try {
@@ -91,8 +101,12 @@ export default function CampaignMonitorPage() {
   };
 
   const startMonitoring = () => {
-    if (!selectedCompany) return;
+    if (!selectedCompany) {
+      console.error('[Monitor] Cannot start - no company selected');
+      return;
+    }
     
+    console.log('[Monitor] Starting monitoring for company:', selectedCompany.id);
     setIsMonitoring(true);
     setStatus('connecting');
     setCurrentStep('Connecting to processor...');
@@ -102,10 +116,12 @@ export default function CampaignMonitorPage() {
     const backendUrl = 'web-production-737b.up.railway.app';
     const wsUrl = `${wsProtocol}//${backendUrl}/ws/campaign/${campaignId}/monitor/${selectedCompany.id}`;
     
+    console.log('[Monitor] Connecting to WebSocket:', wsUrl);
     const ws = new WebSocket(wsUrl);
     setWsConnection(ws);
     
     ws.onopen = () => {
+      console.log('[Monitor] WebSocket connected');
       setStatus('processing');
       setCurrentStep('Connected - Starting browser...');
       setProgress(10);
@@ -118,6 +134,7 @@ export default function CampaignMonitorPage() {
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        console.log('[Monitor] WebSocket message:', message.type, message.data);
         
         if (message.type === 'log') {
           const log = message.data;
@@ -169,13 +186,19 @@ export default function CampaignMonitorPage() {
       }
     };
     
-    ws.onerror = () => {
+    ws.onerror = (error) => {
+      console.error('[Monitor] WebSocket error:', error);
       setStatus('failed');
       setCurrentStep('Connection error - Please try again');
       setIsMonitoring(false);
     };
     
     ws.onclose = (event) => {
+      console.log('[Monitor] WebSocket closed:', {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean
+      });
       setIsMonitoring(false);
       setWsConnection(null);
       
