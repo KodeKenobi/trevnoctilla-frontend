@@ -82,7 +82,7 @@ export default function CampaignMonitorPage() {
 
   const stopMonitoring = () => {
     if (wsConnection) {
-      wsConnection.close();
+      wsConnection.close(1000, 'User cancelled');
       setWsConnection(null);
     }
     setIsMonitoring(false);
@@ -155,12 +155,14 @@ export default function CampaignMonitorPage() {
           setCurrentStep('✓ Campaign completed successfully!');
           setProgress(100);
           setIsMonitoring(false);
-          ws.close();
+          // Close with normal code
+          ws.close(1000, 'Completed');
         } else if (message.type === 'error') {
           setStatus('failed');
           setCurrentStep('✗ ' + (message.data?.message || 'Processing failed'));
           setIsMonitoring(false);
-          ws.close();
+          // Close with normal code
+          ws.close(1000, 'Error handled');
         }
       } catch (error) {
         console.error('[WebSocket] Error:', error);
@@ -174,11 +176,23 @@ export default function CampaignMonitorPage() {
     };
     
     ws.onclose = (event) => {
-      if (event.code !== 1000 && status !== 'success') {
-        setStatus('failed');
-        setCurrentStep('Connection lost');
-      }
       setIsMonitoring(false);
+      setWsConnection(null);
+      
+      // Only show "Connection lost" if it was an unexpected closure
+      // event.code 1000 = normal closure
+      // event.code 1001 = going away
+      // event.code 1006 = abnormal closure (no close frame)
+      if (event.code !== 1000 && event.code !== 1001) {
+        setStatus((prevStatus) => {
+          // Don't override success or already-failed status
+          if (prevStatus === 'success' || prevStatus === 'failed') {
+            return prevStatus;
+          }
+          setCurrentStep('Connection lost - Please try again');
+          return 'failed';
+        });
+      }
     };
   };
 

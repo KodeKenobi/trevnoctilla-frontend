@@ -179,7 +179,7 @@ export default function CampaignDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 pt-24 pb-12 px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-24 pb-12 px-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="mb-8 pb-6 border-b border-gray-900">

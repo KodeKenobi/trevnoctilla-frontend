@@ -37,7 +37,6 @@ export default function CampaignsPage() {
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<number | null>(null);
-  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCampaigns();
@@ -111,35 +110,35 @@ export default function CampaignsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950 pt-24">
+      <div className="min-h-screen flex items-center justify-center bg-white pt-24">
         <div className="flex flex-col items-center gap-3">
-          <Loader className="w-5 h-5 animate-spin text-gray-500" />
-          <span className="text-sm text-gray-400 font-mono">Loading campaigns...</span>
+          <Loader className="w-5 h-5 animate-spin text-purple-600" />
+          <span className="text-sm text-gray-700 font-medium">Loading campaigns...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 pt-24 pb-12 px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-24 pb-12 px-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
-        <div className="flex items-end justify-between mb-8 pb-6 border-b border-gray-800">
+        <div className="flex items-end justify-between mb-8 pb-6 border-b-2 border-gray-200">
           <div>
-            <h1 className="text-xl font-medium text-white tracking-tight mb-2">Campaigns</h1>
-            <p className="text-sm text-gray-400 font-mono">{campaigns.length} active</p>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">Campaigns</h1>
+            <p className="text-base text-gray-600">{campaigns.length} active campaign{campaigns.length !== 1 ? 's' : ''}</p>
           </div>
           <button
             onClick={() => router.push("/campaigns/upload")}
-            className="group flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-medium hover:bg-gray-100 transition-all duration-200 rounded-lg"
+            className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200 rounded-xl shadow-lg hover:shadow-xl"
           >
-            <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
+            <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
             New Campaign
           </button>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm flex items-start gap-3 rounded-lg">
+          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-start gap-3 rounded-xl">
             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -148,122 +147,128 @@ export default function CampaignsPage() {
         {campaigns.length === 0 ? (
           <div className="py-32 text-center">
             <div className="inline-flex flex-col items-center gap-5">
-              <div className="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center">
-                <Plus className="w-7 h-7 text-gray-600" />
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center shadow-md">
+                <Plus className="w-10 h-10 text-purple-600" />
               </div>
               <div>
-                <p className="text-base text-gray-300 mb-2">No campaigns yet</p>
-                <p className="text-sm text-gray-500">Create your first automated outreach campaign</p>
+                <p className="text-xl font-semibold text-gray-900 mb-2">No campaigns yet</p>
+                <p className="text-base text-gray-600">Create your first automated outreach campaign</p>
               </div>
               <button
                 onClick={() => router.push("/campaigns/upload")}
-                className="mt-3 inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-medium hover:bg-gray-100 transition-colors rounded-lg"
+                className="mt-3 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold hover:from-purple-700 hover:to-blue-700 transition-colors rounded-xl shadow-lg"
               >
                 Get Started
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-5 h-5" />
               </button>
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
-            {campaigns.map((campaign, idx) => (
-              <div
-                key={campaign.id}
-                onMouseEnter={() => setHoveredRow(campaign.id)}
-                onMouseLeave={() => setHoveredRow(null)}
-                onClick={() => router.push(`/campaigns/${campaign.id}`)}
-                className={`
-                  group relative grid grid-cols-[1fr_140px_80px_80px_80px_80px_100px_120px_80px] gap-4 items-center
-                  px-5 py-4 cursor-pointer transition-all duration-150 rounded-lg
-                  ${hoveredRow === campaign.id ? 'bg-gray-900/50 border-gray-700' : 'border-transparent'}
-                  ${idx === 0 ? '' : 'border-t border-gray-800'}
-                `}
-              >
-                {/* Campaign Name */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-2 h-2 rounded-full bg-gray-700 flex-shrink-0 group-hover:bg-white transition-colors" />
-                  <span className="text-sm text-gray-200 truncate group-hover:text-white transition-colors">
-                    {campaign.name}
-                  </span>
-                </div>
-
-                {/* Status */}
-                <div className={`flex items-center gap-2 ${getStatusColor(campaign.status)}`}>
-                  {getStatusIcon(campaign.status)}
-                  <span className="text-sm capitalize">{campaign.status}</span>
-                </div>
-
-                {/* Stats - Monospace numbers */}
-                <div className="text-right">
-                  <div className="text-sm font-mono text-gray-300">{campaign.total_companies}</div>
-                  <div className="text-xs text-gray-500">total</div>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-sm font-mono text-gray-300">{campaign.processed_count}</div>
-                  <div className="text-xs text-gray-500">done</div>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-sm font-mono text-emerald-400">{campaign.success_count}</div>
-                  <div className="text-xs text-gray-500">success</div>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-sm font-mono text-rose-400">{campaign.failed_count}</div>
-                  <div className="text-xs text-gray-500">failed</div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-white transition-all duration-500"
-                      style={{ width: `${campaign.progress_percentage}%` }}
-                    />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {campaigns.map((campaign) => {
+              const bgImages = [
+                'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&q=80',
+                'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&q=80',
+                'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&q=80',
+                'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80',
+              ];
+              const bgImage = bgImages[campaign.id % bgImages.length];
+              
+              return (
+                <div
+                  key={campaign.id}
+                  onClick={() => router.push(`/campaigns/${campaign.id}`)}
+                  className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+                  style={{ height: '280px' }}
+                >
+                  {/* Background Image with Overlay */}
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url('${bgImage}')` }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
+                  
+                  {/* Content */}
+                  <div className="relative h-full p-6 flex flex-col justify-between">
+                    {/* Top: Status Badge */}
+                    <div className="flex items-center justify-between">
+                      <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm ${
+                        campaign.status === 'active' ? 'bg-emerald-500/90 text-white' :
+                        campaign.status === 'paused' ? 'bg-amber-500/90 text-white' :
+                        campaign.status === 'completed' ? 'bg-blue-500/90 text-white' :
+                        'bg-gray-500/90 text-white'
+                      }`}>
+                        {getStatusIcon(campaign.status)}
+                        <span className="capitalize">{campaign.status}</span>
+                      </div>
+                      
+                      <div 
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(campaign.id);
+                          }}
+                          className="p-2 bg-rose-500/90 hover:bg-rose-600 rounded-lg backdrop-blur-sm transition-colors"
+                          title="Delete campaign"
+                        >
+                          <Trash2 className="w-4 h-4 text-white" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Middle: Campaign Info */}
+                    <div className="flex-1 flex flex-col justify-center">
+                      <h3 className="text-2xl font-bold text-white mb-2 line-clamp-2">
+                        {campaign.name}
+                      </h3>
+                      <p className="text-sm text-gray-300">
+                        Created {new Date(campaign.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    </div>
+                    
+                    {/* Bottom: Stats */}
+                    <div className="space-y-3">
+                      {/* Progress Bar */}
+                      <div className="relative">
+                        <div className="flex items-center justify-between text-xs text-white font-semibold mb-2">
+                          <span>Progress</span>
+                          <span>{campaign.progress_percentage}%</span>
+                        </div>
+                        <div className="h-2 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+                          <div 
+                            className="h-full bg-gradient-to-r from-purple-400 to-blue-400 transition-all duration-500 rounded-full"
+                            style={{ width: `${campaign.progress_percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-4 gap-2">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center">
+                          <div className="text-lg font-bold text-white">{campaign.total_companies}</div>
+                          <div className="text-xs text-gray-300">Total</div>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center">
+                          <div className="text-lg font-bold text-white">{campaign.processed_count}</div>
+                          <div className="text-xs text-gray-300">Done</div>
+                        </div>
+                        <div className="bg-emerald-500/20 backdrop-blur-sm rounded-lg p-2 text-center">
+                          <div className="text-lg font-bold text-emerald-300">{campaign.success_count}</div>
+                          <div className="text-xs text-gray-300">Success</div>
+                        </div>
+                        <div className="bg-rose-500/20 backdrop-blur-sm rounded-lg p-2 text-center">
+                          <div className="text-lg font-bold text-rose-300">{campaign.failed_count}</div>
+                          <div className="text-xs text-gray-300">Failed</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-xs font-mono text-gray-400 w-9 text-right">
-                    {campaign.progress_percentage}%
-                  </span>
                 </div>
-
-                {/* Date */}
-                <div className="text-sm text-gray-400 font-mono">
-                  {new Date(campaign.created_at).toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric',
-                    year: '2-digit'
-                  })}
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/campaigns/${campaign.id}/monitor`);
-                    }}
-                    className="p-2 hover:bg-gray-800 text-gray-400 hover:text-white transition-colors rounded-lg"
-                    title="Monitor"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteClick(campaign.id);
-                    }}
-                    className="p-2 hover:bg-rose-500/10 text-gray-400 hover:text-rose-400 transition-colors rounded-lg"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Hover indicator */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1 bg-white rounded-l-lg transition-opacity ${hoveredRow === campaign.id ? 'opacity-100' : 'opacity-0'}`} />
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
