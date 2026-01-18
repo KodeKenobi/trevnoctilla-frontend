@@ -222,11 +222,12 @@ export default function CampaignsPage() {
       </div>
 
       <ConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
         title="Delete Campaign"
-        description="Are you sure? This will delete all associated data and cannot be undone."
+        message="Are you sure? This will delete all associated data and cannot be undone."
         onConfirm={handleDeleteConfirm}
+        variant="danger"
       />
     </div>
   );
