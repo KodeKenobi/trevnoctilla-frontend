@@ -290,10 +290,10 @@ export default function CampaignMonitorPage() {
           )}
         </div>
 
-        {/* Split View: Website + Logs */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ height: 'calc(100vh - 280px)' }}>
-          {/* Website View */}
-          <div className="lg:col-span-2 bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden flex flex-col">
+        {/* Full Width Website View */}
+        <div className="space-y-4">
+          {/* Website View - Full Width */}
+          <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden flex flex-col" style={{ height: '600px' }}>
             {/* URL Bar */}
             {currentUrl && isMonitoring && (
               <div className="bg-gray-900 border-b border-gray-700 px-4 py-2 flex items-center gap-2">
@@ -339,9 +339,12 @@ export default function CampaignMonitorPage() {
             )}
           </div>
 
-          {/* Live Logs Panel */}
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 overflow-y-auto">
-            <h3 className="text-lg font-semibold text-white mb-3">Live Activity Log</h3>
+          {/* Live Logs Panel - Full Width Below */}
+          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 overflow-y-auto" style={{ maxHeight: '300px' }}>
+            <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${isMonitoring ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></div>
+              Live Activity Log
+            </h3>
             {logs.length === 0 ? (
               <p className="text-gray-500 text-sm">No activity yet...</p>
             ) : (

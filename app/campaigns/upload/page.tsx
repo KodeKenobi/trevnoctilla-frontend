@@ -98,7 +98,7 @@ export default function CampaignUploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] pt-24 py-6 px-4 sm:py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#0A0A0A] pt-28 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
@@ -168,33 +168,45 @@ export default function CampaignUploadPage() {
               </label>
             </div>
 
-            {/* Requirements */}
-            <div className="mt-6 sm:mt-8 bg-[#1A1A1A] border border-gray-800 rounded-lg p-4 sm:p-6">
-              <h4 className="font-semibold text-white mb-3">
-                CSV File Requirements:
+            {/* What Happens Next */}
+            <div className="mt-6 sm:mt-8 bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 sm:p-6">
+              <h4 className="font-semibold text-white mb-4 text-lg">
+                What Happens Next:
               </h4>
-              <ul className="space-y-2 text-sm text-gray-300">
-                <li className="flex items-start">
-                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>
-                    Required: At least one <strong>website URL</strong> per row
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>
-                    Flexible headers: website/url/site, name/company, email, phone - all recognized
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Maximum file size: 10MB</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Example: name,website,email,phone OR Acme,acme.com,hello@acme.com,555-1234</span>
-                </li>
-              </ul>
+              <div className="space-y-3 text-sm text-gray-200">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-purple-400 font-bold text-xs">1</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">CSV Upload & Validation</p>
+                    <p className="text-gray-400 text-xs mt-1">We'll verify your contact list and detect all fields automatically</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-purple-400 font-bold text-xs">2</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">Create Campaign Message</p>
+                    <p className="text-gray-400 text-xs mt-1">Write your personalized message using dynamic fields</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-purple-400 font-bold text-xs">3</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">Live Monitoring & Automation</p>
+                    <p className="text-gray-400 text-xs mt-1">Watch our bot visit websites and fill contact forms in real-time</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-purple-500/20">
+                <p className="text-xs text-gray-400">
+                  💡 <strong className="text-white">Tip:</strong> Only need a website URL column. We auto-fill all form fields intelligently.
+                </p>
+              </div>
             </div>
 
             {/* Error Display */}

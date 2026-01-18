@@ -92,8 +92,8 @@ export default function CreateCampaignPage() {
       // Clear session storage
       sessionStorage.removeItem("campaign_upload_data");
 
-      // Redirect to campaign detail page
-      router.push(`/campaigns/${data.campaign.id}`);
+      // Redirect directly to live monitor page to streamline flow
+      router.push(`/campaigns/${data.campaign.id}/monitor`);
     } catch (err: any) {
       setError(err.message || "Failed to create campaign");
     } finally {

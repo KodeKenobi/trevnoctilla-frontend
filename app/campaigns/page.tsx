@@ -202,7 +202,7 @@ export default function CampaignsPage() {
               className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors shadow-lg"
             >
               <Plus className="w-5 h-5 mr-2" />
-              Create Campaign
+              New Campaign
             </button>
           </motion.div>
         )}
