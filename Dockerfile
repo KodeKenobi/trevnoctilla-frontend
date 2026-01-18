@@ -1,5 +1,6 @@
 FROM python:3.11-slim
 
+# Backend version: 2026-01-18 with error logging
 # Install system dependencies including FFmpeg, git, Node.js, Playwright dependencies, and build tools
 RUN apt-get update && apt-get install -y \
     ffmpeg \
