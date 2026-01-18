@@ -69,15 +69,20 @@ export default function CampaignUploadPage() {
       }
 
       const data = await response.json();
+      console.log('[Upload] API Response:', data);
 
       setUploadedData({
         filename: file.name,
         size: file.size,
-        rows: data.companies || [],
-        totalRows: data.totalRows || 0,
-        validRows: data.validRows || 0,
-        invalidRows: data.invalidRows || 0,
+        rows: data.data?.rows || data.companies || [],
+        totalRows: data.data?.totalRows || data.totalRows || 0,
+        validRows: data.data?.validRows || data.validRows || 0,
+        invalidRows: data.data?.invalidRows || data.invalidRows || 0,
         uploadedAt: new Date().toISOString(),
+      });
+      console.log('[Upload] Set uploadedData:', {
+        rowsCount: data.data?.rows?.length || data.companies?.length || 0,
+        totalRows: data.data?.totalRows || data.totalRows || 0,
       });
     } catch (err: any) {
       console.error("Upload failed:", err);

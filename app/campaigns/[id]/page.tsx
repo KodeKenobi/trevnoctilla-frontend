@@ -48,7 +48,9 @@ export default function CampaignDetailPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
+  const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(
+    null
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
@@ -58,7 +60,10 @@ export default function CampaignDetailPage() {
     if (campaignId) {
       fetchCampaignDetails();
       const interval = setInterval(() => {
-        if (campaign?.status === "processing" || campaign?.status === "queued") {
+        if (
+          campaign?.status === "processing" ||
+          campaign?.status === "queued"
+        ) {
           fetchCampaignDetails(true);
         }
       }, 5000);
@@ -99,22 +104,32 @@ export default function CampaignDetailPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed": return "text-emerald-400";
-      case "processing": return "text-blue-400";
-      case "failed": return "text-rose-400";
-      case "captcha": return "text-amber-400";
-      default: return "text-gray-600";
+      case "completed":
+        return "text-emerald-400";
+      case "processing":
+        return "text-blue-400";
+      case "failed":
+        return "text-rose-400";
+      case "captcha":
+        return "text-amber-400";
+      default:
+        return "text-gray-600";
     }
   };
 
   const getStatusIcon = (status: string) => {
     const iconClass = "w-3.5 h-3.5";
     switch (status) {
-      case "completed": return <CheckCircle className={iconClass} />;
-      case "processing": return <Loader className={`${iconClass} animate-spin`} />;
-      case "failed": return <XCircle className={iconClass} />;
-      case "captcha": return <Shield className={iconClass} />;
-      default: return <Clock className={iconClass} />;
+      case "completed":
+        return <CheckCircle className={iconClass} />;
+      case "processing":
+        return <Loader className={`${iconClass} animate-spin`} />;
+      case "failed":
+        return <XCircle className={iconClass} />;
+      case "captcha":
+        return <Shield className={iconClass} />;
+      default:
+        return <Clock className={iconClass} />;
     }
   };
 
@@ -152,8 +167,14 @@ export default function CampaignDetailPage() {
                 <Activity className="w-4 h-4 text-blue-400" />
               </div>
               <div>
-                <h1 className="text-sm font-medium text-white tracking-tight mb-0.5">{campaign.name}</h1>
-                <p className={`text-[11px] font-mono capitalize ${getStatusColor(campaign.status)}`}>
+                <h1 className="text-sm font-medium text-white tracking-tight mb-0.5">
+                  {campaign.name}
+                </h1>
+                <p
+                  className={`text-[11px] font-mono capitalize ${getStatusColor(
+                    campaign.status
+                  )}`}
+                >
                   {campaign.status}
                 </p>
               </div>
@@ -164,7 +185,9 @@ export default function CampaignDetailPage() {
                 disabled={refreshing}
                 className="p-2 hover:bg-gray-900 text-gray-600 hover:text-white transition-all duration-200 disabled:opacity-50"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
+                />
               </button>
               <button
                 onClick={() => router.push(`/campaigns/${campaignId}/monitor`)}
@@ -180,15 +203,42 @@ export default function CampaignDetailPage() {
         {/* Stats */}
         <div className="grid grid-cols-5 gap-4 mb-8">
           {[
-            { label: 'Total', value: campaign.total_companies, color: 'text-gray-400' },
-            { label: 'Processed', value: campaign.processed_count, color: 'text-gray-400' },
-            { label: 'Success', value: campaign.success_count, color: 'text-emerald-400' },
-            { label: 'Failed', value: campaign.failed_count, color: 'text-rose-400' },
-            { label: 'Progress', value: `${campaign.progress_percentage}%`, color: 'text-white' },
+            {
+              label: "Total",
+              value: campaign.total_companies,
+              color: "text-gray-400",
+            },
+            {
+              label: "Processed",
+              value: campaign.processed_count,
+              color: "text-gray-400",
+            },
+            {
+              label: "Success",
+              value: campaign.success_count,
+              color: "text-emerald-400",
+            },
+            {
+              label: "Failed",
+              value: campaign.failed_count,
+              color: "text-rose-400",
+            },
+            {
+              label: "Progress",
+              value: `${campaign.progress_percentage}%`,
+              color: "text-white",
+            },
           ].map((stat, idx) => (
-            <div key={idx} className="border border-gray-900 p-4 hover:border-gray-800 transition-colors">
-              <div className="text-[10px] text-gray-700 mb-2 uppercase tracking-wider">{stat.label}</div>
-              <div className={`text-2xl font-mono ${stat.color}`}>{stat.value}</div>
+            <div
+              key={idx}
+              className="border border-gray-900 p-4 hover:border-gray-800 transition-colors"
+            >
+              <div className="text-[10px] text-gray-700 mb-2 uppercase tracking-wider">
+                {stat.label}
+              </div>
+              <div className={`text-2xl font-mono ${stat.color}`}>
+                {stat.value}
+              </div>
             </div>
           ))}
         </div>
@@ -223,8 +273,12 @@ export default function CampaignDetailPage() {
                 className={`
                   group relative grid grid-cols-[1fr_140px_200px_80px_200px] gap-4 items-center
                   px-4 py-3 transition-all duration-150
-                  ${hoveredRow === company.id ? 'bg-gray-950/50 border-gray-800' : 'border-transparent'}
-                  ${idx === 0 ? '' : 'border-t border-gray-900'}
+                  ${
+                    hoveredRow === company.id
+                      ? "bg-gray-950/50 border-gray-800"
+                      : "border-transparent"
+                  }
+                  ${idx === 0 ? "" : "border-t border-gray-900"}
                 `}
               >
                 {/* Company */}
@@ -241,7 +295,11 @@ export default function CampaignDetailPage() {
                 </div>
 
                 {/* Status */}
-                <div className={`flex items-center gap-2 ${getStatusColor(company.status)}`}>
+                <div
+                  className={`flex items-center gap-2 ${getStatusColor(
+                    company.status
+                  )}`}
+                >
                   {getStatusIcon(company.status)}
                   <span className="text-xs capitalize">{company.status}</span>
                 </div>
@@ -249,9 +307,13 @@ export default function CampaignDetailPage() {
                 {/* Details */}
                 <div className="text-xs text-gray-500 truncate">
                   {company.error_message ? (
-                    <span className="text-rose-400">{company.error_message}</span>
+                    <span className="text-rose-400">
+                      {company.error_message}
+                    </span>
                   ) : company.contact_page_found ? (
-                    <span className="text-emerald-400">✓ Contact form found</span>
+                    <span className="text-emerald-400">
+                      ✓ Contact form found
+                    </span>
                   ) : (
                     <span className="text-gray-700">—</span>
                   )}
@@ -261,7 +323,9 @@ export default function CampaignDetailPage() {
                 <div className="flex justify-center">
                   {company.screenshot_url ? (
                     <button
-                      onClick={() => setSelectedScreenshot(company.screenshot_url || null)}
+                      onClick={() =>
+                        setSelectedScreenshot(company.screenshot_url || null)
+                      }
                       className="relative group/img"
                     >
                       <img
@@ -283,7 +347,11 @@ export default function CampaignDetailPage() {
                 {/* Actions */}
                 <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={() => router.push(`/campaigns/${campaignId}/monitor?company=${company.id}`)}
+                    onClick={() =>
+                      router.push(
+                        `/campaigns/${campaignId}/monitor?company=${company.id}`
+                      )
+                    }
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 hover:text-white hover:bg-gray-900 transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" />
@@ -292,7 +360,11 @@ export default function CampaignDetailPage() {
                 </div>
 
                 {/* Hover indicator */}
-                <div className={`absolute left-0 top-0 bottom-0 w-0.5 bg-white transition-opacity ${hoveredRow === company.id ? 'opacity-100' : 'opacity-0'}`} />
+                <div
+                  className={`absolute left-0 top-0 bottom-0 w-0.5 bg-white transition-opacity ${
+                    hoveredRow === company.id ? "opacity-100" : "opacity-0"
+                  }`}
+                />
               </div>
             ))}
           </div>
