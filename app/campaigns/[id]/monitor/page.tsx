@@ -92,6 +92,11 @@ export default function CampaignMonitorPage() {
       ws.onopen = () => {
         console.log('[WebSocket] Connection opened successfully');
         addLog('success', 'Connected', 'Connected to campaign processor');
+        
+        // Load the company website in iframe immediately
+        if (iframeRef.current && selectedCompany.website_url) {
+          iframeRef.current.src = selectedCompany.website_url;
+        }
       };
       
       ws.onmessage = (event) => {
@@ -102,34 +107,18 @@ export default function CampaignMonitorPage() {
           if (message.type === 'log') {
             const log = message.data;
             addLog(log.status || 'info', log.action || 'Update', log.message || '');
-          } else if (message.type === 'screenshot') {
-            // Update iframe with screenshot or URL
-            if (iframeRef.current && message.data) {
-              if (message.data.image) {
-                // Base64 image
-                const doc = iframeRef.current.contentDocument;
-                if (doc) {
-                  doc.open();
-                  doc.write(`
-                    <html>
-                      <head>
-                        <style>
-                          body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; background: #000; }
-                          img { max-width: 100%; max-height: 100vh; object-fit: contain; }
-                        </style>
-                      </head>
-                      <body>
-                        <img src="${message.data.image}" alt="Live Browser View" />
-                      </body>
-                    </html>
-                  `);
-                  doc.close();
-                }
-              } else if (message.data.url) {
-                // Load URL in iframe
-                iframeRef.current.src = message.data.url;
+            
+            // Load website URL in iframe when we get a navigation log
+            if (log.message && log.message.includes('http') && iframeRef.current) {
+              const urlMatch = log.message.match(/(https?:\/\/[^\s]+)/);
+              if (urlMatch) {
+                iframeRef.current.src = urlMatch[0];
               }
             }
+          } else if (message.type === 'screenshot') {
+            // Skip screenshots - they crash the WebSocket
+            // Just acknowledge we got it
+            console.log('[WebSocket] Screenshot received but skipped to prevent crash');
           } else if (message.type === 'completed') {
             addLog('success', 'Completed', 'Campaign processing completed!');
             setIsMonitoring(false);
@@ -283,36 +272,68 @@ export default function CampaignMonitorPage() {
           )}
         </div>
 
-        {/* Full Width Website View */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 280px)' }}>
-          {selectedCompany ? (
-            <>
-              <iframe
-                ref={iframeRef}
-                src="about:blank"
-                className="w-full h-full border-0 bg-white"
-                title="Company Website View"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
-                style={{ display: isMonitoring ? 'block' : 'none' }}
-              />
-              {!isMonitoring && (
-                <div className="w-full h-full flex items-center justify-center text-gray-500">
-                  <div className="text-center">
-                    <Eye className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg">Click "Load Website" to start processing</p>
-                    <p className="text-sm mt-2 text-gray-400">{selectedCompany.company_name}</p>
+        {/* Split View: Website + Logs */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ height: 'calc(100vh - 280px)' }}>
+          {/* Website View */}
+          <div className="lg:col-span-2 bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+            {selectedCompany ? (
+              <>
+                <iframe
+                  ref={iframeRef}
+                  src="about:blank"
+                  className="w-full h-full border-0 bg-white"
+                  title="Company Website View"
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+                  style={{ display: isMonitoring ? 'block' : 'none' }}
+                />
+                {!isMonitoring && (
+                  <div className="w-full h-full flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      <Eye className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg">Click "Load Website" to start processing</p>
+                      <p className="text-sm mt-2 text-gray-400">{selectedCompany.company_name}</p>
+                    </div>
                   </div>
+                )}
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <Eye className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg">Select a company and click "Load Website" to start monitoring</p>
                 </div>
-              )}
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-500">
-              <div className="text-center">
-                <Eye className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">Select a company and click "Load Website" to start monitoring</p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Live Logs Panel */}
+          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 overflow-y-auto">
+            <h3 className="text-lg font-semibold text-white mb-3">Live Activity Log</h3>
+            {logs.length === 0 ? (
+              <p className="text-gray-500 text-sm">No activity yet...</p>
+            ) : (
+              <div className="space-y-2">
+                {logs.map((log, index) => (
+                  <div
+                    key={index}
+                    className={`p-2 rounded text-sm ${
+                      log.status === 'success' ? 'bg-green-900/30 border-l-2 border-green-500' :
+                      log.status === 'failed' ? 'bg-red-900/30 border-l-2 border-red-500' :
+                      log.status === 'warning' ? 'bg-yellow-900/30 border-l-2 border-yellow-500' :
+                      'bg-blue-900/30 border-l-2 border-blue-500'
+                    }`}
+                  >
+                    <div className="font-semibold text-white">{log.action}</div>
+                    <div className="text-gray-300 text-xs mt-1">{log.message}</div>
+                    <div className="text-gray-500 text-xs mt-1">
+                      {new Date(log.timestamp).toLocaleTimeString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
         </div>
       </div>
     </div>
