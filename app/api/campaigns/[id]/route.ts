@@ -34,8 +34,27 @@ export async function GET(
       );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    // Check if response has content before parsing
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      console.error('[Campaign GET] Empty response from backend');
+      return NextResponse.json(
+        { error: 'Campaign not found' },
+        { status: 404 }
+      );
+    }
+
+    try {
+      const data = JSON.parse(text);
+      return NextResponse.json(data);
+    } catch (parseError) {
+      console.error('[Campaign GET] JSON parse error:', parseError);
+      console.error('[Campaign GET] Response text:', text);
+      return NextResponse.json(
+        { error: 'Invalid response from backend' },
+        { status: 500 }
+      );
+    }
 
   } catch (error: any) {
     console.error('[Campaign GET] Error:', error);
@@ -76,8 +95,21 @@ export async function PATCH(
       );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    // Check if response has content before parsing
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      console.error('[Campaign PATCH] Empty response from backend');
+      return NextResponse.json({ success: true });
+    }
+
+    try {
+      const data = JSON.parse(text);
+      return NextResponse.json(data);
+    } catch (parseError) {
+      console.error('[Campaign PATCH] JSON parse error:', parseError);
+      console.error('[Campaign PATCH] Response text:', text);
+      return NextResponse.json({ success: true });
+    }
 
   } catch (error: any) {
     console.error('[Campaign PATCH] Error:', error);
@@ -119,8 +151,21 @@ export async function DELETE(
       );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    // Check if response has content before parsing
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      console.warn('[Campaign DELETE] Empty response from backend, assuming success');
+      return NextResponse.json({ success: true });
+    }
+
+    try {
+      const data = JSON.parse(text);
+      return NextResponse.json(data);
+    } catch (parseError) {
+      console.error('[Campaign DELETE] JSON parse error:', parseError);
+      console.error('[Campaign DELETE] Response text:', text);
+      return NextResponse.json({ success: true });
+    }
 
   } catch (error: any) {
     console.error('[Campaign DELETE] Error:', error);

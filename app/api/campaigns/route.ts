@@ -32,8 +32,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    // Check if response has content before parsing
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      console.warn('[Campaigns GET] Empty response from backend');
+      return NextResponse.json({ campaigns: [] });
+    }
+
+    try {
+      const data = JSON.parse(text);
+      return NextResponse.json(data);
+    } catch (parseError) {
+      console.error('[Campaigns GET] JSON parse error:', parseError);
+      console.error('[Campaigns GET] Response text:', text);
+      return NextResponse.json(
+        { error: 'Invalid response from backend', campaigns: [] },
+        { status: 500 }
+      );
+    }
 
   } catch (error: any) {
     console.error('[Campaigns GET] Error:', error);
@@ -84,8 +100,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    // Check if response has content before parsing
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      console.error('[Campaigns POST] Empty response from backend');
+      return NextResponse.json(
+        { error: 'Empty response from backend' },
+        { status: 500 }
+      );
+    }
+
+    try {
+      const data = JSON.parse(text);
+      return NextResponse.json(data);
+    } catch (parseError) {
+      console.error('[Campaigns POST] JSON parse error:', parseError);
+      console.error('[Campaigns POST] Response text:', text);
+      return NextResponse.json(
+        { error: 'Invalid response from backend' },
+        { status: 500 }
+      );
+    }
 
   } catch (error: any) {
     console.error('[Campaigns POST] Error:', error);
