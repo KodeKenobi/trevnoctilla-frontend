@@ -149,12 +149,12 @@ export default function CampaignDetailPage() {
 
       // Start processing in background via WebSocket (but don't navigate to monitor page)
       // The backend will handle it and update the status
-      const wsUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL?.replace("http", "ws") ||
-        "ws://localhost:5000";
-      const ws = new WebSocket(
-        `${wsUrl}/ws/campaign/${campaignId}/monitor/${companyId}`
-      );
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'wss:';
+      const backendUrl = 'web-production-737b.up.railway.app';
+      const wsUrl = `${wsProtocol}//${backendUrl}/ws/campaign/${campaignId}/monitor/${companyId}`;
+      
+      console.log('[Rapid] Connecting to WebSocket:', wsUrl);
+      const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         console.log(`[Rapid] Started processing company ${companyId}`);
@@ -166,7 +166,7 @@ export default function CampaignDetailPage() {
           ws.close();
           setProcessingCompanyId(null);
           fetchCampaignDetails(); // Refresh to show updated status
-          
+
           // Auto-process next pending company
           processNextPending();
         }
@@ -185,7 +185,7 @@ export default function CampaignDetailPage() {
 
   const processNextPending = () => {
     // Find next pending company and auto-process it
-    const nextPending = companies.find(c => c.status === 'pending');
+    const nextPending = companies.find((c) => c.status === "pending");
     if (nextPending && processingCompanyId === null) {
       setTimeout(() => {
         handleRapidProcess(nextPending.id);
@@ -195,8 +195,13 @@ export default function CampaignDetailPage() {
 
   // Auto-start rapid processing for new campaigns
   useEffect(() => {
-    if (campaign && companies.length > 0 && !autoStarted && campaign.status === 'draft') {
-      const pendingCompany = companies.find(c => c.status === 'pending');
+    if (
+      campaign &&
+      companies.length > 0 &&
+      !autoStarted &&
+      campaign.status === "draft"
+    ) {
+      const pendingCompany = companies.find((c) => c.status === "pending");
       if (pendingCompany) {
         setAutoStarted(true);
         setTimeout(() => {
@@ -513,7 +518,11 @@ export default function CampaignDetailPage() {
                           <CheckCircle className="w-3.5 h-3.5" />
                           Complete
                         </button>
-                        <div className={`w-2 h-2 rounded-full ${getStatusDotColor(company.status)}`} />
+                        <div
+                          className={`w-2 h-2 rounded-full ${getStatusDotColor(
+                            company.status
+                          )}`}
+                        />
                       </>
                     ) : (
                       // Not completed: Show View and Rapid buttons
@@ -524,7 +533,10 @@ export default function CampaignDetailPage() {
                               `/campaigns/${campaignId}/monitor?company=${company.id}`
                             )
                           }
-                          disabled={processingCompanyId !== null && processingCompanyId !== company.id}
+                          disabled={
+                            processingCompanyId !== null &&
+                            processingCompanyId !== company.id
+                          }
                           className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white hover:text-white hover:bg-white/10 transition-colors border border-white/20 hover:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -545,7 +557,11 @@ export default function CampaignDetailPage() {
                           )}
                           Rapid
                         </button>
-                        <div className={`w-2 h-2 rounded-full ${getStatusDotColor(company.status)}`} />
+                        <div
+                          className={`w-2 h-2 rounded-full ${getStatusDotColor(
+                            company.status
+                          )}`}
+                        />
                       </>
                     )}
                   </div>
