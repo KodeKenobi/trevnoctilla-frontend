@@ -241,7 +241,7 @@ export default function CampaignMonitorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black pt-16">
+    <div className="min-h-screen bg-black pt-24">
       {/* Minimal Header */}
       <div className="border-b border-gray-800 bg-gray-900/50 backdrop-blur">
         <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center justify-between">
@@ -334,9 +334,23 @@ export default function CampaignMonitorPage() {
 
       {/* Main Content */}
       <div className="max-w-[1800px] mx-auto px-6 py-6">
-        {/* Website Iframe - Full Width */}
+        {/* Website Iframe or Screenshot - Full Width */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden mb-6" style={{ height: '700px' }}>
-          {selectedCompany && isMonitoring ? (
+          {formPreview ? (
+            // Show screenshot when available
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-900/10 to-blue-900/10 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <CheckCircle className="w-6 h-6 text-green-400" />
+                <div className="text-white font-semibold text-lg">Form Submission Screenshot</div>
+              </div>
+              <img 
+                src={formPreview} 
+                alt="Filled form screenshot"
+                className="max-w-full max-h-full object-contain rounded-lg border border-gray-700 shadow-2xl"
+              />
+            </div>
+          ) : selectedCompany && isMonitoring ? (
+            // Show iframe during monitoring
             <iframe
               ref={iframeRef}
               src={selectedCompany.website_url}
@@ -345,33 +359,12 @@ export default function CampaignMonitorPage() {
               sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
             />
           ) : (
+            // Loading state
             <div className="w-full h-full flex items-center justify-center text-white">
               <Loader className="w-12 h-12 animate-spin text-purple-500" />
             </div>
           )}
         </div>
-
-        {/* Form Preview - Only shows when captured */}
-        {formPreview && (
-          <div className="bg-gradient-to-br from-green-900/10 to-blue-900/10 border-2 border-green-500/30 rounded-xl overflow-hidden">
-            <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 border-b border-green-500/30 px-6 py-4">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-6 h-6 text-green-400" />
-                <div>
-                  <div className="text-white font-semibold text-lg">Form Preview</div>
-                  <div className="text-green-300 text-sm">Verify all fields are filled correctly before submission</div>
-                </div>
-              </div>
-            </div>
-            <div className="p-6">
-              <img 
-                src={formPreview} 
-                alt="Filled form"
-                className="w-full rounded-lg border border-gray-700 shadow-2xl"
-              />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

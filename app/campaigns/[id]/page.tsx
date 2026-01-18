@@ -244,37 +244,49 @@ export default function CampaignDetailPage() {
               label: "Total",
               value: campaign.total_companies,
               color: "text-white",
+              bg: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=200&fit=crop",
             },
             {
               label: "Processed",
               value: campaign.processed_count,
               color: "text-white",
+              bg: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=200&fit=crop",
             },
             {
               label: "Success",
               value: campaign.success_count,
               color: "text-emerald-400",
+              bg: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=200&fit=crop",
             },
             {
               label: "Failed",
               value: campaign.failed_count,
               color: "text-rose-400",
+              bg: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=200&fit=crop",
             },
             {
               label: "Progress",
               value: `${campaign.progress_percentage}%`,
               color: "text-white",
+              bg: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=200&fit=crop",
             },
           ].map((stat, idx) => (
             <div
               key={idx}
-              className="border border-gray-900 p-4 hover:border-gray-800 transition-colors"
+              className="relative border border-gray-900 p-4 hover:border-gray-800 transition-colors overflow-hidden group"
             >
-              <div className="text-[10px] text-white mb-2 uppercase tracking-wider">
-                {stat.label}
-              </div>
-              <div className={`text-2xl font-mono ${stat.color}`}>
-                {stat.value}
+              <div 
+                className="absolute inset-0 bg-cover bg-center opacity-20 group-hover:opacity-30 transition-opacity"
+                style={{ backgroundImage: `url(${stat.bg})` }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+              <div className="relative z-10">
+                <div className="text-[10px] text-white mb-2 uppercase tracking-wider">
+                  {stat.label}
+                </div>
+                <div className={`text-2xl font-mono ${stat.color}`}>
+                  {stat.value}
+                </div>
               </div>
             </div>
           ))}
@@ -299,6 +311,15 @@ export default function CampaignDetailPage() {
               <option value="failed">Failed</option>
               <option value="captcha">CAPTCHA</option>
             </select>
+          </div>
+
+          {/* Column Headers */}
+          <div className="grid grid-cols-[1fr_140px_200px_80px_200px] gap-4 px-4 py-2 border-b border-gray-900 mb-2">
+            <div className="text-[10px] text-white uppercase tracking-wider">Company</div>
+            <div className="text-[10px] text-white uppercase tracking-wider">Status</div>
+            <div className="text-[10px] text-white uppercase tracking-wider">Details</div>
+            <div className="text-[10px] text-white uppercase tracking-wider text-center">Screenshot</div>
+            <div className="text-[10px] text-white uppercase tracking-wider text-center">Actions</div>
           </div>
 
           <div className="space-y-2">
