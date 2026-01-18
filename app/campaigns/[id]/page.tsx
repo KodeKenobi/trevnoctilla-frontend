@@ -14,7 +14,9 @@ import {
   Image as ImageIcon,
   X,
   Activity,
+  Trash2,
 } from "lucide-react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface Campaign {
   id: number;
@@ -53,6 +55,8 @@ export default function CampaignDetailPage() {
   );
   const [refreshing, setRefreshing] = useState(false);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const campaignId = params?.id as string;
 
@@ -95,6 +99,31 @@ export default function CampaignDetailPage() {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const handleDeleteCampaign = async () => {
+    if (!campaignId) return;
+
+    try {
+      setDeleting(true);
+      const response = await fetch(`/api/campaigns/${campaignId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete campaign");
+      }
+
+      // Redirect to campaigns list
+      router.push("/campaigns");
+    } catch (error: any) {
+      console.error("Failed to delete campaign:", error);
+      alert(`Failed to delete campaign: ${error.message}`);
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -191,10 +220,18 @@ export default function CampaignDetailPage() {
               </button>
               <button
                 onClick={() => router.push(`/campaigns/${campaignId}/monitor`)}
-                className="group flex items-center gap-2 px-4 py-2 bg-white text-black text-xs font-medium hover:bg-gray-100 transition-colors"
+                className="group flex items-center gap-2 px-4 py-2 bg-white text-black text-xs font-medium hover:bg-gray-100 transition-colors rounded-lg"
               >
                 <Eye className="w-3.5 h-3.5" />
                 Live Monitor
+              </button>
+              <button
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={deleting}
+                className="group flex items-center gap-2 px-4 py-2 bg-rose-500/10 text-rose-400 text-xs font-medium hover:bg-rose-500/20 transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed border border-rose-500/30"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {deleting ? "Deleting..." : "Delete Campaign"}
               </button>
             </div>
           </div>
@@ -395,6 +432,16 @@ export default function CampaignDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteCampaign}
+        title="Delete Campaign Permanently"
+        message={`Are you sure you want to delete "${campaign?.name}"? This will permanently delete the campaign and all ${campaign?.total_companies} companies. This action cannot be undone.`}
+        variant="danger"
+      />
     </div>
   );
 }

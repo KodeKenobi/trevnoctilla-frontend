@@ -177,7 +177,7 @@ https://www.google.com,Google,contact@google.com,+1234567890`;
     // =====================================================
     // Step 6: Open Monitor Page
     // =====================================================
-    log('\n[Step 6/6] Opening live monitor...', 'cyan');
+    log('\n[Step 6/8] Opening live monitor...', 'cyan');
     
     // Look for the monitor button
     const monitorButton = await page.locator('button:has-text("Live Monitor"), button:has-text("Monitor")').first();
@@ -198,6 +198,72 @@ https://www.google.com,Google,contact@google.com,+1234567890`;
       await page.screenshot({ path: 'test-screenshots/7-monitor-page.png', fullPage: true });
       log('  📸 Screenshot saved: 7-monitor-page.png', 'yellow');
     }
+
+    // =====================================================
+    // Step 7: Watch Form Filling in Action
+    // =====================================================
+    log('\n[Step 7/8] Monitoring live form filling (30 seconds)...', 'cyan');
+    
+    // Listen for log messages
+    let formFilled = false;
+    let formSubmitted = false;
+    
+    page.on('console', msg => {
+      const text = msg.text();
+      if (text.includes('Form Filled') || text.includes('form filled')) {
+        formFilled = true;
+        log('  ✓ Form filled detected!', 'green');
+      }
+      if (text.includes('Submitted') || text.includes('submitted')) {
+        formSubmitted = true;
+        log('  ✓ Form submitted detected!', 'green');
+      }
+    });
+
+    // Wait and watch for form activity
+    for (let i = 0; i < 30; i++) {
+      await page.waitForTimeout(1000);
+      
+      // Check for log entries on the page
+      const logs = await page.locator('[class*="log"], [class*="activity"]').allTextContents().catch(() => []);
+      const logText = logs.join(' ');
+      
+      if (logText.includes('Form Filled') && !formFilled) {
+        formFilled = true;
+        log('  ✓ Form filling detected in UI!', 'green');
+      }
+      if (logText.includes('Submitted') && !formSubmitted) {
+        formSubmitted = true;
+        log('  ✓ Form submission detected in UI!', 'green');
+      }
+      
+      // Take periodic screenshots
+      if (i === 10 || i === 20 || i === 29) {
+        await page.screenshot({ path: `test-screenshots/8-monitor-${i}s.png`, fullPage: true });
+        log(`  📸 Screenshot at ${i}s saved`, 'yellow');
+      }
+      
+      if (formSubmitted) {
+        log('  ✓ Form submission complete, ending monitoring early', 'green');
+        break;
+      }
+    }
+
+    if (!formFilled) {
+      log('  ⚠ Warning: No form filling detected in 30 seconds', 'yellow');
+      log('  This might mean auto-start is disabled or the campaign needs manual start', 'yellow');
+    }
+
+    // =====================================================
+    // Step 8: Return to Campaign Detail
+    // =====================================================
+    log('\n[Step 8/8] Returning to campaign detail page...', 'cyan');
+    await page.goto(`${FRONTEND_URL}/campaigns/${campaignId}`);
+    await page.waitForTimeout(2000);
+    
+    await page.screenshot({ path: 'test-screenshots/9-final-status.png', fullPage: true });
+    log('  📸 Screenshot saved: 9-final-status.png', 'yellow');
+    log('✓ Campaign detail page loaded', 'green');
 
     // =====================================================
     // Summary
