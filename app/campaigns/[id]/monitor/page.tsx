@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Play, StopCircle, Eye, Loader } from "lucide-react";
 
@@ -22,7 +22,6 @@ export default function CampaignMonitorPage() {
   const searchParams = useSearchParams();
   const campaignId = params.id as string;
   const companyIdParam = searchParams.get('company');
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [campaign, setCampaign] = useState<any>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -32,6 +31,7 @@ export default function CampaignMonitorPage() {
   const [loading, setLoading] = useState(true);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
   const [currentUrl, setCurrentUrl] = useState<string>('');
+  const [currentScreenshot, setCurrentScreenshot] = useState<string>('');
 
   // Fetch campaign and companies
   useEffect(() => {
@@ -93,12 +93,8 @@ export default function CampaignMonitorPage() {
       ws.onopen = () => {
         console.log('[WebSocket] Connection opened successfully');
         addLog('success', 'Connected', 'Connected to campaign processor');
-        
-        // Load the company website in iframe immediately
-        if (iframeRef.current && selectedCompany.website_url) {
-          iframeRef.current.src = selectedCompany.website_url;
-          setCurrentUrl(selectedCompany.website_url);
-        }
+        setCurrentUrl(selectedCompany.website_url);
+        setCurrentScreenshot(''); // Clear old screenshot
       };
       
       ws.onmessage = (event) => {
@@ -110,46 +106,37 @@ export default function CampaignMonitorPage() {
             const log = message.data;
             addLog(log.status || 'info', log.action || 'Update', log.message || '');
             
-            // Detect URL changes from logs and navigate iframe
-            if (log.message && iframeRef.current) {
-              const urlMatch = log.message.match(/(https?:\/\/[^\s,)]+)/);
-              if (urlMatch) {
-                const newUrl = urlMatch[0];
-                console.log('[Monitor] Navigating to:', newUrl);
-                iframeRef.current.src = newUrl;
-                setCurrentUrl(newUrl);
-              }
-            }
-            
-            // Also check for URL in details
-            if (log.details?.url && iframeRef.current) {
-              console.log('[Monitor] Navigating to:', log.details.url);
-              iframeRef.current.src = log.details.url;
+            // Track URL from log details
+            if (log.details?.url) {
+              console.log('[Monitor] URL update:', log.details.url);
               setCurrentUrl(log.details.url);
             }
           } else if (message.type === 'navigation') {
             // Direct navigation event with URL
-            if (message.data?.url && iframeRef.current) {
+            if (message.data?.url) {
               console.log('[Monitor] Navigation event:', message.data.url);
-              iframeRef.current.src = message.data.url;
               setCurrentUrl(message.data.url);
               addLog('info', 'Navigating', `Loading: ${message.data.url}`);
             }
           } else if (message.type === 'screenshot') {
-            // Skip screenshots - they crash the WebSocket
-            // Just acknowledge we got it
-            console.log('[WebSocket] Screenshot received but skipped to prevent crash');
+            // Display screenshot - now using tiny images that won't crash
+            if (message.data?.image) {
+              console.log('[WebSocket] Screenshot received');
+              setCurrentScreenshot(message.data.image);
+            }
           } else if (message.type === 'completed') {
             addLog('success', 'Completed', 'Campaign processing completed!');
             setIsMonitoring(false);
             setWsConnection(null);
             setCurrentUrl('');
+            // Keep screenshot visible to see final result
             ws.close();
           } else if (message.type === 'error') {
             addLog('failed', 'Error', message.data?.message || 'An error occurred');
             setIsMonitoring(false);
             setWsConnection(null);
             setCurrentUrl('');
+            setCurrentScreenshot('');
             ws.close();
           }
         } catch (error) {
@@ -163,6 +150,7 @@ export default function CampaignMonitorPage() {
         setIsMonitoring(false);
         setWsConnection(null);
         setCurrentUrl('');
+        setCurrentScreenshot('');
       };
       
       ws.onclose = (event) => {
@@ -173,6 +161,10 @@ export default function CampaignMonitorPage() {
         setIsMonitoring(false);
         setWsConnection(null);
         setCurrentUrl('');
+        // Keep screenshot if normal close, clear if error
+        if (event.code !== 1000) {
+          setCurrentScreenshot('');
+        }
       };
     }
   };
@@ -184,6 +176,7 @@ export default function CampaignMonitorPage() {
     }
     setIsMonitoring(false);
     setCurrentUrl('');
+    setCurrentScreenshot('');
     addLog('warning', 'Stopped', 'Monitoring stopped by user');
   };
 
@@ -311,15 +304,22 @@ export default function CampaignMonitorPage() {
             
             {selectedCompany ? (
               <>
-                <iframe
-                  ref={iframeRef}
-                  src="about:blank"
-                  className="w-full flex-1 border-0 bg-white"
-                  title="Company Website View"
-                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
-                  style={{ display: isMonitoring ? 'block' : 'none' }}
-                />
-                {!isMonitoring && (
+                {isMonitoring && currentScreenshot ? (
+                  <div className="w-full flex-1 flex items-center justify-center bg-gray-900">
+                    <img 
+                      src={currentScreenshot} 
+                      alt="Live browser view"
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
+                ) : isMonitoring && !currentScreenshot ? (
+                  <div className="w-full h-full flex items-center justify-center text-gray-500">
+                    <div className="text-center">
+                      <Loader className="h-16 w-16 mx-auto mb-4 animate-spin text-purple-500" />
+                      <p className="text-lg">Waiting for browser view...</p>
+                    </div>
+                  </div>
+                ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-500">
                     <div className="text-center">
                       <Eye className="h-16 w-16 mx-auto mb-4 opacity-50" />
