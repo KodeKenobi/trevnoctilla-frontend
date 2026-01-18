@@ -30,10 +30,18 @@ export default function CampaignMonitorPage() {
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
 
   // Fetch campaign and companies
   useEffect(() => {
     fetchCampaign();
+    
+    // Cleanup WebSocket on unmount
+    return () => {
+      if (wsConnection) {
+        wsConnection.close();
+      }
+    };
   }, [campaignId]);
 
   const fetchCampaign = async () => {
@@ -70,18 +78,99 @@ export default function CampaignMonitorPage() {
   const startMonitoring = () => {
     if (selectedCompany) {
       setIsMonitoring(true);
-      addLog('info', 'Started monitoring', `Loading ${selectedCompany.company_name}...`);
+      addLog('info', 'Started monitoring', `Connecting to campaign processor...`);
       
-      // Load website directly in iframe
-      if (iframeRef.current) {
-        iframeRef.current.src = selectedCompany.website_url;
-      }
+      // Connect to backend WebSocket for live processing
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'wss:'; // Always use wss for Railway
+      const backendUrl = 'web-production-737b.up.railway.app';
+      const wsUrl = `${wsProtocol}//${backendUrl}/ws/campaign/${campaignId}/monitor/${selectedCompany.id}`;
+      
+      console.log('[WebSocket] Attempting to connect:', wsUrl);
+      const ws = new WebSocket(wsUrl);
+      setWsConnection(ws);
+      
+      ws.onopen = () => {
+        console.log('[WebSocket] Connection opened successfully');
+        addLog('success', 'Connected', 'Connected to campaign processor');
+      };
+      
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          console.log('[WebSocket] Message received:', message);
+          
+          if (message.type === 'log') {
+            const log = message.data;
+            addLog(log.status || 'info', log.action || 'Update', log.message || '');
+          } else if (message.type === 'screenshot') {
+            // Update iframe with screenshot or URL
+            if (iframeRef.current && message.data) {
+              if (message.data.image) {
+                // Base64 image
+                const doc = iframeRef.current.contentDocument;
+                if (doc) {
+                  doc.open();
+                  doc.write(`
+                    <html>
+                      <head>
+                        <style>
+                          body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; background: #000; }
+                          img { max-width: 100%; max-height: 100vh; object-fit: contain; }
+                        </style>
+                      </head>
+                      <body>
+                        <img src="${message.data.image}" alt="Live Browser View" />
+                      </body>
+                    </html>
+                  `);
+                  doc.close();
+                }
+              } else if (message.data.url) {
+                // Load URL in iframe
+                iframeRef.current.src = message.data.url;
+              }
+            }
+          } else if (message.type === 'completed') {
+            addLog('success', 'Completed', 'Campaign processing completed!');
+            setIsMonitoring(false);
+            setWsConnection(null);
+            ws.close();
+          } else if (message.type === 'error') {
+            addLog('failed', 'Error', message.data?.message || 'An error occurred');
+            setIsMonitoring(false);
+            setWsConnection(null);
+            ws.close();
+          }
+        } catch (error) {
+          console.error('[WebSocket] Error parsing message:', error);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error('[WebSocket] Error:', error);
+        addLog('failed', 'Connection Error', `Failed to connect to campaign processor`);
+        setIsMonitoring(false);
+        setWsConnection(null);
+      };
+      
+      ws.onclose = (event) => {
+        console.log('[WebSocket] Connection closed:', event.code, event.reason);
+        if (event.code !== 1000) {
+          addLog('warning', 'Disconnected', `Connection closed (Code: ${event.code})`);
+        }
+        setIsMonitoring(false);
+        setWsConnection(null);
+      };
     }
   };
 
   const stopMonitoring = () => {
+    if (wsConnection) {
+      wsConnection.close();
+      setWsConnection(null);
+    }
     setIsMonitoring(false);
-    addLog('warning', 'Stopped monitoring', 'Monitoring stopped by user');
+    addLog('warning', 'Stopped', 'Monitoring stopped by user');
   };
 
   const addLog = (status: string, action: string, message: string) => {
@@ -130,7 +219,7 @@ export default function CampaignMonitorPage() {
                   const company = companies.find(c => c.id === parseInt(e.target.value));
                   setSelectedCompany(company || null);
                   if (isMonitoring) {
-                    setIsMonitoring(false);
+                    stopMonitoring();
                   }
                 }}
                 className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
@@ -197,24 +286,25 @@ export default function CampaignMonitorPage() {
         {/* Full Width Website View */}
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 280px)' }}>
           {selectedCompany ? (
-            <iframe
-              ref={iframeRef}
-              src={isMonitoring ? selectedCompany.website_url : 'about:blank'}
-              className="w-full h-full border-0 bg-white"
-              title="Company Website View"
-              sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
-              onLoad={() => {
-                if (isMonitoring) {
-                  addLog('success', 'Loaded', `Successfully loaded ${selectedCompany.website_url}`);
-                }
-              }}
-              onError={() => {
-                if (isMonitoring) {
-                  addLog('failed', 'Load Error', `Failed to load ${selectedCompany.website_url}`);
-                  setIsMonitoring(false);
-                }
-              }}
-            />
+            <>
+              <iframe
+                ref={iframeRef}
+                src="about:blank"
+                className="w-full h-full border-0 bg-white"
+                title="Company Website View"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+                style={{ display: isMonitoring ? 'block' : 'none' }}
+              />
+              {!isMonitoring && (
+                <div className="w-full h-full flex items-center justify-center text-gray-500">
+                  <div className="text-center">
+                    <Eye className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg">Click "Load Website" to start processing</p>
+                    <p className="text-sm mt-2 text-gray-400">{selectedCompany.company_name}</p>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-500">
               <div className="text-center">
