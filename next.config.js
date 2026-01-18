@@ -23,6 +23,10 @@ if (!process.env.NEXTAUTH_SECRET) {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Generate unique build ID to prevent caching issues
+  generateBuildId: async () => {
+    return `build-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  },
   images: {
     domains: [
       "localhost",

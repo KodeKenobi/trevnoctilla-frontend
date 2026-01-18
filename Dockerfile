@@ -1,6 +1,7 @@
 FROM python:3.11-slim
 
-# Backend version: 2026-01-18 with error logging
+# Backend version: 2026-01-18-v2 - Force cache invalidation
+# Build timestamp: 2026-01-18T16:30:00Z
 # Install system dependencies including FFmpeg, git, Node.js, Playwright dependencies, and build tools
 RUN apt-get update && apt-get install -y \
     ffmpeg \
@@ -80,13 +81,15 @@ RUN chmod +x start.sh
 # Install Node.js dependencies and build Next.js frontend
 WORKDIR /tmp/repo
 RUN if [ -f "package.json" ]; then \
+        echo "Cleaning .next directory for fresh build..." && \
+        rm -rf .next && \
         if [ -f "pnpm-lock.yaml" ]; then \
             pnpm install --frozen-lockfile; \
         else \
             echo "WARNING: pnpm-lock.yaml not found, installing without frozen-lockfile"; \
             pnpm install; \
         fi && \
-        pnpm run build; \
+        NEXT_TELEMETRY_DISABLED=1 pnpm exec next build; \
     else \
         echo "WARNING: package.json not found, skipping frontend build"; \
     fi
