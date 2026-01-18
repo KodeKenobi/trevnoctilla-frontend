@@ -111,7 +111,7 @@ export default function CampaignsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950 pt-16">
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 pt-24">
         <div className="flex flex-col items-center gap-3">
           <Loader className="w-5 h-5 animate-spin text-gray-500" />
           <span className="text-sm text-gray-400 font-mono">Loading campaigns...</span>
@@ -121,7 +121,7 @@ export default function CampaignsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 pt-20 pb-12 px-8">
+    <div className="min-h-screen bg-gray-950 pt-24 pb-12 px-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="flex items-end justify-between mb-8 pb-6 border-b border-gray-800">

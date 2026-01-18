@@ -164,7 +164,7 @@ export default function CampaignDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black pt-16">
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 pt-24">
         <Loader className="w-4 h-4 animate-spin text-gray-600" />
       </div>
     );
@@ -172,14 +172,14 @@ export default function CampaignDetailPage() {
 
   if (!campaign) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black pt-16">
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 pt-24">
         <p className="text-gray-600 text-sm">Campaign not found</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black pt-20 pb-12 px-8">
+    <div className="min-h-screen bg-gray-950 pt-24 pb-12 px-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="mb-8 pb-6 border-b border-gray-900">

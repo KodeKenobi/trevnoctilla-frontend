@@ -114,7 +114,7 @@ export default function CampaignUploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 pt-20 pb-12 px-8">
+    <div className="min-h-screen bg-gray-950 pt-24 pb-12 px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8 pb-6 border-b border-gray-800">

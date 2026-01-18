@@ -3,8 +3,8 @@
 const WebSocket = require('ws');
 
 const BACKEND_URL = 'web-production-737b.up.railway.app';
-const CAMPAIGN_ID = 3; // From our last test
-const COMPANY_ID = 3; // Actual company ID from database
+const CAMPAIGN_ID = 2; // Fresh campaign after deploy
+const COMPANY_ID = 2; // Company ID from database
 
 console.log('\n🔌 Testing WebSocket Campaign Monitor Connection...');
 console.log(`Backend: wss://${BACKEND_URL}`);
