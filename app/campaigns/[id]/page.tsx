@@ -64,7 +64,10 @@ export default function CampaignDetailPage() {
   const [rapidProgress, setRapidProgress] = useState(0);
   const [rapidStatus, setRapidStatus] = useState<string>("");
   const [rapidCurrentCompany, setRapidCurrentCompany] = useState<string>("");
-  const [activeWebSocket, setActiveWebSocket] = useState<WebSocket | null>(null);
+  const [activeWebSocket, setActiveWebSocket] = useState<WebSocket | null>(
+    null
+  );
+  const [isRapidAllRunning, setIsRapidAllRunning] = useState(false);
 
   const campaignId = params?.id as string;
 
@@ -202,7 +205,10 @@ export default function CampaignDetailPage() {
             setRapidCurrentCompany("");
           }, 2000);
 
-          // Do NOT auto-process next - user must click Rapid manually for each company
+          // Auto-process next ONLY if "Rapid All" is running
+          if (isRapidAllRunning) {
+            processNextPending();
+          }
         } else if (message.type === "error") {
           setRapidProgress(0);
           setRapidStatus("Failed");
@@ -256,6 +262,7 @@ export default function CampaignDetailPage() {
     setRapidStatus("");
     setRapidCurrentCompany("");
     setAutoStarted(false);
+    setIsRapidAllRunning(false); // Stop Rapid All
     
     // Clear localStorage auto-start flag
     localStorage.removeItem(`campaign_${campaignId}_autostarted`);
@@ -269,18 +276,34 @@ export default function CampaignDetailPage() {
     const nextPending = companies.find((c) => c.status === "pending");
 
     // Only process if there's a pending company AND no other company is currently processing
-    if (nextPending && processingCompanyId === null) {
+    if (nextPending && processingCompanyId === null && isRapidAllRunning) {
       console.log(
-        "[Auto-process] Processing next pending company:",
+        "[Rapid All] Processing next pending company:",
         nextPending.company_name
       );
       setTimeout(() => {
         handleRapidProcess(nextPending.id);
       }, 1000); // Small delay between companies
     } else if (!nextPending) {
-      // No more pending companies - campaign is complete
-      console.log("[Auto-process] All companies processed. Campaign complete.");
+      // No more pending companies - stop Rapid All
+      console.log("[Rapid All] All companies processed. Campaign complete.");
+      setIsRapidAllRunning(false);
     }
+  };
+
+  const startRapidAll = () => {
+    const pendingCompanies = companies.filter((c) => c.status === "pending");
+    
+    if (pendingCompanies.length === 0) {
+      alert("No pending companies to process!");
+      return;
+    }
+
+    console.log(`[Rapid All] Starting batch processing for ${pendingCompanies.length} companies`);
+    setIsRapidAllRunning(true);
+    
+    // Start with the first pending company
+    handleRapidProcess(pendingCompanies[0].id);
   };
 
   // DISABLED: No auto-start. User must manually click "Rapid" for each company.
@@ -388,6 +411,16 @@ export default function CampaignDetailPage() {
                   className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
                 />
               </button>
+              {companies.filter((c) => c.status === "pending").length > 0 && (
+                <button
+                  onClick={startRapidAll}
+                  disabled={isRapidAllRunning || processingCompanyId !== null}
+                  className="group flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Activity className="w-3.5 h-3.5" />
+                  {isRapidAllRunning ? "Processing All..." : `Rapid All (${companies.filter((c) => c.status === "pending").length})`}
+                </button>
+              )}
               <button
                 onClick={() => router.push(`/campaigns/${campaignId}/monitor`)}
                 className="group flex items-center gap-2 px-4 py-2 bg-white text-black text-xs font-medium hover:bg-gray-100 transition-colors rounded-lg"
