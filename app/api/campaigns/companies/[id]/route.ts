@@ -4,10 +4,11 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5000";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json();
+    const params = await props.params;
     const companyId = params.id;
 
     const response = await fetch(
