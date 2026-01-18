@@ -15,7 +15,6 @@ import {
   X,
   Activity,
   Trash2,
-  Zap,
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
@@ -200,8 +199,7 @@ export default function CampaignDetailPage() {
             setRapidCurrentCompany("");
           }, 2000);
 
-          // Auto-process next pending company
-          processNextPending();
+          // Do NOT auto-process next - user must click Rapid manually for each company
         } else if (message.type === "error") {
           setRapidProgress(0);
           setRapidStatus("Failed");
@@ -236,10 +234,13 @@ export default function CampaignDetailPage() {
   const processNextPending = () => {
     // Find next pending company and auto-process it
     const nextPending = companies.find((c) => c.status === "pending");
-    
+
     // Only process if there's a pending company AND no other company is currently processing
     if (nextPending && processingCompanyId === null) {
-      console.log("[Auto-process] Processing next pending company:", nextPending.company_name);
+      console.log(
+        "[Auto-process] Processing next pending company:",
+        nextPending.company_name
+      );
       setTimeout(() => {
         handleRapidProcess(nextPending.id);
       }, 1000); // Small delay between companies
@@ -252,23 +253,22 @@ export default function CampaignDetailPage() {
   // Auto-start rapid processing for new campaigns (ONLY if draft and has pending companies)
   useEffect(() => {
     if (!campaign || !companies.length) return;
-    
+
     // Check localStorage to see if this campaign was already auto-started
     const autoStartKey = `campaign_${campaignId}_autostarted`;
     const wasAutoStarted = localStorage.getItem(autoStartKey);
-    
+
     // Only auto-start if:
     // 1. Campaign is in draft status (newly created)
     // 2. Has pending companies
     // 3. Hasn't been auto-started before (checked via localStorage)
-    if (
-      campaign.status === "draft" &&
-      !wasAutoStarted &&
-      !autoStarted
-    ) {
+    if (campaign.status === "draft" && !wasAutoStarted && !autoStarted) {
       const pendingCompany = companies.find((c) => c.status === "pending");
       if (pendingCompany) {
-        console.log("[Auto-start] Starting rapid processing for campaign", campaignId);
+        console.log(
+          "[Auto-start] Starting rapid processing for campaign",
+          campaignId
+        );
         setAutoStarted(true);
         localStorage.setItem(autoStartKey, "true");
         setTimeout(() => {
@@ -405,8 +405,8 @@ export default function CampaignDetailPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Zap className="w-5 h-5 text-yellow-400 animate-pulse" />
-                  <div className="absolute inset-0 bg-yellow-400/20 blur-xl rounded-full" />
+                  <Activity className="w-5 h-5 text-blue-400 animate-pulse" />
+                  <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full" />
                 </div>
                 <div>
                   <div className="text-sm font-medium text-white">
@@ -666,7 +666,7 @@ export default function CampaignDetailPage() {
                           {processingCompanyId === company.id ? (
                             <Loader className="w-3.5 h-3.5 animate-spin" />
                           ) : (
-                            <Zap className="w-3.5 h-3.5" />
+                            <Activity className="w-3.5 h-3.5" />
                           )}
                           Rapid
                         </button>
