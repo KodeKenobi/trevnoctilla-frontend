@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Image as ImageIcon,
   X,
+  Activity,
 } from "lucide-react";
 
 interface Campaign {
@@ -49,6 +50,7 @@ export default function CampaignDetailPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
   const campaignId = params?.id as string;
 
@@ -97,16 +99,16 @@ export default function CampaignDetailPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed": return "text-green-400";
+      case "completed": return "text-emerald-400";
       case "processing": return "text-blue-400";
-      case "failed": return "text-red-400";
-      case "captcha": return "text-yellow-400";
-      default: return "text-gray-500";
+      case "failed": return "text-rose-400";
+      case "captcha": return "text-amber-400";
+      default: return "text-gray-600";
     }
   };
 
   const getStatusIcon = (status: string) => {
-    const iconClass = "w-3 h-3";
+    const iconClass = "w-3.5 h-3.5";
     switch (status) {
       case "completed": return <CheckCircle className={iconClass} />;
       case "processing": return <Loader className={`${iconClass} animate-spin`} />;
@@ -118,92 +120,92 @@ export default function CampaignDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A] pt-16">
-        <Loader className="w-5 h-5 animate-spin text-gray-500" />
+      <div className="min-h-screen flex items-center justify-center bg-black pt-16">
+        <Loader className="w-4 h-4 animate-spin text-gray-600" />
       </div>
     );
   }
 
   if (!campaign) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A] pt-16">
-        <p className="text-gray-500 text-sm">Campaign not found</p>
+      <div className="min-h-screen flex items-center justify-center bg-black pt-16">
+        <p className="text-gray-600 text-sm">Campaign not found</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] pt-20 pb-8 px-6">
-      <div className="max-w-full mx-auto">
+    <div className="min-h-screen bg-black pt-20 pb-12 px-8">
+      <div className="max-w-[1400px] mx-auto">
         {/* Header */}
-        <div className="mb-4 border-b border-gray-800 pb-3">
+        <div className="mb-8 pb-6 border-b border-gray-900">
           <button
             onClick={() => router.push("/campaigns")}
-            className="flex items-center gap-1.5 text-gray-400 hover:text-white text-xs mb-3 transition-colors"
+            className="group flex items-center gap-2 text-gray-600 hover:text-white text-xs mb-4 transition-colors"
           >
-            <ArrowLeft className="w-3 h-3" />
-            Back
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+            Back to campaigns
           </button>
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-base font-medium text-gray-200">{campaign.name}</h1>
-              <p className="text-xs text-gray-500 mt-0.5 capitalize">{campaign.status}</p>
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <Activity className="w-4 h-4 text-blue-400" />
+              </div>
+              <div>
+                <h1 className="text-sm font-medium text-white tracking-tight mb-0.5">{campaign.name}</h1>
+                <p className={`text-[11px] font-mono capitalize ${getStatusColor(campaign.status)}`}>
+                  {campaign.status}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => fetchCampaignDetails()}
                 disabled={refreshing}
-                className="p-1.5 hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+                className="p-2 hover:bg-gray-900 text-gray-600 hover:text-white transition-all duration-200 disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
               </button>
               <button
                 onClick={() => router.push(`/campaigns/${campaignId}/monitor`)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black text-xs font-medium hover:bg-gray-200 transition-colors"
+                className="group flex items-center gap-2 px-4 py-2 bg-white text-black text-xs font-medium hover:bg-gray-100 transition-colors"
               >
-                <Eye className="w-3 h-3" />
-                Monitor
+                <Eye className="w-3.5 h-3.5" />
+                Live Monitor
               </button>
             </div>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-5 gap-3 mb-4">
-          <div className="border border-gray-800 bg-[#111111] p-3">
-            <div className="text-[10px] text-gray-500 mb-1">TOTAL</div>
-            <div className="text-lg font-mono text-gray-200">{campaign.total_companies}</div>
-          </div>
-          <div className="border border-gray-800 bg-[#111111] p-3">
-            <div className="text-[10px] text-gray-500 mb-1">PROCESSED</div>
-            <div className="text-lg font-mono text-gray-300">{campaign.processed_count}</div>
-          </div>
-          <div className="border border-gray-800 bg-[#111111] p-3">
-            <div className="text-[10px] text-gray-500 mb-1">SUCCESS</div>
-            <div className="text-lg font-mono text-green-400">{campaign.success_count}</div>
-          </div>
-          <div className="border border-gray-800 bg-[#111111] p-3">
-            <div className="text-[10px] text-gray-500 mb-1">FAILED</div>
-            <div className="text-lg font-mono text-red-400">{campaign.failed_count}</div>
-          </div>
-          <div className="border border-gray-800 bg-[#111111] p-3">
-            <div className="text-[10px] text-gray-500 mb-1">PROGRESS</div>
-            <div className="text-lg font-mono text-gray-200">{campaign.progress_percentage}%</div>
-          </div>
+        {/* Stats */}
+        <div className="grid grid-cols-5 gap-4 mb-8">
+          {[
+            { label: 'Total', value: campaign.total_companies, color: 'text-gray-400' },
+            { label: 'Processed', value: campaign.processed_count, color: 'text-gray-400' },
+            { label: 'Success', value: campaign.success_count, color: 'text-emerald-400' },
+            { label: 'Failed', value: campaign.failed_count, color: 'text-rose-400' },
+            { label: 'Progress', value: `${campaign.progress_percentage}%`, color: 'text-white' },
+          ].map((stat, idx) => (
+            <div key={idx} className="border border-gray-900 p-4 hover:border-gray-800 transition-colors">
+              <div className="text-[10px] text-gray-700 mb-2 uppercase tracking-wider">{stat.label}</div>
+              <div className={`text-2xl font-mono ${stat.color}`}>{stat.value}</div>
+            </div>
+          ))}
         </div>
 
-        {/* Companies Table */}
-        <div className="border border-gray-800 bg-[#111111]">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-800 bg-[#0A0A0A]">
-            <h2 className="text-xs font-medium text-gray-400">
+        {/* Companies */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs text-gray-500 font-medium">
               Companies ({filteredCompanies.length})
             </h2>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-2 py-1 bg-[#111111] border border-gray-800 text-xs text-gray-300 focus:border-white focus:outline-none"
+              className="px-3 py-1.5 bg-black border border-gray-900 text-xs text-gray-400 
+                       hover:border-gray-800 focus:border-white focus:outline-none transition-colors"
             >
-              <option value="all">All</option>
+              <option value="all">All Status</option>
               <option value="pending">Pending</option>
               <option value="processing">Processing</option>
               <option value="completed">Completed</option>
@@ -212,77 +214,87 @@ export default function CampaignDetailPage() {
             </select>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="border-b border-gray-800 bg-[#0A0A0A]">
-                <tr>
-                  <th className="text-left py-2 px-3 font-medium text-gray-500">#</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-500">Company</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-500">Website</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-500">Status</th>
-                  <th className="text-left py-2 px-3 font-medium text-gray-500">Details</th>
-                  <th className="text-center py-2 px-3 font-medium text-gray-500">Proof</th>
-                  <th className="text-right py-2 px-3 font-medium text-gray-500"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800">
-                {filteredCompanies.map((company, idx) => (
-                  <tr key={company.id} className="hover:bg-[#151515] transition-colors">
-                    <td className="py-2 px-3 text-gray-600 font-mono">{idx + 1}</td>
-                    <td className="py-2 px-3 text-gray-200">{company.company_name}</td>
-                    <td className="py-2 px-3">
-                      <a
-                        href={company.website_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline font-mono text-[11px]"
-                      >
-                        {company.website_url}
-                      </a>
-                    </td>
-                    <td className="py-2 px-3">
-                      <div className={`flex items-center gap-1.5 ${getStatusColor(company.status)}`}>
-                        {getStatusIcon(company.status)}
-                        <span className="capitalize">{company.status}</span>
+          <div className="space-y-2">
+            {filteredCompanies.map((company, idx) => (
+              <div
+                key={company.id}
+                onMouseEnter={() => setHoveredRow(company.id)}
+                onMouseLeave={() => setHoveredRow(null)}
+                className={`
+                  group relative grid grid-cols-[1fr_140px_200px_80px_200px] gap-4 items-center
+                  px-4 py-3 transition-all duration-150
+                  ${hoveredRow === company.id ? 'bg-gray-950/50 border-gray-800' : 'border-transparent'}
+                  ${idx === 0 ? '' : 'border-t border-gray-900'}
+                `}
+              >
+                {/* Company */}
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-1.5 h-1.5 rounded-full bg-gray-800 flex-shrink-0 group-hover:bg-white transition-colors" />
+                  <div className="min-w-0">
+                    <div className="text-sm text-gray-200 truncate group-hover:text-white transition-colors">
+                      {company.company_name}
+                    </div>
+                    <div className="text-[11px] text-gray-600 font-mono truncate mt-0.5">
+                      {company.website_url}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className={`flex items-center gap-2 ${getStatusColor(company.status)}`}>
+                  {getStatusIcon(company.status)}
+                  <span className="text-xs capitalize">{company.status}</span>
+                </div>
+
+                {/* Details */}
+                <div className="text-xs text-gray-500 truncate">
+                  {company.error_message ? (
+                    <span className="text-rose-400">{company.error_message}</span>
+                  ) : company.contact_page_found ? (
+                    <span className="text-emerald-400">✓ Contact form found</span>
+                  ) : (
+                    <span className="text-gray-700">—</span>
+                  )}
+                </div>
+
+                {/* Proof */}
+                <div className="flex justify-center">
+                  {company.screenshot_url ? (
+                    <button
+                      onClick={() => setSelectedScreenshot(company.screenshot_url || null)}
+                      className="relative group/img"
+                    >
+                      <img
+                        src={company.screenshot_url}
+                        alt="Proof"
+                        className="w-12 h-12 object-cover border border-gray-800 group-hover/img:border-white transition-colors"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                        <ImageIcon className="w-4 h-4 text-white" />
                       </div>
-                    </td>
-                    <td className="py-2 px-3 text-gray-400 text-[11px]">
-                      {company.error_message ? (
-                        <span className="text-red-400">{company.error_message}</span>
-                      ) : company.contact_page_found ? (
-                        <span className="text-green-400">Contact found</span>
-                      ) : (
-                        <span className="text-gray-600">-</span>
-                      )}
-                    </td>
-                    <td className="py-2 px-3 text-center">
-                      {company.screenshot_url ? (
-                        <button
-                          onClick={() => setSelectedScreenshot(company.screenshot_url || null)}
-                          className="inline-block"
-                        >
-                          <img
-                            src={company.screenshot_url}
-                            alt="Proof"
-                            className="w-10 h-10 object-cover border border-gray-700 hover:border-white transition-colors"
-                          />
-                        </button>
-                      ) : (
-                        <span className="text-gray-700 text-[10px]">-</span>
-                      )}
-                    </td>
-                    <td className="py-2 px-3 text-right">
-                      <button
-                        onClick={() => router.push(`/campaigns/${campaignId}/monitor?company=${company.id}`)}
-                        className="p-1 hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </button>
+                  ) : (
+                    <div className="w-12 h-12 border border-gray-900 flex items-center justify-center">
+                      <span className="text-gray-800 text-xs">—</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => router.push(`/campaigns/${campaignId}/monitor?company=${company.id}`)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 hover:text-white hover:bg-gray-900 transition-colors"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    Monitor
+                  </button>
+                </div>
+
+                {/* Hover indicator */}
+                <div className={`absolute left-0 top-0 bottom-0 w-0.5 bg-white transition-opacity ${hoveredRow === company.id ? 'opacity-100' : 'opacity-0'}`} />
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -290,16 +302,16 @@ export default function CampaignDetailPage() {
       {/* Screenshot Modal */}
       {selectedScreenshot && (
         <div
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-6"
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-8 backdrop-blur-sm"
           onClick={() => setSelectedScreenshot(null)}
         >
           <div
-            className="relative max-w-6xl max-h-[90vh] overflow-auto border border-gray-800"
+            className="relative max-w-6xl max-h-[90vh] overflow-auto border border-gray-900"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setSelectedScreenshot(null)}
-              className="absolute top-2 right-2 p-1.5 bg-black/80 hover:bg-black text-white"
+              className="absolute top-4 right-4 p-2 bg-black/80 hover:bg-black text-white border border-gray-800 hover:border-white transition-all duration-200"
             >
               <X className="w-4 h-4" />
             </button>

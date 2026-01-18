@@ -7,6 +7,7 @@ import {
   Loader,
   ArrowLeft,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
 
 export default function CreateCampaignPage() {
@@ -71,41 +72,46 @@ export default function CreateCampaignPage() {
 
   if (!uploadedData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A]">
-        <Loader className="w-5 h-5 animate-spin text-gray-500" />
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader className="w-4 h-4 animate-spin text-gray-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] pt-20 pb-8 px-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-black pt-20 pb-12 px-8">
+      <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="mb-6 border-b border-gray-800 pb-3">
+        <div className="mb-8 pb-6 border-b border-gray-900">
           <button
             onClick={() => router.push("/campaigns/upload")}
-            className="flex items-center gap-1.5 text-gray-400 hover:text-white text-xs mb-3 transition-colors"
+            className="group flex items-center gap-2 text-gray-600 hover:text-white text-xs mb-4 transition-colors"
           >
-            <ArrowLeft className="w-3 h-3" />
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
             Back
           </button>
-          <h1 className="text-base font-medium text-gray-200">Create Campaign</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {uploadedData.validRows} companies ready
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-purple-400" />
+            </div>
+            <h1 className="text-sm font-medium text-white tracking-tight">Create Campaign</h1>
+          </div>
+          <p className="text-[11px] text-gray-600 font-mono ml-11">
+            {uploadedData.validRows} companies ready to contact
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-950/30 border border-red-900 text-red-400 text-xs flex items-center gap-2">
-            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+          <div className="mb-6 p-4 bg-rose-500/5 border border-rose-500/20 text-rose-400 text-xs flex items-start gap-3">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Campaign Name */}
-          <div className="border border-gray-800 bg-[#111111] p-4">
-            <label htmlFor="campaignName" className="block text-xs text-gray-400 mb-2 font-medium">
+          <div>
+            <label htmlFor="campaignName" className="block text-xs text-gray-500 font-medium mb-3">
               Campaign Name
             </label>
             <input
@@ -113,23 +119,27 @@ export default function CreateCampaignPage() {
               type="text"
               value={campaignName}
               onChange={(e) => setCampaignName(e.target.value)}
-              className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 text-sm text-gray-200 focus:border-white focus:outline-none transition-colors"
-              placeholder="e.g. Q1 2026 Outreach"
+              className="w-full px-4 py-3 bg-black border border-gray-900 text-sm text-gray-200 
+                       focus:border-white focus:outline-none transition-colors
+                       hover:border-gray-800"
+              placeholder="Q1 2026 Outreach Campaign"
               required
             />
           </div>
 
           {/* Message Template */}
-          <div className="border border-gray-800 bg-[#111111] p-4">
-            <label htmlFor="messageTemplate" className="block text-xs text-gray-400 mb-2 font-medium">
+          <div>
+            <label htmlFor="messageTemplate" className="block text-xs text-gray-500 font-medium mb-3">
               Message Template
             </label>
             <textarea
               id="messageTemplate"
               value={messageTemplate}
               onChange={(e) => setMessageTemplate(e.target.value)}
-              rows={8}
-              className="w-full px-3 py-2 bg-[#0A0A0A] border border-gray-800 text-sm text-gray-200 focus:border-white focus:outline-none transition-colors font-mono resize-none"
+              rows={12}
+              className="w-full px-4 py-3 bg-black border border-gray-900 text-sm text-gray-200 leading-relaxed
+                       focus:border-white focus:outline-none transition-colors resize-none
+                       hover:border-gray-800 font-mono"
               placeholder={`Hello,
 
 I'd like to discuss potential collaboration opportunities.
@@ -139,34 +149,35 @@ Looking forward to connecting!
 Best regards`}
               required
             />
-            <p className="text-[10px] text-gray-600 mt-2">
-              This message will be submitted via each company's contact form
+            <p className="text-[10px] text-gray-700 mt-2 font-mono">
+              This message will be sent via each company's contact form
             </p>
           </div>
 
           {/* Submit */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="flex items-center justify-end gap-4 pt-4">
             <button
               type="button"
               onClick={() => router.push("/campaigns/upload")}
-              className="px-4 py-2 text-xs text-gray-400 hover:text-white transition-colors"
+              className="px-4 py-2 text-xs text-gray-600 hover:text-white transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-1.5 px-4 py-2 bg-white text-black text-xs font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group flex items-center gap-2 px-6 py-2 bg-white text-black text-xs font-medium 
+                       hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
-                  <Loader className="w-3 h-3 animate-spin" />
+                  <Loader className="w-3.5 h-3.5 animate-spin" />
                   Creating...
                 </>
               ) : (
                 <>
                   Create Campaign
-                  <ArrowRight className="w-3 h-3" />
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                 </>
               )}
             </button>
