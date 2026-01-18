@@ -128,14 +128,46 @@ https://www.google.com,Google,contact@google.com,+1234567890`;
 
     // Click Create Campaign button
     log('  Clicking "Create Campaign" button...', 'yellow');
+    
+    // Listen for console errors
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        log(`  ❌ Browser Error: ${msg.text()}`, 'red');
+      }
+    });
+
+    // Listen for page errors
+    page.on('pageerror', error => {
+      log(`  ❌ Page Error: ${error.message}`, 'red');
+    });
+
     await page.click('button:has-text("Create Campaign")');
     
     // Wait for navigation to campaign detail page
-    await page.waitForURL('**/campaigns/**', { timeout: 10000 });
+    try {
+      await page.waitForURL('**/campaigns/**', { timeout: 10000 });
+    } catch (e) {
+      log('  ❌ Failed to navigate to campaign page!', 'red');
+      log(`  Current URL: ${page.url()}`, 'yellow');
+      
+      // Check for error messages on page
+      const errorText = await page.locator('text=/error|failed/i').first().textContent().catch(() => null);
+      if (errorText) {
+        log(`  Error message: ${errorText}`, 'red');
+      }
+      throw new Error('Campaign creation failed - did not navigate to detail page');
+    }
+    
     await page.waitForTimeout(3000);
     
     const currentUrl = page.url();
     const campaignId = currentUrl.match(/campaigns\/(\d+)/)?.[1];
+    
+    if (!campaignId) {
+      log(`  ❌ Could not extract campaign ID from URL: ${currentUrl}`, 'red');
+      throw new Error('Campaign ID not found in URL');
+    }
+    
     log(`✓ Campaign created! ID: ${campaignId}`, 'green');
 
     // Take screenshot

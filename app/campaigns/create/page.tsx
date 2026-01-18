@@ -44,7 +44,7 @@ export default function CreateCampaignPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch("/api/campaigns/create", {
+      const response = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -55,8 +55,15 @@ export default function CreateCampaignPage() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to create campaign");
+        let errorMsg = "Failed to create campaign";
+        try {
+          const data = await response.json();
+          errorMsg = data.error || errorMsg;
+        } catch (e) {
+          // If JSON parsing fails, use status text
+          errorMsg = `Failed to create campaign (${response.status})`;
+        }
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();
