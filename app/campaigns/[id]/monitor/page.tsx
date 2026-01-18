@@ -31,6 +31,7 @@ export default function CampaignMonitorPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
+  const [currentUrl, setCurrentUrl] = useState<string>('');
 
   // Fetch campaign and companies
   useEffect(() => {
@@ -96,6 +97,7 @@ export default function CampaignMonitorPage() {
         // Load the company website in iframe immediately
         if (iframeRef.current && selectedCompany.website_url) {
           iframeRef.current.src = selectedCompany.website_url;
+          setCurrentUrl(selectedCompany.website_url);
         }
       };
       
@@ -108,12 +110,30 @@ export default function CampaignMonitorPage() {
             const log = message.data;
             addLog(log.status || 'info', log.action || 'Update', log.message || '');
             
-            // Load website URL in iframe when we get a navigation log
-            if (log.message && log.message.includes('http') && iframeRef.current) {
-              const urlMatch = log.message.match(/(https?:\/\/[^\s]+)/);
+            // Detect URL changes from logs and navigate iframe
+            if (log.message && iframeRef.current) {
+              const urlMatch = log.message.match(/(https?:\/\/[^\s,)]+)/);
               if (urlMatch) {
-                iframeRef.current.src = urlMatch[0];
+                const newUrl = urlMatch[0];
+                console.log('[Monitor] Navigating to:', newUrl);
+                iframeRef.current.src = newUrl;
+                setCurrentUrl(newUrl);
               }
+            }
+            
+            // Also check for URL in details
+            if (log.details?.url && iframeRef.current) {
+              console.log('[Monitor] Navigating to:', log.details.url);
+              iframeRef.current.src = log.details.url;
+              setCurrentUrl(log.details.url);
+            }
+          } else if (message.type === 'navigation') {
+            // Direct navigation event with URL
+            if (message.data?.url && iframeRef.current) {
+              console.log('[Monitor] Navigation event:', message.data.url);
+              iframeRef.current.src = message.data.url;
+              setCurrentUrl(message.data.url);
+              addLog('info', 'Navigating', `Loading: ${message.data.url}`);
             }
           } else if (message.type === 'screenshot') {
             // Skip screenshots - they crash the WebSocket
@@ -123,11 +143,13 @@ export default function CampaignMonitorPage() {
             addLog('success', 'Completed', 'Campaign processing completed!');
             setIsMonitoring(false);
             setWsConnection(null);
+            setCurrentUrl('');
             ws.close();
           } else if (message.type === 'error') {
             addLog('failed', 'Error', message.data?.message || 'An error occurred');
             setIsMonitoring(false);
             setWsConnection(null);
+            setCurrentUrl('');
             ws.close();
           }
         } catch (error) {
@@ -140,6 +162,7 @@ export default function CampaignMonitorPage() {
         addLog('failed', 'Connection Error', `Failed to connect to campaign processor`);
         setIsMonitoring(false);
         setWsConnection(null);
+        setCurrentUrl('');
       };
       
       ws.onclose = (event) => {
@@ -149,6 +172,7 @@ export default function CampaignMonitorPage() {
         }
         setIsMonitoring(false);
         setWsConnection(null);
+        setCurrentUrl('');
       };
     }
   };
@@ -159,6 +183,7 @@ export default function CampaignMonitorPage() {
       setWsConnection(null);
     }
     setIsMonitoring(false);
+    setCurrentUrl('');
     addLog('warning', 'Stopped', 'Monitoring stopped by user');
   };
 
@@ -275,13 +300,21 @@ export default function CampaignMonitorPage() {
         {/* Split View: Website + Logs */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ height: 'calc(100vh - 280px)' }}>
           {/* Website View */}
-          <div className="lg:col-span-2 bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
+          <div className="lg:col-span-2 bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden flex flex-col">
+            {/* URL Bar */}
+            {currentUrl && isMonitoring && (
+              <div className="bg-gray-900 border-b border-gray-700 px-4 py-2 flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-gray-400 font-mono truncate">{currentUrl}</span>
+              </div>
+            )}
+            
             {selectedCompany ? (
               <>
                 <iframe
                   ref={iframeRef}
                   src="about:blank"
-                  className="w-full h-full border-0 bg-white"
+                  className="w-full flex-1 border-0 bg-white"
                   title="Company Website View"
                   sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
                   style={{ display: isMonitoring ? 'block' : 'none' }}
