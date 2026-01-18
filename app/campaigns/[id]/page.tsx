@@ -245,7 +245,7 @@ export default function CampaignDetailPage() {
 
   const emergencyStopAll = () => {
     console.log("[EMERGENCY STOP] Forcefully stopping all processing");
-    
+
     // Close active WebSocket
     if (activeWebSocket) {
       try {
@@ -255,7 +255,7 @@ export default function CampaignDetailPage() {
       }
       setActiveWebSocket(null);
     }
-    
+
     // Reset all processing states
     setProcessingCompanyId(null);
     setRapidProgress(0);
@@ -263,10 +263,10 @@ export default function CampaignDetailPage() {
     setRapidCurrentCompany("");
     setAutoStarted(false);
     setIsRapidAllRunning(false); // Stop Rapid All
-    
+
     // Clear localStorage auto-start flag
     localStorage.removeItem(`campaign_${campaignId}_autostarted`);
-    
+
     // Refresh data
     fetchCampaignDetails();
   };
@@ -293,15 +293,17 @@ export default function CampaignDetailPage() {
 
   const startRapidAll = () => {
     const pendingCompanies = companies.filter((c) => c.status === "pending");
-    
+
     if (pendingCompanies.length === 0) {
       alert("No pending companies to process!");
       return;
     }
 
-    console.log(`[Rapid All] Starting batch processing for ${pendingCompanies.length} companies`);
+    console.log(
+      `[Rapid All] Starting batch processing for ${pendingCompanies.length} companies`
+    );
     setIsRapidAllRunning(true);
-    
+
     // Start with the first pending company
     handleRapidProcess(pendingCompanies[0].id);
   };
@@ -418,7 +420,11 @@ export default function CampaignDetailPage() {
                   className="group flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Activity className="w-3.5 h-3.5" />
-                  {isRapidAllRunning ? "Processing All..." : `Rapid All (${companies.filter((c) => c.status === "pending").length})`}
+                  {isRapidAllRunning
+                    ? "Processing All..."
+                    : `Rapid All (${
+                        companies.filter((c) => c.status === "pending").length
+                      })`}
                 </button>
               )}
               <button
