@@ -15,6 +15,7 @@ import {
   X,
   Activity,
   Trash2,
+  Zap,
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
@@ -57,6 +58,7 @@ export default function CampaignDetailPage() {
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [processingCompanyId, setProcessingCompanyId] = useState<number | null>(null);
 
   const campaignId = params?.id as string;
 
@@ -124,6 +126,51 @@ export default function CampaignDetailPage() {
     } finally {
       setDeleting(false);
       setDeleteDialogOpen(false);
+    }
+  };
+
+  const handleRapidProcess = async (companyId: number) => {
+    try {
+      setProcessingCompanyId(companyId);
+      
+      // Update company status to processing
+      const response = await fetch(`/api/campaigns/companies/${companyId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "processing" }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to start rapid processing");
+      }
+
+      // Start processing in background via WebSocket (but don't navigate to monitor page)
+      // The backend will handle it and update the status
+      const wsUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace('http', 'ws') || 'ws://localhost:5000';
+      const ws = new WebSocket(`${wsUrl}/ws/campaign/${campaignId}/monitor/${companyId}`);
+      
+      ws.onopen = () => {
+        console.log(`[Rapid] Started processing company ${companyId}`);
+      };
+      
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (message.type === 'completed' || message.type === 'error') {
+          ws.close();
+          setProcessingCompanyId(null);
+          fetchCampaignDetails(); // Refresh to show updated status
+        }
+      };
+      
+      ws.onerror = () => {
+        setProcessingCompanyId(null);
+        alert("Failed to process company");
+      };
+      
+    } catch (error: any) {
+      console.error("Failed to start rapid processing:", error);
+      alert(`Failed to start processing: ${error.message}`);
+      setProcessingCompanyId(null);
     }
   };
 
@@ -336,98 +383,110 @@ export default function CampaignDetailPage() {
 
             {/* Table Rows */}
             <div>
-            {filteredCompanies.map((company, idx) => (
-              <div
-                key={company.id}
-                onMouseEnter={() => setHoveredRow(company.id)}
-                onMouseLeave={() => setHoveredRow(null)}
-                className={`
+              {filteredCompanies.map((company, idx) => (
+                <div
+                  key={company.id}
+                  onMouseEnter={() => setHoveredRow(company.id)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                  className={`
                   group relative grid grid-cols-[1fr_140px_200px_80px_200px] gap-4 items-center
                   px-4 py-4 transition-all duration-150
                   ${idx % 2 === 0 ? "bg-white/[0.02]" : "bg-transparent"}
                   ${hoveredRow === company.id ? "bg-white/[0.05]" : ""}
                   ${idx === 0 ? "" : "border-t border-white/5"}
                 `}
-              >
-                {/* Company */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="min-w-0">
-                    <div className="text-sm text-white truncate group-hover:text-white transition-colors">
-                      {company.company_name}
-                    </div>
-                    <div className="text-[11px] text-white font-mono truncate mt-0.5">
-                      {company.website_url}
+                >
+                  {/* Company */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="min-w-0">
+                      <div className="text-sm text-white truncate group-hover:text-white transition-colors">
+                        {company.company_name}
+                      </div>
+                      <div className="text-[11px] text-white font-mono truncate mt-0.5">
+                        {company.website_url}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Status */}
-                <div
-                  className={`flex items-center gap-2 ${getStatusColor(
-                    company.status
-                  )}`}
-                >
-                  {getStatusIcon(company.status)}
-                  <span className="text-xs capitalize">{company.status}</span>
-                </div>
+                  {/* Status */}
+                  <div
+                    className={`flex items-center gap-2 ${getStatusColor(
+                      company.status
+                    )}`}
+                  >
+                    {getStatusIcon(company.status)}
+                    <span className="text-xs capitalize">{company.status}</span>
+                  </div>
 
-                {/* Details */}
-                <div className="text-xs text-white truncate">
-                  {company.error_message ? (
-                    <span className="text-rose-400">
-                      {company.error_message}
-                    </span>
-                  ) : company.contact_page_found ? (
-                    <span className="text-emerald-400">
-                      ✓ Contact form found
-                    </span>
-                  ) : (
-                    <span className="text-white">—</span>
-                  )}
-                </div>
+                  {/* Details */}
+                  <div className="text-xs text-white truncate">
+                    {company.error_message ? (
+                      <span className="text-rose-400">
+                        {company.error_message}
+                      </span>
+                    ) : company.contact_page_found ? (
+                      <span className="text-emerald-400">
+                        ✓ Contact form found
+                      </span>
+                    ) : (
+                      <span className="text-white">—</span>
+                    )}
+                  </div>
 
-                {/* Proof */}
-                <div className="flex justify-center">
-                  {company.screenshot_url ? (
-                    <button
-                      onClick={() =>
-                        setSelectedScreenshot(company.screenshot_url || null)
-                      }
-                      className="relative group/img"
-                    >
-                      <img
-                        src={company.screenshot_url}
-                        alt="Proof"
-                        className="w-12 h-12 object-cover border border-gray-800 group-hover/img:border-white transition-colors"
-                      />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                        <ImageIcon className="w-4 h-4 text-white" />
+                  {/* Proof */}
+                  <div className="flex justify-center">
+                    {company.screenshot_url ? (
+                      <button
+                        onClick={() =>
+                          setSelectedScreenshot(company.screenshot_url || null)
+                        }
+                        className="relative group/img"
+                      >
+                        <img
+                          src={company.screenshot_url}
+                          alt="Proof"
+                          className="w-12 h-12 object-cover border border-gray-800 group-hover/img:border-white transition-colors"
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                          <ImageIcon className="w-4 h-4 text-white" />
+                        </div>
+                      </button>
+                    ) : (
+                      <div className="w-12 h-12 border border-gray-900 flex items-center justify-center">
+                        <span className="text-white text-xs">—</span>
                       </div>
-                    </button>
-                  ) : (
-                    <div className="w-12 h-12 border border-gray-900 flex items-center justify-center">
-                      <span className="text-white text-xs">—</span>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center justify-end gap-2">
                   <button
                     onClick={() =>
                       router.push(
                         `/campaigns/${campaignId}/monitor?company=${company.id}`
                       )
                     }
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white hover:text-white hover:bg-gray-900 transition-colors"
+                    disabled={processingCompanyId === company.id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white hover:text-white hover:bg-white/10 transition-colors border border-white/20 hover:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    Monitor
+                    View
+                  </button>
+                  <button
+                    onClick={() => handleRapidProcess(company.id)}
+                    disabled={processingCompanyId === company.id || company.status === 'processing' || company.status === 'completed'}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-black bg-white hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-600"
+                  >
+                    {processingCompanyId === company.id ? (
+                      <Loader className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="w-3.5 h-3.5" />
+                    )}
+                    Rapid
                   </button>
                 </div>
-
-              </div>
-            ))}
+                </div>
+              ))}
             </div>
           </div>
         </div>
