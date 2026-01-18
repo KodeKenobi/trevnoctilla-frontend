@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Play, StopCircle, Eye, Loader } from "lucide-react";
+import { Play, StopCircle, Eye, Loader, CheckCircle } from "lucide-react";
 
 /**
  * Live Campaign Monitoring View  
@@ -31,7 +31,8 @@ export default function CampaignMonitorPage() {
   const [loading, setLoading] = useState(true);
   const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
   const [currentUrl, setCurrentUrl] = useState<string>('');
-  const [currentScreenshot, setCurrentScreenshot] = useState<string>('');
+  const [formPreview, setFormPreview] = useState<string>('');
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Fetch campaign and companies
   useEffect(() => {
@@ -94,7 +95,11 @@ export default function CampaignMonitorPage() {
         console.log('[WebSocket] Connection opened successfully');
         addLog('success', 'Connected', 'Connected to campaign processor');
         setCurrentUrl(selectedCompany.website_url);
-        setCurrentScreenshot(''); // Clear old screenshot
+        setFormPreview(''); // Clear old preview
+        // Load website in iframe
+        if (iframeRef.current) {
+          iframeRef.current.src = selectedCompany.website_url;
+        }
       };
       
       ws.onmessage = (event) => {
@@ -106,37 +111,43 @@ export default function CampaignMonitorPage() {
             const log = message.data;
             addLog(log.status || 'info', log.action || 'Update', log.message || '');
             
-            // Track URL from log details
-            if (log.details?.url) {
+            // Track URL from log details and update iframe
+            if (log.details?.url && iframeRef.current) {
               console.log('[Monitor] URL update:', log.details.url);
               setCurrentUrl(log.details.url);
+              if (iframeRef.current.src !== log.details.url) {
+                iframeRef.current.src = log.details.url;
+              }
             }
           } else if (message.type === 'navigation') {
             // Direct navigation event with URL
             if (message.data?.url) {
               console.log('[Monitor] Navigation event:', message.data.url);
               setCurrentUrl(message.data.url);
+              if (iframeRef.current) {
+                iframeRef.current.src = message.data.url;
+              }
               addLog('info', 'Navigating', `Loading: ${message.data.url}`);
             }
-          } else if (message.type === 'screenshot') {
-            // Display screenshot - now using tiny images that won't crash
+          } else if (message.type === 'form_preview') {
+            // ONE screenshot of filled form before submission
             if (message.data?.image) {
-              console.log('[WebSocket] Screenshot received');
-              setCurrentScreenshot(message.data.image);
+              console.log('[WebSocket] Form preview received - fields filled!');
+              setFormPreview(message.data.image);
             }
           } else if (message.type === 'completed') {
             addLog('success', 'Completed', 'Campaign processing completed!');
             setIsMonitoring(false);
             setWsConnection(null);
             setCurrentUrl('');
-            // Keep screenshot visible to see final result
+            // Keep form preview visible to see filled form
             ws.close();
           } else if (message.type === 'error') {
             addLog('failed', 'Error', message.data?.message || 'An error occurred');
             setIsMonitoring(false);
             setWsConnection(null);
             setCurrentUrl('');
-            setCurrentScreenshot('');
+            setFormPreview('');
             ws.close();
           }
         } catch (error) {
@@ -150,7 +161,7 @@ export default function CampaignMonitorPage() {
         setIsMonitoring(false);
         setWsConnection(null);
         setCurrentUrl('');
-        setCurrentScreenshot('');
+        setFormPreview('');
       };
       
       ws.onclose = (event) => {
@@ -161,9 +172,9 @@ export default function CampaignMonitorPage() {
         setIsMonitoring(false);
         setWsConnection(null);
         setCurrentUrl('');
-        // Keep screenshot if normal close, clear if error
+        // Keep form preview if normal close, clear if error
         if (event.code !== 1000) {
-          setCurrentScreenshot('');
+          setFormPreview('');
         }
       };
     }
@@ -176,7 +187,7 @@ export default function CampaignMonitorPage() {
     }
     setIsMonitoring(false);
     setCurrentUrl('');
-    setCurrentScreenshot('');
+    setFormPreview('');
     addLog('warning', 'Stopped', 'Monitoring stopped by user');
   };
 
@@ -304,21 +315,14 @@ export default function CampaignMonitorPage() {
             
             {selectedCompany ? (
               <>
-                {isMonitoring && currentScreenshot ? (
-                  <div className="w-full flex-1 flex items-center justify-center bg-gray-900">
-                    <img 
-                      src={currentScreenshot} 
-                      alt="Live browser view"
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-                ) : isMonitoring && !currentScreenshot ? (
-                  <div className="w-full h-full flex items-center justify-center text-gray-500">
-                    <div className="text-center">
-                      <Loader className="h-16 w-16 mx-auto mb-4 animate-spin text-purple-500" />
-                      <p className="text-lg">Waiting for browser view...</p>
-                    </div>
-                  </div>
+                {isMonitoring ? (
+                  <iframe
+                    ref={iframeRef}
+                    src={selectedCompany.website_url}
+                    className="w-full flex-1 border-0 bg-white"
+                    title="Live Website Navigation"
+                    sandbox="allow-scripts allow-forms allow-popups allow-same-origin allow-top-navigation-by-user-activation"
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-500">
                     <div className="text-center">
@@ -338,6 +342,24 @@ export default function CampaignMonitorPage() {
               </div>
             )}
           </div>
+
+          {/* Form Preview - Shows filled form before submission */}
+          {formPreview && (
+            <div className="bg-gradient-to-br from-green-900/20 to-blue-900/20 border border-green-500/50 rounded-lg overflow-hidden">
+              <div className="bg-green-900/30 border-b border-green-500/30 px-4 py-2 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-sm font-semibold text-green-300">Form Filled - Preview Before Submission</span>
+              </div>
+              <div className="p-4 bg-gray-900">
+                <img 
+                  src={formPreview} 
+                  alt="Filled form preview"
+                  className="w-full border border-gray-700 rounded-lg shadow-2xl"
+                  style={{ maxHeight: '800px', objectFit: 'contain' }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Live Logs Panel - Full Width Below */}
           <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 overflow-y-auto" style={{ maxHeight: '300px' }}>
