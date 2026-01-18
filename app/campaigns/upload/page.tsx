@@ -28,7 +28,6 @@ export default function CampaignUploadPage() {
   const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [creating, setCreating] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -107,54 +106,11 @@ export default function CampaignUploadPage() {
     }
   };
 
-  const handleContinue = async () => {
-    if (!uploadedData) return;
-
-    try {
-      setCreating(true);
-      setError(null);
-
-      // Auto-create campaign with uploaded data
-      const campaignName = `Campaign ${new Date().toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      })}`;
-
-      const response = await fetch("/api/campaigns", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: campaignName,
-          message_template: "Hi {company_name}, I'd like to connect with you regarding {service}. Please get back to me at your earliest convenience.",
-          companies: uploadedData.rows.map((row) => ({
-            company_name: row.company_name || "",
-            website_url: row.website_url,
-            contact_email: row.contact_email || null,
-            phone: row.phone || null,
-          })),
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to create campaign");
-      }
-
-      const data = await response.json();
-      const campaignId = data.campaign?.id;
-
-      if (!campaignId) {
-        throw new Error("Campaign created but no ID returned");
-      }
-
-      // Redirect to campaign detail page where Rapid can be triggered
-      router.push(`/campaigns/${campaignId}`);
-    } catch (err: any) {
-      console.error("Failed to create campaign:", err);
-      setError(err.message || "Failed to create campaign");
-      setCreating(false);
+  const handleContinue = () => {
+    if (uploadedData) {
+      // Save uploaded data and redirect to create page for template
+      localStorage.setItem("uploadedCampaignData", JSON.stringify(uploadedData));
+      router.push("/campaigns/create");
     }
   };
 
@@ -254,20 +210,10 @@ https://another.com,Another Co,hi@another.com,+0987654321`}
                 </div>
                 <button
                   onClick={handleContinue}
-                  disabled={creating}
-                  className="group flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-medium hover:bg-gray-100 transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-medium hover:bg-gray-100 transition-colors rounded-lg"
                 >
-                  {creating ? (
-                    <>
-                      <Loader className="w-4 h-4 animate-spin" />
-                      Creating Campaign...
-                    </>
-                  ) : (
-                    <>
-                      Continue
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                    </>
-                  )}
+                  Create Message Template
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
             </div>
