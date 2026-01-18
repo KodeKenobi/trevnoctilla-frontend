@@ -367,7 +367,6 @@ export default function CampaignMonitorPage() {
             )}
           </div>
         </div>
-        </div>
       </div>
     </div>
   );
