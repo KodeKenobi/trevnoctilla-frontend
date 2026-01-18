@@ -64,6 +64,7 @@ export default function CampaignDetailPage() {
   const [rapidProgress, setRapidProgress] = useState(0);
   const [rapidStatus, setRapidStatus] = useState<string>("");
   const [rapidCurrentCompany, setRapidCurrentCompany] = useState<string>("");
+  const [activeWebSocket, setActiveWebSocket] = useState<WebSocket | null>(null);
 
   const campaignId = params?.id as string;
 
@@ -164,6 +165,7 @@ export default function CampaignDetailPage() {
 
       console.log("[Rapid] Connecting to WebSocket:", wsUrl);
       const ws = new WebSocket(wsUrl);
+      setActiveWebSocket(ws); // Store WebSocket reference for emergency stop
 
       ws.onopen = () => {
         console.log(`[Rapid] Started processing company ${companyId}`);
@@ -189,6 +191,7 @@ export default function CampaignDetailPage() {
           setRapidProgress(100);
           setRapidStatus("Completed!");
           ws.close();
+          setActiveWebSocket(null);
           setProcessingCompanyId(null);
           fetchCampaignDetails(); // Refresh to show updated status
 
@@ -204,6 +207,7 @@ export default function CampaignDetailPage() {
           setRapidProgress(0);
           setRapidStatus("Failed");
           ws.close();
+          setActiveWebSocket(null);
           setProcessingCompanyId(null);
           fetchCampaignDetails();
 
@@ -215,6 +219,7 @@ export default function CampaignDetailPage() {
       };
 
       ws.onerror = () => {
+        setActiveWebSocket(null);
         setProcessingCompanyId(null);
         setRapidProgress(0);
         setRapidStatus("Connection error");
@@ -224,11 +229,39 @@ export default function CampaignDetailPage() {
     } catch (error: any) {
       console.error("Failed to start rapid processing:", error);
       alert(`Failed to start processing: ${error.message}`);
+      setActiveWebSocket(null);
       setProcessingCompanyId(null);
       setRapidProgress(0);
       setRapidStatus("");
       setRapidCurrentCompany("");
     }
+  };
+
+  const emergencyStopAll = () => {
+    console.log("[EMERGENCY STOP] Forcefully stopping all processing");
+    
+    // Close active WebSocket
+    if (activeWebSocket) {
+      try {
+        activeWebSocket.close(1000, "Emergency stop by user");
+      } catch (e) {
+        console.error("Error closing WebSocket:", e);
+      }
+      setActiveWebSocket(null);
+    }
+    
+    // Reset all processing states
+    setProcessingCompanyId(null);
+    setRapidProgress(0);
+    setRapidStatus("");
+    setRapidCurrentCompany("");
+    setAutoStarted(false);
+    
+    // Clear localStorage auto-start flag
+    localStorage.removeItem(`campaign_${campaignId}_autostarted`);
+    
+    // Refresh data
+    fetchCampaignDetails();
   };
 
   const processNextPending = () => {
@@ -250,33 +283,8 @@ export default function CampaignDetailPage() {
     }
   };
 
-  // Auto-start rapid processing for new campaigns (ONLY if draft and has pending companies)
-  useEffect(() => {
-    if (!campaign || !companies.length) return;
-
-    // Check localStorage to see if this campaign was already auto-started
-    const autoStartKey = `campaign_${campaignId}_autostarted`;
-    const wasAutoStarted = localStorage.getItem(autoStartKey);
-
-    // Only auto-start if:
-    // 1. Campaign is in draft status (newly created)
-    // 2. Has pending companies
-    // 3. Hasn't been auto-started before (checked via localStorage)
-    if (campaign.status === "draft" && !wasAutoStarted && !autoStarted) {
-      const pendingCompany = companies.find((c) => c.status === "pending");
-      if (pendingCompany) {
-        console.log(
-          "[Auto-start] Starting rapid processing for campaign",
-          campaignId
-        );
-        setAutoStarted(true);
-        localStorage.setItem(autoStartKey, "true");
-        setTimeout(() => {
-          handleRapidProcess(pendingCompany.id);
-        }, 1000);
-      }
-    }
-  }, [campaign, companies, autoStarted, campaignId]);
+  // DISABLED: No auto-start. User must manually click "Rapid" for each company.
+  // This prevents infinite loops and unwanted processing.
 
   const filteredCompanies = companies.filter((company) =>
     filterStatus === "all" ? true : company.status === filterStatus
@@ -417,8 +425,17 @@ export default function CampaignDetailPage() {
                   </div>
                 </div>
               </div>
-              <div className="text-sm font-mono text-white">
-                {rapidProgress}%
+              <div className="flex items-center gap-4">
+                <div className="text-sm font-mono text-white">
+                  {rapidProgress}%
+                </div>
+                <button
+                  onClick={emergencyStopAll}
+                  className="px-4 py-1.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded transition-colors flex items-center gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  STOP
+                </button>
               </div>
             </div>
             <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
