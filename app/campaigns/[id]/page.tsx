@@ -138,7 +138,7 @@ export default function CampaignDetailPage() {
   const handleRapidProcess = async (companyId: number) => {
     try {
       setProcessingCompanyId(companyId);
-      
+
       // Find company name for display
       const company = companies.find((c) => c.id === companyId);
       setRapidCurrentCompany(company?.company_name || `Company ${companyId}`);
@@ -174,12 +174,12 @@ export default function CampaignDetailPage() {
 
       ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
-        
+
         // Update progress based on message type
         if (message.type === "log") {
           const log = message.data;
           setRapidStatus(log.message || log.action);
-          
+
           // Map actions to progress percentages
           if (log.action?.includes("Navigation")) setRapidProgress(20);
           else if (log.action?.includes("Contact")) setRapidProgress(40);
@@ -208,7 +208,7 @@ export default function CampaignDetailPage() {
           ws.close();
           setProcessingCompanyId(null);
           fetchCampaignDetails();
-          
+
           setTimeout(() => {
             setRapidStatus("");
             setRapidCurrentCompany("");
@@ -400,7 +400,9 @@ export default function CampaignDetailPage() {
                   </div>
                 </div>
               </div>
-              <div className="text-sm font-mono text-white">{rapidProgress}%</div>
+              <div className="text-sm font-mono text-white">
+                {rapidProgress}%
+              </div>
             </div>
             <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
               <div
@@ -550,17 +552,26 @@ export default function CampaignDetailPage() {
                   </div>
 
                   {/* Details */}
-                  <div className="text-xs text-white truncate">
-                    {company.error_message ? (
+                  <div className="text-xs text-white/80">
+                    {company.status === "completed" ? (
+                      <div className="space-y-0.5">
+                        <div className="text-emerald-400">✓ Form submitted</div>
+                        {company.contact_email && (
+                          <div className="text-white/40 font-mono text-[10px]">
+                            {company.contact_email}
+                          </div>
+                        )}
+                      </div>
+                    ) : company.error_message ? (
                       <span className="text-rose-400">
                         {company.error_message}
                       </span>
+                    ) : company.status === "processing" ? (
+                      <span className="text-blue-400">In progress...</span>
                     ) : company.contact_page_found ? (
-                      <span className="text-emerald-400">
-                        ✓ Contact form found
-                      </span>
+                      <span className="text-white/60">Contact form detected</span>
                     ) : (
-                      <span className="text-white">—</span>
+                      <span className="text-white/40">—</span>
                     )}
                   </div>
 
