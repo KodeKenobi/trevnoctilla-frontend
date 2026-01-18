@@ -25,22 +25,15 @@ WORKDIR /app
 COPY . /tmp/repo
 WORKDIR /tmp/repo
 
-# Check if trevnoctilla-backend exists and is populated, if not clone it
-RUN if [ -d "trevnoctilla-backend" ]; then \
-        echo "trevnoctilla-backend directory exists"; \
-        if [ -z "$(ls -A trevnoctilla-backend)" ]; then \
-            echo "trevnoctilla-backend is empty, cloning repository..."; \
-            rm -rf trevnoctilla-backend; \
-            git clone https://github.com/KodeKenobi/justpdf-backend.git trevnoctilla-backend; \
-        else \
-            echo "trevnoctilla-backend is populated"; \
-        fi; \
-    else \
-        echo "trevnoctilla-backend directory NOT found, cloning repository..."; \
-        git clone https://github.com/KodeKenobi/justpdf-backend.git trevnoctilla-backend; \
-    fi && \
+# Always clone latest backend from GitHub (force fresh pull every time)
+RUN rm -rf trevnoctilla-backend && \
+    echo "Cloning latest justpdf-backend from GitHub..." && \
+    git clone https://github.com/KodeKenobi/justpdf-backend.git trevnoctilla-backend && \
+    cd trevnoctilla-backend && \
+    echo "=== Backend version ===" && \
+    git log --oneline -1 && \
     echo "=== Verifying trevnoctilla-backend contents ===" && \
-    ls -la trevnoctilla-backend/ | head -20
+    ls -la | head -20
 
 # Copy requirements and install Python dependencies
 # Handle both root-level and trevnoctilla-backend/ build contexts
