@@ -180,8 +180,13 @@ export default function CampaignMonitorPage() {
           setProgress(100);
           setIsMonitoring(false);
           setHasCompleted(true); // Prevent auto-restart
-          // Close with normal code
-          ws.close(1000, 'Completed');
+          // Keep connection open briefly so user can see the success state
+          // Backend will close it after a few seconds anyway
+          setTimeout(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.close(1000, 'Completed');
+            }
+          }, 3000); // Keep success state visible for 3 seconds
         } else if (message.type === 'error') {
           setStatus('failed');
           setCurrentStep('✗ ' + (message.data?.message || 'Processing failed'));
@@ -229,20 +234,20 @@ export default function CampaignMonitorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <Loader className="w-8 h-8 animate-spin text-purple-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 pt-16">
+    <div className="min-h-screen bg-black pt-16">
       {/* Minimal Header */}
       <div className="border-b border-gray-800 bg-gray-900/50 backdrop-blur">
         <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center justify-between">
           <button
             onClick={() => router.push(`/campaigns/${campaignId}`)}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-white hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="font-medium">Back</span>
@@ -251,7 +256,7 @@ export default function CampaignMonitorPage() {
           {selectedCompany && (
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <div className="text-sm text-gray-400">Monitoring</div>
+                <div className="text-sm text-white">Monitoring</div>
                 <div className="text-white font-semibold">{selectedCompany.company_name}</div>
               </div>
               {companies.length > 1 && (
@@ -302,7 +307,7 @@ export default function CampaignMonitorPage() {
             <span className={`text-sm font-medium ${
               status === 'success' ? 'text-green-400' :
               status === 'failed' ? 'text-red-400' :
-              'text-gray-300'
+              'text-white'
             }`}>
               {currentStep}
             </span>
@@ -320,7 +325,7 @@ export default function CampaignMonitorPage() {
           </div>
           
           {currentUrl && (
-            <div className="mt-3 text-xs text-gray-500 font-mono truncate">
+            <div className="mt-3 text-xs text-white font-mono truncate">
               {currentUrl}
             </div>
           )}
@@ -340,7 +345,7 @@ export default function CampaignMonitorPage() {
               sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-500">
+            <div className="w-full h-full flex items-center justify-center text-white">
               <Loader className="w-12 h-12 animate-spin text-purple-500" />
             </div>
           )}

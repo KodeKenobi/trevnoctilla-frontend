@@ -93,7 +93,7 @@ export default function CampaignsPage() {
       case "queued": return "text-purple-400";
       case "failed": return "text-rose-400";
       case "paused": return "text-amber-400";
-      default: return "text-gray-400";
+      default: return "text-white";
     }
   };
 
@@ -110,23 +110,23 @@ export default function CampaignsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white pt-24">
+      <div className="min-h-screen flex items-center justify-center bg-black pt-24">
         <div className="flex flex-col items-center gap-3">
-          <Loader className="w-5 h-5 animate-spin text-purple-600" />
-          <span className="text-sm text-gray-700 font-medium">Loading campaigns...</span>
+          <Loader className="w-5 h-5 animate-spin text-purple-500" />
+          <span className="text-sm text-white font-medium">Loading campaigns...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-24 pb-12 px-8">
+    <div className="min-h-screen bg-black pt-24 pb-12 px-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
-        <div className="flex items-end justify-between mb-8 pb-6 border-b-2 border-gray-200">
+        <div className="flex items-end justify-between mb-8 pb-6 border-b-2 border-gray-800">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">Campaigns</h1>
-            <p className="text-base text-gray-600">{campaigns.length} active campaign{campaigns.length !== 1 ? 's' : ''}</p>
+            <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Campaigns</h1>
+            <p className="text-base text-white">{campaigns.length} active campaign{campaigns.length !== 1 ? 's' : ''}</p>
           </div>
           <button
             onClick={() => router.push("/campaigns/upload")}
@@ -138,7 +138,7 @@ export default function CampaignsPage() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-start gap-3 rounded-xl">
+          <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/30 text-white text-sm flex items-start gap-3 rounded-xl">
             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -147,12 +147,12 @@ export default function CampaignsPage() {
         {campaigns.length === 0 ? (
           <div className="py-32 text-center">
             <div className="inline-flex flex-col items-center gap-5">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center shadow-md">
-                <Plus className="w-10 h-10 text-purple-600" />
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center shadow-md">
+                <Plus className="w-10 h-10 text-purple-400" />
               </div>
               <div>
-                <p className="text-xl font-semibold text-gray-900 mb-2">No campaigns yet</p>
-                <p className="text-base text-gray-600">Create your first automated outreach campaign</p>
+                <p className="text-xl font-semibold text-white mb-2">No campaigns yet</p>
+                <p className="text-base text-white">Create your first automated outreach campaign</p>
               </div>
               <button
                 onClick={() => router.push("/campaigns/upload")}
@@ -224,7 +224,7 @@ export default function CampaignsPage() {
                       <h3 className="text-2xl font-bold text-white mb-2 line-clamp-2">
                         {campaign.name}
                       </h3>
-                      <p className="text-sm text-gray-300">
+                      <p className="text-sm text-white">
                         Created {new Date(campaign.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                     </div>
@@ -249,19 +249,19 @@ export default function CampaignsPage() {
                       <div className="grid grid-cols-4 gap-2">
                         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center">
                           <div className="text-lg font-bold text-white">{campaign.total_companies}</div>
-                          <div className="text-xs text-gray-300">Total</div>
+                          <div className="text-xs text-white">Total</div>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center">
                           <div className="text-lg font-bold text-white">{campaign.processed_count}</div>
-                          <div className="text-xs text-gray-300">Done</div>
+                          <div className="text-xs text-white">Done</div>
                         </div>
                         <div className="bg-emerald-500/20 backdrop-blur-sm rounded-lg p-2 text-center">
                           <div className="text-lg font-bold text-emerald-300">{campaign.success_count}</div>
-                          <div className="text-xs text-gray-300">Success</div>
+                          <div className="text-xs text-white">Success</div>
                         </div>
                         <div className="bg-rose-500/20 backdrop-blur-sm rounded-lg p-2 text-center">
                           <div className="text-lg font-bold text-rose-300">{campaign.failed_count}</div>
-                          <div className="text-xs text-gray-300">Failed</div>
+                          <div className="text-xs text-white">Failed</div>
                         </div>
                       </div>
                     </div>

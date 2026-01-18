@@ -114,19 +114,19 @@ export default function CampaignUploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-24 pb-12 px-8">
+    <div className="min-h-screen bg-black pt-24 pb-12 px-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8 pb-6 border-b border-gray-800">
           <button
             onClick={() => router.push("/campaigns")}
-            className="group flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-4 transition-colors"
+            className="group flex items-center gap-2 text-white hover:text-purple-400 text-sm mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             Back to campaigns
           </button>
           <h1 className="text-xl font-medium text-white tracking-tight mb-2">Upload Companies</h1>
-          <p className="text-sm text-gray-400 font-mono">CSV with company websites</p>
+          <p className="text-sm text-white font-mono">CSV with company websites</p>
         </div>
 
         {error && (
@@ -156,14 +156,14 @@ export default function CampaignUploadPage() {
                     {uploading ? (
                       <Loader className="w-7 h-7 text-white animate-spin" />
                     ) : (
-                      <Upload className="w-7 h-7 text-gray-500 group-hover:text-white transition-colors" />
+                      <Upload className="w-7 h-7 text-white group-hover:text-purple-400 transition-colors" />
                     )}
                   </div>
                   <div>
-                    <p className="text-base text-gray-300 mb-2">
+                    <p className="text-base text-white mb-2">
                       {uploading ? "Processing..." : "Drop CSV file or click to browse"}
                     </p>
-                    <p className="text-sm text-gray-500">Must include website_url column</p>
+                    <p className="text-sm text-white">Must include website_url column</p>
                   </div>
                 </div>
               </div>
@@ -180,15 +180,15 @@ export default function CampaignUploadPage() {
             {/* Format Info */}
             <div className="border border-gray-800 p-6 rounded-xl">
               <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-gray-500" />
-                <span className="text-sm text-gray-300 font-medium">Required Format</span>
+                <FileText className="w-5 h-5 text-white" />
+                <span className="text-sm text-white font-medium">Required Format</span>
               </div>
-              <pre className="text-sm font-mono text-gray-400 bg-gray-900 p-4 border border-gray-800 overflow-x-auto rounded-lg">
+              <pre className="text-sm font-mono text-white bg-gray-900 p-4 border border-gray-800 overflow-x-auto rounded-lg">
 {`website_url,company_name,contact_email,phone
 https://example.com,Example Inc,hello@example.com,+1234567890
 https://another.com,Another Co,hi@another.com,+0987654321`}
               </pre>
-              <p className="text-xs text-gray-500 mt-4">
+              <p className="text-xs text-white mt-4">
                 Only website_url is required • Max 1000 rows
               </p>
             </div>
@@ -220,13 +220,13 @@ https://another.com,Another Co,hi@another.com,+0987654321`}
             {/* Stats Grid */}
             <div className="grid grid-cols-4 gap-4">
               {[
-                { label: 'Total', value: uploadedData.totalRows, color: 'text-gray-300' },
+                { label: 'Total', value: uploadedData.totalRows, color: 'text-white' },
                 { label: 'Valid', value: uploadedData.validRows, color: 'text-emerald-400' },
                 { label: 'Invalid', value: uploadedData.invalidRows, color: 'text-rose-400' },
-                { label: 'Size', value: `${(uploadedData.size / 1024).toFixed(1)}KB`, color: 'text-gray-300' },
+                { label: 'Size', value: `${(uploadedData.size / 1024).toFixed(1)}KB`, color: 'text-white' },
               ].map((stat, idx) => (
                 <div key={idx} className="border border-gray-800 p-5 rounded-xl">
-                  <div className="text-xs text-gray-500 mb-2 uppercase tracking-wider">{stat.label}</div>
+                  <div className="text-xs text-white mb-2 uppercase tracking-wider">{stat.label}</div>
                   <div className={`text-2xl font-mono ${stat.color}`}>{stat.value}</div>
                 </div>
               ))}
@@ -235,32 +235,32 @@ https://another.com,Another Co,hi@another.com,+0987654321`}
             {/* Preview */}
             <div className="border border-gray-800 rounded-xl overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between bg-gray-900/50">
-                <span className="text-sm text-gray-300 font-medium">Preview</span>
-                <span className="text-xs text-gray-500 font-mono">First 10 rows</span>
+                <span className="text-sm text-white font-medium">Preview</span>
+                <span className="text-xs text-white font-mono">First 10 rows</span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="border-b border-gray-800 bg-gray-900">
                     <tr>
-                      <th className="text-left py-3 px-5 font-medium text-gray-400 w-12">#</th>
-                      <th className="text-left py-3 px-5 font-medium text-gray-400">Website</th>
-                      <th className="text-left py-3 px-5 font-medium text-gray-400">Company</th>
-                      <th className="text-left py-3 px-5 font-medium text-gray-400">Email</th>
-                      <th className="text-left py-3 px-5 font-medium text-gray-400">Phone</th>
+                      <th className="text-left py-3 px-5 font-medium text-white w-12">#</th>
+                      <th className="text-left py-3 px-5 font-medium text-white">Website</th>
+                      <th className="text-left py-3 px-5 font-medium text-white">Company</th>
+                      <th className="text-left py-3 px-5 font-medium text-white">Email</th>
+                      <th className="text-left py-3 px-5 font-medium text-white">Phone</th>
                     </tr>
                   </thead>
                   <tbody>
                     {uploadedData.rows.slice(0, 10).map((row, idx) => (
                       <tr key={idx} className="border-b border-gray-800 hover:bg-gray-900/30 transition-colors">
-                        <td className="py-3 px-5 text-gray-500 font-mono">{idx + 1}</td>
+                        <td className="py-3 px-5 text-white font-mono">{idx + 1}</td>
                         <td className="py-3 px-5 text-blue-400 font-mono text-sm truncate max-w-xs">
                           {row.website_url}
                         </td>
-                        <td className="py-3 px-5 text-gray-300">{row.company_name || '-'}</td>
-                        <td className="py-3 px-5 text-gray-400 font-mono text-sm">
+                        <td className="py-3 px-5 text-white">{row.company_name || '-'}</td>
+                        <td className="py-3 px-5 text-white font-mono text-sm">
                           {row.contact_email || '-'}
                         </td>
-                        <td className="py-3 px-5 text-gray-400 font-mono text-sm">
+                        <td className="py-3 px-5 text-white font-mono text-sm">
                           {row.phone || '-'}
                         </td>
                       </tr>
@@ -269,7 +269,7 @@ https://another.com,Another Co,hi@another.com,+0987654321`}
                 </table>
               </div>
               {uploadedData.rows.length > 10 && (
-                <div className="px-5 py-3 border-t border-gray-800 bg-gray-900/50 text-xs text-gray-500 font-mono">
+                <div className="px-5 py-3 border-t border-gray-800 bg-gray-900/50 text-xs text-white font-mono">
                   +{uploadedData.rows.length - 10} more rows
                 </div>
               )}

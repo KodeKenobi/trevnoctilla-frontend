@@ -79,20 +79,20 @@ export default function CreateCampaignPage() {
 
   if (!uploadedData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <Loader className="w-5 h-5 animate-spin text-gray-500" />
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <Loader className="w-5 h-5 animate-spin text-white" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-24 pb-12 px-8">
+    <div className="min-h-screen bg-black pt-24 pb-12 px-8">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-8 pb-6 border-b border-gray-800">
           <button
             onClick={() => router.push("/campaigns/upload")}
-            className="group flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-5 transition-colors"
+            className="group flex items-center gap-2 text-white hover:text-purple-400 text-sm mb-5 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             Back
@@ -103,7 +103,7 @@ export default function CreateCampaignPage() {
             </div>
             <h1 className="text-xl font-medium text-white tracking-tight">Create Campaign</h1>
           </div>
-          <p className="text-sm text-gray-400 font-mono ml-13">
+          <p className="text-sm text-white font-mono ml-13">
             {uploadedData.validRows} companies ready to contact
           </p>
         </div>
@@ -118,7 +118,7 @@ export default function CreateCampaignPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Campaign Name */}
           <div>
-            <label htmlFor="campaignName" className="block text-sm text-gray-300 font-medium mb-3">
+            <label htmlFor="campaignName" className="block text-sm text-white font-medium mb-3">
               Campaign Name
             </label>
             <input
@@ -126,7 +126,7 @@ export default function CreateCampaignPage() {
               type="text"
               value={campaignName}
               onChange={(e) => setCampaignName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-800 text-base text-gray-200 
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-800 text-base text-white 
                        focus:border-white focus:outline-none transition-colors rounded-lg
                        hover:border-gray-700 placeholder:text-gray-600"
               placeholder="Q1 2026 Outreach Campaign"
@@ -136,7 +136,7 @@ export default function CreateCampaignPage() {
 
           {/* Message Template */}
           <div>
-            <label htmlFor="messageTemplate" className="block text-sm text-gray-300 font-medium mb-3">
+            <label htmlFor="messageTemplate" className="block text-sm text-white font-medium mb-3">
               Message Template
             </label>
             <textarea
@@ -144,7 +144,7 @@ export default function CreateCampaignPage() {
               value={messageTemplate}
               onChange={(e) => setMessageTemplate(e.target.value)}
               rows={14}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-800 text-base text-gray-200 leading-relaxed
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-800 text-base text-white leading-relaxed
                        focus:border-white focus:outline-none transition-colors resize-none rounded-lg
                        hover:border-gray-700 font-mono placeholder:text-gray-600"
               placeholder={`Hello,
@@ -156,7 +156,7 @@ Looking forward to connecting!
 Best regards`}
               required
             />
-            <p className="text-xs text-gray-500 mt-3 font-mono">
+            <p className="text-xs text-white mt-3 font-mono">
               This message will be sent via each company's contact form
             </p>
           </div>
@@ -166,7 +166,7 @@ Best regards`}
             <button
               type="button"
               onClick={() => router.push("/campaigns/upload")}
-              className="px-5 py-2.5 text-sm text-gray-400 hover:text-white transition-colors"
+              className="px-5 py-2.5 text-sm text-white hover:text-purple-400 transition-colors"
             >
               Cancel
             </button>

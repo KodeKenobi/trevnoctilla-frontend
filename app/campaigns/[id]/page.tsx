@@ -142,7 +142,7 @@ export default function CampaignDetailPage() {
       case "captcha":
         return "text-amber-400";
       default:
-        return "text-gray-600";
+        return "text-white";
     }
   };
 
@@ -164,28 +164,28 @@ export default function CampaignDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950 pt-24">
-        <Loader className="w-4 h-4 animate-spin text-gray-600" />
+      <div className="min-h-screen flex items-center justify-center bg-black pt-24">
+        <Loader className="w-4 h-4 animate-spin text-white" />
       </div>
     );
   }
 
   if (!campaign) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950 pt-24">
-        <p className="text-gray-600 text-sm">Campaign not found</p>
+      <div className="min-h-screen flex items-center justify-center bg-black pt-24">
+        <p className="text-white text-sm">Campaign not found</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 pt-24 pb-12 px-8">
+    <div className="min-h-screen bg-black pt-24 pb-12 px-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="mb-8 pb-6 border-b border-gray-900">
           <button
             onClick={() => router.push("/campaigns")}
-            className="group flex items-center gap-2 text-gray-600 hover:text-white text-xs mb-4 transition-colors"
+            className="group flex items-center gap-2 text-white hover:text-white text-xs mb-4 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
             Back to campaigns
@@ -212,7 +212,7 @@ export default function CampaignDetailPage() {
               <button
                 onClick={() => fetchCampaignDetails()}
                 disabled={refreshing}
-                className="p-2 hover:bg-gray-900 text-gray-600 hover:text-white transition-all duration-200 disabled:opacity-50"
+                className="p-2 hover:bg-gray-900 text-white hover:text-white transition-all duration-200 disabled:opacity-50"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
@@ -243,12 +243,12 @@ export default function CampaignDetailPage() {
             {
               label: "Total",
               value: campaign.total_companies,
-              color: "text-gray-400",
+              color: "text-white",
             },
             {
               label: "Processed",
               value: campaign.processed_count,
-              color: "text-gray-400",
+              color: "text-white",
             },
             {
               label: "Success",
@@ -270,7 +270,7 @@ export default function CampaignDetailPage() {
               key={idx}
               className="border border-gray-900 p-4 hover:border-gray-800 transition-colors"
             >
-              <div className="text-[10px] text-gray-700 mb-2 uppercase tracking-wider">
+              <div className="text-[10px] text-white mb-2 uppercase tracking-wider">
                 {stat.label}
               </div>
               <div className={`text-2xl font-mono ${stat.color}`}>
@@ -283,13 +283,13 @@ export default function CampaignDetailPage() {
         {/* Companies */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xs text-gray-500 font-medium">
+            <h2 className="text-xs text-white font-medium">
               Companies ({filteredCompanies.length})
             </h2>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-1.5 bg-black border border-gray-900 text-xs text-gray-400 
+              className="px-3 py-1.5 bg-black border border-gray-900 text-xs text-white 
                        hover:border-gray-800 focus:border-white focus:outline-none transition-colors"
             >
               <option value="all">All Status</option>
@@ -312,7 +312,7 @@ export default function CampaignDetailPage() {
                   px-4 py-3 transition-all duration-150
                   ${
                     hoveredRow === company.id
-                      ? "bg-gray-950/50 border-gray-800"
+                      ? "bg-black/50 border-gray-800"
                       : "border-transparent"
                   }
                   ${idx === 0 ? "" : "border-t border-gray-900"}
@@ -322,10 +322,10 @@ export default function CampaignDetailPage() {
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-1.5 h-1.5 rounded-full bg-gray-800 flex-shrink-0 group-hover:bg-white transition-colors" />
                   <div className="min-w-0">
-                    <div className="text-sm text-gray-200 truncate group-hover:text-white transition-colors">
+                    <div className="text-sm text-white truncate group-hover:text-white transition-colors">
                       {company.company_name}
                     </div>
-                    <div className="text-[11px] text-gray-600 font-mono truncate mt-0.5">
+                    <div className="text-[11px] text-white font-mono truncate mt-0.5">
                       {company.website_url}
                     </div>
                   </div>
@@ -342,7 +342,7 @@ export default function CampaignDetailPage() {
                 </div>
 
                 {/* Details */}
-                <div className="text-xs text-gray-500 truncate">
+                <div className="text-xs text-white truncate">
                   {company.error_message ? (
                     <span className="text-rose-400">
                       {company.error_message}
@@ -352,7 +352,7 @@ export default function CampaignDetailPage() {
                       ✓ Contact form found
                     </span>
                   ) : (
-                    <span className="text-gray-700">—</span>
+                    <span className="text-white">—</span>
                   )}
                 </div>
 
@@ -376,7 +376,7 @@ export default function CampaignDetailPage() {
                     </button>
                   ) : (
                     <div className="w-12 h-12 border border-gray-900 flex items-center justify-center">
-                      <span className="text-gray-800 text-xs">—</span>
+                      <span className="text-white text-xs">—</span>
                     </div>
                   )}
                 </div>
@@ -389,7 +389,7 @@ export default function CampaignDetailPage() {
                         `/campaigns/${campaignId}/monitor?company=${company.id}`
                       )
                     }
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 hover:text-white hover:bg-gray-900 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white hover:text-white hover:bg-gray-900 transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     Monitor
