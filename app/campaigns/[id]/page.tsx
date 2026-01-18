@@ -62,6 +62,9 @@ export default function CampaignDetailPage() {
     null
   );
   const [autoStarted, setAutoStarted] = useState(false);
+  const [rapidProgress, setRapidProgress] = useState(0);
+  const [rapidStatus, setRapidStatus] = useState<string>("");
+  const [rapidCurrentCompany, setRapidCurrentCompany] = useState<string>("");
 
   const campaignId = params?.id as string;
 
@@ -135,6 +138,12 @@ export default function CampaignDetailPage() {
   const handleRapidProcess = async (companyId: number) => {
     try {
       setProcessingCompanyId(companyId);
+      
+      // Find company name for display
+      const company = companies.find((c) => c.id === companyId);
+      setRapidCurrentCompany(company?.company_name || `Company ${companyId}`);
+      setRapidProgress(0);
+      setRapidStatus("Starting...");
 
       // Update company status to processing
       const response = await fetch(`/api/campaigns/companies/${companyId}`, {
@@ -149,37 +158,78 @@ export default function CampaignDetailPage() {
 
       // Start processing in background via WebSocket (but don't navigate to monitor page)
       // The backend will handle it and update the status
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'wss:';
-      const backendUrl = 'web-production-737b.up.railway.app';
+      const wsProtocol =
+        window.location.protocol === "https:" ? "wss:" : "wss:";
+      const backendUrl = "web-production-737b.up.railway.app";
       const wsUrl = `${wsProtocol}//${backendUrl}/ws/campaign/${campaignId}/monitor/${companyId}`;
-      
-      console.log('[Rapid] Connecting to WebSocket:', wsUrl);
+
+      console.log("[Rapid] Connecting to WebSocket:", wsUrl);
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         console.log(`[Rapid] Started processing company ${companyId}`);
+        setRapidStatus("Connected");
+        setRapidProgress(10);
       };
 
       ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
-        if (message.type === "completed" || message.type === "error") {
+        
+        // Update progress based on message type
+        if (message.type === "log") {
+          const log = message.data;
+          setRapidStatus(log.message || log.action);
+          
+          // Map actions to progress percentages
+          if (log.action?.includes("Navigation")) setRapidProgress(20);
+          else if (log.action?.includes("Contact")) setRapidProgress(40);
+          else if (log.action?.includes("Form")) setRapidProgress(60);
+          else if (log.action?.includes("Submit")) setRapidProgress(80);
+          else if (log.action?.includes("Screenshot")) setRapidProgress(90);
+        } else if (message.type === "completed") {
+          setRapidProgress(100);
+          setRapidStatus("Completed!");
           ws.close();
           setProcessingCompanyId(null);
           fetchCampaignDetails(); // Refresh to show updated status
 
+          // Reset progress display after a delay
+          setTimeout(() => {
+            setRapidProgress(0);
+            setRapidStatus("");
+            setRapidCurrentCompany("");
+          }, 2000);
+
           // Auto-process next pending company
           processNextPending();
+        } else if (message.type === "error") {
+          setRapidProgress(0);
+          setRapidStatus("Failed");
+          ws.close();
+          setProcessingCompanyId(null);
+          fetchCampaignDetails();
+          
+          setTimeout(() => {
+            setRapidStatus("");
+            setRapidCurrentCompany("");
+          }, 3000);
         }
       };
 
       ws.onerror = () => {
         setProcessingCompanyId(null);
+        setRapidProgress(0);
+        setRapidStatus("Connection error");
+        setRapidCurrentCompany("");
         alert("Failed to process company");
       };
     } catch (error: any) {
       console.error("Failed to start rapid processing:", error);
       alert(`Failed to start processing: ${error.message}`);
       setProcessingCompanyId(null);
+      setRapidProgress(0);
+      setRapidStatus("");
+      setRapidCurrentCompany("");
     }
   };
 
@@ -331,6 +381,39 @@ export default function CampaignDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Rapid Progress Bar */}
+        {processingCompanyId && (
+          <div className="mb-6 border border-white/20 rounded-lg p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Zap className="w-5 h-5 text-yellow-400 animate-pulse" />
+                  <div className="absolute inset-0 bg-yellow-400/20 blur-xl rounded-full" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">
+                    Processing: {rapidCurrentCompany}
+                  </div>
+                  <div className="text-xs text-white/60 mt-0.5">
+                    {rapidStatus}
+                  </div>
+                </div>
+              </div>
+              <div className="text-sm font-mono text-white">{rapidProgress}%</div>
+            </div>
+            <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out"
+                style={{ width: `${rapidProgress}%` }}
+              />
+            </div>
+            <div className="mt-2 text-[10px] text-white/40 font-mono">
+              {companies.filter((c) => c.status === "completed").length} /{" "}
+              {companies.length} companies processed
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-5 gap-4 mb-8">
