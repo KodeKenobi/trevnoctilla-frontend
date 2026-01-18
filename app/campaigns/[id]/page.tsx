@@ -438,7 +438,7 @@ export default function CampaignDetailPage() {
                       <td className="py-3 px-4 text-center hidden lg:table-cell">
                         {company.screenshot_url ? (
                           <button
-                            onClick={() => setSelectedScreenshot(company.screenshot_url)}
+                            onClick={() => setSelectedScreenshot(company.screenshot_url || null)}
                             className="inline-block relative group"
                             title="View screenshot"
                           >
