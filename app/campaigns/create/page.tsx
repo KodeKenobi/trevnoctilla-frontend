@@ -30,7 +30,6 @@ export default function CreateCampaignPage() {
   const [senderAddress, setSenderAddress] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
-  const [newsletter, setNewsletter] = useState<"yes" | "no" | "skip">("skip");
 
   useEffect(() => {
     const data = localStorage.getItem("uploadedCampaignData");
@@ -66,7 +65,6 @@ export default function CreateCampaignPage() {
         sender_address: senderAddress || "",
         subject: subject || "Inquiry",
         message: message,
-        newsletter: newsletter,
       };
 
       const response = await fetch("/api/campaigns", {
@@ -256,46 +254,12 @@ export default function CreateCampaignPage() {
                 />
                 <p className="text-[10px] text-white/40 mt-1">Used for: Subject, Topic, Inquiry Type fields</p>
               </div>
-
-              {/* Newsletter */}
-              <div className="md:col-span-2">
-                <label className="block text-xs text-white mb-2">
-                  Newsletter / Mailing List Subscription
-                </label>
-                <div className="flex gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      value="yes"
-                      checked={newsletter === "yes"}
-                      onChange={(e) => setNewsletter(e.target.value as "yes" | "no" | "skip")}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-sm text-white">Yes, subscribe</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      value="no"
-                      checked={newsletter === "no"}
-                      onChange={(e) => setNewsletter(e.target.value as "yes" | "no" | "skip")}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-sm text-white">No, don't subscribe</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      value="skip"
-                      checked={newsletter === "skip"}
-                      onChange={(e) => setNewsletter(e.target.value as "yes" | "no" | "skip")}
-                      className="w-4 h-4"
-                    />
-                    <span className="text-sm text-white">Skip (leave unchecked)</span>
-                  </label>
-                </div>
-                <p className="text-[10px] text-white/40 mt-1">Used for: Newsletter, Mailing List, Consent checkboxes/radio buttons</p>
-              </div>
+            </div>
+            
+            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <p className="text-xs text-blue-300">
+                💡 <strong>Smart Form Handling:</strong> The bot will automatically detect and handle checkboxes, radio buttons, dropdowns, and other fields on forms. It intelligently selects appropriate options based on context.
+              </p>
             </div>
           </div>
 
