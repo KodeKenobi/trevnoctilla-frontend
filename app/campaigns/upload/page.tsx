@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import {
   Upload,
-  FileText,
   AlertCircle,
   CheckCircle,
   ArrowRight,
   Loader,
-  X,
+  ArrowLeft,
 } from "lucide-react";
 
 interface UploadedData {
@@ -25,30 +23,9 @@ interface UploadedData {
 
 export default function CampaignUploadPage() {
   const router = useRouter();
-  const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFileUpload(file);
-    }
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,10 +35,15 @@ export default function CampaignUploadPage() {
   };
 
   const handleFileUpload = async (file: File) => {
-    setUploading(true);
-    setError(null);
+    if (!file.name.endsWith(".csv")) {
+      setError("Please upload a CSV file");
+      return;
+    }
 
     try {
+      setUploading(true);
+      setError(null);
+
       const formData = new FormData();
       formData.append("file", file);
 
@@ -70,14 +52,24 @@ export default function CampaignUploadPage() {
         body: formData,
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || "Failed to upload file");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Upload failed");
       }
 
-      setUploadedData(data.data);
+      const data = await response.json();
+
+      setUploadedData({
+        filename: file.name,
+        size: file.size,
+        rows: data.companies || [],
+        totalRows: data.totalRows || 0,
+        validRows: data.validRows || 0,
+        invalidRows: data.invalidRows || 0,
+        uploadedAt: new Date().toISOString(),
+      });
     } catch (err: any) {
+      console.error("Upload failed:", err);
       setError(err.message || "Failed to upload file");
     } finally {
       setUploading(false);
@@ -86,241 +78,155 @@ export default function CampaignUploadPage() {
 
   const handleContinue = () => {
     if (uploadedData) {
-      // Store data in session storage for next step
-      sessionStorage.setItem("campaign_upload_data", JSON.stringify(uploadedData));
+      localStorage.setItem("uploadedCampaignData", JSON.stringify(uploadedData));
       router.push("/campaigns/create");
     }
   };
 
-  const handleReset = () => {
-    setUploadedData(null);
-    setError(null);
-  };
-
   return (
-    <div className="min-h-screen bg-[#0A0A0A] pt-28 pb-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#0A0A0A] pt-20 pb-8 px-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6 sm:mb-12"
-        >
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 sm:mb-4">
-            Upload Contact List
-          </h1>
-          <p className="text-base sm:text-lg text-gray-400">
-            Upload a CSV file with company websites to get started
-          </p>
-        </motion.div>
-
-        {/* Upload Area */}
-        {!uploadedData && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-[#0F0F0F] border border-gray-800 rounded-2xl shadow-xl p-6 sm:p-8"
+        <div className="mb-6 border-b border-gray-800 pb-3">
+          <button
+            onClick={() => router.push("/campaigns")}
+            className="flex items-center gap-1.5 text-gray-400 hover:text-white text-xs mb-3 transition-colors"
           >
-            <div
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              className={`border-3 border-dashed rounded-xl p-8 sm:p-12 text-center transition-all ${
-                isDragging
-                  ? "border-purple-500 bg-purple-950/30"
-                  : "border-gray-700 hover:border-purple-400"
-              }`}
-            >
-              <Upload
-                className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-6 ${
-                  isDragging ? "text-purple-400" : "text-gray-500"
-                }`}
-              />
-              <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
-                Drop your CSV file here
-              </h3>
-              <p className="text-sm sm:text-base text-gray-400 mb-4 sm:mb-6">
-                or click to browse
-              </p>
+            <ArrowLeft className="w-3 h-3" />
+            Back
+          </button>
+          <h1 className="text-base font-medium text-gray-200">Upload Companies</h1>
+          <p className="text-xs text-gray-500 mt-0.5">CSV file with company websites</p>
+        </div>
 
-              <label className="inline-block">
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  disabled={uploading}
-                />
-                <span className="px-5 py-2.5 sm:px-6 sm:py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors cursor-pointer inline-flex items-center">
-                  {uploading ? (
-                    <>
-                      <Loader className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                      Select File
-                    </>
-                  )}
-                </span>
-              </label>
-            </div>
-
-            {/* What Happens Next */}
-            <div className="mt-6 sm:mt-8 bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 sm:p-6">
-              <h4 className="font-semibold text-white mb-4 text-lg">
-                What Happens Next:
-              </h4>
-              <div className="space-y-3 text-sm text-gray-200">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-purple-400 font-bold text-xs">1</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">CSV Upload & Validation</p>
-                    <p className="text-gray-400 text-xs mt-1">We'll verify your contact list and detect all fields automatically</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-purple-400 font-bold text-xs">2</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">Create Campaign Message</p>
-                    <p className="text-gray-400 text-xs mt-1">Write your personalized message using dynamic fields</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-purple-400 font-bold text-xs">3</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">Live Monitoring & Automation</p>
-                    <p className="text-gray-400 text-xs mt-1">Watch our bot visit websites and fill contact forms in real-time</p>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-purple-500/20">
-                <p className="text-xs text-gray-400">
-                  💡 <strong className="text-white">Tip:</strong> Only need a website URL column. We auto-fill all form fields intelligently.
-                </p>
-              </div>
-            </div>
-
-            {/* Error Display */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4 sm:mt-6 bg-red-950/30 border border-red-800 rounded-lg p-4"
-              >
-                <div className="flex items-start">
-                  <AlertCircle className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-red-300 mb-1">
-                      Upload Error
-                    </h4>
-                    <p className="text-sm text-red-400">{error}</p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </motion.div>
+        {error && (
+          <div className="mb-4 p-3 bg-red-950/30 border border-red-900 text-red-400 text-xs flex items-center gap-2">
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
         )}
 
-        {/* Upload Success */}
-        {uploadedData && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#0F0F0F] border border-gray-800 rounded-2xl shadow-xl p-6 sm:p-8"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
-                <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mr-3" />
-                <div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-white">
-                    File Uploaded Successfully
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    {uploadedData.filename}
-                  </p>
-                </div>
+        {!uploadedData ? (
+          <div className="border border-gray-800 bg-[#111111] p-6">
+            <label htmlFor="file-upload" className="cursor-pointer block">
+              <div className="border-2 border-dashed border-gray-700 hover:border-gray-600 py-12 text-center transition-colors">
+                <Upload className="w-8 h-8 mx-auto text-gray-600 mb-3" />
+                <p className="text-sm text-gray-400 mb-1">
+                  {uploading ? "Uploading..." : "Click to select CSV file"}
+                </p>
+                <p className="text-xs text-gray-600">Must include 'website_url' column</p>
               </div>
-              <button
-                onClick={handleReset}
-                className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
+              <input
+                id="file-upload"
+                type="file"
+                accept=".csv"
+                onChange={handleFileSelect}
+                className="hidden"
+                disabled={uploading}
+              />
+            </label>
+
+            {uploading && (
+              <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500">
+                <Loader className="w-3.5 h-3.5 animate-spin" />
+                <span>Processing CSV...</span>
+              </div>
+            )}
+
+            <div className="mt-6 pt-6 border-t border-gray-800">
+              <p className="text-xs text-gray-500 mb-2 font-medium">CSV Format:</p>
+              <pre className="text-[10px] font-mono text-gray-600 bg-[#0A0A0A] p-3 border border-gray-800 overflow-x-auto">
+{`website_url,company_name,contact_email,phone
+https://example.com,Example Inc,hello@example.com,+1234567890`}
+              </pre>
+              <p className="text-[10px] text-gray-600 mt-2">
+                * Only website_url is required • Max 1000 rows per upload
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Success Header */}
+            <div className="border border-green-900/50 bg-green-950/20 p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <span className="text-sm text-green-400 font-medium">Upload Complete</span>
+                </div>
+                <button
+                  onClick={handleContinue}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black text-xs font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Continue
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-              <div className="bg-[#1A1A1A] border border-gray-800 rounded-lg p-4">
-                <div className="text-2xl font-bold text-white">
-                  {uploadedData.totalRows}
-                </div>
-                <div className="text-sm text-gray-400">Total Rows</div>
+            <div className="grid grid-cols-4 gap-3">
+              <div className="border border-gray-800 bg-[#111111] p-3">
+                <div className="text-xs text-gray-500 mb-1">Total Rows</div>
+                <div className="text-lg font-mono text-gray-200">{uploadedData.totalRows}</div>
               </div>
-              <div className="bg-green-950/30 border border-green-800 rounded-lg p-4">
-                <div className="text-2xl font-bold text-green-400">
-                  {uploadedData.validRows}
-                </div>
-                <div className="text-sm text-gray-400">Valid</div>
+              <div className="border border-gray-800 bg-[#111111] p-3">
+                <div className="text-xs text-gray-500 mb-1">Valid</div>
+                <div className="text-lg font-mono text-green-400">{uploadedData.validRows}</div>
               </div>
-              {uploadedData.invalidRows > 0 && (
-                <div className="bg-red-950/30 border border-red-800 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-red-400">
-                    {uploadedData.invalidRows}
-                  </div>
-                  <div className="text-sm text-gray-400">Invalid</div>
+              <div className="border border-gray-800 bg-[#111111] p-3">
+                <div className="text-xs text-gray-500 mb-1">Invalid</div>
+                <div className="text-lg font-mono text-red-400">{uploadedData.invalidRows}</div>
+              </div>
+              <div className="border border-gray-800 bg-[#111111] p-3">
+                <div className="text-xs text-gray-500 mb-1">File Size</div>
+                <div className="text-lg font-mono text-gray-200">
+                  {(uploadedData.size / 1024).toFixed(1)}KB
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Preview */}
-            <div className="mb-6">
-              <h4 className="font-semibold text-white mb-3">
-                Data Preview (first 5 rows):
-              </h4>
+            {/* Preview Table */}
+            <div className="border border-gray-800 bg-[#111111]">
+              <div className="px-3 py-2 border-b border-gray-800 bg-[#0A0A0A]">
+                <h3 className="text-xs font-medium text-gray-400">Preview (first 10 rows)</h3>
+              </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-[#1A1A1A] border-b border-gray-800">
-                      <th className="px-4 py-2 text-left font-medium text-gray-300">
-                        Company Name
-                      </th>
-                      <th className="px-4 py-2 text-left font-medium text-gray-300">
-                        Website
-                      </th>
+                <table className="w-full text-xs">
+                  <thead className="border-b border-gray-800 bg-[#0A0A0A]">
+                    <tr>
+                      <th className="text-left py-2 px-3 font-medium text-gray-500">#</th>
+                      <th className="text-left py-2 px-3 font-medium text-gray-500">Website URL</th>
+                      <th className="text-left py-2 px-3 font-medium text-gray-500">Company Name</th>
+                      <th className="text-left py-2 px-3 font-medium text-gray-500">Email</th>
+                      <th className="text-left py-2 px-3 font-medium text-gray-500">Phone</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {uploadedData.rows.slice(0, 5).map((row, idx) => (
-                      <tr key={idx} className="border-b border-gray-800 hover:bg-[#1A1A1A]">
-                        <td className="px-4 py-2 text-gray-300">{row.company_name || 'Auto-detect'}</td>
-                        <td className="px-4 py-2 text-purple-400">
+                  <tbody className="divide-y divide-gray-800">
+                    {uploadedData.rows.slice(0, 10).map((row, idx) => (
+                      <tr key={idx} className="hover:bg-[#151515]">
+                        <td className="py-2 px-3 text-gray-600 font-mono">{idx + 1}</td>
+                        <td className="py-2 px-3 text-blue-400 font-mono text-[11px]">
                           {row.website_url}
+                        </td>
+                        <td className="py-2 px-3 text-gray-300">{row.company_name || '-'}</td>
+                        <td className="py-2 px-3 text-gray-400 font-mono text-[11px]">
+                          {row.contact_email || '-'}
+                        </td>
+                        <td className="py-2 px-3 text-gray-400 font-mono text-[11px]">
+                          {row.phone || '-'}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+              {uploadedData.rows.length > 10 && (
+                <div className="px-3 py-2 border-t border-gray-800 bg-[#0A0A0A] text-[10px] text-gray-600">
+                  + {uploadedData.rows.length - 10} more rows
+                </div>
+              )}
             </div>
-
-            {/* Continue Button */}
-            <button
-              onClick={handleContinue}
-              className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center"
-            >
-              Continue to Create Campaign
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </button>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>
