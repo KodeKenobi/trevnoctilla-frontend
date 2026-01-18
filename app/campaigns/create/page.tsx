@@ -22,7 +22,7 @@ export default function CreateCampaignPage() {
   const [error, setError] = useState<string | null>(null);
   const [campaignName, setCampaignName] = useState("");
   const [uploadedData, setUploadedData] = useState<any>(null);
-  
+
   // Form field values
   const [senderName, setSenderName] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
@@ -121,10 +121,9 @@ export default function CreateCampaignPage() {
             Back
           </button>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-purple-400" />
-            </div>
-            <h1 className="text-xl font-medium text-white tracking-tight">Create Campaign</h1>
+            <h1 className="text-xl font-medium text-white tracking-tight">
+              Create Campaign
+            </h1>
           </div>
           <p className="text-sm text-white font-mono ml-13">
             {uploadedData.validRows} companies ready to contact
@@ -141,7 +140,10 @@ export default function CreateCampaignPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Campaign Name */}
           <div>
-            <label htmlFor="campaignName" className="block text-sm text-white font-medium mb-3">
+            <label
+              htmlFor="campaignName"
+              className="block text-sm text-white font-medium mb-3"
+            >
               Campaign Name
             </label>
             <input
@@ -149,9 +151,9 @@ export default function CreateCampaignPage() {
               type="text"
               value={campaignName}
               onChange={(e) => setCampaignName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-800 text-base text-white 
+              className="w-full px-4 py-3 bg-black border border-white/20 text-base text-white 
                        focus:border-white focus:outline-none transition-colors rounded-lg
-                       hover:border-gray-700 placeholder:text-gray-600"
+                       hover:border-white/30 placeholder:text-gray-600"
               placeholder="Q1 2026 Outreach Campaign"
               required
             />
@@ -163,7 +165,7 @@ export default function CreateCampaignPage() {
               <Sparkles className="w-4 h-4" />
               Form Data (Will be filled into contact forms)
             </h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Your Name */}
               <div>
@@ -175,12 +177,14 @@ export default function CreateCampaignPage() {
                   type="text"
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-white/10 text-sm text-white 
-                           focus:border-white/30 focus:outline-none transition-colors rounded
-                           hover:border-white/20 placeholder:text-gray-600"
+                  className="w-full px-3 py-2 bg-black border border-white/20 text-sm text-white 
+                           focus:border-white focus:outline-none transition-colors rounded
+                           hover:border-white/30 placeholder:text-gray-600"
                   placeholder="John Doe"
                 />
-                <p className="text-[10px] text-white/40 mt-1">Used for: Name, First Name, Last Name fields</p>
+                <p className="text-[10px] text-white/40 mt-1">
+                  Used for: Name, First Name, Last Name fields
+                </p>
               </div>
 
               {/* Your Email */}
@@ -193,12 +197,14 @@ export default function CreateCampaignPage() {
                   type="email"
                   value={senderEmail}
                   onChange={(e) => setSenderEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-white/10 text-sm text-white 
-                           focus:border-white/30 focus:outline-none transition-colors rounded
-                           hover:border-white/20 placeholder:text-gray-600"
+                  className="w-full px-3 py-2 bg-black border border-white/20 text-sm text-white 
+                           focus:border-white focus:outline-none transition-colors rounded
+                           hover:border-white/30 placeholder:text-gray-600"
                   placeholder="john@example.com"
                 />
-                <p className="text-[10px] text-white/40 mt-1">Used for: Email, Contact Email fields</p>
+                <p className="text-[10px] text-white/40 mt-1">
+                  Used for: Email, Contact Email fields
+                </p>
               </div>
 
               {/* Your Phone */}
@@ -211,12 +217,14 @@ export default function CreateCampaignPage() {
                   type="tel"
                   value={senderPhone}
                   onChange={(e) => setSenderPhone(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-white/10 text-sm text-white 
-                           focus:border-white/30 focus:outline-none transition-colors rounded
-                           hover:border-white/20 placeholder:text-gray-600"
+                  className="w-full px-3 py-2 bg-black border border-white/20 text-sm text-white 
+                           focus:border-white focus:outline-none transition-colors rounded
+                           hover:border-white/30 placeholder:text-gray-600"
                   placeholder="+1 555-123-4567"
                 />
-                <p className="text-[10px] text-white/40 mt-1">Used for: Phone, Mobile, Telephone fields</p>
+                <p className="text-[10px] text-white/40 mt-1">
+                  Used for: Phone, Mobile, Telephone fields
+                </p>
               </div>
 
               {/* Your Address */}
@@ -229,12 +237,14 @@ export default function CreateCampaignPage() {
                   type="text"
                   value={senderAddress}
                   onChange={(e) => setSenderAddress(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-white/10 text-sm text-white 
-                           focus:border-white/30 focus:outline-none transition-colors rounded
-                           hover:border-white/20 placeholder:text-gray-600"
+                  className="w-full px-3 py-2 bg-black border border-white/20 text-sm text-white 
+                           focus:border-white focus:outline-none transition-colors rounded
+                           hover:border-white/30 placeholder:text-gray-600"
                   placeholder="123 Main St, New York, NY 10001"
                 />
-                <p className="text-[10px] text-white/40 mt-1">Used for: Address, Location, City, State fields</p>
+                <p className="text-[10px] text-white/40 mt-1">
+                  Used for: Address, Location, City, State fields
+                </p>
               </div>
 
               {/* Subject */}
@@ -247,25 +257,33 @@ export default function CreateCampaignPage() {
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-white/10 text-sm text-white 
-                           focus:border-white/30 focus:outline-none transition-colors rounded
-                           hover:border-white/20 placeholder:text-gray-600"
-                  placeholder="Business Inquiry"
+                  className="w-full px-3 py-2 bg-black border border-white/20 text-sm text-white 
+                           focus:border-white focus:outline-none transition-colors rounded
+                           hover:border-white/30 placeholder:text-gray-600"
+                  placeholder="Partnership Opportunity"
                 />
-                <p className="text-[10px] text-white/40 mt-1">Used for: Subject, Topic, Inquiry Type fields</p>
+                <p className="text-[10px] text-white/40 mt-1">
+                  Used for: Subject, Topic, Inquiry Type fields
+                </p>
               </div>
             </div>
-            
+
             <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <p className="text-xs text-blue-300">
-                💡 <strong>Smart Form Handling:</strong> The bot will automatically detect and handle checkboxes, radio buttons, dropdowns, and other fields on forms. It intelligently selects appropriate options based on context.
+                <strong>Smart Form Handling:</strong> The bot will automatically
+                detect and handle checkboxes, radio buttons, dropdowns, and
+                other fields on forms. It intelligently selects appropriate
+                options based on context.
               </p>
             </div>
           </div>
 
           {/* Message */}
           <div>
-            <label htmlFor="message" className="block text-sm text-white font-medium mb-3 flex items-center gap-2">
+            <label
+              htmlFor="message"
+              className="block text-sm text-white font-medium mb-3 flex items-center gap-2"
+            >
               <MessageSquare className="w-4 h-4" />
               Message
             </label>
@@ -274,9 +292,9 @@ export default function CreateCampaignPage() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={10}
-              className="w-full px-4 py-3 bg-gray-900 border border-gray-800 text-base text-white leading-relaxed
+              className="w-full px-4 py-3 bg-black border border-white/20 text-base text-white leading-relaxed
                        focus:border-white focus:outline-none transition-colors resize-none rounded-lg
-                       hover:border-gray-700 placeholder:text-gray-600"
+                       hover:border-white/30 placeholder:text-gray-600"
               placeholder={`Hello,
 
 I hope this message finds you well. I came across your website and was impressed by your work.
@@ -289,7 +307,8 @@ Best regards`}
               required
             />
             <p className="text-xs text-white mt-2 font-mono">
-              💬 This message will be filled into Message, Comments, or Inquiry fields on contact forms
+              💬 This message will be filled into Message, Comments, or Inquiry
+              fields on contact forms
             </p>
           </div>
 
