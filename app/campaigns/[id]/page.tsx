@@ -261,13 +261,10 @@ export default function CampaignDetailPage() {
     // 1. Campaign is in draft status (newly created)
     // 2. Has pending companies
     // 3. Hasn't been auto-started before (checked via localStorage)
-    // 4. Campaign is NOT completed or processing already
     if (
       campaign.status === "draft" &&
       !wasAutoStarted &&
-      !autoStarted &&
-      campaign.status !== "completed" &&
-      campaign.status !== "processing"
+      !autoStarted
     ) {
       const pendingCompany = companies.find((c) => c.status === "pending");
       if (pendingCompany) {
