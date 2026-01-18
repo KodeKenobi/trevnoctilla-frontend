@@ -202,7 +202,7 @@ export default function CampaignMonitorPage() {
               src={isMonitoring ? selectedCompany.website_url : 'about:blank'}
               className="w-full h-full border-0 bg-white"
               title="Company Website View"
-              sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
               onLoad={() => {
                 if (isMonitoring) {
                   addLog('success', 'Loaded', `Successfully loaded ${selectedCompany.website_url}`);
