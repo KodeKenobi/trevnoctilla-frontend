@@ -697,31 +697,19 @@ export default function AdminDashboard() {
                 Quick Actions
               </h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Link
-                  href="/admin/users"
-                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
-                >
+                <Link href="/admin/users" className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group">
                   <Users className="h-6 w-6 text-purple-400 group-hover:text-purple-300" />
                   <span className="text-white font-medium">Manage Users</span>
                 </Link>
-                <Link
-                  href="/admin/api-keys"
-                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
-                >
+                <Link href="/admin/api-keys" className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group">
                   <Key className="h-6 w-6 text-blue-400 group-hover:text-blue-300" />
                   <span className="text-white font-medium">API Keys</span>
                 </Link>
-                <Link
-                  href="/admin/analytics"
-                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
-                >
+                <Link href="/admin/analytics" className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group">
                   <BarChart3 className="h-6 w-6 text-green-400 group-hover:text-green-300" />
                   <span className="text-white font-medium">Analytics</span>
                 </Link>
-                <Link
-                  href="/admin/settings"
-                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
-                >
+                <Link href="/admin/settings" className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group">
                   <Settings className="h-6 w-6 text-yellow-400 group-hover:text-yellow-300" />
                   <span className="text-white font-medium">Settings</span>
                 </Link>
