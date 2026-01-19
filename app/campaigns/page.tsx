@@ -110,23 +110,23 @@ export default function CampaignsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black pt-24">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-24">
         <div className="flex flex-col items-center gap-3">
-          <Loader className="w-5 h-5 animate-spin text-purple-500" />
-          <span className="text-sm text-white font-medium">Loading campaigns...</span>
+          <Loader className="w-6 h-6 animate-spin text-blue-400" />
+          <span className="text-sm text-gray-300 font-medium">Loading campaigns...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black pt-24 pb-12 px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-24 pb-12 px-8">
       <div className="max-w-[1400px] mx-auto">
         {/* Header */}
-        <div className="flex items-end justify-between mb-8 pb-6 border-b-2 border-gray-800">
+        <div className="flex items-end justify-between mb-8 pb-6 border-b border-gray-700">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Campaigns</h1>
-            <p className="text-base text-white">{campaigns.length} active campaign{campaigns.length !== 1 ? 's' : ''}</p>
+            <p className="text-base text-gray-300">{campaigns.length} active campaign{campaigns.length !== 1 ? 's' : ''}</p>
           </div>
           <button
             onClick={() => router.push("/campaigns/upload")}
@@ -138,29 +138,92 @@ export default function CampaignsPage() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/30 text-white text-sm flex items-start gap-3 rounded-xl">
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <span>{error}</span>
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-200 text-sm flex items-start gap-3 rounded-xl">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-red-400" />
+            <div>
+              <p className="font-semibold mb-1">Error loading campaigns</p>
+              <p className="text-xs text-red-300">{error}</p>
+            </div>
           </div>
         )}
 
         {campaigns.length === 0 ? (
-          <div className="py-32 text-center">
-            <div className="inline-flex flex-col items-center gap-5">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center shadow-md">
-                <Plus className="w-10 h-10 text-purple-400" />
+          <div className="max-w-4xl mx-auto py-12">
+            {/* Hero Section */}
+            <div className="text-center mb-12">
+              <div className="inline-flex w-24 h-24 rounded-3xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center shadow-xl mb-6">
+                <Plus className="w-12 h-12 text-purple-400" />
               </div>
-              <div>
-                <p className="text-xl font-semibold text-white mb-2">No campaigns yet</p>
-                <p className="text-base text-white">Create your first automated outreach campaign</p>
+              <h2 className="text-3xl font-bold text-white mb-3">Automate Your Outreach</h2>
+              <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+                Send personalized messages to hundreds of companies automatically by filling out their contact forms
+              </p>
+            </div>
+
+            {/* What It Does */}
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-8 mb-6">
+              <h3 className="text-xl font-semibold text-white mb-4">How It Works</h3>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold">1</div>
+                  <div>
+                    <h4 className="text-white font-medium mb-1">Upload Your Company List</h4>
+                    <p className="text-gray-400 text-sm">Upload a CSV file with company names and websites you want to contact</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold">2</div>
+                  <div>
+                    <h4 className="text-white font-medium mb-1">Create Your Message Template</h4>
+                    <p className="text-gray-400 text-sm">Write your contact info (name, email, phone) and custom message once</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 font-bold">3</div>
+                  <div>
+                    <h4 className="text-white font-medium mb-1">Let the Bot Do the Work</h4>
+                    <p className="text-gray-400 text-sm">Our AI bot visits each company's website, finds their contact form, fills it with your info, and submits it</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400 font-bold">4</div>
+                  <div>
+                    <h4 className="text-white font-medium mb-1">Track Results</h4>
+                    <p className="text-gray-400 text-sm">See which forms were submitted successfully, with screenshots as proof</p>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            {/* Key Features */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-5">
+                <div className="text-2xl mb-2">🤖</div>
+                <h4 className="text-white font-semibold mb-2 text-sm">Fully Automated</h4>
+                <p className="text-gray-400 text-xs">No manual form filling. Click once and let it run.</p>
+              </div>
+              <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-5">
+                <div className="text-2xl mb-2">📸</div>
+                <h4 className="text-white font-semibold mb-2 text-sm">Screenshot Proof</h4>
+                <p className="text-gray-400 text-xs">Every submission includes a screenshot for verification.</p>
+              </div>
+              <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-5">
+                <div className="text-2xl mb-2">⚡</div>
+                <h4 className="text-white font-semibold mb-2 text-sm">Process Hundreds</h4>
+                <p className="text-gray-400 text-xs">Contact 500+ companies in minutes, not days.</p>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="text-center">
               <button
                 onClick={() => router.push("/campaigns/upload")}
-                className="mt-3 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold hover:from-purple-700 hover:to-blue-700 transition-colors rounded-xl shadow-lg"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200 rounded-xl shadow-2xl hover:shadow-3xl transform hover:-translate-y-0.5"
               >
-                Get Started
-                <ArrowRight className="w-5 h-5" />
+                Create Your First Campaign
+                <ArrowRight className="w-6 h-6" />
               </button>
+              <p className="text-sm text-gray-400 mt-3">No credit card required • Takes less than 5 minutes</p>
             </div>
           </div>
         ) : (
