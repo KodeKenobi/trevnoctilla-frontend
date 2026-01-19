@@ -77,13 +77,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get authorization header if present (for authenticated users)
+    const authHeader = request.headers.get('Authorization');
+
     // Create campaign in backend
     const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
+    
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Add auth header if present (for user-associated campaigns)
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+    
     const response = await fetch(`${backendUrl}/api/campaigns`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         email: email || 'demo@example.com',
         name,
