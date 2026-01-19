@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   FileText,
 } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
 
 interface UploadedData {
   filename: string;
@@ -24,10 +25,23 @@ interface UploadedData {
 
 export default function CampaignUploadPage() {
   const router = useRouter();
+  const { user } = useUser();
   const [uploading, setUploading] = useState(false);
   const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [limitExceeded, setLimitExceeded] = useState(false);
+
+  // Get user's campaign company limit
+  const getCampaignLimit = () => {
+    if (!user) return 5; // Guest
+    if (user.subscription_tier === 'free' || user.subscription_tier === 'testing') return 50;
+    if (user.subscription_tier === 'premium') return 100; // Production
+    if (user.subscription_tier === 'enterprise' || user.subscription_tier === 'client') return Infinity;
+    return 5; // Default to guest limit
+  };
+
+  const campaignLimit = getCampaignLimit();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -85,7 +99,7 @@ export default function CampaignUploadPage() {
 
       console.log('[Upload] API Response:', data);
 
-      setUploadedData({
+      const uploadData = {
         filename: file.name,
         size: file.size,
         rows: data.data?.rows || data.companies || [],
@@ -93,16 +107,42 @@ export default function CampaignUploadPage() {
         validRows: data.data?.validRows || data.validRows || 0,
         invalidRows: data.data?.invalidRows || data.invalidRows || 0,
         uploadedAt: new Date().toISOString(),
-      });
+      };
+
+      setUploadedData(uploadData);
+      
+      // Check if limit is exceeded
+      const companyCount = uploadData.validRows;
+      if (companyCount > campaignLimit) {
+        setLimitExceeded(true);
+      }
+      
       console.log('[Upload] Set uploadedData:', {
-        rowsCount: data.data?.rows?.length || data.companies?.length || 0,
-        totalRows: data.data?.totalRows || data.totalRows || 0,
+        rowsCount: uploadData.rows.length,
+        totalRows: uploadData.totalRows,
+        companyCount,
+        campaignLimit,
+        limitExceeded: companyCount > campaignLimit,
       });
     } catch (err: any) {
       console.error("Upload failed:", err);
       setError(err.message || "Failed to upload file");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleTrimTo = (limit: number) => {
+    if (uploadedData) {
+      const trimmedData = {
+        ...uploadedData,
+        rows: uploadedData.rows.slice(0, limit),
+        validRows: Math.min(uploadedData.validRows, limit),
+        totalRows: limit,
+      };
+      setUploadedData(trimmedData);
+      setLimitExceeded(false);
+      console.log(`[Upload] Trimmed to ${limit} companies`);
     }
   };
 
@@ -210,13 +250,102 @@ https://another.com,Another Co,hi@another.com,+0987654321`}
                 </div>
                 <button
                   onClick={handleContinue}
-                  className="group flex items-center gap-2 px-5 py-2.5 bg-white text-black text-sm font-medium hover:bg-gray-100 transition-colors rounded-lg"
+                  disabled={limitExceeded}
+                  className={`group flex items-center gap-2 px-5 py-2.5 text-sm font-medium transition-colors rounded-lg ${
+                    limitExceeded 
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                      : 'bg-white text-black hover:bg-gray-100'
+                  }`}
                 >
                   Create Message Template
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
             </div>
+
+            {/* Limit Exceeded Warning */}
+            {limitExceeded && (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6">
+                <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                  <AlertCircle className="w-6 h-6 text-amber-400" />
+                  Your CSV has {uploadedData.validRows} companies
+                </h3>
+                
+                {!user ? (
+                  // Anonymous user
+                  <>
+                    <p className="text-gray-300 mb-4">
+                      Guest users can process <strong className="text-white">5 companies</strong>. 
+                      <strong className="text-amber-300"> Sign up free to get 50 companies!</strong>
+                    </p>
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => router.push('/auth/register')}
+                        className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
+                      >
+                        Sign Up Free - Get 50 Companies (10x more!)
+                      </button>
+                      <button
+                        onClick={() => handleTrimTo(5)}
+                        className="w-full px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                      >
+                        Continue as Guest - Use First 5 Companies Only
+                      </button>
+                    </div>
+                  </>
+                ) : (user.subscription_tier === 'free' || user.subscription_tier === 'testing') ? (
+                  // Free signed-up user
+                  <>
+                    <p className="text-gray-300 mb-4">
+                      Your Free plan allows <strong className="text-white">50 companies per campaign</strong>. 
+                      You uploaded {uploadedData.validRows}.
+                    </p>
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => router.push('/payment?plan=production')}
+                        className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Upgrade to Production ($9/mo) - Get 100 Companies
+                      </button>
+                      <button
+                        onClick={() => router.push('/payment?plan=enterprise')}
+                        className="w-full px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        Upgrade to Enterprise ($19/mo) - Unlimited
+                      </button>
+                      <button
+                        onClick={() => handleTrimTo(50)}
+                        className="w-full px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                      >
+                        Continue with Free - Use First 50 Companies Only
+                      </button>
+                    </div>
+                  </>
+                ) : user.subscription_tier === 'premium' ? (
+                  // Production user (100 limit)
+                  <>
+                    <p className="text-gray-300 mb-4">
+                      Your Production plan allows <strong className="text-white">100 companies per campaign</strong>. 
+                      You uploaded {uploadedData.validRows}.
+                    </p>
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => router.push('/payment?plan=enterprise')}
+                        className="w-full px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        Upgrade to Enterprise ($19/mo) - Process All {uploadedData.validRows} Companies
+                      </button>
+                      <button
+                        onClick={() => handleTrimTo(100)}
+                        className="w-full px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                      >
+                        Continue with Production - Use First 100 Companies Only
+                      </button>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            )}
 
             {/* Stats Grid */}
             <div className="grid grid-cols-4 gap-4">

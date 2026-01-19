@@ -54,10 +54,11 @@ const plans: Plan[] = [
   {
     id: "production",
     name: "Production",
-    price: 29,
+    price: 9,
     description: "For production applications",
     features: [
       "5,000 API calls/month",
+      "100 companies per campaign",
       "PDF operations (merge, split, extract)",
       "Video/audio conversion",
       "Image processing",
@@ -70,10 +71,11 @@ const plans: Plan[] = [
   {
     id: "enterprise",
     name: "Enterprise",
-    price: 49,
+    price: 19,
     description: "For large-scale applications",
     features: [
       "Unlimited API calls",
+      "Unlimited campaign companies",
       "All file processing capabilities",
       "Enterprise client dashboard",
       "Dedicated support",

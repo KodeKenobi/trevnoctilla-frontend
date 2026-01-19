@@ -28,13 +28,13 @@ function PaymentContent() {
   const planConfig = {
     production: {
       name: "Production Plan",
-      usdPrice: 29,
+      usdPrice: 9,
       description: "5,000 API calls per month",
       tier: "premium",
     },
     enterprise: {
       name: "Enterprise Plan",
-      usdPrice: 49,
+      usdPrice: 19,
       description: "Unlimited API calls",
       tier: "enterprise",
     },
