@@ -15,6 +15,7 @@ import { ActivityTable } from "@/components/dashboard/ActivityTable";
 import { ApiKeysSection } from "@/components/dashboard/ApiKeysSection";
 import { ApiReferenceContent } from "@/components/dashboard/ApiReferenceContent";
 import { ResetHistoryTable } from "@/components/dashboard/ResetHistoryTable";
+import { CampaignsListEmbedded } from "@/components/dashboard/CampaignsListEmbedded";
 
 function CommandPaletteContent({
   onCommand,
@@ -1648,6 +1649,64 @@ function DashboardContent() {
                 </div>
 
                 <ApiReferenceContent section={apiReferenceSection} />
+              </div>
+            )}
+
+            {/* Campaigns Tab */}
+            {activeTab === "campaigns" && (
+              <div className="space-y-8">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Campaigns</h2>
+                    <p className="text-gray-400 mt-2">
+                      Automate contact form submissions across multiple companies
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => router.push("/campaigns/upload")}
+                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all rounded-xl shadow-lg hover:shadow-xl"
+                  >
+                    <Plus className="w-5 h-5" />
+                    New Campaign
+                  </button>
+                </div>
+
+                {/* User Tier Status Card */}
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        {!user
+                          ? "Guest (5 companies/campaign)"
+                          : user.subscription_tier === "free" || user.subscription_tier === "testing"
+                          ? "Free Plan - 50 companies/campaign"
+                          : user.subscription_tier === "premium"
+                          ? "Production Plan - 100 companies/campaign"
+                          : user.subscription_tier === "enterprise" || user.subscription_tier === "client"
+                          ? "Enterprise Plan - Unlimited"
+                          : "Free Plan - 50 companies/campaign"}
+                      </h3>
+                      <p className="text-gray-400 text-sm">
+                        {!user && "Sign up free to unlock 50 companies per campaign!"}
+                        {user && (user.subscription_tier === "free" || user.subscription_tier === "testing") && "Upgrade to process more companies per campaign"}
+                        {user && user.subscription_tier === "premium" && "Upgrade to Enterprise for unlimited processing"}
+                        {user && (user.subscription_tier === "enterprise" || user.subscription_tier === "client") && "You have unlimited campaign processing"}
+                      </p>
+                    </div>
+                    {(!user || (user.subscription_tier !== "enterprise" && user.subscription_tier !== "client")) && (
+                      <button
+                        onClick={() => router.push("/payment?plan=production")}
+                        className="px-6 py-2.5 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        {!user ? "Sign Up" : "Upgrade"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Campaigns List */}
+                <CampaignsListEmbedded />
               </div>
             )}
 

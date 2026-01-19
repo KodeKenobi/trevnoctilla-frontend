@@ -177,18 +177,22 @@ export default function CampaignsPage() {
                   You're Using Campaigns as a Guest
                 </h3>
                 <p className="text-gray-300 mb-4">
-                  Guest users can process <strong className="text-white">5 companies</strong> to try it out.
-                  Sign up free to unlock <strong className="text-amber-300">50 companies per campaign!</strong>
+                  Guest users can process{" "}
+                  <strong className="text-white">5 companies</strong> to try it
+                  out. Sign up free to unlock{" "}
+                  <strong className="text-amber-300">
+                    50 companies per campaign!
+                  </strong>
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <button
-                    onClick={() => router.push('/auth/register')}
+                    onClick={() => router.push("/auth/register")}
                     className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all"
                   >
                     Sign Up Free - Get 50 Companies
                   </button>
                   <button
-                    onClick={() => router.push('/auth/login')}
+                    onClick={() => router.push("/auth/login")}
                     className="px-6 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors"
                   >
                     Already Have Account? Sign In
@@ -199,39 +203,54 @@ export default function CampaignsPage() {
           </div>
         )}
 
-        {!userLoading && user && (user.subscription_tier === 'free' || user.subscription_tier === 'testing') && (
-          <div className="mb-8 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-2xl p-6">
-            <div className="flex items-start gap-4">
-              <div className="text-4xl">🎯</div>
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  You're on the Free Plan - 50 Companies Per Campaign
-                </h3>
-                <p className="text-gray-300 mb-4">
-                  Upgrade to process more companies per campaign:
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                    <div className="text-white font-semibold mb-1">Production - $9/mo</div>
-                    <div className="text-3xl font-bold text-blue-400 mb-2">100</div>
-                    <div className="text-sm text-gray-400">companies per campaign</div>
+        {!userLoading &&
+          user &&
+          (user.subscription_tier === "free" ||
+            user.subscription_tier === "testing") && (
+            <div className="mb-8 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-2xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="text-4xl">🎯</div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    You're on the Free Plan - 50 Companies Per Campaign
+                  </h3>
+                  <p className="text-gray-300 mb-4">
+                    Upgrade to process more companies per campaign:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                      <div className="text-white font-semibold mb-1">
+                        Production - $9/mo
+                      </div>
+                      <div className="text-3xl font-bold text-blue-400 mb-2">
+                        100
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        companies per campaign
+                      </div>
+                    </div>
+                    <div className="bg-gray-800/50 border border-purple-500/30 rounded-lg p-4">
+                      <div className="text-white font-semibold mb-1">
+                        Enterprise - $19/mo
+                      </div>
+                      <div className="text-3xl font-bold text-purple-400 mb-2">
+                        Unlimited
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        no restrictions
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-gray-800/50 border border-purple-500/30 rounded-lg p-4">
-                    <div className="text-white font-semibold mb-1">Enterprise - $19/mo</div>
-                    <div className="text-3xl font-bold text-purple-400 mb-2">Unlimited</div>
-                    <div className="text-sm text-gray-400">no restrictions</div>
-                  </div>
+                  <button
+                    onClick={() => router.push("/payment?plan=production")}
+                    className="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Upgrade Now
+                  </button>
                 </div>
-                <button
-                  onClick={() => router.push('/payment?plan=production')}
-                  className="px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Upgrade Now
-                </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
         {campaigns.length === 0 ? (
           <div className="max-w-4xl mx-auto py-12">

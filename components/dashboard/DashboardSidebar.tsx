@@ -21,6 +21,7 @@ import {
   Code,
   Terminal,
   Shield,
+  Send,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -52,6 +53,12 @@ const sidebarItems: SidebarItem[] = [
     label: "Analytics",
     icon: <Activity className="w-5 h-5" />,
     path: "/dashboard?tab=analytics",
+  },
+  {
+    id: "campaigns",
+    label: "Campaigns",
+    icon: <Send className="w-5 h-5" />,
+    path: "/dashboard?tab=campaigns",
   },
   {
     id: "testing",

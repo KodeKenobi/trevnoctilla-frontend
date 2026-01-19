@@ -15,6 +15,8 @@ import {
   Shield,
   CheckCircle,
   AlertCircle,
+  Send,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/contexts/UserContext";
@@ -315,7 +317,7 @@ export default function EnterpriseDashboard() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
             <StatCard
               title="Monthly API Calls"
               value={stats.monthlyCalls.toLocaleString()}
@@ -349,6 +351,24 @@ export default function EnterpriseDashboard() {
               changeType="neutral"
               color="yellow"
             />
+            <Link
+              href="/campaigns"
+              className="block hover:scale-105 transition-transform"
+            >
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition-all shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <Send className="w-8 h-8 text-purple-400" />
+                  <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-white transition-colors" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">Campaigns</h3>
+                <p className="text-sm text-gray-400">
+                  Automate outreach and contact form submissions
+                </p>
+                <div className="mt-4 text-2xl font-bold text-white">
+                  Unlimited
+                </div>
+              </div>
+            </Link>
           </div>
 
           {/* Enterprise Features */}
@@ -408,6 +428,13 @@ export default function EnterpriseDashboard() {
                   <h4 className="text-white font-medium mb-1">SLA Guarantee</h4>
                   <p className="text-sm text-gray-400">
                     99.9% uptime guarantee
+                  </p>
+                </div>
+                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+                  <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
+                  <h4 className="text-white font-medium mb-1">Unlimited Campaigns</h4>
+                  <p className="text-sm text-gray-400">
+                    No limits on campaign automation
                   </p>
                 </div>
               </div>
