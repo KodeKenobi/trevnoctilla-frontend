@@ -14,6 +14,7 @@ import {
   X,
   Shield,
   Server,
+  Send,
   Database,
   Activity,
   Bell,
@@ -29,6 +30,7 @@ import { useUser } from "@/contexts/UserContext";
 const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: Home },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/campaigns", label: "Campaigns", icon: Send },
   { href: "/admin/api-keys", label: "API Keys", icon: Key },
   { href: "/admin/free-tier-keys", label: "Free Tier Keys", icon: Gift },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
