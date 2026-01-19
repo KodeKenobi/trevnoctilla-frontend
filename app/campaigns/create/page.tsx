@@ -112,7 +112,7 @@ export default function CreateCampaignPage() {
     <div className="min-h-screen bg-black pt-24 pb-12 px-8">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="mb-8 pb-6 border-b border-gray-800">
+        <div className="mb-8 pb-6 border-b border-white/20">
           <button
             onClick={() => router.push("/campaigns/upload")}
             className="group flex items-center gap-2 text-white hover:text-purple-400 text-sm mb-5 transition-colors"
