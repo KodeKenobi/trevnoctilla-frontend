@@ -112,7 +112,7 @@ export default function CreateCampaignPage() {
     <div className="min-h-screen bg-black pt-24 pb-12 px-8">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="mb-8 pb-6 border-b border-white/20">
+        <div className="mb-8 pb-6 border-b border-white">
           <button
             onClick={() => router.push("/campaigns/upload")}
             className="group flex items-center gap-2 text-white hover:text-purple-400 text-sm mb-5 transition-colors"
@@ -151,16 +151,16 @@ export default function CreateCampaignPage() {
               type="text"
               value={campaignName}
               onChange={(e) => setCampaignName(e.target.value)}
-              className="w-full px-4 py-3 bg-black border border-white/20 text-base text-white 
+              className="w-full px-4 py-3 bg-black border border-white text-base text-white 
                        focus:border-white focus:outline-none transition-colors rounded-lg
-                       hover:border-white/30 placeholder:text-gray-600"
+                       hover:border-white placeholder:text-gray-600"
               placeholder="Q1 2026 Outreach Campaign"
               required
             />
           </div>
 
           {/* Form Data Section */}
-          <div className="border border-white/20 rounded-lg p-6 bg-white/[0.02]">
+          <div className="border border-white rounded-lg p-6 bg-white/[0.02]">
             <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               Form Data (Will be filled into contact forms)
@@ -177,9 +177,9 @@ export default function CreateCampaignPage() {
                   type="text"
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-white/20 text-sm text-white 
+                  className="w-full px-3 py-2 bg-black border border-white text-sm text-white 
                            focus:border-white focus:outline-none transition-colors rounded
-                           hover:border-white/30 placeholder:text-gray-600"
+                           hover:border-white placeholder:text-gray-600"
                   placeholder="John Doe"
                 />
                 <p className="text-[10px] text-white/40 mt-1">
@@ -197,9 +197,9 @@ export default function CreateCampaignPage() {
                   type="email"
                   value={senderEmail}
                   onChange={(e) => setSenderEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-white/20 text-sm text-white 
+                  className="w-full px-3 py-2 bg-black border border-white text-sm text-white 
                            focus:border-white focus:outline-none transition-colors rounded
-                           hover:border-white/30 placeholder:text-gray-600"
+                           hover:border-white placeholder:text-gray-600"
                   placeholder="john@example.com"
                 />
                 <p className="text-[10px] text-white/40 mt-1">
@@ -217,9 +217,9 @@ export default function CreateCampaignPage() {
                   type="tel"
                   value={senderPhone}
                   onChange={(e) => setSenderPhone(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-white/20 text-sm text-white 
+                  className="w-full px-3 py-2 bg-black border border-white text-sm text-white 
                            focus:border-white focus:outline-none transition-colors rounded
-                           hover:border-white/30 placeholder:text-gray-600"
+                           hover:border-white placeholder:text-gray-600"
                   placeholder="+1 555-123-4567"
                 />
                 <p className="text-[10px] text-white/40 mt-1">
@@ -237,9 +237,9 @@ export default function CreateCampaignPage() {
                   type="text"
                   value={senderAddress}
                   onChange={(e) => setSenderAddress(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-white/20 text-sm text-white 
+                  className="w-full px-3 py-2 bg-black border border-white text-sm text-white 
                            focus:border-white focus:outline-none transition-colors rounded
-                           hover:border-white/30 placeholder:text-gray-600"
+                           hover:border-white placeholder:text-gray-600"
                   placeholder="123 Main St, New York, NY 10001"
                 />
                 <p className="text-[10px] text-white/40 mt-1">
@@ -257,9 +257,9 @@ export default function CreateCampaignPage() {
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-white/20 text-sm text-white 
+                  className="w-full px-3 py-2 bg-black border border-white text-sm text-white 
                            focus:border-white focus:outline-none transition-colors rounded
-                           hover:border-white/30 placeholder:text-gray-600"
+                           hover:border-white placeholder:text-gray-600"
                   placeholder="Partnership Opportunity"
                 />
                 <p className="text-[10px] text-white/40 mt-1">
@@ -292,9 +292,9 @@ export default function CreateCampaignPage() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={10}
-              className="w-full px-4 py-3 bg-black border border-white/20 text-base text-white leading-relaxed
+              className="w-full px-4 py-3 bg-black border border-white text-base text-white leading-relaxed
                        focus:border-white focus:outline-none transition-colors resize-none rounded-lg
-                       hover:border-white/30 placeholder:text-gray-600"
+                       hover:border-white placeholder:text-gray-600"
               placeholder={`Hello,
 
 I hope this message finds you well. I came across your website and was impressed by your work.
