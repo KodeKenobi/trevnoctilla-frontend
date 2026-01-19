@@ -45,6 +45,15 @@ export default function UniversalHeader() {
 
   // Update selected menu item based on current page
   React.useEffect(() => {
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+
+    // Check for campaigns pages first
+    if (pathname.startsWith('/campaigns')) {
+      setSelectedMenuItem("Campaigns");
+      return;
+    }
+
+    // Existing logic for other pages
     switch (currentPage) {
       case "home":
         setSelectedMenuItem("Home");
