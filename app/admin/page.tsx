@@ -434,20 +434,6 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          {/* Original Grid Continues */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 hidden">
-            {/* Hidden duplicate - keeping for structure */}
-          </div>
-            <StatCard
-              title="Success Rate"
-              value={`${stats.successRate}%`}
-              icon={TrendingUp}
-              change="+0.3% this week"
-              changeType="positive"
-              color="green"
-            />
-          </div>
-
           {/* System Health */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <StatCard
