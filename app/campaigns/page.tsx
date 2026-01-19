@@ -130,7 +130,7 @@ export default function CampaignsPage() {
           </div>
           <button
             onClick={() => router.push("/campaigns/upload")}
-            className="group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200 rounded-xl shadow-lg hover:shadow-xl"
+            className="group flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all duration-200 rounded-xl shadow-lg hover:shadow-xl"
           >
             <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
             New Campaign
@@ -151,9 +151,6 @@ export default function CampaignsPage() {
           <div className="max-w-4xl mx-auto py-12">
             {/* Hero Section */}
             <div className="text-center mb-12">
-              <div className="inline-flex w-24 h-24 rounded-3xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center shadow-xl mb-6">
-                <Plus className="w-12 h-12 text-purple-400" />
-              </div>
               <h2 className="text-3xl font-bold text-white mb-3">Automate Your Outreach</h2>
               <p className="text-lg text-gray-300 max-w-2xl mx-auto">
                 Send personalized messages to hundreds of companies automatically by filling out their contact forms
@@ -198,17 +195,14 @@ export default function CampaignsPage() {
             {/* Key Features */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-5">
-                <div className="text-2xl mb-2">🤖</div>
                 <h4 className="text-white font-semibold mb-2 text-sm">Fully Automated</h4>
                 <p className="text-gray-400 text-xs">No manual form filling. Click once and let it run.</p>
               </div>
               <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-5">
-                <div className="text-2xl mb-2">📸</div>
                 <h4 className="text-white font-semibold mb-2 text-sm">Screenshot Proof</h4>
                 <p className="text-gray-400 text-xs">Every submission includes a screenshot for verification.</p>
               </div>
               <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-5">
-                <div className="text-2xl mb-2">⚡</div>
                 <h4 className="text-white font-semibold mb-2 text-sm">Process Hundreds</h4>
                 <p className="text-gray-400 text-xs">Contact 500+ companies in minutes, not days.</p>
               </div>
@@ -218,7 +212,7 @@ export default function CampaignsPage() {
             <div className="text-center">
               <button
                 onClick={() => router.push("/campaigns/upload")}
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200 rounded-xl shadow-2xl hover:shadow-3xl transform hover:-translate-y-0.5"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white text-lg font-semibold hover:bg-blue-700 transition-all duration-200 rounded-xl shadow-2xl hover:shadow-3xl transform hover:-translate-y-0.5"
               >
                 Create Your First Campaign
                 <ArrowRight className="w-6 h-6" />
