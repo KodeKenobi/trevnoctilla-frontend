@@ -349,7 +349,6 @@ export default function CampaignsPage() {
                 </p>
               </div>
               <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-5">
-                seeing that
                 <h4 className="text-white font-semibold mb-2 text-sm">
                   Process Hundreds
                 </h4>
