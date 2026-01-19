@@ -4,12 +4,15 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/campaigns/my-campaigns
- * Get campaigns for the authenticated user
+ * POST /api/campaigns/admin/[id]/resume
+ * Resume a paused campaign (admin action)
  */
-export async function GET(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // Get authorization header from request
+    const { id } = await params;
     const authHeader = request.headers.get("Authorization");
 
     if (!authHeader) {
@@ -19,25 +22,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get backend URL
     const backendUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL ||
       process.env.BACKEND_URL ||
       "https://web-production-737b.up.railway.app";
 
-    // Get query params for pagination
-    const { searchParams } = new URL(request.url);
-    const page = searchParams.get("page") || "1";
-    const per_page = searchParams.get("per_page") || "20";
-
-    // Proxy request to backend with auth token
     const response = await fetch(
-      `${backendUrl}/api/campaigns/my-campaigns?page=${page}&per_page=${per_page}`,
+      `${backendUrl}/api/campaigns/admin/${id}/resume`,
       {
-        method: "GET",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: authHeader, // Forward the auth token
+          Authorization: authHeader,
         },
       }
     );
@@ -45,7 +41,7 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { error: errorData.error || "Failed to fetch campaigns" },
+        { error: errorData.error || "Failed to resume campaign" },
         { status: response.status }
       );
     }
@@ -53,9 +49,9 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error("[My Campaigns GET] Error:", error);
+    console.error("[Admin Resume Campaign] Error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to fetch campaigns" },
+      { error: error.message || "Failed to resume campaign" },
       { status: 500 }
     );
   }

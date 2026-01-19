@@ -4,12 +4,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/campaigns/my-campaigns
- * Get campaigns for the authenticated user
+ * GET /api/campaigns/admin/all
+ * Get all campaigns across all users (admin only)
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get authorization header from request
     const authHeader = request.headers.get("Authorization");
 
     if (!authHeader) {
@@ -19,25 +18,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get backend URL
     const backendUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL ||
       process.env.BACKEND_URL ||
       "https://web-production-737b.up.railway.app";
 
-    // Get query params for pagination
     const { searchParams } = new URL(request.url);
     const page = searchParams.get("page") || "1";
-    const per_page = searchParams.get("per_page") || "20";
+    const per_page = searchParams.get("per_page") || "50";
+    const status = searchParams.get("status") || "";
+    const user_id = searchParams.get("user_id") || "";
 
-    // Proxy request to backend with auth token
+    const queryParams = new URLSearchParams({
+      page,
+      per_page,
+      ...(status && { status }),
+      ...(user_id && { user_id }),
+    });
+
     const response = await fetch(
-      `${backendUrl}/api/campaigns/my-campaigns?page=${page}&per_page=${per_page}`,
+      `${backendUrl}/api/campaigns/admin/all?${queryParams}`,
       {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: authHeader, // Forward the auth token
+          Authorization: authHeader,
         },
       }
     );
@@ -53,7 +58,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error("[My Campaigns GET] Error:", error);
+    console.error("[Admin Campaigns GET] Error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to fetch campaigns" },
       { status: 500 }
