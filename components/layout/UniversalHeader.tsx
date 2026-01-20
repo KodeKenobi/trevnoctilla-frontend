@@ -27,6 +27,9 @@ export default function UniversalHeader() {
   const [selectedMenuItem, setSelectedMenuItem] = useState("Home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  
+  // Check if user is enterprise (admin role)
+  const isEnterprise = user?.role === "admin";
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -98,8 +101,8 @@ export default function UniversalHeader() {
     else if (item === "API") router.push("/api-docs");
   };
 
-  const handleViewSwitch = (view: "website" | "client" | "admin") => {
-    setCurrentView(view);
+  const handleViewSwitch = (view: "website" | "client" | "admin" | "enterprise") => {
+    setCurrentView(view as any);
     if (view === "website") {
       // Navigate to website home
       window.location.href = "/";
@@ -109,6 +112,9 @@ export default function UniversalHeader() {
     } else if (view === "admin") {
       // Navigate to admin dashboard
       window.location.href = "/admin";
+    } else if (view === "enterprise") {
+      // Navigate to enterprise dashboard
+      window.location.href = "/enterprise";
     }
   };
 
@@ -197,8 +203,8 @@ export default function UniversalHeader() {
         {/* Desktop Actions */}
         <div className="hidden lg:flex items-center space-x-4">
           {/* Theme Toggle */}
-          {/* Switch View Tab for Super Admin */}
-          {isSuperAdmin && user && (
+          {/* Switch View Tab for Super Admin and Enterprise */}
+          {(isSuperAdmin || isEnterprise) && user && (
             <div className="flex items-center space-x-1 bg-gray-800/50 rounded-lg p-1">
               <button
                 onClick={() => handleViewSwitch("website")}
@@ -218,21 +224,35 @@ export default function UniversalHeader() {
                     ? "bg-black text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-700"
                 }`}
-                title="Client Dashboard"
+                title={isEnterprise ? "Full Dashboard" : "Client Dashboard"}
               >
                 <User className="h-4 w-4" />
               </button>
-              <button
-                onClick={() => handleViewSwitch("admin")}
-                className={`p-2 rounded-md transition-all ${
-                  currentView === "admin"
-                    ? "bg-black text-white"
-                    : "text-gray-300 hover:text-white hover:bg-gray-700"
-                }`}
-                title="Admin Dashboard"
-              >
-                <Shield className="h-4 w-4" />
-              </button>
+              {isSuperAdmin ? (
+                <button
+                  onClick={() => handleViewSwitch("admin")}
+                  className={`p-2 rounded-md transition-all ${
+                    currentView === "admin"
+                      ? "bg-black text-white"
+                      : "text-gray-300 hover:text-white hover:bg-gray-700"
+                  }`}
+                  title="Admin Dashboard"
+                >
+                  <Shield className="h-4 w-4" />
+                </button>
+              ) : isEnterprise ? (
+                <button
+                  onClick={() => handleViewSwitch("enterprise")}
+                  className={`p-2 rounded-md transition-all ${
+                    currentView === "enterprise"
+                      ? "bg-black text-white"
+                      : "text-gray-300 hover:text-white hover:bg-gray-700"
+                  }`}
+                  title="Enterprise Dashboard"
+                >
+                  <Shield className="h-4 w-4" />
+                </button>
+              ) : null}
             </div>
           )}
           {loading ? (
@@ -285,7 +305,7 @@ export default function UniversalHeader() {
                         </div>
                       </div>
                       <div className="p-2">
-                        {/* Only show dashboard links for super admin */}
+                        {/* Show dashboard links for super admin and enterprise */}
                         {isSuperAdmin && (
                           <>
                             {/* Switch to Client Dashboard */}
@@ -304,6 +324,28 @@ export default function UniversalHeader() {
                             >
                               <Shield className="h-4 w-4" />
                               <span>Admin Dashboard</span>
+                            </Link>
+                          </>
+                        )}
+
+                        {isEnterprise && !isSuperAdmin && (
+                          <>
+                            {/* Switch to Full Dashboard */}
+                            <Link
+                              href="/dashboard"
+                              className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors mb-2"
+                            >
+                              <User className="h-4 w-4" />
+                              <span>Full Dashboard</span>
+                            </Link>
+
+                            {/* Switch to Enterprise Dashboard */}
+                            <Link
+                              href="/enterprise"
+                              className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors mb-2"
+                            >
+                              <Shield className="h-4 w-4" />
+                              <span>Enterprise Dashboard</span>
                             </Link>
                           </>
                         )}
@@ -335,8 +377,8 @@ export default function UniversalHeader() {
 
         {/* Mobile Hamburger Menu */}
         <div className="lg:hidden flex items-center space-x-2">
-          {/* Mobile Switch View for Super Admin */}
-          {isSuperAdmin && user && (
+          {/* Mobile Switch View for Super Admin and Enterprise */}
+          {(isSuperAdmin || isEnterprise) && user && (
             <div className="flex items-center space-x-1 bg-gray-800/50 rounded-lg p-1 mr-2">
               <button
                 onClick={() => handleViewSwitch("website")}
@@ -356,21 +398,35 @@ export default function UniversalHeader() {
                     ? "bg-black text-white"
                     : "text-gray-300 hover:text-white hover:bg-gray-700"
                 }`}
-                title="Client Dashboard"
+                title={isEnterprise ? "Full Dashboard" : "Client Dashboard"}
               >
                 <User className="h-4 w-4" />
               </button>
-              <button
-                onClick={() => handleViewSwitch("admin")}
-                className={`p-2 rounded transition-all ${
-                  currentView === "admin"
-                    ? "bg-black text-white"
-                    : "text-gray-300 hover:text-white hover:bg-gray-700"
-                }`}
-                title="Admin Dashboard"
-              >
-                <Shield className="h-4 w-4" />
-              </button>
+              {isSuperAdmin ? (
+                <button
+                  onClick={() => handleViewSwitch("admin")}
+                  className={`p-2 rounded transition-all ${
+                    currentView === "admin"
+                      ? "bg-black text-white"
+                      : "text-gray-300 hover:text-white hover:bg-gray-700"
+                  }`}
+                  title="Admin Dashboard"
+                >
+                  <Shield className="h-4 w-4" />
+                </button>
+              ) : isEnterprise ? (
+                <button
+                  onClick={() => handleViewSwitch("enterprise")}
+                  className={`p-2 rounded transition-all ${
+                    currentView === "enterprise"
+                      ? "bg-black text-white"
+                      : "text-gray-300 hover:text-white hover:bg-gray-700"
+                  }`}
+                  title="Enterprise Dashboard"
+                >
+                  <Shield className="h-4 w-4" />
+                </button>
+              ) : null}
             </div>
           )}
 
