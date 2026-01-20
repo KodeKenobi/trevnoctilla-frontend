@@ -93,6 +93,31 @@ export default function AdminDashboard() {
 
       return () => clearTimeout(timeout);
     }
+
+    // Redirect enterprise users to enterprise dashboard (unless they're also admin)
+    if (user && !userLoading) {
+      const subscriptionTier = user.subscription_tier?.toLowerCase() || "free";
+      const isEnterprise =
+        subscriptionTier === "enterprise" ||
+        user.monthly_call_limit === -1 ||
+        (user.monthly_call_limit && user.monthly_call_limit >= 100000);
+
+      console.log("Admin page - Enterprise check:", {
+        email: user.email,
+        role: user.role,
+        subscriptionTier: user.subscription_tier,
+        monthlyCallLimit: user.monthly_call_limit,
+        isEnterprise,
+        shouldRedirect: isEnterprise && user.role !== "admin" && user.role !== "super_admin"
+      });
+
+      // If user is enterprise but NOT admin/super_admin, redirect to enterprise dashboard
+      if (isEnterprise && user.role !== "admin" && user.role !== "super_admin") {
+        console.log("Redirecting enterprise user from admin to /enterprise");
+        window.location.href = "/enterprise";
+        return;
+      }
+    }
   }, [user, userLoading]);
 
   useEffect(() => {

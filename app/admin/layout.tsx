@@ -53,6 +53,22 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isSuperAdmin = user?.role === "super_admin";
 
+  // Redirect enterprise users (who are not admin) to enterprise dashboard
+  React.useEffect(() => {
+    if (user) {
+      const subscriptionTier = user.subscription_tier?.toLowerCase() || "free";
+      const isEnterprise =
+        subscriptionTier === "enterprise" ||
+        (user as any).monthly_call_limit === -1 ||
+        ((user as any).monthly_call_limit && (user as any).monthly_call_limit >= 100000);
+
+      // If user is enterprise but NOT admin/super_admin, redirect to enterprise dashboard
+      if (isEnterprise && user.role !== "admin" && user.role !== "super_admin") {
+        router.push("/enterprise");
+      }
+    }
+  }, [user, router]);
+
   return (
     <div className="min-h-screen bg-black">
       {/* Mobile sidebar */}

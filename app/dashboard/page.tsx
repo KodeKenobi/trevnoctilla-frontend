@@ -226,7 +226,11 @@ function DashboardContent() {
       const isPremium = subscriptionTier === "premium";
 
       // Only redirect to enterprise if not already on enterprise page and not bypassing
-      if (isEnterprise && window.location.pathname !== "/enterprise" && !bypassRedirect) {
+      if (
+        isEnterprise &&
+        window.location.pathname !== "/enterprise" &&
+        !bypassRedirect
+      ) {
         console.log("Redirecting enterprise user to /enterprise");
         router.push("/enterprise");
         return;

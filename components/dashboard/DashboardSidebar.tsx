@@ -270,11 +270,11 @@ export function DashboardSidebar({
   };
 
   // Check if user is enterprise
-  const isEnterprise = user ? (
-    user.subscription_tier?.toLowerCase() === "enterprise" ||
-    user.monthly_call_limit === -1 ||
-    (user.monthly_call_limit && user.monthly_call_limit >= 100000)
-  ) : false;
+  const isEnterprise = user
+    ? user.subscription_tier?.toLowerCase() === "enterprise" ||
+      user.monthly_call_limit === -1 ||
+      (user.monthly_call_limit && user.monthly_call_limit >= 100000)
+    : false;
 
   const sidebarContent = (
     <div className="h-full flex flex-col bg-[#1a1a1a] border-r border-[#2a2a2a]">
