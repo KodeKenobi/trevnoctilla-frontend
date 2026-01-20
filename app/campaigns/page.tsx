@@ -457,19 +457,38 @@ export default function CampaignsPage() {
   const router = useRouter();
   const { user, loading: userLoading } = useUser();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchCampaigns();
-  }, []);
+    if (!userLoading) {
+      fetchCampaigns();
+    }
+  }, [userLoading]);
 
   const fetchCampaigns = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/campaigns");
+
+      // For guests, use a unique session ID stored in localStorage
+      // For authenticated users, backend will use their user_id
+      let sessionId = localStorage.getItem("guest_session_id");
+      if (!sessionId && !user) {
+        // Generate unique session ID for guests
+        sessionId = `guest_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
+        localStorage.setItem("guest_session_id", sessionId);
+      }
+
+      // Build URL with session parameter for guests
+      const url = user
+        ? "/api/campaigns"
+        : `/api/campaigns?session_id=${sessionId}`;
+
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch campaigns");
       }

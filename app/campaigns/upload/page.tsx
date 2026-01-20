@@ -60,8 +60,8 @@ export default function CampaignUploadPage() {
   };
 
   const handleFileUpload = async (file: File) => {
-    if (!file.name.endsWith(".csv")) {
-      setError("Please upload a CSV file");
+    if (!file.name.match(/\.(csv|xls|xlsx)$/i)) {
+      setError("Please upload a CSV or Excel file");
       return;
     }
 
@@ -157,17 +157,49 @@ export default function CampaignUploadPage() {
   return (
     <div className="min-h-screen bg-black pt-24 pb-12 px-8">
       <div className="max-w-4xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={() => router.push("/campaigns")}
+          className="text-white/60 hover:text-white text-sm mb-4 transition-colors"
+        >
+          ← Back to campaigns
+        </button>
+
+        {/* Sign-In/Sign-Up Banner for Guests */}
+        {!user && (
+          <div className="mb-6 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl p-6">
+            <div className="flex items-center justify-between gap-6">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Unlock Full Campaign Power
+                </h3>
+                <p className="text-sm text-gray-300">
+                  You're currently limited to 5 companies as a guest. 
+                  <strong className="text-white"> Sign up free to get 50 companies per campaign</strong> - that's 10x more reach!
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => router.push('/auth/register')}
+                  className="px-5 py-2 bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors rounded-full whitespace-nowrap"
+                >
+                  Sign Up Free
+                </button>
+                <button
+                  onClick={() => router.push('/auth/login')}
+                  className="px-5 py-2 bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors rounded-full whitespace-nowrap"
+                >
+                  Sign In
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Header */}
         <div className="mb-8 pb-6 border-b border-gray-800">
-          <button
-            onClick={() => router.push("/campaigns")}
-            className="group flex items-center gap-2 text-white hover:text-purple-400 text-sm mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            Back to campaigns
-          </button>
           <h1 className="text-xl font-medium text-white tracking-tight mb-2">Upload Companies</h1>
-          <p className="text-sm text-white font-mono">CSV with company websites</p>
+          <p className="text-sm text-white font-mono">CSV or Excel spreadsheet with company websites</p>
         </div>
 
         {error && (
@@ -202,7 +234,7 @@ export default function CampaignUploadPage() {
                   </div>
                   <div>
                     <p className="text-base text-white mb-2">
-                      {uploading ? "Processing..." : "Drop CSV file or click to browse"}
+                      {uploading ? "Processing..." : "Drop CSV or Excel file or click to browse"}
                     </p>
                     <p className="text-sm text-white">Must include website_url column</p>
                   </div>
@@ -211,7 +243,7 @@ export default function CampaignUploadPage() {
               <input
                 id="file-upload"
                 type="file"
-                accept=".csv"
+                accept=".csv,.xls,.xlsx"
                 onChange={handleFileSelect}
                 className="hidden"
                 disabled={uploading}
@@ -219,17 +251,14 @@ export default function CampaignUploadPage() {
             </label>
 
             {/* Format Info */}
-            <div className="border border-gray-800 p-6 rounded-xl">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-white" />
-                <span className="text-sm text-white font-medium">Required Format</span>
-              </div>
-              <pre className="text-sm font-mono text-white bg-gray-900 p-4 border border-gray-800 overflow-x-auto rounded-lg">
+            <div className="border border-gray-800 p-5 rounded-xl">
+              <p className="text-xs text-white/60 mb-3">Required Format</p>
+              <pre className="text-xs font-mono text-white/80 bg-gray-900 p-4 border border-gray-800 overflow-x-auto rounded-lg">
 {`website_url,company_name,contact_email,phone
 https://example.com,Example Inc,hello@example.com,+1234567890
 https://another.com,Another Co,hi@another.com,+0987654321`}
               </pre>
-              <p className="text-xs text-white mt-4">
+              <p className="text-xs text-white/50 mt-3">
                 Only website_url is required • Max 1000 rows
               </p>
             </div>

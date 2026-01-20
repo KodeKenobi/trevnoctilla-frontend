@@ -38,7 +38,7 @@ export function CampaignsListEmbedded() {
     try {
       setLoading(true);
       const token = localStorage.getItem("auth_token");
-      
+
       if (!token) {
         setError("Please sign in to view your campaigns");
         setLoading(false);
@@ -123,7 +123,6 @@ export function CampaignsListEmbedded() {
   if (campaigns.length === 0) {
     return (
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-12 text-center">
-        <div className="text-6xl mb-4">📧</div>
         <h3 className="text-xl font-semibold text-white mb-2">
           No campaigns yet
         </h3>

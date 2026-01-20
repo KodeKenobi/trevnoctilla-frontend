@@ -195,7 +195,7 @@ export function DashboardSidebar({
             w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200
             ${
               active
-                ? "bg-[#2a2a2a] text-white border-l-2 border-[#8b5cf6]"
+                ? "bg-[#2a2a2a] text-white"
                 : "text-gray-400 hover:text-white hover:bg-[#2a2a2a]/50"
             }
             ${level > 0 ? "pl-8" : ""}
@@ -233,7 +233,7 @@ export function DashboardSidebar({
                           : null;
                       return child.id === urlSection || child.id === activeTab;
                     })()
-                      ? "bg-[#2a2a2a] text-white border-l-2 "
+                      ? "bg-[#2a2a2a] text-white"
                       : "text-gray-400 hover:text-white hover:bg-[#2a2a2a]/50"
                   }
                   pl-8

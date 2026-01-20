@@ -1420,7 +1420,7 @@ function DashboardContent() {
                 </p>
               </div>
               <div className="flex items-center gap-4">
-                <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-accent/50 rounded-xl border border-border backdrop-blur-sm">
+                <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-green-500/20 rounded-xl border border-border backdrop-blur-sm">
                   <div className="w-3 h-3 bg-[#ffffff] rounded-full animate-pulse"></div>
                   <span className="text-sm font-medium text-foreground">
                     Online
@@ -1660,7 +1660,8 @@ function DashboardContent() {
                   <div>
                     <h2 className="text-2xl font-bold text-white">Campaigns</h2>
                     <p className="text-gray-400 mt-2">
-                      Automate contact form submissions across multiple companies
+                      Automate contact form submissions across multiple
+                      companies
                     </p>
                   </div>
                   <button
@@ -1679,22 +1680,35 @@ function DashboardContent() {
                       <h3 className="text-lg font-semibold text-white mb-2">
                         {!user
                           ? "Guest (5 companies/campaign)"
-                          : user.subscription_tier === "free" || user.subscription_tier === "testing"
+                          : user.subscription_tier === "free" ||
+                            user.subscription_tier === "testing"
                           ? "Free Plan - 50 companies/campaign"
                           : user.subscription_tier === "premium"
                           ? "Production Plan - 100 companies/campaign"
-                          : user.subscription_tier === "enterprise" || user.subscription_tier === "client"
+                          : user.subscription_tier === "enterprise" ||
+                            user.subscription_tier === "client"
                           ? "Enterprise Plan - Unlimited"
                           : "Free Plan - 50 companies/campaign"}
                       </h3>
                       <p className="text-gray-400 text-sm">
-                        {!user && "Sign up free to unlock 50 companies per campaign!"}
-                        {user && (user.subscription_tier === "free" || user.subscription_tier === "testing") && "Upgrade to process more companies per campaign"}
-                        {user && user.subscription_tier === "premium" && "Upgrade to Enterprise for unlimited processing"}
-                        {user && (user.subscription_tier === "enterprise" || user.subscription_tier === "client") && "You have unlimited campaign processing"}
+                        {!user &&
+                          "Sign up free to unlock 50 companies per campaign!"}
+                        {user &&
+                          (user.subscription_tier === "free" ||
+                            user.subscription_tier === "testing") &&
+                          "Upgrade to process more companies per campaign"}
+                        {user &&
+                          user.subscription_tier === "premium" &&
+                          "Upgrade to Enterprise for unlimited processing"}
+                        {user &&
+                          (user.subscription_tier === "enterprise" ||
+                            user.subscription_tier === "client") &&
+                          "You have unlimited campaign processing"}
                       </p>
                     </div>
-                    {(!user || (user.subscription_tier !== "enterprise" && user.subscription_tier !== "client")) && (
+                    {(!user ||
+                      (user.subscription_tier !== "enterprise" &&
+                        user.subscription_tier !== "client")) && (
                       <button
                         onClick={() => router.push("/payment?plan=production")}
                         className="px-6 py-2.5 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"

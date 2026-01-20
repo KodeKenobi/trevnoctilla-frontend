@@ -12,16 +12,39 @@ export async function GET(request: NextRequest) {
     // Get backend URL
     const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
     
-    // Get email from query params for public access
+    // Get parameters from query
     const { searchParams } = new URL(request.url);
-    const email = searchParams.get('email') || 'demo@example.com';
+    const sessionId = searchParams.get('session_id');
+    const email = searchParams.get('email');
+
+    // Check for auth token (authenticated users)
+    const authHeader = request.headers.get('Authorization');
+    
+    // Build query params
+    let queryParams = '';
+    if (authHeader) {
+      // Authenticated user - backend will use token to get user_id
+      queryParams = '';
+    } else if (sessionId) {
+      // Guest with session ID
+      queryParams = `?session_id=${encodeURIComponent(sessionId)}`;
+    } else if (email) {
+      // Legacy email parameter
+      queryParams = `?email=${encodeURIComponent(email)}`;
+    }
 
     // Fetch campaigns from backend
-    const response = await fetch(`${backendUrl}/api/campaigns?email=${email}`, {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+
+    const response = await fetch(`${backendUrl}/api/campaigns${queryParams}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -67,7 +90,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, message_template, companies, email } = body;
+    const { name, message_template, companies, email, session_id } = body;
 
     // Validate input
     if (!name || !message_template || !companies || companies.length === 0) {
@@ -99,7 +122,8 @@ export async function POST(request: NextRequest) {
         email: email || 'demo@example.com',
         name,
         message_template,
-        companies
+        companies,
+        session_id: session_id  // Pass session_id for guest tracking
       }),
     });
 
