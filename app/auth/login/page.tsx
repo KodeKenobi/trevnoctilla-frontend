@@ -69,10 +69,8 @@ export default function LoginPage() {
                 // Password optional - NextAuth session is trusted
                 // Sending it for backward compatibility but not required
                 password: formData.password,
-                role:
-                  formData.email === "kodekenobi@gmail.com"
-                    ? "super_admin"
-                    : "user",
+                // Don't send role - let backend use the role from database
+                // role: undefined,  // Backend will use existing role from DB
                 subscription_tier: "free", // Will be updated by backend from database
               }),
             }

@@ -161,10 +161,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 body: JSON.stringify({
                   email: session.user.email,
                   // Password no longer required - NextAuth session is trusted
-                  role:
-                    (session.user as any)?.role === "super_admin"
-                      ? "super_admin"
-                      : "user",
+                  // Don't send role - let backend use the role from database
+                  // role: undefined,  // Backend will use existing role from DB
                   subscription_tier:
                     (session.user as any)?.subscription_tier || "free",
                 }),
