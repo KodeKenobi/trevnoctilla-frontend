@@ -344,78 +344,79 @@ export default function EnterpriseDashboard() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-4xl font-bold text-white mb-2">
                 Enterprise Dashboard
               </h1>
               <p className="text-gray-300 text-lg">
-                Unlimited API access and advanced features
+                Unlimited API access and premium features for your team
               </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-green-400">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium">Enterprise Active</span>
-              </div>
-              <div className="px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-lg">
-                <span className="text-sm font-medium text-purple-300">
-                  Unlimited API Calls
-                </span>
-              </div>
+            <div className="flex items-center space-x-2 text-green-400">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium">Enterprise Plan Active</span>
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-            <StatCard
-              title="Monthly API Calls"
-              value={stats.monthlyCalls.toLocaleString()}
-              icon={Zap}
-              change="Unlimited access"
-              changeType="positive"
-              color="purple"
-            />
-            <StatCard
-              title="Success Rate"
-              value={`${stats.successRate}%`}
-              icon={TrendingUp}
-              change="Excellent performance"
-              changeType="positive"
-              color="green"
-            />
-            <StatCard
-              title="Active API Keys"
-              value={stats.activeKeys}
-              icon={Key}
-              change={`${stats.activeKeys} keys configured`}
-              changeType="neutral"
-              color="blue"
-              href="/dashboard?tab=settings&section=keys"
-            />
-            <StatCard
-              title="Data Processed"
-              value={`${(stats.dataProcessed / 1024 / 1024).toFixed(2)} MB`}
-              icon={Database}
-              change="This month"
-              changeType="neutral"
-              color="yellow"
-            />
+          {/* Quick Overview Cards */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Campaigns Card */}
             <Link
               href="/campaigns"
               className="block hover:scale-105 transition-transform"
             >
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition-all shadow-lg">
+              <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition-all shadow-lg h-full">
                 <div className="flex items-center justify-between mb-4">
                   <Send className="w-8 h-8 text-purple-400" />
-                  <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-white transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">Campaigns</h3>
-                <p className="text-sm text-gray-400">
+                <h3 className="text-xl font-semibold text-white mb-2">Campaigns</h3>
+                <p className="text-sm text-gray-300 mb-4">
                   Automate outreach and contact form submissions
                 </p>
-                <div className="mt-4 text-2xl font-bold text-white">
+                <div className="text-2xl font-bold text-purple-300">
                   Unlimited
+                </div>
+              </div>
+            </Link>
+
+            {/* Team Management Card */}
+            <Link
+              href="/enterprise/team"
+              className="block hover:scale-105 transition-transform"
+            >
+              <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6 hover:border-blue-500/50 transition-all shadow-lg h-full">
+                <div className="flex items-center justify-between mb-4">
+                  <Users className="w-8 h-8 text-blue-400" />
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Team</h3>
+                <p className="text-sm text-gray-300 mb-4">
+                  Invite and manage your team members
+                </p>
+                <div className="text-sm font-medium text-blue-300">
+                  Add unlimited members
+                </div>
+              </div>
+            </Link>
+
+            {/* API Access Card */}
+            <Link
+              href="/dashboard?tab=settings&section=keys"
+              className="block hover:scale-105 transition-transform"
+            >
+              <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-6 hover:border-green-500/50 transition-all shadow-lg h-full">
+                <div className="flex items-center justify-between mb-4">
+                  <Key className="w-8 h-8 text-green-400" />
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">API Keys</h3>
+                <p className="text-sm text-gray-300 mb-4">
+                  Manage your API keys and access tokens
+                </p>
+                <div className="text-sm font-medium text-green-300">
+                  {stats.activeKeys} {stats.activeKeys === 1 ? 'key' : 'keys'} active
                 </div>
               </div>
             </Link>
@@ -425,7 +426,7 @@ export default function EnterpriseDashboard() {
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
             <div className="px-6 py-6">
               <h3 className="text-xl font-semibold text-white mb-6">
-                Enterprise Features
+                Your Enterprise Benefits
               </h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
@@ -440,10 +441,19 @@ export default function EnterpriseDashboard() {
                 <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
                   <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
                   <h4 className="text-white font-medium mb-1">
-                    All API Endpoints
+                    Unlimited Campaigns
                   </h4>
                   <p className="text-sm text-gray-400">
-                    Access to all available endpoints
+                    Run unlimited outreach campaigns
+                  </p>
+                </div>
+                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+                  <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
+                  <h4 className="text-white font-medium mb-1">
+                    Team Collaboration
+                  </h4>
+                  <p className="text-sm text-gray-400">
+                    Add unlimited team members
                   </p>
                 </div>
                 <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
@@ -458,165 +468,59 @@ export default function EnterpriseDashboard() {
                 <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
                   <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
                   <h4 className="text-white font-medium mb-1">
-                    Advanced Analytics
+                    All API Endpoints
                   </h4>
                   <p className="text-sm text-gray-400">
-                    Detailed usage insights
+                    Access to all available endpoints
                   </p>
                 </div>
                 <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
                   <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
                   <h4 className="text-white font-medium mb-1">
-                    Custom Integrations
+                    99.9% SLA Guarantee
                   </h4>
                   <p className="text-sm text-gray-400">
-                    Tailored solutions available
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-                  <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
-                  <h4 className="text-white font-medium mb-1">SLA Guarantee</h4>
-                  <p className="text-sm text-gray-400">
-                    99.9% uptime guarantee
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-                  <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
-                  <h4 className="text-white font-medium mb-1">Unlimited Campaigns</h4>
-                  <p className="text-sm text-gray-400">
-                    No limits on campaign automation
+                    Uptime guarantee for your business
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
-            <div className="px-6 py-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-white">
-                  Recent API Activity
-                </h3>
-                <Link
-                  href="/dashboard?tab=analytics"
-                  className="text-purple-400 hover:text-purple-300 text-sm font-medium"
-                >
-                  View All →
-                </Link>
-              </div>
-              <div className="space-y-4">
-                {activities.slice(0, 10).map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0">
-                        {activity.status === "success" ? (
-                          <CheckCircle className="h-4 w-4 text-green-400" />
-                        ) : (
-                          <AlertCircle className="h-4 w-4 text-red-400" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-white">
-                          {activity.endpoint}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {new Date(activity.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-400">
-                        {activity.responseTime}ms
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Team Management */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
-            <div className="px-6 py-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    Team Management
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    Manage your team members and their access
-                  </p>
-                </div>
-                <Link
-                  href="/enterprise/team"
-                  className="px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-lg text-purple-300 hover:bg-purple-500/30 transition-all"
-                >
-                  Manage Team
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-                  <Users className="h-6 w-6 text-purple-400 mb-2" />
-                  <h4 className="text-white font-medium mb-1">
-                    Add Team Members
-                  </h4>
-                  <p className="text-sm text-gray-400">
-                    Invite users to your enterprise account
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-                  <Key className="h-6 w-6 text-blue-400 mb-2" />
-                  <h4 className="text-white font-medium mb-1">
-                    Manage API Keys
-                  </h4>
-                  <p className="text-sm text-gray-400">
-                    Create and manage team API keys
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-                  <Activity className="h-6 w-6 text-green-400 mb-2" />
-                  <h4 className="text-white font-medium mb-1">
-                    Team Activity
-                  </h4>
-                  <p className="text-sm text-gray-400">
-                    Monitor team usage and activity
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
+          {/* Resources */}
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
             <div className="px-6 py-6">
               <h3 className="text-xl font-semibold text-white mb-6">
-                Quick Actions
+                Resources & Documentation
               </h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <Link
-                  href="/dashboard?tab=settings&section=keys"
-                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
-                >
-                  <Key className="h-6 w-6 text-blue-400 group-hover:text-blue-300" />
-                  <span className="text-white font-medium">API Keys</span>
-                </Link>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Link
                   href="/api-docs"
                   className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
                 >
-                  <Settings className="h-6 w-6 text-yellow-400 group-hover:text-yellow-300" />
-                  <span className="text-white font-medium">API Docs</span>
+                  <Settings className="h-6 w-6 text-blue-400 group-hover:text-blue-300" />
+                  <span className="text-white font-medium">API Documentation</span>
                 </Link>
                 <Link
-                  href="/campaigns"
+                  href="/dashboard?tab=settings"
                   className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
                 >
-                  <Send className="h-6 w-6 text-purple-400 group-hover:text-purple-300" />
-                  <span className="text-white font-medium">Campaigns</span>
+                  <Settings className="h-6 w-6 text-purple-400 group-hover:text-purple-300" />
+                  <span className="text-white font-medium">Settings</span>
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
+                >
+                  <BarChart3 className="h-6 w-6 text-green-400 group-hover:text-green-300" />
+                  <span className="text-white font-medium">Usage Dashboard</span>
+                </Link>
+                <Link
+                  href="/enterprise/team"
+                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
+                >
+                  <Users className="h-6 w-6 text-yellow-400 group-hover:text-yellow-300" />
+                  <span className="text-white font-medium">Team Settings</span>
                 </Link>
               </div>
             </div>
