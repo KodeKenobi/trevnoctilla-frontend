@@ -53,21 +53,29 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isSuperAdmin = user?.role === "super_admin";
 
-  // Redirect enterprise users (who are not admin) to enterprise dashboard
+  // Only allow super_admin role to access admin pages
+  // Role structure: user = regular user, admin = enterprise, super_admin = super admin
   React.useEffect(() => {
     if (user) {
-      const subscriptionTier = user.subscription_tier?.toLowerCase() || "free";
-      const isEnterprise =
-        subscriptionTier === "enterprise" ||
-        (user as any).monthly_call_limit === -1 ||
-        ((user as any).monthly_call_limit && (user as any).monthly_call_limit >= 100000);
+      console.log("Admin layout - Access check:", {
+        email: user.email,
+        role: user.role,
+        currentPath: pathname,
+      });
 
-      // If user is enterprise but NOT admin/super_admin, redirect to enterprise dashboard
-      if (isEnterprise && user.role !== "admin" && user.role !== "super_admin") {
+      // Redirect based on role
+      if (user.role === "admin") {
+        // Regular admin (enterprise users) should go to enterprise dashboard
+        console.log("Redirecting admin (enterprise) from admin layout to /enterprise");
         router.push("/enterprise");
+      } else if (user.role === "user") {
+        // Regular users should go to regular dashboard
+        console.log("Redirecting user from admin layout to /dashboard");
+        router.push("/dashboard");
       }
+      // super_admin can access admin pages
     }
-  }, [user, router]);
+  }, [user, router, pathname]);
 
   return (
     <div className="min-h-screen bg-black">

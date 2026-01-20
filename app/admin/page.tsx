@@ -94,29 +94,29 @@ export default function AdminDashboard() {
       return () => clearTimeout(timeout);
     }
 
-    // Redirect enterprise users to enterprise dashboard (unless they're also admin)
+    // Only allow super_admin role to access admin dashboard
+    // Role structure: user = regular user, admin = enterprise, super_admin = super admin
     if (user && !userLoading) {
-      const subscriptionTier = user.subscription_tier?.toLowerCase() || "free";
-      const isEnterprise =
-        subscriptionTier === "enterprise" ||
-        user.monthly_call_limit === -1 ||
-        (user.monthly_call_limit && user.monthly_call_limit >= 100000);
-
-      console.log("Admin page - Enterprise check:", {
+      console.log("Admin page - Access check:", {
         email: user.email,
         role: user.role,
-        subscriptionTier: user.subscription_tier,
-        monthlyCallLimit: user.monthly_call_limit,
-        isEnterprise,
-        shouldRedirect: isEnterprise && user.role !== "admin" && user.role !== "super_admin"
+        currentPath: window.location.pathname,
       });
 
-      // If user is enterprise but NOT admin/super_admin, redirect to enterprise dashboard
-      if (isEnterprise && user.role !== "admin" && user.role !== "super_admin") {
-        console.log("Redirecting enterprise user from admin to /enterprise");
+      // Redirect based on role
+      if (user.role === "admin") {
+        // Regular admin (enterprise users) should go to enterprise dashboard
+        console.log("Redirecting admin (enterprise) to /enterprise");
         window.location.href = "/enterprise";
         return;
+      } else if (user.role === "user") {
+        // Regular users should go to regular dashboard
+        console.log("Redirecting user to /dashboard");
+        window.location.href = "/dashboard";
+        return;
       }
+      // super_admin can access this page
+      console.log("Access granted to admin dashboard (super_admin)");
     }
   }, [user, userLoading]);
 
@@ -128,7 +128,7 @@ export default function AdminDashboard() {
 
   const fetchAdminData = async () => {
     try {
-      if (!user || (user.role !== "admin" && user.role !== "super_admin")) {
+      if (!user || user.role !== "super_admin") {
         setLoading(false);
         return;
       }
@@ -360,8 +360,8 @@ export default function AdminDashboard() {
     );
   }
 
-  // Show access denied if not admin
-  if (user.role !== "admin" && user.role !== "super_admin") {
+  // Show access denied if not super_admin
+  if (user.role !== "super_admin") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pt-20 flex items-center justify-center">
         <div className="text-center p-8 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg">

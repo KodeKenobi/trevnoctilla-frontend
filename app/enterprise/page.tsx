@@ -158,9 +158,8 @@ function EnterpriseDashboardContent() {
   ]);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Redirect if not enterprise tier
+  // Redirect if not admin role (enterprise users have admin role)
   useEffect(() => {
-    // Only check after user is loaded
     if (!userLoading) {
       // If no user at all, redirect to login
       if (!user) {
@@ -173,60 +172,24 @@ function EnterpriseDashboardContent() {
         return;
       }
 
-      // User is loaded, check enterprise status
-      const checkEnterpriseStatus = async () => {
-        // First check user object (most reliable)
-        const userIsEnterprise =
-          user.subscription_tier?.toLowerCase() === "enterprise" ||
-          user.monthly_call_limit === -1 ||
-          (user.monthly_call_limit && user.monthly_call_limit >= 100000);
+      // DEBUG: Log enterprise access check
+      console.log("Enterprise page - Access check:", {
+        email: user.email,
+        role: user.role,
+        currentPath: window.location.pathname,
+      });
 
-        if (userIsEnterprise) {
-          // User is confirmed enterprise, allow access
-          return;
-        }
+      // Check if user has admin role (enterprise users)
+      // Role structure: user = regular user, admin = enterprise, super_admin = super admin
+      if (user.role !== "admin" && user.role !== "super_admin") {
+        // Not an admin, redirect to regular dashboard
+        console.log("Redirecting non-admin to /dashboard");
+        router.push("/dashboard");
+        return;
+      }
 
-        // If user object doesn't confirm enterprise, check via API
-        try {
-          const token = localStorage.getItem("auth_token");
-          if (!token) {
-            router.push("/auth/login");
-            return;
-          }
-
-          const usageResponse = await fetch(
-            `${getApiUrl("/api/client/usage")}`,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          if (usageResponse.ok) {
-            const usageData = await usageResponse.json();
-            const apiIsEnterprise =
-              usageData.subscription_tier?.toLowerCase() === "enterprise" ||
-              usageData.monthly?.limit === -1 ||
-              (usageData.monthly?.limit && usageData.monthly.limit >= 100000);
-
-            if (!apiIsEnterprise) {
-              // Not enterprise, redirect to regular dashboard
-              router.push("/dashboard");
-              return;
-            }
-          } else {
-            // If API check fails, redirect to dashboard (safer approach)
-            router.push("/dashboard");
-          }
-        } catch (error) {
-          // On API error, redirect to dashboard to be safe
-          router.push("/dashboard");
-        }
-      };
-
-      checkEnterpriseStatus();
+      // Admin or super_admin can access this page
+      console.log("Access granted to enterprise dashboard");
     }
   }, [user, userLoading, router]);
 

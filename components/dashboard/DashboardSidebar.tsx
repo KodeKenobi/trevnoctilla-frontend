@@ -40,6 +40,7 @@ interface DashboardSidebarProps {
   user?: {
     email?: string;
     name?: string;
+    role?: string;
     subscription_tier?: string;
     monthly_call_limit?: number;
   };
@@ -269,12 +270,9 @@ export function DashboardSidebar({
     );
   };
 
-  // Check if user is enterprise
-  const isEnterprise = user
-    ? user.subscription_tier?.toLowerCase() === "enterprise" ||
-      user.monthly_call_limit === -1 ||
-      (user.monthly_call_limit && user.monthly_call_limit >= 100000)
-    : false;
+  // Check if user is enterprise (admin role) or super admin
+  // Role structure: user = regular user, admin = enterprise, super_admin = super admin
+  const isEnterprise = user ? user.role === "admin" || user.role === "super_admin" : false;
 
   const sidebarContent = (
     <div className="h-full flex flex-col bg-[#1a1a1a] border-r border-[#2a2a2a]">

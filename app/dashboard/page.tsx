@@ -189,58 +189,42 @@ function DashboardContent() {
   // Check if user should be redirected to admin or enterprise dashboard
   useEffect(() => {
     if (user && !userLoading) {
-      // Only redirect regular admin users to admin dashboard (super admins can switch freely)
-      // Check for query parameter to bypass redirect (used by super admin switcher)
+      // Check for query parameter to bypass redirect (used by quick switcher)
       const bypassRedirect = searchParams.get("bypass") === "true";
 
-      // Super admins can access all dashboards freely - no redirect
-      // Only redirect regular admins (not super admins)
-      if (user.role === "admin") {
-        if (window.location.pathname !== "/admin" && !bypassRedirect) {
-          router.push("/admin");
-          return;
-        }
-      }
-
-      // Use subscription_tier from user object (fetched from profile endpoint)
-      const subscriptionTier = user.subscription_tier?.toLowerCase() || "free";
-
-      // Check if user has enterprise tier
-      const isEnterprise =
-        subscriptionTier === "enterprise" ||
-        user.monthly_call_limit === -1 || // Unlimited indicates enterprise
-        (user.monthly_call_limit && user.monthly_call_limit >= 100000); // High limit indicates enterprise
-
       // DEBUG: Log redirection logic
-      console.log("User redirect check:", {
+      console.log("Dashboard redirect check:", {
         email: user.email,
         role: user.role,
         subscriptionTier: user.subscription_tier,
         monthlyCallLimit: user.monthly_call_limit,
-        isEnterprise,
         currentPath: window.location.pathname,
         bypassRedirect,
       });
 
-      // Check for premium tier
-      const isPremium = subscriptionTier === "premium";
+      // Role-based redirection:
+      // super_admin → /admin (Super Admin Dashboard)
+      // admin → /enterprise (Enterprise Dashboard)
+      // user → /dashboard (User Dashboard)
 
-      // Only redirect to enterprise if not already on enterprise page and not bypassing
-      if (
-        isEnterprise &&
-        window.location.pathname !== "/enterprise" &&
-        !bypassRedirect
-      ) {
-        console.log("Redirecting enterprise user to /enterprise");
-        router.push("/enterprise");
-        return;
+      if (user.role === "super_admin") {
+        // Super admins go to admin dashboard
+        if (window.location.pathname !== "/admin" && !bypassRedirect) {
+          console.log("Redirecting super_admin to /admin");
+          router.push("/admin");
+          return;
+        }
+      } else if (user.role === "admin") {
+        // Regular admins (enterprise users) go to enterprise dashboard
+        if (window.location.pathname !== "/enterprise" && !bypassRedirect) {
+          console.log("Redirecting admin (enterprise) to /enterprise");
+          router.push("/enterprise");
+          return;
+        }
       }
-
-      // Premium users stay on regular dashboard (no redirect needed)
-      if (isPremium) {
-      }
+      // Users with role "user" stay on this dashboard
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, router, searchParams]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
