@@ -27,10 +27,20 @@ import {
   X,
   Globe,
   Crown,
+  CreditCard,
+  Code,
+  Terminal,
+  Clock,
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/contexts/UserContext";
 import { getApiUrl, getAuthHeaders } from "../../lib/config";
+import { CircularStats } from "@/components/dashboard/CircularChart";
+import { ActivityTable } from "@/components/dashboard/ActivityTable";
+import { ToolCard } from "@/components/dashboard/ToolCard";
+import { BillingSection } from "@/components/dashboard/BillingSection";
+import { ResetHistoryTable } from "@/components/dashboard/ResetHistoryTable";
+import { TOOL_CATEGORIES } from "../../lib/apiEndpoints";
 
 interface EnterpriseStats {
   monthlyCalls: number;
@@ -58,10 +68,22 @@ const enterpriseSidebarItems: SidebarItem[] = [
     path: "/enterprise?tab=overview",
   },
   {
+    id: "analytics",
+    label: "Analytics",
+    icon: <Activity className="w-5 h-5" />,
+    path: "/enterprise?tab=analytics",
+  },
+  {
     id: "campaigns",
     label: "Campaigns",
     icon: <Send className="w-5 h-5" />,
     path: "/enterprise?tab=campaigns",
+  },
+  {
+    id: "testing",
+    label: "API Testing",
+    icon: <FileText className="w-5 h-5" />,
+    path: "/enterprise?tab=testing",
   },
   {
     id: "team",
@@ -89,7 +111,7 @@ const enterpriseSidebarItems: SidebarItem[] = [
       {
         id: "base-url",
         label: "Base URL",
-        icon: <Server className="w-4 h-4" />,
+        icon: <Globe className="w-4 h-4" />,
         path: "/enterprise?tab=api-reference&section=base-url",
       },
       {
@@ -101,16 +123,22 @@ const enterpriseSidebarItems: SidebarItem[] = [
       {
         id: "endpoints",
         label: "API Endpoints",
-        icon: <FileText className="w-4 h-4" />,
+        icon: <Code className="w-4 h-4" />,
         path: "/enterprise?tab=api-reference&section=endpoints",
       },
       {
         id: "integration",
         label: "Integration Guides",
-        icon: <Database className="w-4 h-4" />,
+        icon: <Terminal className="w-4 h-4" />,
         path: "/enterprise?tab=api-reference&section=integration",
       },
     ],
+  },
+  {
+    id: "history",
+    label: "History",
+    icon: <Clock className="w-5 h-5" />,
+    path: "/enterprise?tab=history",
   },
   {
     id: "settings",
@@ -122,6 +150,12 @@ const enterpriseSidebarItems: SidebarItem[] = [
         label: "API Keys",
         icon: <Key className="w-4 h-4" />,
         path: "/enterprise?tab=settings&section=keys",
+      },
+      {
+        id: "billing",
+        label: "Billing",
+        icon: <CreditCard className="w-4 h-4" />,
+        path: "/enterprise?tab=settings&section=billing",
       },
     ],
   },
@@ -157,6 +191,8 @@ function EnterpriseDashboardContent() {
     "api-reference",
   ]);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [toolStats, setToolStats] = useState<any[]>([]);
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
   // Redirect if not admin role (enterprise users have admin role)
   useEffect(() => {
@@ -198,6 +234,20 @@ function EnterpriseDashboardContent() {
       fetchEnterpriseData();
     }
   }, [user]);
+
+  // Initialize toolStats from TOOL_CATEGORIES
+  useEffect(() => {
+    const initialToolStats = TOOL_CATEGORIES.map((category) => ({
+      toolId: category.id,
+      stats: {
+        callsToday: 0,
+        successRate: 0,
+        avgResponseTime: 0,
+        dataProcessed: 0,
+      },
+    }));
+    setToolStats(initialToolStats);
+  }, []);
 
   // Update active tab and sections when URL changes
   useEffect(() => {
@@ -705,17 +755,22 @@ function EnterpriseDashboardContent() {
                     href="/campaigns"
                     className="block hover:scale-105 transition-transform"
                   >
-                    <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition-all shadow-lg h-full">
-                      <div className="flex items-center justify-between mb-4">
-                        <Send className="w-8 h-8 text-purple-400" />
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-white mb-2">Campaigns</h3>
-                      <p className="text-sm text-gray-300 mb-4">
-                        Automate outreach and contact form submissions
-                      </p>
-                      <div className="text-2xl font-bold text-purple-300">
-                        Unlimited
+                    <div className="relative overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition-all shadow-lg h-full">
+                      {/* Background Image */}
+                      <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop')] bg-cover bg-center"></div>
+                      {/* Content */}
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                          <Send className="w-8 h-8 text-purple-400" />
+                          <ChevronRight className="w-5 h-5 text-gray-400" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">Campaigns</h3>
+                        <p className="text-sm text-gray-300 mb-4">
+                          Automate outreach and contact form submissions
+                        </p>
+                        <div className="text-2xl font-bold text-purple-300">
+                          Unlimited
+                        </div>
                       </div>
                     </div>
                   </Link>
@@ -725,17 +780,22 @@ function EnterpriseDashboardContent() {
                     href="/enterprise/team"
                     className="block hover:scale-105 transition-transform"
                   >
-                    <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6 hover:border-blue-500/50 transition-all shadow-lg h-full">
-                      <div className="flex items-center justify-between mb-4">
-                        <Users className="w-8 h-8 text-blue-400" />
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-white mb-2">Team</h3>
-                      <p className="text-sm text-gray-300 mb-4">
-                        Invite and manage your team members
-                      </p>
-                      <div className="text-sm font-medium text-blue-300">
-                        Add unlimited members
+                    <div className="relative overflow-hidden bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6 hover:border-blue-500/50 transition-all shadow-lg h-full">
+                      {/* Background Image */}
+                      <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop')] bg-cover bg-center"></div>
+                      {/* Content */}
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                          <Users className="w-8 h-8 text-blue-400" />
+                          <ChevronRight className="w-5 h-5 text-gray-400" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">Team</h3>
+                        <p className="text-sm text-gray-300 mb-4">
+                          Invite and manage your team members
+                        </p>
+                        <div className="text-sm font-medium text-blue-300">
+                          Add unlimited members
+                        </div>
                       </div>
                     </div>
                   </Link>
@@ -745,17 +805,22 @@ function EnterpriseDashboardContent() {
                     href="/enterprise?tab=settings&section=keys"
                     className="block hover:scale-105 transition-transform"
                   >
-                    <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-6 hover:border-green-500/50 transition-all shadow-lg h-full">
-                      <div className="flex items-center justify-between mb-4">
-                        <Key className="w-8 h-8 text-green-400" />
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-white mb-2">API Keys</h3>
-                      <p className="text-sm text-gray-300 mb-4">
-                        Manage your API keys and access tokens
-                      </p>
-                      <div className="text-sm font-medium text-green-300">
-                        {stats.activeKeys} {stats.activeKeys === 1 ? 'key' : 'keys'} active
+                    <div className="relative overflow-hidden bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-6 hover:border-green-500/50 transition-all shadow-lg h-full">
+                      {/* Background Image */}
+                      <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1633265486064-086b219458ec?w=800&auto=format&fit=crop')] bg-cover bg-center"></div>
+                      {/* Content */}
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                          <Key className="w-8 h-8 text-green-400" />
+                          <ChevronRight className="w-5 h-5 text-gray-400" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">API Keys</h3>
+                        <p className="text-sm text-gray-300 mb-4">
+                          Manage your API keys and access tokens
+                        </p>
+                        <div className="text-sm font-medium text-green-300">
+                          {stats.activeKeys} {stats.activeKeys === 1 ? 'key' : 'keys'} active
+                        </div>
                       </div>
                     </div>
                   </Link>
@@ -856,6 +921,212 @@ function EnterpriseDashboardContent() {
               </div>
             )}
 
+            {/* Analytics Tab */}
+            {activeTab === "analytics" && (
+              <div className="space-y-8">
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="relative">
+                    <div className="w-6 h-6 bg-white rounded-full animate-pulse"></div>
+                    <div className="absolute inset-0 w-6 h-6 bg-white rounded-full blur-sm opacity-50"></div>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">
+                      Analytics Dashboard
+                    </h2>
+                    <p className="text-gray-400 mt-2">
+                      Detailed insights into your API usage, performance metrics, and trends.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Circular Stats */}
+                <div className="mb-8">
+                  <CircularStats stats={{
+                    callsToday: stats.monthlyCalls,
+                    successRate: stats.successRate,
+                    dataProcessed: stats.dataProcessed,
+                    avgResponseTime: stats.avgResponseTime,
+                    activeKeys: stats.activeKeys,
+                  }} />
+                </div>
+
+                {/* Trend Indicators */}
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 mb-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="relative">
+                      <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
+                      <div className="absolute inset-0 w-4 h-4 bg-white rounded-full blur-sm opacity-50"></div>
+                    </div>
+                    <h3 className="text-lg font-semibold text-white">
+                      Performance Trends
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div className="text-center">
+                      <div className="text-xs text-green-400 font-medium">
+                        +12% from yesterday
+                      </div>
+                      <div className="text-xs text-gray-500">API Calls</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-green-400 font-medium">
+                        +2% from last week
+                      </div>
+                      <div className="text-xs text-gray-500">Success Rate</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-blue-400 font-medium">
+                        +8% from last month
+                      </div>
+                      <div className="text-xs text-gray-500">Data Processed</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-yellow-400 font-medium">
+                        -15ms from last week
+                      </div>
+                      <div className="text-xs text-gray-500">Response Time</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-red-400 font-medium">
+                        +1 new key
+                      </div>
+                      <div className="text-xs text-gray-500">Active Keys</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Activity Table */}
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg">
+                  <div className="px-6 py-4 border-b border-[#2a2a2a]">
+                    <h3 className="text-lg font-semibold text-white">
+                      Recent Activity
+                    </h3>
+                  </div>
+                  <ActivityTable
+                    activities={activities}
+                    onDownload={(id) => console.log('Download', id)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* API Testing Tab */}
+            {activeTab === "testing" && (
+              <div className="space-y-8">
+                {/* Header */}
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-white">
+                    API Testing Hub
+                  </h2>
+                  <p className="text-gray-400 mt-2">
+                    Test all available API endpoints with real-time responses and debugging tools.
+                  </p>
+                </div>
+
+                {/* Circular Stats */}
+                <div className="mb-8">
+                  <CircularStats
+                    stats={{
+                      callsToday: toolStats.reduce((sum, tool) => sum + tool.stats.callsToday, 0),
+                      successRate:
+                        toolStats.length > 0
+                          ? Math.round(toolStats.reduce((sum, tool) => sum + tool.stats.successRate, 0) / toolStats.length)
+                          : 0,
+                      dataProcessed: 0,
+                      avgResponseTime:
+                        toolStats.length > 0
+                          ? Math.round(toolStats.reduce((sum, tool) => sum + tool.stats.avgResponseTime, 0) / toolStats.length)
+                          : 0,
+                      activeKeys: stats.activeKeys,
+                    }}
+                  />
+                </div>
+
+                {/* Tools Section */}
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg overflow-hidden">
+                  <div className="px-6 py-4 border-b border-[#2a2a2a]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-sm font-medium text-white">API Tools</h3>
+                        <span className="text-xs text-gray-500">
+                          {TOOL_CATEGORIES.length} available
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr>
+                          <th className="px-6 py-3 text-left">
+                            <div className="text-xs font-medium text-gray-500">Tool</div>
+                          </th>
+                          <th className="px-6 py-3 text-left">
+                            <div className="text-xs font-medium text-gray-500">Calls</div>
+                          </th>
+                          <th className="px-6 py-3 text-left">
+                            <div className="text-xs font-medium text-gray-500">Success</div>
+                          </th>
+                          <th className="px-6 py-3 text-left">
+                            <div className="text-xs font-medium text-gray-500">Avg Time</div>
+                          </th>
+                          <th className="px-6 py-3 text-right">
+                            <div className="text-xs font-medium text-gray-500">Actions</div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#2a2a2a]">
+                        {toolStats.map(({ toolId, stats }) => (
+                          <ToolCard
+                            key={toolId}
+                            toolId={toolId}
+                            stats={stats}
+                            isExpanded={selectedTool === toolId}
+                            onToggleExpand={() => setSelectedTool(selectedTool === toolId ? null : toolId)}
+                            onTestApi={() => setSelectedTool(toolId)}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* History Tab */}
+            {activeTab === "history" && (
+              <div className="space-y-8">
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="relative">
+                    <div className="w-6 h-6 bg-white rounded-full animate-pulse"></div>
+                    <div className="absolute inset-0 w-6 h-6 bg-white rounded-full blur-sm opacity-50"></div>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">
+                      Reset History
+                    </h2>
+                    <p className="text-gray-400 mt-2">
+                      View when your API calls were reset by administrators
+                    </p>
+                  </div>
+                </div>
+
+                {/* Reset History Table */}
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg">
+                  <div className="px-6 py-4 border-b border-[#2a2a2a]">
+                    <h3 className="text-lg font-semibold text-white">
+                      API Call Resets
+                    </h3>
+                  </div>
+                  <ResetHistoryTable userId={user?.id} />
+                </div>
+              </div>
+            )}
+
             {/* API Reference Tab */}
             {activeTab === "api-reference" && (
               <div className="space-y-8">
@@ -879,7 +1150,7 @@ function EnterpriseDashboardContent() {
             {/* Settings Tab */}
             {activeTab === "settings" && (
               <div className="space-y-8">
-                {settingsSection === "keys" && (
+                {settingsSection === "keys" ? (
                   <>
                     {/* Header */}
                     <div className="flex items-center gap-4 mb-8">
@@ -902,6 +1173,8 @@ function EnterpriseDashboardContent() {
                       <p className="text-gray-400">API Keys management interface would go here</p>
                     </div>
                   </>
+                ) : (
+                  <BillingSection user={user} />
                 )}
               </div>
             )}
