@@ -93,12 +93,25 @@ export default function EnterpriseTeamPage() {
         return;
       }
 
-      // For now, we'll show a placeholder until backend endpoint is created
-      // TODO: Create /api/enterprise/team endpoint on backend
-      setTeamMembers([]);
+      const response = await fetch("/api/enterprise/team", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTeamMembers(data.teamMembers || []);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || "Failed to fetch team members");
+      }
       setLoading(false);
     } catch (error) {
       console.error("Error fetching team members:", error);
+      setError("Failed to fetch team members");
       setLoading(false);
     }
   };
@@ -117,14 +130,29 @@ export default function EnterpriseTeamPage() {
         return;
       }
 
-      // TODO: Create backend endpoint for inviting team members
-      // For now, show success message
-      setSuccess(`Invitation sent to ${newMemberEmail}`);
-      setNewMemberEmail("");
-      
-      // Refresh team members list
-      await fetchTeamMembers();
+      const response = await fetch("/api/enterprise/team", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          email: newMemberEmail,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSuccess(data.message || `Invitation sent to ${newMemberEmail}`);
+        setNewMemberEmail("");
+        // Refresh team members list
+        await fetchTeamMembers();
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || "Failed to invite team member");
+      }
     } catch (error) {
+      console.error("Error inviting team member:", error);
       setError("Failed to invite team member. Please try again.");
     } finally {
       setInviting(false);
@@ -136,6 +164,9 @@ export default function EnterpriseTeamPage() {
       return;
     }
 
+    setError("");
+    setSuccess("");
+
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) {
@@ -143,10 +174,24 @@ export default function EnterpriseTeamPage() {
         return;
       }
 
-      // TODO: Create backend endpoint for removing team members
-      setSuccess("Team member removed successfully");
-      await fetchTeamMembers();
+      const response = await fetch(`/api/enterprise/team/${memberId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSuccess(data.message || "Team member removed successfully");
+        await fetchTeamMembers();
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        setError(errorData.error || "Failed to remove team member");
+      }
     } catch (error) {
+      console.error("Error removing team member:", error);
       setError("Failed to remove team member. Please try again.");
     }
   };

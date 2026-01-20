@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Users,
   Key,
@@ -17,6 +17,14 @@ import {
   AlertCircle,
   Send,
   ChevronRight,
+  Home,
+  LayoutDashboard,
+  FileText,
+  Book,
+  ChevronDown,
+  ChevronRight as ChevronRightIcon,
+  Menu,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/contexts/UserContext";
@@ -32,9 +40,95 @@ interface EnterpriseStats {
   avgResponseTime: number;
 }
 
-export default function EnterpriseDashboard() {
+interface SidebarItem {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  path?: string;
+  children?: SidebarItem[];
+}
+
+const enterpriseSidebarItems: SidebarItem[] = [
+  {
+    id: "overview",
+    label: "Overview",
+    icon: <LayoutDashboard className="w-5 h-5" />,
+    path: "/enterprise?tab=overview",
+  },
+  {
+    id: "campaigns",
+    label: "Campaigns",
+    icon: <Send className="w-5 h-5" />,
+    path: "/enterprise?tab=campaigns",
+  },
+  {
+    id: "team",
+    label: "Team",
+    icon: <Users className="w-5 h-5" />,
+    path: "/enterprise/team",
+  },
+  {
+    id: "api-reference",
+    label: "API Reference",
+    icon: <Book className="w-5 h-5" />,
+    children: [
+      {
+        id: "introduction",
+        label: "Introduction",
+        icon: <Zap className="w-4 h-4" />,
+        path: "/enterprise?tab=api-reference&section=introduction",
+      },
+      {
+        id: "authentication",
+        label: "Authentication",
+        icon: <Shield className="w-4 h-4" />,
+        path: "/enterprise?tab=api-reference&section=authentication",
+      },
+      {
+        id: "base-url",
+        label: "Base URL",
+        icon: <Server className="w-4 h-4" />,
+        path: "/enterprise?tab=api-reference&section=base-url",
+      },
+      {
+        id: "errors",
+        label: "Errors",
+        icon: <AlertCircle className="w-4 h-4" />,
+        path: "/enterprise?tab=api-reference&section=errors",
+      },
+      {
+        id: "endpoints",
+        label: "API Endpoints",
+        icon: <FileText className="w-4 h-4" />,
+        path: "/enterprise?tab=api-reference&section=endpoints",
+      },
+      {
+        id: "integration",
+        label: "Integration Guides",
+        icon: <Database className="w-4 h-4" />,
+        path: "/enterprise?tab=api-reference&section=integration",
+      },
+    ],
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: <Settings className="w-5 h-5" />,
+    children: [
+      {
+        id: "api-keys",
+        label: "API Keys",
+        icon: <Key className="w-4 h-4" />,
+        path: "/enterprise?tab=settings&section=keys",
+      },
+    ],
+  },
+];
+
+function EnterpriseDashboardContent() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [stats, setStats] = useState<EnterpriseStats>({
     monthlyCalls: 0,
     monthlyLimit: -1, // Unlimited for enterprise
@@ -47,6 +141,20 @@ export default function EnterpriseDashboard() {
   const [activities, setActivities] = useState<any[]>([]);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") || "overview"
+  );
+  const [settingsSection, setSettingsSection] = useState(
+    searchParams.get("section") || "keys"
+  );
+  const [apiReferenceSection, setApiReferenceSection] = useState(
+    searchParams.get("section") || "introduction"
+  );
+  const [expandedItems, setExpandedItems] = useState<string[]>([
+    "settings",
+    "api-reference",
+  ]);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   // Redirect if not enterprise tier
   useEffect(() => {
@@ -65,6 +173,18 @@ export default function EnterpriseDashboard() {
 
       // User is loaded, check enterprise status
       const checkEnterpriseStatus = async () => {
+        // First check user object (most reliable)
+        const userIsEnterprise =
+          user.subscription_tier?.toLowerCase() === "enterprise" ||
+          user.monthly_call_limit === -1 ||
+          (user.monthly_call_limit && user.monthly_call_limit >= 100000);
+
+        if (userIsEnterprise) {
+          // User is confirmed enterprise, allow access
+          return;
+        }
+
+        // If user object doesn't confirm enterprise, check via API
         try {
           const token = localStorage.getItem("auth_token");
           if (!token) {
@@ -73,10 +193,7 @@ export default function EnterpriseDashboard() {
           }
 
           const usageResponse = await fetch(
-            `${
-              process.env.NEXT_PUBLIC_API_BASE_URL ||
-              "https://web-production-737b.up.railway.app"
-            }/api/client/usage`,
+            `${getApiUrl("/api/client/usage")}`,
             {
               headers: {
                 "Content-Type": "application/json",
@@ -87,37 +204,23 @@ export default function EnterpriseDashboard() {
 
           if (usageResponse.ok) {
             const usageData = await usageResponse.json();
-            const isEnterprise =
+            const apiIsEnterprise =
               usageData.subscription_tier?.toLowerCase() === "enterprise" ||
               usageData.monthly?.limit === -1 ||
               (usageData.monthly?.limit && usageData.monthly.limit >= 100000);
 
-            if (!isEnterprise) {
+            if (!apiIsEnterprise) {
               // Not enterprise, redirect to regular dashboard
               router.push("/dashboard");
               return;
             }
           } else {
-            // If usage check fails, still allow access if user has enterprise subscription_tier
-            const userIsEnterprise =
-              user.subscription_tier?.toLowerCase() === "enterprise" ||
-              user.monthly_call_limit === -1 ||
-              (user.monthly_call_limit && user.monthly_call_limit >= 100000);
-
-            if (!userIsEnterprise) {
-              router.push("/dashboard");
-            }
-          }
-        } catch (error) {
-          // On error, check user object as fallback
-          const userIsEnterprise =
-            user.subscription_tier?.toLowerCase() === "enterprise" ||
-            user.monthly_call_limit === -1 ||
-            (user.monthly_call_limit && user.monthly_call_limit >= 100000);
-
-          if (!userIsEnterprise) {
+            // If API check fails, redirect to dashboard (safer approach)
             router.push("/dashboard");
           }
+        } catch (error) {
+          // On API error, redirect to dashboard to be safe
+          router.push("/dashboard");
         }
       };
 
@@ -130,6 +233,23 @@ export default function EnterpriseDashboard() {
       fetchEnterpriseData();
     }
   }, [user]);
+
+  // Update active tab and sections when URL changes
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    const section = searchParams.get("section");
+    if (tab && activeTab !== tab) {
+      setActiveTab(tab);
+    }
+    if (section) {
+      if (activeTab === "settings") {
+        setSettingsSection(section);
+      }
+      if (activeTab === "api-reference") {
+        setApiReferenceSection(section);
+      }
+    }
+  }, [searchParams, activeTab]);
 
   const fetchEnterpriseData = async () => {
     try {
@@ -217,6 +337,158 @@ export default function EnterpriseDashboard() {
       setLoading(false);
     }
   };
+
+  const toggleExpanded = (itemId: string) => {
+    setExpandedItems((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  const handleItemClick = (item: SidebarItem) => {
+    if (item.path) {
+      router.push(item.path);
+      setActiveTab(item.id);
+      setMobileOpen(false);
+    } else if (item.children) {
+      toggleExpanded(item.id);
+    }
+  };
+
+  const handleChildClick = (child: SidebarItem, parentId: string) => {
+    if (child.path) {
+      router.push(child.path);
+      setActiveTab(parentId);
+      setMobileOpen(false);
+    }
+  };
+
+  const isActive = (item: SidebarItem) => {
+    if (item.id === activeTab) return true;
+    if (item.children) {
+      return item.children.some((child) => {
+        const urlSection = typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("section")
+          : null;
+        return child.id === activeTab || child.id === urlSection;
+      });
+    }
+    return false;
+  };
+
+  const renderSidebarItem = (item: SidebarItem, level = 0) => {
+    const hasChildren = item.children && item.children.length > 0;
+    const isExpanded = expandedItems.includes(item.id);
+    const active = isActive(item);
+
+    return (
+      <div key={item.id}>
+        <button
+          onClick={() => handleItemClick(item)}
+          className={`
+            w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200
+            ${
+              active
+                ? "bg-[#2a2a2a] text-white"
+                : "text-gray-400 hover:text-white hover:bg-[#2a2a2a]/50"
+            }
+            ${level > 0 ? "pl-8" : ""}
+          `}
+        >
+          <div className="flex items-center gap-3">
+            <span className={active ? "text-[#8b5cf6]" : ""}>{item.icon}</span>
+            <span className="text-sm font-medium">{item.label}</span>
+          </div>
+          {hasChildren && (
+            <span className="text-gray-500">
+              {isExpanded ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRightIcon className="w-4 h-4" />
+              )}
+            </span>
+          )}
+        </button>
+        {hasChildren && isExpanded && (
+          <div className="mt-1 space-y-1">
+            {item.children!.map((child) => (
+              <button
+                key={child.id}
+                onClick={() => handleChildClick(child, item.id)}
+                className={`
+                  w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
+                  ${
+                    (() => {
+                      const urlSection =
+                        typeof window !== "undefined"
+                          ? new URLSearchParams(window.location.search).get(
+                              "section"
+                            )
+                          : null;
+                      return child.id === urlSection || child.id === activeTab;
+                    })()
+                      ? "bg-[#2a2a2a] text-white"
+                      : "text-gray-400 hover:text-white hover:bg-[#2a2a2a]/50"
+                  }
+                  pl-8
+                `}
+              >
+                <span
+                  className={
+                    (() => {
+                      const urlSection =
+                        typeof window !== "undefined"
+                          ? new URLSearchParams(window.location.search).get(
+                              "section"
+                            )
+                          : null;
+                      return child.id === urlSection || child.id === activeTab;
+                    })()
+                      ? "text-[#8b5cf6]"
+                      : ""
+                  }
+                >
+                  {child.icon}
+                </span>
+                <span className="text-sm font-medium">{child.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const sidebarContent = (
+    <div className="h-full flex flex-col bg-[#1a1a1a] border-r border-[#2a2a2a]">
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        {enterpriseSidebarItems.map((item) => renderSidebarItem(item))}
+      </nav>
+
+      {/* User Profile */}
+      {user && (
+        <div className="p-4 border-t border-[#2a2a2a]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center border border-white">
+                <span className="text-white font-semibold text-sm">
+                  {user.email?.[0]?.toUpperCase() || "U"}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {user.email || "User"}
+                </p>
+              <p className="text-xs text-gray-400 truncate">
+                {user.email || ""}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   const StatCard = ({
     title,
@@ -340,193 +612,296 @@ export default function EnterpriseDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 page-content">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">
-                Enterprise Dashboard
-              </h1>
-              <p className="text-gray-300 text-lg">
-                Unlimited API access and premium features for your team
-              </p>
-            </div>
-            <div className="flex items-center space-x-2 text-green-400">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium">Enterprise Plan Active</span>
-            </div>
-          </div>
+    <div className="min-h-screen bg-black text-white relative overflow-hidden page-content flex">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-[#8b5cf6]/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#3b82f6]/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
 
-          {/* Quick Overview Cards */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Campaigns Card */}
-            <Link
-              href="/campaigns"
-              className="block hover:scale-105 transition-transform"
-            >
-              <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition-all shadow-lg h-full">
-                <div className="flex items-center justify-between mb-4">
-                  <Send className="w-8 h-8 text-purple-400" />
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Campaigns</h3>
-                <p className="text-sm text-gray-300 mb-4">
-                  Automate outreach and contact form submissions
+      {/* Sidebar */}
+      <div className="hidden lg:flex lg:w-64 lg:flex-shrink-0">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div
+        className={`
+          lg:hidden fixed left-0 top-0 h-full w-64 z-50 transform transition-transform duration-300
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        {sidebarContent}
+      </div>
+
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#1a1a1a] rounded-lg border border-[#2a2a2a] text-white"
+      >
+        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        {/* Header */}
+        <div className="relative border-b border-border/50 backdrop-blur-sm bg-background/80 dark:bg-[#0a0a0a]/80 z-10">
+          <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                  Enterprise Dashboard
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+                  <span className="w-2 h-2 bg-[#8b5cf6] rounded-full animate-pulse"></span>
+                  {user?.email || "User"} • Enterprise Plan
                 </p>
-                <div className="text-2xl font-bold text-purple-300">
-                  Unlimited
-                </div>
               </div>
-            </Link>
-
-            {/* Team Management Card */}
-            <Link
-              href="/enterprise/team"
-              className="block hover:scale-105 transition-transform"
-            >
-              <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6 hover:border-blue-500/50 transition-all shadow-lg h-full">
-                <div className="flex items-center justify-between mb-4">
-                  <Users className="w-8 h-8 text-blue-400" />
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
+              <div className="flex items-center gap-4">
+                <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-green-500/20 rounded-xl border border-border backdrop-blur-sm">
+                  <div className="w-3 h-3 bg-[#ffffff] rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-foreground">
+                    Online
+                  </span>
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Team</h3>
-                <p className="text-sm text-gray-300 mb-4">
-                  Invite and manage your team members
-                </p>
-                <div className="text-sm font-medium text-blue-300">
-                  Add unlimited members
-                </div>
-              </div>
-            </Link>
-
-            {/* API Access Card */}
-            <Link
-              href="/dashboard?tab=settings&section=keys"
-              className="block hover:scale-105 transition-transform"
-            >
-              <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-6 hover:border-green-500/50 transition-all shadow-lg h-full">
-                <div className="flex items-center justify-between mb-4">
-                  <Key className="w-8 h-8 text-green-400" />
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">API Keys</h3>
-                <p className="text-sm text-gray-300 mb-4">
-                  Manage your API keys and access tokens
-                </p>
-                <div className="text-sm font-medium text-green-300">
-                  {stats.activeKeys} {stats.activeKeys === 1 ? 'key' : 'keys'} active
-                </div>
-              </div>
-            </Link>
-          </div>
-
-          {/* Enterprise Features */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
-            <div className="px-6 py-6">
-              <h3 className="text-xl font-semibold text-white mb-6">
-                Your Enterprise Benefits
-              </h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-                  <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
-                  <h4 className="text-white font-medium mb-1">
-                    Unlimited API Calls
-                  </h4>
-                  <p className="text-sm text-gray-400">
-                    No monthly limits on API usage
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-                  <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
-                  <h4 className="text-white font-medium mb-1">
-                    Unlimited Campaigns
-                  </h4>
-                  <p className="text-sm text-gray-400">
-                    Run unlimited outreach campaigns
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-                  <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
-                  <h4 className="text-white font-medium mb-1">
-                    Team Collaboration
-                  </h4>
-                  <p className="text-sm text-gray-400">
-                    Add unlimited team members
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-                  <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
-                  <h4 className="text-white font-medium mb-1">
-                    Priority Support
-                  </h4>
-                  <p className="text-sm text-gray-400">
-                    Dedicated support channel
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-                  <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
-                  <h4 className="text-white font-medium mb-1">
-                    All API Endpoints
-                  </h4>
-                  <p className="text-sm text-gray-400">
-                    Access to all available endpoints
-                  </p>
-                </div>
-                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
-                  <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
-                  <h4 className="text-white font-medium mb-1">
-                    99.9% SLA Guarantee
-                  </h4>
-                  <p className="text-sm text-gray-400">
-                    Uptime guarantee for your business
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Resources */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
-            <div className="px-6 py-6">
-              <h3 className="text-xl font-semibold text-white mb-6">
-                Resources & Documentation
-              </h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Link
-                  href="/api-docs"
-                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
-                >
-                  <Settings className="h-6 w-6 text-blue-400 group-hover:text-blue-300" />
-                  <span className="text-white font-medium">API Documentation</span>
-                </Link>
-                <Link
-                  href="/dashboard?tab=settings"
-                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
-                >
-                  <Settings className="h-6 w-6 text-purple-400 group-hover:text-purple-300" />
-                  <span className="text-white font-medium">Settings</span>
-                </Link>
-                <Link
-                  href="/dashboard"
-                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
-                >
-                  <BarChart3 className="h-6 w-6 text-green-400 group-hover:text-green-300" />
-                  <span className="text-white font-medium">Usage Dashboard</span>
-                </Link>
-                <Link
-                  href="/enterprise/team"
-                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
-                >
-                  <Users className="h-6 w-6 text-yellow-400 group-hover:text-yellow-300" />
-                  <span className="text-white font-medium">Team Settings</span>
-                </Link>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Main Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+            {/* Overview Tab */}
+            {activeTab === "overview" && (
+              <>
+                {/* Quick Overview Cards */}
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+                  {/* Campaigns Card */}
+                  <Link
+                    href="/campaigns"
+                    className="block hover:scale-105 transition-transform"
+                  >
+                    <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 hover:border-purple-500/50 transition-all shadow-lg h-full">
+                      <div className="flex items-center justify-between mb-4">
+                        <Send className="w-8 h-8 text-purple-400" />
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white mb-2">Campaigns</h3>
+                      <p className="text-sm text-gray-300 mb-4">
+                        Automate outreach and contact form submissions
+                      </p>
+                      <div className="text-2xl font-bold text-purple-300">
+                        Unlimited
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Team Management Card */}
+                  <Link
+                    href="/enterprise/team"
+                    className="block hover:scale-105 transition-transform"
+                  >
+                    <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6 hover:border-blue-500/50 transition-all shadow-lg h-full">
+                      <div className="flex items-center justify-between mb-4">
+                        <Users className="w-8 h-8 text-blue-400" />
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white mb-2">Team</h3>
+                      <p className="text-sm text-gray-300 mb-4">
+                        Invite and manage your team members
+                      </p>
+                      <div className="text-sm font-medium text-blue-300">
+                        Add unlimited members
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* API Access Card */}
+                  <Link
+                    href="/enterprise?tab=settings&section=keys"
+                    className="block hover:scale-105 transition-transform"
+                  >
+                    <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-6 hover:border-green-500/50 transition-all shadow-lg h-full">
+                      <div className="flex items-center justify-between mb-4">
+                        <Key className="w-8 h-8 text-green-400" />
+                        <ChevronRight className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white mb-2">API Keys</h3>
+                      <p className="text-sm text-gray-300 mb-4">
+                        Manage your API keys and access tokens
+                      </p>
+                      <div className="text-sm font-medium text-green-300">
+                        {stats.activeKeys} {stats.activeKeys === 1 ? 'key' : 'keys'} active
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+
+                {/* Enterprise Features */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
+                  <div className="px-6 py-6">
+                    <h3 className="text-xl font-semibold text-white mb-6">
+                      Your Enterprise Benefits
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+                        <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
+                        <h4 className="text-white font-medium mb-1">
+                          Unlimited API Calls
+                        </h4>
+                        <p className="text-sm text-gray-400">
+                          No monthly limits on API usage
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+                        <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
+                        <h4 className="text-white font-medium mb-1">
+                          Unlimited Campaigns
+                        </h4>
+                        <p className="text-sm text-gray-400">
+                          Run unlimited outreach campaigns
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+                        <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
+                        <h4 className="text-white font-medium mb-1">
+                          Team Collaboration
+                        </h4>
+                        <p className="text-sm text-gray-400">
+                          Add unlimited team members
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+                        <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
+                        <h4 className="text-white font-medium mb-1">
+                          Priority Support
+                        </h4>
+                        <p className="text-sm text-gray-400">
+                          Dedicated support channel
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+                        <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
+                        <h4 className="text-white font-medium mb-1">
+                          All API Endpoints
+                        </h4>
+                        <p className="text-sm text-gray-400">
+                          Access to all available endpoints
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+                        <CheckCircle className="h-6 w-6 text-green-400 mb-2" />
+                        <h4 className="text-white font-medium mb-1">
+                          99.9% SLA Guarantee
+                        </h4>
+                        <p className="text-sm text-gray-400">
+                          Uptime guarantee for your business
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Campaigns Tab */}
+            {activeTab === "campaigns" && (
+              <div className="space-y-8">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Campaigns</h2>
+                    <p className="text-gray-400 mt-2">
+                      Automate contact form submissions across multiple
+                      companies
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => router.push("/campaigns/upload")}
+                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all rounded-xl shadow-lg hover:shadow-xl"
+                  >
+                    <Send className="w-5 h-5" />
+                    New Campaign
+                  </button>
+                </div>
+
+                {/* Campaigns List - Import from existing component */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl p-6">
+                  <p className="text-gray-400">Campaign management interface would go here</p>
+                </div>
+              </div>
+            )}
+
+            {/* API Reference Tab */}
+            {activeTab === "api-reference" && (
+              <div className="space-y-8">
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-white">
+                    API Reference
+                  </h2>
+                  <p className="text-gray-400 mt-2">
+                    Complete documentation for the Trevnoctilla API. Build
+                    powerful file conversion and processing features into your
+                    applications.
+                  </p>
+                </div>
+
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl p-6">
+                  <p className="text-gray-400">API Reference content would go here</p>
+                </div>
+              </div>
+            )}
+
+            {/* Settings Tab */}
+            {activeTab === "settings" && (
+              <div className="space-y-8">
+                {settingsSection === "keys" && (
+                  <>
+                    {/* Header */}
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="relative">
+                        <div className="w-6 h-6 bg-white rounded-full animate-pulse"></div>
+                        <div className="absolute inset-0 w-6 h-6 bg-white rounded-full blur-sm opacity-50"></div>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-white">
+                          API Keys
+                        </h2>
+                        <p className="text-gray-400 mt-2">
+                          Manage your API authentication keys
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* API Keys Management */}
+                    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg p-6">
+                      <p className="text-gray-400">API Keys management interface would go here</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+export default function EnterpriseDashboard() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-400 mx-auto mb-4"></div>
+            <p className="text-gray-300">Loading enterprise dashboard...</p>
+          </div>
+        </div>
+      }
+    >
+      <EnterpriseDashboardContent />
+    </Suspense>
   );
 }
