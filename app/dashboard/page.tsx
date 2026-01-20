@@ -219,14 +219,14 @@ function DashboardContent() {
         monthlyCallLimit: user.monthly_call_limit,
         isEnterprise,
         currentPath: window.location.pathname,
-        bypassRedirect
+        bypassRedirect,
       });
 
       // Check for premium tier
       const isPremium = subscriptionTier === "premium";
 
-      // Only redirect to enterprise if not already on enterprise page
-      if (isEnterprise && window.location.pathname !== "/enterprise") {
+      // Only redirect to enterprise if not already on enterprise page and not bypassing
+      if (isEnterprise && window.location.pathname !== "/enterprise" && !bypassRedirect) {
         console.log("Redirecting enterprise user to /enterprise");
         router.push("/enterprise");
         return;

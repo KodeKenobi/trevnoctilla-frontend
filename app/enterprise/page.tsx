@@ -25,6 +25,8 @@ import {
   ChevronRight as ChevronRightIcon,
   Menu,
   X,
+  Globe,
+  Crown,
 } from "lucide-react";
 import Link from "next/link";
 import { useUser } from "@/contexts/UserContext";
@@ -462,8 +464,40 @@ function EnterpriseDashboardContent() {
 
   const sidebarContent = (
     <div className="h-full flex flex-col bg-[#1a1a1a] border-r border-[#2a2a2a]">
+      {/* Enterprise Quick Switch */}
+      <div className="p-4">
+        <div className="mb-4 px-3 py-2 bg-purple-500/10 rounded-md border border-purple-500/30">
+          <div className="flex items-center gap-2 mb-2">
+            <Crown className="h-4 w-4 text-purple-400" />
+            <p className="text-xs font-semibold text-purple-400">
+              Quick Switch
+            </p>
+          </div>
+          <div className="space-y-1">
+            <Link
+              href="/"
+              className="flex items-center px-2 py-1.5 text-xs text-gray-300 hover:bg-gray-600 rounded transition-colors"
+            >
+              <Globe className="h-3 w-3 mr-2" />
+              Website
+            </Link>
+            <Link
+              href="/dashboard?bypass=true"
+              className="flex items-center px-2 py-1.5 text-xs text-gray-300 hover:bg-gray-600 rounded transition-colors"
+            >
+              <LayoutDashboard className="h-3 w-3 mr-2" />
+              Full Dashboard
+            </Link>
+            <div className="flex items-center px-2 py-1.5 text-xs text-white bg-gray-800 rounded">
+              <Shield className="h-3 w-3 mr-2" />
+              Enterprise
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
         {enterpriseSidebarItems.map((item) => renderSidebarItem(item))}
       </nav>
 
@@ -641,6 +675,32 @@ function EnterpriseDashboardContent() {
       >
         {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
+
+      {/* Mobile Enterprise Quick Switch */}
+      {!mobileOpen && (
+        <div className="lg:hidden fixed top-4 right-4 z-50 flex items-center gap-1 bg-[#1a1a1a]/90 rounded-lg px-2 py-1 border border-[#2a2a2a] backdrop-blur-sm">
+          <Link
+            href="/"
+            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-600 rounded transition-colors"
+            title="Website"
+          >
+            <Globe className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/dashboard?bypass=true"
+            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-600 rounded transition-colors"
+            title="Full Dashboard"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+          </Link>
+          <div
+            className="p-1.5 text-white bg-purple-600 rounded"
+            title="Enterprise Dashboard"
+          >
+            <Shield className="h-4 w-4" />
+          </div>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
