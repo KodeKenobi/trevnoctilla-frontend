@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 // DELETE /api/enterprise/team/[id] - Remove a team member
 export async function DELETE(
@@ -8,8 +6,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    // Get authorization header
+    const authHeader = request.headers.get('Authorization');
+
+    if (!authHeader) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -20,30 +20,28 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid team member ID" }, { status: 400 });
     }
 
-    // Check if user is enterprise
-    const userRole = (session.user as any).role;
-    const subscriptionTier = (session.user as any).subscription_tier;
+    // Get backend URL
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
 
-    const isEnterprise =
-      userRole === "enterprise" ||
-      subscriptionTier?.toLowerCase() === "enterprise" ||
-      (session.user as any).monthly_call_limit === -1 ||
-      ((session.user as any).monthly_call_limit && (session.user as any).monthly_call_limit >= 100000);
+    // Send removal request to backend
+    const response = await fetch(`${backendUrl}/api/enterprise/team/${teamMemberId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
+      },
+    });
 
-    if (!isEnterprise) {
-      return NextResponse.json({ error: "Enterprise access required" }, { status: 403 });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return NextResponse.json(
+        { error: errorData.error || 'Failed to remove team member' },
+        { status: response.status }
+      );
     }
 
-    // TODO: Implement team member removal logic
-    // For now, just return success message
-    // In a real implementation, you'd:
-    // 1. Verify the team member belongs to this user's team
-    // 2. Remove the team member from the team
-    // 3. Optionally deactivate their account or change their role
-
-    return NextResponse.json({
-      message: "Team member removed successfully"
-    });
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Error removing team member:", error);
     return NextResponse.json(

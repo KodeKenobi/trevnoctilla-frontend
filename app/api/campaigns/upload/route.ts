@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import * as XLSX from 'xlsx';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -27,10 +28,10 @@ export async function POST(request: NextRequest) {
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ];
-    
+
     if (!allowedTypes.includes(file.type) && !file.name.match(/\.(csv|xls|xlsx)$/i)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Please upload CSV or Excel file.' },
+        { error: 'Invalid file type. Please upload CSV, XLS, or XLSX file.' },
         { status: 400 }
       );
     }
@@ -248,11 +249,200 @@ export async function POST(request: NextRequest) {
 
         rows.push(row);
       }
+    } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      // Parse Excel file
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+
+      // Get the first worksheet
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+
+      // Convert to array of arrays (same format as CSV)
+      const csvData = XLSX.utils.sheet_to_csv(worksheet);
+
+      // Parse CSV data (same logic as CSV files)
+      const lines = csvData.split('\n').filter(line => line.trim());
+      if (lines.length < 1) {
+        return NextResponse.json(
+          { error: 'Excel file is empty' },
+          { status: 400 }
+        );
+      }
+
+      const firstLine = lines[0].split(',').map(h => h.trim().replace(/['"]/g, ''));
+
+      // Detect if first row is headers or data
+      // If any column looks like a URL or domain, treat it as data without headers
+      const hasUrlInFirstRow = firstLine.some(value => {
+        const lower = value.toLowerCase();
+        return lower.includes('http') ||
+               lower.includes('.com') ||
+               lower.includes('.net') ||
+               lower.includes('.org') ||
+               lower.includes('.io') ||
+               lower.includes('.co') ||
+               lower.includes('www.');
+      });
+
+      const hasHeaders = !hasUrlInFirstRow;
+
+      let headers: string[];
+      let startRow: number;
+
+      if (hasHeaders) {
+        headers = firstLine;
+        startRow = 1;
+      } else {
+        // No headers - detect columns by analyzing data patterns
+        // Look at first few rows to detect column types
+        const sampleSize = Math.min(5, lines.length);
+        const columnPatterns: { [key: number]: { isUrl: number; isEmail: number; isPhone: number; isText: number } } = {};
+
+        // Initialize pattern counters for each column
+        for (let col = 0; col < firstLine.length; col++) {
+          columnPatterns[col] = { isUrl: 0, isEmail: 0, isPhone: 0, isText: 0 };
+        }
+
+        // Analyze first few rows
+        for (let row = 0; row < sampleSize; row++) {
+          const values = lines[row].split(',').map(v => v.trim().replace(/['"]/g, ''));
+          values.forEach((value, col) => {
+            const lower = value.toLowerCase();
+
+            // Check if it's a URL
+            if (lower.includes('http') || lower.includes('.com') || lower.includes('.net') ||
+                lower.includes('.org') || lower.includes('.io') || lower.includes('.co') ||
+                lower.includes('www.') || /\.[a-z]{2,}/.test(lower)) {
+              columnPatterns[col].isUrl++;
+            }
+            // Check if it's an email
+            else if (value.includes('@') && value.includes('.')) {
+              columnPatterns[col].isEmail++;
+            }
+            // Check if it's a phone number
+            else if (/[\d\-\+\(\)\s]{7,}/.test(value) && /\d{3,}/.test(value)) {
+              columnPatterns[col].isPhone++;
+            }
+            // Otherwise it's text
+            else if (value.length > 0) {
+              columnPatterns[col].isText++;
+            }
+          });
+        }
+
+        // Assign column types based on patterns (already normalized)
+        headers = [];
+        let urlColumnFound = false;
+
+        for (let col = 0; col < firstLine.length; col++) {
+          const patterns = columnPatterns[col];
+
+          if (patterns.isUrl > 0 && !urlColumnFound) {
+            headers.push('website_url'); // Already normalized
+            urlColumnFound = true;
+          } else if (patterns.isEmail > 0) {
+            headers.push('contact_email'); // Already normalized
+          } else if (patterns.isPhone > 0) {
+            headers.push('phone'); // Already normalized
+          } else if (patterns.isText > 0) {
+            headers.push('company_name'); // Already normalized
+          } else {
+            headers.push(`column_${col}`);
+          }
+        }
+
+        if (!urlColumnFound) {
+          return NextResponse.json(
+            {
+              error: `Could not detect website URL column in Excel file. Please ensure at least one column contains website URLs.`
+            },
+            { status: 400 }
+          );
+        }
+
+        startRow = 0;
+      }
+
+      console.log('[Excel Debug] Headers detected:', headers);
+      console.log('[Excel Debug] Start row:', startRow);
+      console.log('[Excel Debug] Total lines:', lines.length);
+
+      // Normalize header names to standard field names
+      const normalizeHeader = (header: string): string => {
+        const lower = header.toLowerCase().replace(/\s+/g, '_');
+
+        // Map various URL field names to website_url
+        if (lower.includes('website') || lower.includes('url') || lower === 'site') {
+          return 'website_url';
+        }
+        // Map various company name fields
+        if (lower.includes('company') || lower === 'name' || lower === 'business') {
+          return 'company_name';
+        }
+        // Map email fields
+        if (lower.includes('email') || lower.includes('mail')) {
+          return 'contact_email';
+        }
+        // Map phone fields
+        if (lower.includes('phone') || lower.includes('mobile') || lower.includes('tel')) {
+          return 'phone';
+        }
+        // Map contact person fields
+        if (lower.includes('contact') && (lower.includes('person') || lower.includes('name'))) {
+          return 'contact_person';
+        }
+
+        return lower;
+      };
+
+      // Parse data rows
+      for (let i = startRow; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim().replace(/['"]/g, ''));
+
+        // Skip empty rows
+        const hasData = values.some(v => v && v.trim() !== '');
+        if (!hasData) {
+          console.log(`[Excel Debug] Row ${i} is empty, skipping`);
+          continue;
+        }
+
+        const row: any = {};
+
+        console.log(`[Excel Debug] Row ${i} values:`, values);
+
+        headers.forEach((header, index) => {
+          const value = values[index] || '';
+          const normalizedHeader = normalizeHeader(header);
+          row[normalizedHeader] = value;
+        });
+
+        console.log(`[Excel Debug] Row ${i} object:`, row);
+
+        // Validate website URL
+        if (row.website_url && !row.website_url.startsWith('http')) {
+          row.website_url = 'https://' + row.website_url;
+        }
+
+        // Auto-generate company name from domain if missing
+        if (!row.company_name || row.company_name.trim() === '') {
+          try {
+            const url = new URL(row.website_url.startsWith('http') ? row.website_url : `https://${row.website_url}`);
+            let domain = url.hostname.replace(/^www\./i, '');
+            const domainParts = domain.split('.');
+            let companyName = domainParts[0];
+            // Capitalize
+            companyName = companyName.charAt(0).toUpperCase() + companyName.slice(1);
+            row.company_name = companyName;
+          } catch (e) {
+            row.company_name = row.website_url;
+          }
+        }
+
+        rows.push(row);
+      }
     } else {
-      // For Excel files, we'll need to use a library on the server side
-      // For now, return error asking user to convert to CSV
       return NextResponse.json(
-        { error: 'Please convert Excel file to CSV format for upload' },
+        { error: 'Unsupported file format. Please upload CSV, XLS, or XLSX file.' },
         { status: 400 }
       );
     }

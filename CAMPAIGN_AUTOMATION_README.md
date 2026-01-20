@@ -9,7 +9,7 @@ This feature allows users to automatically visit websites, find contact pages, f
 ### ✅ Completed Features
 
 1. **Spreadsheet Upload**
-   - Support for CSV files
+   - Support for CSV, XLS, and XLSX files
    - Validation of required columns (company_name, website_url)
    - Preview of uploaded data
    - Handles optional fields (contact_email, contact_person, phone)
@@ -178,7 +178,7 @@ npm run worker:campaigns
 
 1. Navigate to `/campaigns`
 2. Click "New Campaign"
-3. Upload a CSV file with columns:
+3. Upload a CSV, XLS, or XLSX file with columns:
    - `company_name` (required)
    - `website_url` (required)
    - `contact_email` (optional)

@@ -9,6 +9,12 @@ const SUPER_ADMIN_CREDENTIALS = {
   password: process.env.SUPER_ADMIN_PASSWORD || "admin123",
 };
 
+
+const ADMIN_CREDENTIALS = {
+  email: "tshepomtshali89@gmail.com",
+  password: "Kopenikus0218!",
+};
+
 async function testSuperAdminLogin() {
   console.log("🔐 Testing Super Admin Login\n");
   console.log(`Base URL: ${BASE_URL}`);

@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 interface TeamMember {
   id: number;
@@ -13,30 +11,35 @@ interface TeamMember {
 // GET /api/enterprise/team - Get team members for the current enterprise user
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    // Get authorization header
+    const authHeader = request.headers.get('Authorization');
+
+    if (!authHeader) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check user role from session (assuming enterprise users have appropriate role)
-    const userRole = (session.user as any).role;
-    const subscriptionTier = (session.user as any).subscription_tier;
+    // Get backend URL
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
 
-    const isEnterprise =
-      userRole === "enterprise" ||
-      subscriptionTier?.toLowerCase() === "enterprise" ||
-      (session.user as any).monthly_call_limit === -1 ||
-      ((session.user as any).monthly_call_limit && (session.user as any).monthly_call_limit >= 100000);
+    // Fetch team members from backend
+    const response = await fetch(`${backendUrl}/api/enterprise/team`, {
+      method: 'GET',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
+      },
+    });
 
-    if (!isEnterprise) {
-      return NextResponse.json({ error: "Enterprise access required" }, { status: 403 });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return NextResponse.json(
+        { error: errorData.error || 'Failed to fetch team members' },
+        { status: response.status }
+      );
     }
 
-    // For now, return empty array until team management is fully implemented
-    // In a real implementation, you'd have a team_members table
-    const teamMembers: TeamMember[] = [];
-
-    return NextResponse.json({ teamMembers });
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Error fetching team members:", error);
     return NextResponse.json(
@@ -49,8 +52,10 @@ export async function GET(request: NextRequest) {
 // POST /api/enterprise/team - Invite a new team member
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    // Get authorization header
+    const authHeader = request.headers.get('Authorization');
+
+    if (!authHeader) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -66,31 +71,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid email format" }, { status: 400 });
     }
 
-    // Check if user is enterprise
-    const userRole = (session.user as any).role;
-    const subscriptionTier = (session.user as any).subscription_tier;
+    // Get backend URL
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
 
-    const isEnterprise =
-      userRole === "enterprise" ||
-      subscriptionTier?.toLowerCase() === "enterprise" ||
-      (session.user as any).monthly_call_limit === -1 ||
-      ((session.user as any).monthly_call_limit && (session.user as any).monthly_call_limit >= 100000);
+    // Send invitation request to backend
+    const response = await fetch(`${backendUrl}/api/enterprise/team`, {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
 
-    if (!isEnterprise) {
-      return NextResponse.json({ error: "Enterprise access required" }, { status: 403 });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return NextResponse.json(
+        { error: errorData.error || 'Failed to invite team member' },
+        { status: response.status }
+      );
     }
 
-    // TODO: Implement team invitation logic
-    // For now, just return success message
-    // In a real implementation, you'd:
-    // 1. Create a team invitation record
-    // 2. Send an email invitation
-    // 3. Handle invitation acceptance
-
-    return NextResponse.json({
-      message: "Team member invited successfully",
-      email: email
-    });
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Error inviting team member:", error);
     return NextResponse.json(

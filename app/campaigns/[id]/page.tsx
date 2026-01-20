@@ -15,8 +15,10 @@ import {
   X,
   Activity,
   Trash2,
+  Download,
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import ExportOptionsModal from "@/components/ui/ExportOptionsModal";
 
 interface Campaign {
   id: number;
@@ -68,6 +70,8 @@ export default function CampaignDetailPage() {
     null
   );
   const [isRapidAllRunning, setIsRapidAllRunning] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const campaignId = params?.id as string;
 
@@ -308,6 +312,37 @@ export default function CampaignDetailPage() {
     handleRapidProcess(pendingCompanies[0].id);
   };
 
+  const handleExport = async (options: any) => {
+    try {
+      setIsExporting(true);
+
+      // Build export URL with options
+      const params = new URLSearchParams({
+        completedColor: options.completedColor,
+        failedColor: options.failedColor,
+        includeComments: options.includeComments.toString(),
+        commentStyle: options.commentStyle,
+      });
+
+      const exportUrl = `/api/campaigns/${campaignId}/export?${params}`;
+
+      // Create a temporary link to trigger download
+      const link = document.createElement('a');
+      link.href = exportUrl;
+      link.download = `${campaign?.name || 'campaign'}_results.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setExportModalOpen(false);
+    } catch (error: any) {
+      console.error('Failed to export campaign:', error);
+      alert(`Failed to export campaign: ${error.message}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // DISABLED: No auto-start. User must manually click "Rapid" for each company.
   // This prevents infinite loops and unwanted processing.
 
@@ -427,6 +462,13 @@ export default function CampaignDetailPage() {
                       })`}
                 </button>
               )}
+              <button
+                onClick={() => setExportModalOpen(true)}
+                className="group flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-xs font-medium transition-colors rounded-lg"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Export Results
+              </button>
               <button
                 onClick={() => router.push(`/campaigns/${campaignId}/monitor`)}
                 className="group flex items-center gap-2 px-4 py-2 bg-white text-black text-xs font-medium hover:bg-gray-100 transition-colors rounded-lg"
@@ -774,6 +816,15 @@ export default function CampaignDetailPage() {
         title="Delete Campaign Permanently"
         message={`Are you sure you want to delete "${campaign?.name}"? This will permanently delete the campaign and all ${campaign?.total_companies} companies. This action cannot be undone.`}
         variant="danger"
+      />
+
+      {/* Export Options Modal */}
+      <ExportOptionsModal
+        isOpen={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onExport={handleExport}
+        campaignName={campaign?.name || 'Campaign'}
+        isExporting={isExporting}
       />
     </div>
   );
