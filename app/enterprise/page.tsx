@@ -50,7 +50,20 @@ export default function EnterpriseDashboard() {
 
   // Redirect if not enterprise tier
   useEffect(() => {
-    if (!userLoading && user) {
+    // Only check after user is loaded
+    if (!userLoading) {
+      // If no user at all, redirect to login
+      if (!user) {
+        const token = localStorage.getItem("auth_token");
+        if (!token) {
+          router.push("/auth/login");
+          return;
+        }
+        // If there's a token but no user yet, wait a bit more
+        return;
+      }
+
+      // User is loaded, check enterprise status
       const checkEnterpriseStatus = async () => {
         try {
           const token = localStorage.getItem("auth_token");
@@ -80,12 +93,31 @@ export default function EnterpriseDashboard() {
               (usageData.monthly?.limit && usageData.monthly.limit >= 100000);
 
             if (!isEnterprise) {
+              // Not enterprise, redirect to regular dashboard
               router.push("/dashboard");
               return;
             }
+          } else {
+            // If usage check fails, still allow access if user has enterprise subscription_tier
+            const userIsEnterprise =
+              user.subscription_tier?.toLowerCase() === "enterprise" ||
+              user.monthly_call_limit === -1 ||
+              (user.monthly_call_limit && user.monthly_call_limit >= 100000);
+
+            if (!userIsEnterprise) {
+              router.push("/dashboard");
+            }
           }
         } catch (error) {
-          
+          // On error, check user object as fallback
+          const userIsEnterprise =
+            user.subscription_tier?.toLowerCase() === "enterprise" ||
+            user.monthly_call_limit === -1 ||
+            (user.monthly_call_limit && user.monthly_call_limit >= 100000);
+
+          if (!userIsEnterprise) {
+            router.push("/dashboard");
+          }
         }
       };
 
@@ -258,6 +290,7 @@ export default function EnterpriseDashboard() {
     return content;
   };
 
+  // Show loading state while checking authentication
   if (userLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
@@ -269,7 +302,24 @@ export default function EnterpriseDashboard() {
     );
   }
 
+  // Only show access denied if we're sure user is not logged in
+  // (after loading is complete and there's no user and no token)
   if (!user) {
+    const hasToken = typeof window !== "undefined" && localStorage.getItem("auth_token");
+    
+    // If there's a token, keep loading (user context might still be loading)
+    if (hasToken) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-400 mx-auto mb-4"></div>
+            <p className="text-gray-300">Authenticating...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // No token and no user - show access denied
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
         <div className="text-center p-8 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg shadow-lg">
@@ -489,20 +539,64 @@ export default function EnterpriseDashboard() {
             </div>
           </div>
 
+          {/* Team Management */}
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
+            <div className="px-6 py-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    Team Management
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    Manage your team members and their access
+                  </p>
+                </div>
+                <Link
+                  href="/enterprise/team"
+                  className="px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-lg text-purple-300 hover:bg-purple-500/30 transition-all"
+                >
+                  Manage Team
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+                  <Users className="h-6 w-6 text-purple-400 mb-2" />
+                  <h4 className="text-white font-medium mb-1">
+                    Add Team Members
+                  </h4>
+                  <p className="text-sm text-gray-400">
+                    Invite users to your enterprise account
+                  </p>
+                </div>
+                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+                  <Key className="h-6 w-6 text-blue-400 mb-2" />
+                  <h4 className="text-white font-medium mb-1">
+                    Manage API Keys
+                  </h4>
+                  <p className="text-sm text-gray-400">
+                    Create and manage team API keys
+                  </p>
+                </div>
+                <div className="p-4 bg-gray-700/30 rounded-lg border border-gray-600">
+                  <Activity className="h-6 w-6 text-green-400 mb-2" />
+                  <h4 className="text-white font-medium mb-1">
+                    Team Activity
+                  </h4>
+                  <p className="text-sm text-gray-400">
+                    Monitor team usage and activity
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Quick Actions */}
           <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl">
             <div className="px-6 py-6">
               <h3 className="text-xl font-semibold text-white mb-6">
                 Quick Actions
               </h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Link
-                  href="/dashboard?tab=testing"
-                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
-                >
-                  <Zap className="h-6 w-6 text-purple-400 group-hover:text-purple-300" />
-                  <span className="text-white font-medium">Test APIs</span>
-                </Link>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <Link
                   href="/dashboard?tab=settings&section=keys"
                   className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
@@ -511,18 +605,18 @@ export default function EnterpriseDashboard() {
                   <span className="text-white font-medium">API Keys</span>
                 </Link>
                 <Link
-                  href="/dashboard?tab=analytics"
-                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
-                >
-                  <BarChart3 className="h-6 w-6 text-green-400 group-hover:text-green-300" />
-                  <span className="text-white font-medium">Analytics</span>
-                </Link>
-                <Link
                   href="/api-docs"
                   className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
                 >
                   <Settings className="h-6 w-6 text-yellow-400 group-hover:text-yellow-300" />
                   <span className="text-white font-medium">API Docs</span>
+                </Link>
+                <Link
+                  href="/campaigns"
+                  className="flex items-center space-x-3 p-4 bg-gray-700/30 rounded-lg border border-gray-600 hover:bg-gray-700/50 transition-all duration-200 group"
+                >
+                  <Send className="h-6 w-6 text-purple-400 group-hover:text-purple-300" />
+                  <span className="text-white font-medium">Campaigns</span>
                 </Link>
               </div>
             </div>

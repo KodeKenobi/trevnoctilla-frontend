@@ -415,24 +415,6 @@ export default function AdminDashboard() {
             />
           </div>
 
-          {/* Campaigns Quick Stats */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 shadow-lg rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Send className="w-6 h-6 text-purple-400" />
-                Campaign Activity
-              </h3>
-              <Link
-                href="/admin/campaigns"
-                className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                View All →
-              </Link>
-            </div>
-            <p className="text-gray-400 text-sm">
-              Monitor and manage all user campaigns from the dedicated campaigns page
-            </p>
-          </div>
 
           {/* System Health */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

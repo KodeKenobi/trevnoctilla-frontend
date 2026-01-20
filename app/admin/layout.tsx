@@ -23,6 +23,7 @@ import {
   Globe,
   LayoutDashboard,
   Crown,
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
@@ -35,6 +36,8 @@ const adminNavItems = [
   { href: "/admin/free-tier-keys", label: "Free Tier Keys", icon: Gift },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/automations", label: "Automations", icon: Zap },
+  { href: "/admin/backups", label: "Backups", icon: Database },
   { href: "/admin/testing", label: "Testing", icon: TestTube },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
