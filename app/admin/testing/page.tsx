@@ -46,9 +46,14 @@ export default function TestingPage() {
   
   // Selected tool for sidebar navigation
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
-  
+
   // Expanded test result for details (format: "toolId-index")
   const [expandedTest, setExpandedTest] = useState<string | null>(null);
+
+  // Service management state
+  const [backupStatus, setBackupStatus] = useState<any>(null);
+  const [adServiceStatus, setAdServiceStatus] = useState<any>(null);
+  const [serviceLoading, setServiceLoading] = useState(false);
 
   const testSupabaseUsers = async () => {
     setLoading(true);
@@ -74,6 +79,131 @@ export default function TestingPage() {
       setLoading(false);
     }
   };
+
+  // Service management functions
+  const runManualBackup = async () => {
+    setServiceLoading(true);
+    try {
+      const response = await fetch("/api/admin/backup/run", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to start backup");
+      }
+
+      const data = await response.json();
+      alert(`Backup started: ${data.message}`);
+      await loadBackupStatus();
+    } catch (err: any) {
+      alert(`Backup failed: ${err.message}`);
+      console.error("Error starting backup:", err);
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const loadBackupStatus = async () => {
+    try {
+      const response = await fetch("/api/admin/backup/status");
+      if (response.ok) {
+        const data = await response.json();
+        setBackupStatus(data);
+      }
+    } catch (err: any) {
+      console.error("Error loading backup status:", err);
+    }
+  };
+
+  const startAdService = async () => {
+    setServiceLoading(true);
+    try {
+      const response = await fetch("/api/admin/ad-service/start", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to start ad service");
+      }
+
+      const data = await response.json();
+      alert(`Ad service: ${data.message}`);
+      await loadAdServiceStatus();
+    } catch (err: any) {
+      alert(`Ad service error: ${err.message}`);
+      console.error("Error starting ad service:", err);
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const stopAdService = async () => {
+    setServiceLoading(true);
+    try {
+      const response = await fetch("/api/admin/ad-service/stop", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to stop ad service");
+      }
+
+      const data = await response.json();
+      alert(`Ad service: ${data.message}`);
+      await loadAdServiceStatus();
+    } catch (err: any) {
+      alert(`Ad service error: ${err.message}`);
+      console.error("Error stopping ad service:", err);
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const resetAdStats = async () => {
+    setServiceLoading(true);
+    try {
+      const response = await fetch("/api/admin/ad-service/reset", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to reset ad stats");
+      }
+
+      const data = await response.json();
+      alert(`Ad stats: ${data.message}`);
+      await loadAdServiceStatus();
+    } catch (err: any) {
+      alert(`Ad stats reset error: ${err.message}`);
+      console.error("Error resetting ad stats:", err);
+    } finally {
+      setServiceLoading(false);
+    }
+  };
+
+  const loadAdServiceStatus = async () => {
+    try {
+      const response = await fetch("/api/admin/ad-service/status");
+      if (response.ok) {
+        const data = await response.json();
+        setAdServiceStatus(data.status);
+      }
+    } catch (err: any) {
+      console.error("Error loading ad service status:", err);
+    }
+  };
+
+  // Load service status on mount
+  React.useEffect(() => {
+    if (!userLoading && user) {
+      loadBackupStatus();
+      loadAdServiceStatus();
+    }
+  }, [userLoading, user]);
 
   if (userLoading) {
     return (
@@ -4487,6 +4617,122 @@ This is an automated notification from the Trevnoctilla Admin Dashboard
             </div>
           </div>
         )}
+        </div>
+
+        {/* Service Management Section */}
+        <div className="bg-[#1a1a1a] rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Service Management</h2>
+
+          {/* Backup Service */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white mb-3">Database Backup Service</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <button
+                onClick={runManualBackup}
+                disabled={serviceLoading}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
+              >
+                {serviceLoading ? "Running Backup..." : "Run Manual Backup"}
+              </button>
+              <button
+                onClick={loadBackupStatus}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Refresh Backup Status
+              </button>
+            </div>
+
+            {backupStatus && (
+              <div className="bg-[#0a0a0a] rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-blue-300 mb-2">Backup Status</h4>
+                <div className="text-xs text-gray-300 space-y-1">
+                  <p>Total Backups: {backupStatus.total_backups}</p>
+                  <p>Backup Directory: {backupStatus.backup_directory}</p>
+                  {backupStatus.backup_files.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-blue-300 mb-1">Recent Backups:</p>
+                      {backupStatus.backup_files.slice(0, 3).map((file: any, index: number) => (
+                        <div key={index} className="text-gray-400 text-xs">
+                          {file.name} - {file.size_mb}MB - {new Date(file.created * 1000).toLocaleString()}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Automated Ad Service */}
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-3">Automated Ad View Service</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <button
+                onClick={startAdService}
+                disabled={serviceLoading}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
+              >
+                Start Ad Service
+              </button>
+              <button
+                onClick={stopAdService}
+                disabled={serviceLoading}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
+              >
+                Stop Ad Service
+              </button>
+              <button
+                onClick={resetAdStats}
+                disabled={serviceLoading}
+                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors"
+              >
+                Reset Statistics
+              </button>
+            </div>
+
+            <button
+              onClick={loadAdServiceStatus}
+              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors mb-4"
+            >
+              Refresh Ad Service Status
+            </button>
+
+            {adServiceStatus && (
+              <div className="bg-[#0a0a0a] rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-green-300 mb-2">Ad Service Status</h4>
+                <div className="text-xs text-gray-300 space-y-1">
+                  <p>Status: <span className={adServiceStatus.is_running ? "text-green-400" : "text-red-400"}>
+                    {adServiceStatus.is_running ? "Running" : "Stopped"}
+                  </span></p>
+                  <p>Total Views: {adServiceStatus.total_views}</p>
+                  <p>Today's Views: {adServiceStatus.today_views}</p>
+                  <p>Daily Target: {adServiceStatus.target_daily_views}</p>
+                  {adServiceStatus.last_view_time && (
+                    <p>Last View: {new Date(adServiceStatus.last_view_time).toLocaleString()}</p>
+                  )}
+
+                  {adServiceStatus.recent_history.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-green-300 mb-1">Recent Activity:</p>
+                      {adServiceStatus.recent_history.slice(0, 5).map((record: any, index: number) => (
+                        <div key={index} className="text-gray-400 text-xs">
+                          {new Date(record.timestamp).toLocaleTimeString()} - {record.context}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-3 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+              <h4 className="text-yellow-400 font-semibold mb-1">Automated Ad Views</h4>
+              <p className="text-yellow-200 text-xs">
+                This service automatically simulates ad views throughout the day (12 times total) to boost ad revenue.
+                Views are spread randomly to avoid detection. Progress emails are sent every 10 views.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
