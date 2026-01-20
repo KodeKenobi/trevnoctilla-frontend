@@ -91,6 +91,27 @@ export default function LoginPage() {
         // Get the session to check user role
         const session = await getSession();
 
+        // Fetch user profile to check subscription tier
+        const token = localStorage.getItem("auth_token");
+        let userProfile = null;
+        
+        if (token) {
+          try {
+            const profileResponse = await fetch("/api/auth/profile", {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            
+            if (profileResponse.ok) {
+              userProfile = await profileResponse.json();
+            }
+          } catch (e) {
+            console.error("Failed to fetch user profile:", e);
+          }
+        }
+
         setTimeout(() => {
           // Check for pending subscription
           const pendingSubscription = sessionStorage.getItem(
@@ -118,9 +139,20 @@ export default function LoginPage() {
               }
             }
           } else {
-            // Redirect based on user role
+            // Check subscription tier and redirect accordingly
+            const subscriptionTier = userProfile?.subscription_tier?.toLowerCase() || "free";
+            const isEnterprise =
+              subscriptionTier === "enterprise" ||
+              userProfile?.monthly_call_limit === -1 ||
+              (userProfile?.monthly_call_limit && userProfile.monthly_call_limit >= 100000);
+
+            // Redirect based on user role and subscription tier
             if ((session?.user as any)?.role === "super_admin") {
               router.push("/admin");
+            } else if ((session?.user as any)?.role === "admin") {
+              router.push("/admin");
+            } else if (isEnterprise) {
+              router.push("/enterprise");
             } else {
               router.push("/dashboard");
             }
