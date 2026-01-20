@@ -211,11 +211,23 @@ function DashboardContent() {
         user.monthly_call_limit === -1 || // Unlimited indicates enterprise
         (user.monthly_call_limit && user.monthly_call_limit >= 100000); // High limit indicates enterprise
 
+      // DEBUG: Log redirection logic
+      console.log("User redirect check:", {
+        email: user.email,
+        role: user.role,
+        subscriptionTier: user.subscription_tier,
+        monthlyCallLimit: user.monthly_call_limit,
+        isEnterprise,
+        currentPath: window.location.pathname,
+        bypassRedirect
+      });
+
       // Check for premium tier
       const isPremium = subscriptionTier === "premium";
 
       // Only redirect to enterprise if not already on enterprise page
       if (isEnterprise && window.location.pathname !== "/enterprise") {
+        console.log("Redirecting enterprise user to /enterprise");
         router.push("/enterprise");
         return;
       }
