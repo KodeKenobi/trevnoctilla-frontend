@@ -618,9 +618,22 @@ export default function CampaignsPage() {
                 return (
                   <div
                     key={campaign.id}
-                    className="bg-[#1a1a1a] border border-gray-800 rounded-xl hover:border-gray-700 transition-all duration-200 group cursor-pointer"
+                    className="bg-[#1a1a1a] border border-gray-800 rounded-xl hover:border-gray-700 transition-all duration-200 group cursor-pointer overflow-hidden"
                     onClick={() => router.push(`/campaigns/${campaign.id}`)}
                   >
+                    {/* Background Image with Overlay */}
+                    <div
+                      className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-200"
+                      style={{
+                        backgroundImage: `url('https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=200&fit=crop')`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#1a1a1a]" />
+
+                    {/* Content */}
+                    <div className="relative">
                     {/* Header */}
                     <div className="p-6 pb-4">
                       <div className="flex items-start justify-between mb-4">
@@ -761,6 +774,7 @@ export default function CampaignsPage() {
                           Delete
                         </button>
                       </div>
+                    </div>
                     </div>
                   </div>
                 );
