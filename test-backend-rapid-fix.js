@@ -10,16 +10,21 @@ const fetch = require('node-fetch');
 
 // Test configuration
 const BACKEND_URL = process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
-const TEST_CAMPAIGN_ID = 1; // Use an existing campaign ID from your database
-const TEST_COMPANY_ID = 1;  // Use an existing company ID from that campaign
+const FRONTEND_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.trevnoctilla.com';
+
+// Get IDs from command line or use latest from recent test
+const TEST_CAMPAIGN_ID = process.argv[2] ? parseInt(process.argv[2]) : 9; // Campaign 9 from latest test
+const TEST_COMPANY_ID = process.argv[3] ? parseInt(process.argv[3]) : 36; // Company 36 from latest test
 
 console.log('\n╔══════════════════════════════════════════════════════════════════════════════╗');
 console.log('║              BACKEND APPLICATION CONTEXT TEST                                 ║');
 console.log('╚══════════════════════════════════════════════════════════════════════════════╝\n');
 
 console.log(`Testing backend: ${BACKEND_URL}`);
+console.log(`Frontend: ${FRONTEND_URL}`);
 console.log(`Campaign ID: ${TEST_CAMPAIGN_ID}`);
-console.log(`Company ID: ${TEST_COMPANY_ID}\n`);
+console.log(`Company ID: ${TEST_COMPANY_ID}`);
+console.log('\nUsage: node test-backend-rapid-fix.js [campaignId] [companyId]\n');
 
 async function testBackendDirectly() {
     try {
@@ -125,8 +130,57 @@ async function testBackendDirectly() {
     }
 }
 
+async function findValidTestData() {
+    console.log('🔍 [AUTO-DISCOVER] Searching for valid test data...\n');
+    
+    try {
+        // Try to get campaigns from frontend API
+        const response = await fetch(`${FRONTEND_URL}/api/campaigns?limit=10`);
+        if (!response.ok) {
+            console.log('⚠️  Could not fetch campaigns from frontend API');
+            return null;
+        }
+        
+        const data = await response.json();
+        if (!data.campaigns || data.campaigns.length === 0) {
+            console.log('⚠️  No campaigns found in database');
+            return null;
+        }
+        
+        // Find a campaign with pending companies
+        for (const campaign of data.campaigns) {
+            // Fetch companies for this campaign
+            const companiesResp = await fetch(`${FRONTEND_URL}/api/campaigns/${campaign.id}/companies`);
+            if (companiesResp.ok) {
+                const companiesData = await companiesResp.json();
+                if (companiesData.companies && companiesData.companies.length > 0) {
+                    const pendingCompany = companiesData.companies.find(c => c.status === 'pending');
+                    if (pendingCompany) {
+                        console.log(`✅ Found valid test data:`);
+                        console.log(`   Campaign: ${campaign.id} - "${campaign.name}"`);
+                        console.log(`   Company: ${pendingCompany.id} - "${pendingCompany.company_name}"`);
+                        console.log(`   Website: ${pendingCompany.website_url}\n`);
+                        return { campaignId: campaign.id, companyId: pendingCompany.id };
+                    }
+                }
+            }
+        }
+        
+        console.log('⚠️  No pending companies found in recent campaigns');
+        return null;
+    } catch (error) {
+        console.log('⚠️  Auto-discovery failed:', error.message);
+        return null;
+    }
+}
+
 async function main() {
     console.log('Starting backend test...\n');
+    
+    // If using default IDs, try to auto-discover valid ones
+    if (TEST_CAMPAIGN_ID === 9 && !process.argv[2]) {
+        console.log('ℹ️  Using default IDs from recent test. If this fails, use auto-discovery or specify IDs.\n');
+    }
     
     const success = await testBackendDirectly();
     

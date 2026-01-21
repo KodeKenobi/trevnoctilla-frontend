@@ -14,16 +14,31 @@
  * 8. Verify final results
  * 
  * EXTENSIVE VERBOSE LOGGING FOR EVERYTHING
+ * 
+ * Usage:
+ *   node test-rapid-all-flow.js [options]
+ * 
+ * Options:
+ *   --skip-duplicates, --unique    Automatically skip duplicate website URLs
+ *   --allow-duplicates, --all      Automatically process all companies including duplicates
+ * 
+ * If no option is provided and duplicates are detected, you'll be prompted to choose.
  */
 
 const fs = require('fs');
 const path = require('path');
 const FormData = require('form-data');
 const fetch = require('node-fetch');
+const readline = require('readline');
 
 // Detect environment
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.trevnoctilla.com';
 const BACKEND_URL = process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
+
+// Command line arguments
+const args = process.argv.slice(2);
+const SKIP_DUPLICATES = args.includes('--skip-duplicates') || args.includes('--unique');
+const ALLOW_DUPLICATES = args.includes('--allow-duplicates') || args.includes('--all');
 
 // Create log file
 const LOG_FILE = path.join(process.cwd(), 'rapid-all-test-logs.txt');
@@ -89,6 +104,7 @@ const log = {
 
 let campaignId = null;
 let companyIds = [];
+let companiesData = []; // Store full company objects for batch processing
 let sessionId = `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
 // Rapid All state tracking (matches frontend)
@@ -103,6 +119,136 @@ let processingCompanies = new Set(); // Track which companies are currently proc
 
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Ask user a yes/no question via command line with timeout
+ */
+function askQuestion(question, timeoutMs = 30000) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  return new Promise(resolve => {
+    // Set timeout to auto-select option 1 if no response
+    const timeout = setTimeout(() => {
+      rl.close();
+      log.warn('⏱️  No response received - defaulting to option 1 (Process ALL)');
+      resolve('1');
+    }, timeoutMs);
+
+    rl.question(question, answer => {
+      clearTimeout(timeout);
+      rl.close();
+      resolve(answer.toLowerCase().trim());
+    });
+
+    // Handle stdin not available (non-interactive mode)
+    rl.on('close', () => {
+      clearTimeout(timeout);
+    });
+  });
+}
+
+/**
+ * Detect duplicate website URLs and ask user what to do
+ */
+async function handleDuplicateURLs(companies) {
+  const urlCounts = {};
+  const duplicates = [];
+  
+  // Count URL occurrences
+  companies.forEach((company, index) => {
+    const url = company.website_url;
+    if (!url) return;
+    
+    if (!urlCounts[url]) {
+      urlCounts[url] = [];
+    }
+    urlCounts[url].push({ index, company });
+  });
+  
+  // Find duplicates
+  Object.keys(urlCounts).forEach(url => {
+    if (urlCounts[url].length > 1) {
+      duplicates.push({ url, count: urlCounts[url].length, instances: urlCounts[url] });
+    }
+  });
+  
+  if (duplicates.length === 0) {
+    log.success('✅ No duplicate website URLs detected');
+    return companies;
+  }
+  
+  // Alert user about duplicates
+  log.warn('\n⚠️  DUPLICATE WEBSITE URLs DETECTED!\n');
+  log.info('The following URLs appear multiple times:');
+  duplicates.forEach(dup => {
+    log.info(`  • ${dup.url} - appears ${dup.count} times`);
+    dup.instances.forEach((inst, idx) => {
+      log.info(`    ${idx + 1}. ${inst.company.company_name || 'Unnamed'} (row ${inst.index + 1})`);
+    });
+  });
+  
+  const totalDuplicates = duplicates.reduce((sum, dup) => sum + (dup.count - 1), 0);
+  log.info(`\nTotal: ${companies.length} companies, ${totalDuplicates} duplicates`);
+  log.info(`If you skip duplicates: ${companies.length - totalDuplicates} unique companies will be processed`);
+  
+  // Check for command line arguments first
+  if (SKIP_DUPLICATES) {
+    log.info('🔧 Using --skip-duplicates flag from command line');
+    const seenUrls = new Set();
+    const uniqueCompanies = companies.filter(company => {
+      const url = company.website_url;
+      if (!url || seenUrls.has(url)) {
+        return false;
+      }
+      seenUrls.add(url);
+      return true;
+    });
+    log.success(`✅ Skipping duplicates: Processing ${uniqueCompanies.length} unique companies`);
+    return uniqueCompanies;
+  }
+  
+  if (ALLOW_DUPLICATES) {
+    log.info('🔧 Using --allow-duplicates flag from command line');
+    log.info('✅ Processing all companies (including duplicates)');
+    return companies;
+  }
+  
+  // Ask user what to do
+  writeLog('\n❓ What would you like to do?');
+  writeLog('   [1] Process ALL companies (including duplicates)');
+  writeLog('   [2] Skip duplicates (process only unique URLs)');
+  writeLog('   [3] Cancel test');
+  writeLog('\nTip: Use --allow-duplicates or --skip-duplicates flags to skip this prompt\n');
+  
+  const answer = await askQuestion('Enter your choice (1/2/3): ');
+  
+  if (answer === '3' || answer === 'cancel' || answer === 'c') {
+    log.warn('❌ Test cancelled by user');
+    process.exit(0);
+  }
+  
+  if (answer === '2' || answer === 'skip' || answer === 's') {
+    // Keep only first occurrence of each URL
+    const seenUrls = new Set();
+    const uniqueCompanies = companies.filter(company => {
+      const url = company.website_url;
+      if (!url || seenUrls.has(url)) {
+        return false;
+      }
+      seenUrls.add(url);
+      return true;
+    });
+    
+    log.success(`✅ Skipping duplicates: Processing ${uniqueCompanies.length} unique companies`);
+    return uniqueCompanies;
+  }
+  
+  log.info('✅ Processing all companies (including duplicates)');
+  return companies;
 }
 
 async function step1_UploadSpreadsheet() {
@@ -192,8 +338,13 @@ async function step2_CreateCampaign(uploadedData) {
   log.info('  - Message: REQUIRED');
 
   // Limit to 5 companies for guest user (like frontend does)
-  const companiesToUse = uploadedData.rows.slice(0, 5);
-  log.info(`Using first ${companiesToUse.length} companies (guest limit: 5)`);
+  let companiesToUse = uploadedData.rows.slice(0, 5);
+  log.info(`Found ${companiesToUse.length} companies (guest limit: 5)`);
+  
+  // Check for duplicate URLs and ask user what to do
+  companiesToUse = await handleDuplicateURLs(companiesToUse);
+  
+  log.info(`Final company count: ${companiesToUse.length}`);
   log.info(`Session ID: ${sessionId}`);
 
   // Form data (matching frontend defaults)
@@ -292,21 +443,22 @@ async function step3_FetchCampaignDetails() {
     const companiesStartTime = Date.now();
     const companiesResponse = await fetch(`${BASE_URL}/api/campaigns/${campaignId}/companies`);
     const companiesDuration = Date.now() - companiesStartTime;
-    const companiesData = await companiesResponse.json();
+    const companiesApiResponse = await companiesResponse.json();
 
-    log.apiResponse(companiesResponse.status, companiesData, companiesDuration);
+    log.apiResponse(companiesResponse.status, companiesApiResponse, companiesDuration);
 
-    if (!companiesResponse.ok || !companiesData.success) {
-      log.error(`Failed to fetch companies: ${companiesData.message || companiesData.error}`);
+    if (!companiesResponse.ok || !companiesApiResponse.success) {
+      log.error(`Failed to fetch companies: ${companiesApiResponse.message || companiesApiResponse.error}`);
       return campaign;
     }
 
-    // Get pending company IDs
-    if (companiesData.companies && Array.isArray(companiesData.companies)) {
-      const allCompanies = companiesData.companies;
-      companyIds = allCompanies
-        .filter(c => c.status === 'pending')
-        .map(c => c.id);
+    // Get pending company IDs and full data
+    if (companiesApiResponse.companies && Array.isArray(companiesApiResponse.companies)) {
+      const allCompanies = companiesApiResponse.companies;
+      const pendingCompanies = allCompanies.filter(c => c.status === 'pending');
+      
+      companyIds = pendingCompanies.map(c => c.id);
+      companiesData = pendingCompanies; // Store full company objects
 
       log.success(`Found ${allCompanies.length} total companies`);
       log.info(`Pending companies: ${companyIds.length}`);
@@ -333,6 +485,94 @@ async function step3_FetchCampaignDetails() {
   }
 }
 
+async function rapidProcessBatch(batchCompanies) {
+  const startTime = Date.now();
+  const websiteUrl = batchCompanies[0].website_url;
+  const companyIds = batchCompanies.map(c => c.id);
+  
+  log.info(`\n📦 [BATCH] Processing ${batchCompanies.length} companies with same URL`);
+  log.info(`🌐 URL: ${websiteUrl}`);
+  log.info(`👥 Companies: ${batchCompanies.map(c => c.company_name).join(', ')}`);
+  log.info(`🆔 IDs: ${companyIds.join(', ')}`);
+  
+  // Mark all as processing
+  companyIds.forEach(id => {
+    processingCompanies.add(id);
+  });
+  processingCount += companyIds.length;
+  
+  try{
+    const requestBody = { company_ids: companyIds };
+    log.api('POST', `${BASE_URL}/api/campaigns/${campaignId}/rapid-process-batch`, requestBody, {
+      'Content-Type': 'application/json',
+    });
+
+    const response = await fetch(`${BASE_URL}/api/campaigns/${campaignId}/rapid-process-batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+    });
+
+    const processingTime = (Date.now() - startTime) / 1000;
+    const data = await response.json();
+
+    log.apiResponse(response.status, data, Date.now() - startTime);
+
+    // Track processing time for ETA
+    processingTimes.push(processingTime);
+    if (processingTimes.length > 10) {
+      processingTimes.shift();
+    }
+    avgProcessingTime = processingTimes.reduce((a, b) => a + b, 0) / processingTimes.length;
+
+    // Update progress for each company in batch
+    companyIds.forEach(id => {
+      rapidAllProgress++;
+      processingCount--;
+      processingCompanies.delete(id);
+    });
+
+    // Log each company result
+    if (data.results && Array.isArray(data.results)) {
+      data.results.forEach((result, idx) => {
+        log.company(result.companyId, 'COMPLETED', {
+          status: result.status,
+          processingTime: `${processingTime.toFixed(2)}s`,
+          screenshotUrl: result.screenshotUrl || 'none',
+          errorMessage: result.errorMessage || 'none',
+          rapidAllProgress: `${rapidAllProgress}/${rapidAllTotal}`,
+          avgProcessingTime: `${avgProcessingTime.toFixed(2)}s`,
+        });
+      });
+    }
+
+    log.success(`✅ Batch complete: ${data.companiesProcessed} companies processed in ${processingTime.toFixed(2)}s`);
+    
+    return { 
+      success: data.success !== false, 
+      data, 
+      processingTime,
+      companiesProcessed: companyIds.length 
+    };
+  } catch (error) {
+    const processingTime = (Date.now() - startTime) / 1000;
+    
+    // Mark all as failed
+    companyIds.forEach(id => {
+      processingCount--;
+      processingCompanies.delete(id);
+      rapidAllProgress++;
+      
+      log.company(id, 'ERROR', {
+        error: error.message,
+        processingTime: `${processingTime.toFixed(2)}s`,
+      });
+    });
+
+    return { success: false, error: error.message, processingTime };
+  }
+}
+
 async function rapidProcessCompany(companyId) {
   const startTime = Date.now();
   
@@ -347,11 +587,11 @@ async function rapidProcessCompany(companyId) {
   
   try {
     const requestBody = { companyId };
-    log.api('POST', `${BASE_URL}/api/campaigns/${campaignId}/rapid-process`, requestBody, {
+    log.api('POST', `${BASE_URL}/api/campaigns/${campaignId}/companies/${companyId}/rapid-process`, requestBody, {
       'Content-Type': 'application/json',
     });
 
-    const response = await fetch(`${BASE_URL}/api/campaigns/${campaignId}/rapid-process`, {
+    const response = await fetch(`${BASE_URL}/api/campaigns/${campaignId}/companies/${companyId}/rapid-process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody),
@@ -402,13 +642,12 @@ async function rapidProcessCompany(companyId) {
 async function step4_RapidAll() {
   log.step(4, 'CLICK RAPID ALL BUTTON (EXACT USER FLOW)');
 
-  const pendingCompanies = companyIds.filter(id => !processingCompanies.has(id));
+  const pendingCompaniesObjs = companiesData.filter(c => !processingCompanies.has(c.id));
   
   log.rapidAll('User clicked "Rapid All" button');
-  log.info(`Pending companies: ${pendingCompanies.length}`);
-  log.info(`Company IDs: ${pendingCompanies.join(', ')}`);
+  log.info(`Pending companies: ${pendingCompaniesObjs.length}`);
 
-  if (pendingCompanies.length === 0) {
+  if (pendingCompaniesObjs.length === 0) {
     log.error('No pending companies to process!');
     return null;
   }
@@ -419,83 +658,85 @@ async function step4_RapidAll() {
   
   const limit = 5;
   customProcessingLimit = limit;
-  rapidAllTotal = Math.min(limit, pendingCompanies.length);
+  rapidAllTotal = Math.min(limit, pendingCompaniesObjs.length);
   rapidAllProgress = 0;
   processingCount = 0;
   processingTimes = [];
   avgProcessingTime = 0;
   isRapidAllRunning = true;
 
-  log.rapidAll('Starting Rapid All processing', {
-    limit: limit,
-    total: rapidAllTotal,
-    parallelCount: 5,
+  // GROUP COMPANIES BY URL FOR BATCH PROCESSING
+  const companyGroups = {};
+  pendingCompaniesObjs.slice(0, limit).forEach(company => {
+    const url = company.website_url;
+    if (!companyGroups[url]) {
+      companyGroups[url] = [];
+    }
+    companyGroups[url].push(company);
   });
 
-  // Start 5 companies in parallel (or fewer if less than 5 pending)
-  const PARALLEL_COUNT = 5;
-  const initialBatch = pendingCompanies.slice(0, Math.min(PARALLEL_COUNT, limit));
+  const urlGroups = Object.entries(companyGroups);
   
-  log.rapidAll(`Starting initial batch of ${initialBatch.length} companies in parallel`);
-  log.info(`Company IDs in batch: ${initialBatch.join(', ')}`);
+  log.info('\n🔍 DUPLICATE URL DETECTION & BATCH GROUPING:');
+  log.info(`Total companies to process: ${rapidAllTotal}`);
+  log.info(`Unique website URLs: ${urlGroups.length}`);
+  
+  urlGroups.forEach(([url, companies]) => {
+    if (companies.length > 1) {
+      log.success(`✨ BATCH: ${url} → ${companies.length} companies`);
+      log.info(`   Companies: ${companies.map(c => c.company_name).join(', ')}`);
+    } else {
+      log.info(`   Single: ${url} → ${companies[0].company_name}`);
+    }
+  });
+
+  log.rapidAll('Starting BATCH Rapid All processing', {
+    limit: limit,
+    total: rapidAllTotal,
+    uniqueUrls: urlGroups.length,
+    batches: urlGroups.filter(([_, c]) => c.length > 1).length,
+  });
 
   const results = [];
   const startTime = Date.now();
 
-  // Start all companies in parallel
-  const promises = initialBatch.map(companyId => {
-    return rapidProcessCompany(companyId).then(result => {
-      results.push({ companyId, ...result });
+  // Process all URL groups (batches for duplicates, single for unique)
+  const promises = urlGroups.map(([url, companies]) => {
+    if (companies.length > 1) {
+      // BATCH: Multiple companies with same URL
+      log.info(`\n🔄 Starting BATCH for ${url} (${companies.length} companies)`);
+      return rapidProcessBatch(companies).then(result => {
+        results.push(...(result.data?.results || []).map(r => ({
+          companyId: r.companyId,
+          success: r.success,
+          data: r,
+          processingTime: result.processingTime
+        })));
 
-      // Update progress display
-      const remaining = rapidAllTotal - rapidAllProgress;
-      const eta = remaining > 0 ? Math.ceil(remaining * avgProcessingTime / PARALLEL_COUNT) : 0;
-      log.progress(rapidAllProgress, rapidAllTotal, processingCount, eta, avgProcessingTime);
+        // Update progress display
+        const remaining = rapidAllTotal - rapidAllProgress;
+        const eta = remaining > 0 ? Math.ceil(remaining * avgProcessingTime) : 0;
+        log.progress(rapidAllProgress, rapidAllTotal, processingCount, eta, avgProcessingTime);
 
-      // Check if we should start next company
-      if (isRapidAllRunning) {
-        const currentProgress = rapidAllProgress;
-        const currentLimit = customProcessingLimit;
+        return result;
+      });
+    } else {
+      // SINGLE: Only one company for this URL
+      log.info(`\n➡️  Processing single company: ${companies[0].company_name}`);
+      return rapidProcessCompany(companies[0].id).then(result => {
+        results.push({ companyId: companies[0].id, ...result });
 
-        if (currentLimit && currentProgress >= currentLimit) {
-          // Reached limit
-          if (processingCount === 0) {
-            isRapidAllRunning = false;
-            log.rapidAll('Limit reached. Stopping.', { progress: currentProgress, limit: currentLimit });
-          }
-        } else {
-          // Start next pending company
-          const nextPending = pendingCompanies.find(id => 
-            !processingCompanies.has(id) && !results.some(r => r.companyId === id)
-          );
+        // Update progress display
+        const remaining = rapidAllTotal - rapidAllProgress;
+        const eta = remaining > 0 ? Math.ceil(remaining * avgProcessingTime) : 0;
+        log.progress(rapidAllProgress, rapidAllTotal, processingCount, eta, avgProcessingTime);
 
-          if (nextPending) {
-            log.rapidAll(`Starting next pending company: ${nextPending}`, {
-              progress: `${currentProgress}/${currentLimit}`,
-            });
-            return rapidProcessCompany(nextPending).then(nextResult => {
-              results.push({ companyId: nextPending, ...nextResult });
-              const remaining = rapidAllTotal - rapidAllProgress;
-              const eta = remaining > 0 ? Math.ceil(remaining * avgProcessingTime / PARALLEL_COUNT) : 0;
-              log.progress(rapidAllProgress, rapidAllTotal, processingCount, eta, avgProcessingTime);
-            });
-          } else {
-            // No more pending
-            if (processingCount === 0) {
-              isRapidAllRunning = false;
-              log.rapidAll('All companies processed!', {
-                progress: `${rapidAllProgress}/${rapidAllTotal}`,
-              });
-            }
-          }
-        }
-      }
-
-      return result;
-    });
+        return result;
+      });
+    }
   });
 
-  // Wait for all initial batch to complete
+  // Wait for all batches to complete
   await Promise.all(promises);
 
   // Wait for any remaining processing to complete
@@ -518,7 +759,8 @@ async function step4_RapidAll() {
   log.info(`❌ Failed: ${failCount}/${results.length}`);
   log.info(`⏱️  Total time: ${totalDuration}s`);
   log.info(`📈 Avg per company: ${(totalDuration / results.length).toFixed(2)}s`);
-  log.info(`⚡ Parallel processing: ${PARALLEL_COUNT} companies at once`);
+  log.info(`🔄 Unique URLs processed: ${urlGroups.length}`);
+  log.info(`📦 Batch groups: ${urlGroups.filter(([_, c]) => c.length > 1).length}`);
 
   return results;
 }
