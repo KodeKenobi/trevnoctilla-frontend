@@ -81,11 +81,14 @@ export default function CampaignDetailPage() {
   const [customProcessingLimit, setCustomProcessingLimit] = useState<number | null>(null);
   const [rapidAllProgress, setRapidAllProgress] = useState(0); // Track: X companies processed
   const [rapidAllTotal, setRapidAllTotal] = useState(0); // Track: out of Y total
+  const [processingCount, setProcessingCount] = useState(0); // How many are currently processing
+  const [avgProcessingTime, setAvgProcessingTime] = useState(0); // Average time per company
   
   // Use refs to avoid stale closures in processNextPending
   const rapidAllProgressRef = useRef(0);
   const customProcessingLimitRef = useRef<number | null>(null);
   const isRapidAllRunningRef = useRef(false);
+  const processingTimesRef = useRef<number[]>([]); // Track processing times for ETA
 
   // Keep refs in sync with state
   useEffect(() => {
@@ -346,6 +349,74 @@ export default function CampaignDetailPage() {
     fetchCampaignDetails();
   };
 
+  // Headless rapid processing (no WebSocket, faster)
+  const rapidProcessCompany = async (companyId: number) => {
+    const startTime = Date.now();
+    
+    try {
+      setProcessingCount((prev) => prev + 1);
+      
+      const response = await fetch(`/api/campaigns/${campaignId}/rapid-process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ companyId }),
+      });
+
+      const data = await response.json();
+      const processingTime = (Date.now() - startTime) / 1000;
+
+      // Track processing time for ETA
+      processingTimesRef.current.push(processingTime);
+      if (processingTimesRef.current.length > 10) {
+        processingTimesRef.current.shift(); // Keep only last 10
+      }
+      const avgTime = processingTimesRef.current.reduce((a, b) => a + b, 0) / processingTimesRef.current.length;
+      setAvgProcessingTime(avgTime);
+
+      // Update company status locally
+      setCompanies((prevCompanies) =>
+        prevCompanies.map((c) =>
+          c.id === companyId
+            ? {
+                ...c,
+                status: data.status,
+                screenshot_url: data.screenshotUrl || c.screenshot_url,
+                error_message: data.errorMessage || c.error_message,
+              }
+            : c
+        )
+      );
+
+      // Increment progress
+      setRapidAllProgress((prev) => prev + 1);
+
+      console.log(
+        `[Rapid All] Company ${companyId} completed: ${data.status} (${processingTime.toFixed(2)}s)`
+      );
+
+      return data;
+    } catch (error) {
+      console.error(`[Rapid All] Error processing company ${companyId}:`, error);
+      
+      // Mark as failed
+      setCompanies((prevCompanies) =>
+        prevCompanies.map((c) =>
+          c.id === companyId
+            ? { ...c, status: 'failed', error_message: 'Processing error' }
+            : c
+        )
+      );
+      
+      setRapidAllProgress((prev) => prev + 1);
+      
+      return { success: false, status: 'failed' };
+    } finally {
+      setProcessingCount((prev) => prev - 1);
+    }
+  };
+
   const processNextPending = useCallback(() => {
     // Use refs to avoid stale closures (CRITICAL FIX)
     const currentProgress = rapidAllProgressRef.current;
@@ -375,10 +446,13 @@ export default function CampaignDetailPage() {
           `[Rapid All] Processing next pending company (${currentProgress + 1}/${currentLimit || 'unlimited'}):`,
           nextPending.company_name
         );
-        // Process immediately - no delay needed with manual state updates
-        setTimeout(() => {
-          handleRapidProcess(nextPending.id);
-        }, 50);
+        // Process using headless API (faster, no WebSocket)
+        rapidProcessCompany(nextPending.id).then(() => {
+          // After completion, check if we should continue
+          if (isRapidAllRunningRef.current) {
+            setTimeout(() => processNextPending(), 100);
+          }
+        });
       } else {
         // No more pending companies - stop Rapid All
         console.log("[Rapid All] All companies processed. Campaign complete.");
@@ -406,20 +480,67 @@ export default function CampaignDetailPage() {
     setRapidAllModalOpen(true);
   };
 
-  const handleStartRapidAllWithLimit = (limit: number) => {
+  const handleStartRapidAllWithLimit = async (limit: number) => {
     const pendingCompanies = companies.filter((c) => c.status === "pending");
 
     console.log(
-      `[Rapid All] Starting batch processing for ${limit} companies`
+      `[Rapid All] Starting parallel batch processing for ${limit} companies (5 at a time)`
     );
     setCustomProcessingLimit(limit); // Set limit for tracking
     setRapidAllTotal(Math.min(limit, pendingCompanies.length));
     setRapidAllProgress(0);
+    setProcessingCount(0);
+    setAvgProcessingTime(0);
+    processingTimesRef.current = [];
     setIsRapidAllRunning(true);
     setRapidAllModalOpen(false);
 
-    // Start with the first pending company
-    handleRapidProcess(pendingCompanies[0].id);
+    // Start 5 companies in parallel (or fewer if less than 5 pending)
+    const PARALLEL_COUNT = 5;
+    const initialBatch = pendingCompanies.slice(0, Math.min(PARALLEL_COUNT, limit));
+    
+    console.log(`[Rapid All] Starting initial batch of ${initialBatch.length} companies`);
+    
+    for (const company of initialBatch) {
+      rapidProcessCompany(company.id).then(() => {
+        // After completion, start next pending if we should continue
+        if (isRapidAllRunningRef.current) {
+          setTimeout(() => {
+            const currentProgress = rapidAllProgressRef.current;
+            const currentLimit = customProcessingLimitRef.current;
+            
+            if (currentLimit && currentProgress >= currentLimit) {
+              // Reached limit, check if all processing is done
+              setProcessingCount((count) => {
+                if (count === 0) {
+                  setIsRapidAllRunning(false);
+                  console.log('[Rapid All] Limit reached. Stopping.');
+                }
+                return count;
+              });
+            } else {
+              // Start next pending
+              setCompanies((prevCompanies) => {
+                const nextPending = prevCompanies.find((c) => c.status === "pending");
+                if (nextPending) {
+                  rapidProcessCompany(nextPending.id);
+                } else {
+                  // No more pending, check if all done
+                  setProcessingCount((count) => {
+                    if (count === 0) {
+                      setIsRapidAllRunning(false);
+                      console.log('[Rapid All] All companies processed!');
+                    }
+                    return count;
+                  });
+                }
+                return prevCompanies;
+              });
+            }
+          }, 100);
+        }
+      });
+    }
   };
 
   const handleExport = async (options: any) => {
@@ -665,10 +786,15 @@ export default function CampaignDetailPage() {
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-white">
-                    Rapid All Processing
+                    Rapid All Processing (Parallel Mode)
                   </div>
                   <div className="text-xs text-white/60 mt-0.5">
-                    {rapidAllProgress}/{rapidAllTotal} companies processed
+                    {rapidAllProgress}/{rapidAllTotal} completed • {processingCount} processing
+                    {avgProcessingTime > 0 && (
+                      <span className="ml-2">
+                        • ETA: {Math.ceil((rapidAllTotal - rapidAllProgress) * avgProcessingTime / 5)}s
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -691,6 +817,11 @@ export default function CampaignDetailPage() {
                 style={{ width: `${(rapidAllProgress / rapidAllTotal) * 100}%` }}
               />
             </div>
+            {avgProcessingTime > 0 && (
+              <div className="mt-2 text-[10px] text-white/50 font-mono">
+                Avg: {avgProcessingTime.toFixed(1)}s per company • Speed: ~{Math.round(60 / avgProcessingTime * 5)} companies/min (5x parallel)
+              </div>
+            )}
           </div>
         )}
 
