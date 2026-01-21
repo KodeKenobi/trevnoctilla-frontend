@@ -101,6 +101,7 @@ export default function CampaignMonitorPage() {
     setIsMonitoring(false);
     setStatus('cancelled');
     setCurrentStep('Monitoring cancelled by user');
+    setHasCompleted(true); // CRITICAL: Prevent auto-restart after cancel
   };
 
   const startMonitoring = () => {
