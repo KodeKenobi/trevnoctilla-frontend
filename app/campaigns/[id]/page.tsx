@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import ExportOptionsModal from "@/components/ui/ExportOptionsModal";
+import RapidAllLimitModal from "@/components/ui/RapidAllLimitModal";
 
 interface Campaign {
   id: number;
@@ -76,6 +77,8 @@ export default function CampaignDetailPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [rapidAllModalOpen, setRapidAllModalOpen] = useState(false);
+  const [customProcessingLimit, setCustomProcessingLimit] = useState<number | null>(null);
 
   const campaignId = params?.id as string;
 
@@ -297,6 +300,20 @@ export default function CampaignDetailPage() {
 
       // Only process if there's a pending company AND rapid all is still running
       if (nextPending && isRapidAllRunning) {
+        // Count how many have been processed in this batch
+        const processedCount = prevCompanies.filter(
+          (c) => c.status === "completed" || c.status === "failed" || c.status === "captcha"
+        ).length;
+
+        // Check if we've hit the custom limit
+        if (customProcessingLimit && processedCount >= customProcessingLimit) {
+          console.log(
+            `[Rapid All] Reached custom limit of ${customProcessingLimit} companies`
+          );
+          setIsRapidAllRunning(false);
+          return prevCompanies;
+        }
+
         console.log(
           "[Rapid All] Processing next pending company:",
           nextPending.company_name
@@ -313,7 +330,7 @@ export default function CampaignDetailPage() {
       }
       return prevCompanies;
     });
-  }, [isRapidAllRunning]);
+  }, [isRapidAllRunning, customProcessingLimit]);
 
   const startRapidAll = () => {
     const pendingCompanies = companies.filter((c) => c.status === "pending");
@@ -323,16 +340,21 @@ export default function CampaignDetailPage() {
       return;
     }
 
-    // Limit the number of companies to process based on user's subscription
-    const companiesToProcess = pendingCompanies.slice(0, campaignLimit === Infinity ? pendingCompanies.length : campaignLimit);
+    // Show modal to let user set custom limit
+    setRapidAllModalOpen(true);
+  };
+
+  const handleStartRapidAllWithLimit = (limit: number) => {
+    const pendingCompanies = companies.filter((c) => c.status === "pending");
 
     console.log(
-      `[Rapid All] Starting batch processing for ${companiesToProcess.length} companies (limit: ${campaignLimit === Infinity ? 'unlimited' : campaignLimit})`
+      `[Rapid All] Starting batch processing for ${limit} companies`
     );
     setIsRapidAllRunning(true);
+    setRapidAllModalOpen(false);
 
     // Start with the first pending company
-    handleRapidProcess(companiesToProcess[0].id);
+    handleRapidProcess(pendingCompanies[0].id);
   };
 
   const handleExport = async (options: any) => {
@@ -900,6 +922,17 @@ export default function CampaignDetailPage() {
         onExport={handleExport}
         campaignName={campaign?.name || 'Campaign'}
         isExporting={isExporting}
+      />
+
+      {/* Rapid All Limit Modal */}
+      <RapidAllLimitModal
+        isOpen={rapidAllModalOpen}
+        onClose={() => setRapidAllModalOpen(false)}
+        onStart={handleStartRapidAllWithLimit}
+        maxAvailable={companies.filter((c) => c.status === "pending").length}
+        maxSubscriptionTier={campaignLimit === Infinity ? 999999 : campaignLimit}
+        subscriptionTier={user?.subscription_tier || 'free'}
+        isProcessing={isRapidAllRunning}
       />
     </div>
   );
