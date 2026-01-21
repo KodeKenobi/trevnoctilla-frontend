@@ -360,27 +360,30 @@ export default function CampaignDetailPage() {
     try {
       setProcessingCount((prev) => prev + batchCompanies.length);
       
-      // Mark all as processing immediately for UI feedback
-      setCompanies((prevCompanies) =>
-        prevCompanies.map((c) =>
-          companyIds.includes(c.id)
-            ? { ...c, status: 'processing' }
-            : c
-        )
-      );
+      // DON'T mark all as processing - let backend do it sequentially!
+      // This ensures proper queue visualization
       
-      // Start polling for real-time updates
+      // Start polling for real-time updates (faster polling for better UX)
       const pollInterval = setInterval(async () => {
         try {
           const statusResponse = await fetch(`/api/campaigns/${campaignId}/companies`);
           const statusData = await statusResponse.json();
           if (statusData.companies) {
             setCompanies(statusData.companies);
+            
+            // Update progress count in real-time
+            const batchProcessed = statusData.companies.filter(
+              c => companyIds.includes(c.id) && (c.status === 'completed' || c.status === 'failed')
+            ).length;
+            
+            if (batchProcessed > 0) {
+              console.log(`[Batch] Real-time progress: ${batchProcessed}/${batchCompanies.length} completed`);
+            }
           }
         } catch (error) {
           console.error('[Batch] Polling error:', error);
         }
-      }, 2000); // Poll every 2 seconds
+      }, 1000); // Poll every 1 second for faster updates
       
       const response = await fetch(`/api/campaigns/${campaignId}/rapid-process-batch`, {
         method: 'POST',
@@ -457,14 +460,7 @@ export default function CampaignDetailPage() {
     try {
       setProcessingCount((prev) => prev + 1);
       
-      // Mark as processing immediately for UI feedback
-      setCompanies((prevCompanies) =>
-        prevCompanies.map((c) =>
-          c.id === companyId ? { ...c, status: 'processing' } : c
-        )
-      );
-      
-      // Start polling for real-time updates
+      // Start polling for real-time updates (backend marks as processing)
       const pollInterval = setInterval(async () => {
         try {
           const statusResponse = await fetch(`/api/campaigns/${campaignId}/companies`);
@@ -475,7 +471,7 @@ export default function CampaignDetailPage() {
         } catch (error) {
           console.error('[Rapid] Polling error:', error);
         }
-      }, 2000); // Poll every 2 seconds
+      }, 1000); // Poll every 1 second for faster updates
       
       const response = await fetch(`/api/campaigns/${campaignId}/companies/${companyId}/rapid-process`, {
         method: 'POST',
