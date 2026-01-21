@@ -1,0 +1,318 @@
+[2026-01-21T20:27:06.097Z] [INFO] ╔═══════════════════════════════════════════════════════════════════════════════╗
+[2026-01-21T20:27:06.120Z] [INFO] ║                    COMPLETE CAMPAIGN FLOW TEST                                 ║
+[2026-01-21T20:27:06.120Z] [INFO] ║                                                                                ║
+[2026-01-21T20:27:06.120Z] [INFO] ║  Base URL: https://www.trevnoctilla.com                                   ║
+[2026-01-21T20:27:06.120Z] [INFO] ║  Backend:  https://web-production-737b.up.railway.app                     ║
+[2026-01-21T20:27:06.121Z] [INFO] ╚═══════════════════════════════════════════════════════════════════════════════╝
+[2026-01-21T20:27:06.121Z] [INFO] 
+================================================================================
+[2026-01-21T20:27:06.121Z] [INFO] STEP 1: CREATE CAMPAIGN
+[2026-01-21T20:27:06.122Z] [INFO] ================================================================================
+[2026-01-21T20:27:06.122Z] [API] 
+🌐 [API] POST https://www.trevnoctilla.com/api/campaigns
+[2026-01-21T20:27:06.122Z] [API] 📤 [API] Request Body: {
+  "name": "Complete Flow Test 1769027226097",
+  "message_template": "{\"sender_name\":\"Flow Test User\",\"sender_email\":\"flowtest@example.com\",\"sender_phone\":\"+1-555-FLOW\",\"sender_address\":\"\",\"subject\":\"Automated Flow Test Inquiry\",\"message\":\"This is an automated test of the complete campaign flow. Please disregard this message.\"}",
+  "companies": [
+    {
+      "company_name": "Trevnoctilla Test 1",
+      "website_url": "https://www.trevnoctilla.com/",
+      "country": "South Africa"
+    },
+    {
+      "company_name": "Trevnoctilla Test 2",
+      "website_url": "https://www.trevnoctilla.com/",
+      "country": "South Africa"
+    },
+    {
+      "company_name": "Trevnoctilla Test 3",
+      "website_url": "https://www.trevnoctilla.com/",
+      "country": "South Africa"
+    }
+  ],
+  "session_id": "test-session-1769027226122"
+}
+[2026-01-21T20:27:07.037Z] [SUCCESS] 📥 [API] Response: 200 (912ms)
+[2026-01-21T20:27:07.038Z] [API] 📦 [API] Response Data: {
+  "campaign": {
+    "captcha_count": 0,
+    "completed_at": null,
+    "created_at": "2026-01-21T20:27:07.593982",
+    "failed_count": 0,
+    "id": 2,
+    "message_template": "{\"sender_name\":\"Flow Test User\",\"sender_email\":\"flowtest@example.com\",\"sender_phone\":\"+1-555-FLOW\",\"sender_address\":\"\",\"subject\":\"Automated Flow Test Inquiry\",\"message\":\"This is an automated test of the complete campaign flow. Please disregard this message.\"}",
+    "name": "Complete Flow Test 1769027226097",
+    "processed_count": 0,
+    "progress_percentage": 0,
+    "spreadsheet_filename": null,
+    "started_at": null,
+    "status": "draft",
+    "success_count": 0,
+    "total_companies": 3,
+    "user_id": null
+  },
+  "message": "Campaign created successfully",
+  "success": true
+}
+[2026-01-21T20:27:07.038Z] [SUCCESS] ✅ [SUCCESS] Campaign created with ID: 2
+[2026-01-21T20:27:07.038Z] [INFO] 
+================================================================================
+[2026-01-21T20:27:07.038Z] [INFO] STEP 2: UPLOAD ADDITIONAL COMPANIES (SKIPPED)
+[2026-01-21T20:27:07.038Z] [INFO] ================================================================================
+[2026-01-21T20:27:07.038Z] [INFO] ℹ️ Companies already added during campaign creation
+[2026-01-21T20:27:07.038Z] [INFO] 
+================================================================================
+[2026-01-21T20:27:07.038Z] [INFO] STEP 3: VERIFY COMPANIES UPLOADED
+[2026-01-21T20:27:07.038Z] [INFO] ================================================================================
+[2026-01-21T20:27:07.038Z] [API] 
+🌐 [API] GET https://www.trevnoctilla.com/api/campaigns/2/companies
+[2026-01-21T20:27:08.081Z] [SUCCESS] 📥 [API] Response: 200 (1041ms)
+[2026-01-21T20:27:08.081Z] [API] 📦 [API] Response Data: {
+  "companies": [
+    {
+      "additional_data": {},
+      "campaign_id": 2,
+      "company_name": "Trevnoctilla Test 1",
+      "contact_email": null,
+      "contact_page_found": false,
+      "contact_page_url": null,
+      "contact_person": null,
+      "created_at": "2026-01-21T20:27:07.595432",
+      "error_message": null,
+      "form_found": false,
+      "id": 6,
+      "phone": null,
+      "processed_at": null,
+      "screenshot_url": null,
+      "status": "pending",
+      "submitted_at": null,
+      "website_url": "https://www.trevnoctilla.com/"
+    },
+    {
+      "additional_data": {},
+      "campaign_id": 2,
+      "company_name": "Trevnoctilla Test 2",
+      "contact_email": null,
+      "contact_page_found": false,
+      "contact_page_url": null,
+      "contact_person": null,
+      "created_at": "2026-01-21T20:27:07.595435",
+      "error_message": null,
+      "form_found": false,
+      "id": 7,
+      "phone": null,
+      "processed_at": null,
+      "screenshot_url": null,
+      "status": "pending",
+      "submitted_at": null,
+      "website_url": "https://www.trevnoctilla.com/"
+    },
+    {
+      "additional_data": {},
+      "campaign_id": 2,
+      "company_name": "Trevnoctilla Test 3",
+      "contact_email": null,
+      "contact_page_found": false,
+      "contact_page_url": null,
+      "contact_person": null,
+      "created_at": "2026-01-21T20:27:07.595436",
+      "error_message": null,
+      "form_found": false,
+      "id": 8,
+      "phone": null,
+      "processed_at": null,
+      "screenshot_url": null,
+      "status": "pending",
+      "submitted_at": null,
+      "website_url": "https://www.trevnoctilla.com/"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pages": 1,
+    "per_page": 50,
+    "total": 3
+  },
+  "success": true
+}
+[2026-01-21T20:27:08.082Z] [INFO] 📊 [INFO] Total companies: 3
+[2026-01-21T20:27:08.082Z] [INFO] 📊 [INFO] Pending companies: 3
+[2026-01-21T20:27:08.082Z] [INFO] 
+================================================================================
+[2026-01-21T20:27:08.083Z] [INFO] STEP 4: START RAPID ALL PROCESSING
+[2026-01-21T20:27:08.083Z] [INFO] ================================================================================
+[2026-01-21T20:27:08.083Z] [INFO] 📊 [INFO] Total pending: 3
+[2026-01-21T20:27:08.083Z] [INFO] 📊 [INFO] Unique URLs: 1
+[2026-01-21T20:27:08.083Z] [INFO] 📊 [INFO] Batch groups (duplicates): 1
+[2026-01-21T20:27:08.083Z] [INFO] 
+🔄 [BATCH] Processing 3 companies for https://www.trevnoctilla.com/
+[2026-01-21T20:27:08.083Z] [API] 
+🌐 [API] POST https://www.trevnoctilla.com/api/campaigns/2/rapid-process-batch
+[2026-01-21T20:27:08.083Z] [API] 📤 [API] Request Body: {
+  "company_ids": [
+    6,
+    7,
+    8
+  ]
+}
+[2026-01-21T20:27:36.127Z] [SUCCESS] 📥 [API] Response: 200 (28042ms)
+[2026-01-21T20:27:36.127Z] [API] 📦 [API] Response Data: {
+  "companiesProcessed": 3,
+  "processingTime": 27.78,
+  "results": [
+    {
+      "companyId": 6,
+      "errorMessage": null,
+      "screenshotUrl": "https://pqdxqvxyrahvongbhtdb.supabase.co/storage/v1/object/public/campaign-screenshots/campaign_2/company_6_20260121_202717.jpg?",
+      "status": "completed",
+      "success": true
+    },
+    {
+      "companyId": 7,
+      "errorMessage": null,
+      "screenshotUrl": "https://pqdxqvxyrahvongbhtdb.supabase.co/storage/v1/object/public/campaign-screenshots/campaign_2/company_7_20260121_202725.jpg?",
+      "status": "completed",
+      "success": true
+    },
+    {
+      "companyId": 8,
+      "errorMessage": null,
+      "screenshotUrl": "https://pqdxqvxyrahvongbhtdb.supabase.co/storage/v1/object/public/campaign-screenshots/campaign_2/company_8_20260121_202733.jpg?",
+      "status": "completed",
+      "success": true
+    }
+  ],
+  "success": true,
+  "websiteUrl": "https://www.trevnoctilla.com/"
+}
+[2026-01-21T20:27:36.127Z] [SUCCESS] ✅ [SUCCESS] Batch completed
+[2026-01-21T20:27:36.127Z] [INFO]    ✅ Company 6: completed
+[2026-01-21T20:27:36.127Z] [INFO]    ✅ Company 7: completed
+[2026-01-21T20:27:36.127Z] [INFO]    ✅ Company 8: completed
+[2026-01-21T20:27:36.128Z] [INFO] 
+⏱️ [TIMING] Total processing time: 28.05s
+[2026-01-21T20:27:36.128Z] [INFO] ⏱️ [TIMING] Average per company: 9.35s
+[2026-01-21T20:27:36.128Z] [INFO] 
+================================================================================
+[2026-01-21T20:27:36.128Z] [INFO] STEP 5: VERIFY RESULTS
+[2026-01-21T20:27:36.128Z] [INFO] ================================================================================
+[2026-01-21T20:27:38.143Z] [API] 
+🌐 [API] GET https://www.trevnoctilla.com/api/campaigns/2
+[2026-01-21T20:27:38.365Z] [SUCCESS] 📥 [API] Response: 200 (220ms)
+[2026-01-21T20:27:38.365Z] [API] 📦 [API] Response Data: {
+  "campaign": {
+    "captcha_count": 0,
+    "completed_at": null,
+    "created_at": "2026-01-21T20:27:07.593982",
+    "failed_count": 0,
+    "id": 2,
+    "message_template": "{\"sender_name\":\"Flow Test User\",\"sender_email\":\"flowtest@example.com\",\"sender_phone\":\"+1-555-FLOW\",\"sender_address\":\"\",\"subject\":\"Automated Flow Test Inquiry\",\"message\":\"This is an automated test of the complete campaign flow. Please disregard this message.\"}",
+    "name": "Complete Flow Test 1769027226097",
+    "processed_count": 3,
+    "progress_percentage": 100,
+    "spreadsheet_filename": null,
+    "started_at": null,
+    "status": "draft",
+    "success_count": 3,
+    "total_companies": 3,
+    "user_id": null
+  },
+  "success": true
+}
+[2026-01-21T20:27:38.365Z] [INFO] 
+📊 [RESULTS] Campaign Status:
+[2026-01-21T20:27:38.365Z] [INFO]    Total Companies: 3
+[2026-01-21T20:27:38.365Z] [INFO]    Processed: 3
+[2026-01-21T20:27:38.365Z] [SUCCESS]    ✅ Success: 3
+[2026-01-21T20:27:38.366Z] [ERROR]    ❌ Failed: 0
+[2026-01-21T20:27:38.366Z] [INFO]    📈 Progress: 100%
+[2026-01-21T20:27:38.366Z] [API] 
+🌐 [API] GET https://www.trevnoctilla.com/api/campaigns/2/companies
+[2026-01-21T20:27:39.162Z] [SUCCESS] 📥 [API] Response: 200 (795ms)
+[2026-01-21T20:27:39.162Z] [API] 📦 [API] Response Data: {
+  "companies": [
+    {
+      "additional_data": {},
+      "campaign_id": 2,
+      "company_name": "Trevnoctilla Test 1",
+      "contact_email": null,
+      "contact_page_found": false,
+      "contact_page_url": null,
+      "contact_person": null,
+      "created_at": "2026-01-21T20:27:07.595432",
+      "error_message": null,
+      "form_found": false,
+      "id": 6,
+      "phone": null,
+      "processed_at": null,
+      "screenshot_url": "https://pqdxqvxyrahvongbhtdb.supabase.co/storage/v1/object/public/campaign-screenshots/campaign_2/company_6_20260121_202717.jpg?",
+      "status": "completed",
+      "submitted_at": null,
+      "website_url": "https://www.trevnoctilla.com/"
+    },
+    {
+      "additional_data": {},
+      "campaign_id": 2,
+      "company_name": "Trevnoctilla Test 2",
+      "contact_email": null,
+      "contact_page_found": false,
+      "contact_page_url": null,
+      "contact_person": null,
+      "created_at": "2026-01-21T20:27:07.595435",
+      "error_message": null,
+      "form_found": false,
+      "id": 7,
+      "phone": null,
+      "processed_at": null,
+      "screenshot_url": "https://pqdxqvxyrahvongbhtdb.supabase.co/storage/v1/object/public/campaign-screenshots/campaign_2/company_7_20260121_202725.jpg?",
+      "status": "completed",
+      "submitted_at": null,
+      "website_url": "https://www.trevnoctilla.com/"
+    },
+    {
+      "additional_data": {},
+      "campaign_id": 2,
+      "company_name": "Trevnoctilla Test 3",
+      "contact_email": null,
+      "contact_page_found": false,
+      "contact_page_url": null,
+      "contact_person": null,
+      "created_at": "2026-01-21T20:27:07.595436",
+      "error_message": null,
+      "form_found": false,
+      "id": 8,
+      "phone": null,
+      "processed_at": null,
+      "screenshot_url": "https://pqdxqvxyrahvongbhtdb.supabase.co/storage/v1/object/public/campaign-screenshots/campaign_2/company_8_20260121_202733.jpg?",
+      "status": "completed",
+      "submitted_at": null,
+      "website_url": "https://www.trevnoctilla.com/"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pages": 1,
+    "per_page": 50,
+    "total": 3
+  },
+  "success": true
+}
+[2026-01-21T20:27:39.162Z] [INFO] 
+📋 [BREAKDOWN] Company Status:
+[2026-01-21T20:27:39.162Z] [SUCCESS]    ✅ Completed: 3
+[2026-01-21T20:27:39.162Z] [ERROR]    ❌ Failed: 0
+[2026-01-21T20:27:39.162Z] [INFO]    ⏳ Pending: 0
+[2026-01-21T20:27:39.163Z] [SUCCESS] 
+✅ [SUCCESSFUL COMPANIES]:
+[2026-01-21T20:27:39.163Z] [SUCCESS]    • Trevnoctilla Test 1
+[2026-01-21T20:27:39.163Z] [SUCCESS]      📸 Screenshot: https://pqdxqvxyrahvongbhtdb.supabase.co/storage/v1/object/public/campaign-screenshots/campaign_2/company_6_20260121_202717.jpg?
+[2026-01-21T20:27:39.163Z] [SUCCESS]    • Trevnoctilla Test 2
+[2026-01-21T20:27:39.163Z] [SUCCESS]      📸 Screenshot: https://pqdxqvxyrahvongbhtdb.supabase.co/storage/v1/object/public/campaign-screenshots/campaign_2/company_7_20260121_202725.jpg?
+[2026-01-21T20:27:39.163Z] [SUCCESS]    • Trevnoctilla Test 3
+[2026-01-21T20:27:39.163Z] [SUCCESS]      📸 Screenshot: https://pqdxqvxyrahvongbhtdb.supabase.co/storage/v1/object/public/campaign-screenshots/campaign_2/company_8_20260121_202733.jpg?
+[2026-01-21T20:27:39.163Z] [INFO] 
+================================================================================
+[2026-01-21T20:27:39.163Z] [INFO] STEP 6: TEST EXPORT FUNCTIONALITY
+[2026-01-21T20:27:39.163Z] [INFO] ================================================================================
+[2026-01-21T20:27:39.163Z] [INFO] 📥 [EXPORT] Requesting CSV export from https://www.trevnoctilla.com/api/campaigns/2/export?format=csv
+[2026-01-21T20:27:39.491Z] [SUCCESS] ✅ [SUCCESS] Export completed
