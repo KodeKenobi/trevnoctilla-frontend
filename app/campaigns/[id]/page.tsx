@@ -79,6 +79,8 @@ export default function CampaignDetailPage() {
   const [itemsPerPage] = useState(10);
   const [rapidAllModalOpen, setRapidAllModalOpen] = useState(false);
   const [customProcessingLimit, setCustomProcessingLimit] = useState<number | null>(null);
+  const [rapidAllProgress, setRapidAllProgress] = useState(0); // Track: X companies processed
+  const [rapidAllTotal, setRapidAllTotal] = useState(0); // Track: out of Y total
 
   const campaignId = params?.id as string;
 
@@ -220,12 +222,17 @@ export default function CampaignDetailPage() {
           setProcessingCompanyId(null);
           fetchCampaignDetails(); // Refresh to show updated status
 
+          // Increment Rapid All progress
+          if (isRapidAllRunning) {
+            setRapidAllProgress((prev) => prev + 1);
+          }
+
           // Reset progress display after a delay
           setTimeout(() => {
             setRapidProgress(0);
             setRapidStatus("");
             setRapidCurrentCompany("");
-          }, 2000);
+          }, 1000); // Reduced delay for faster processing
 
           // Auto-process next ONLY if "Rapid All" is running
           if (isRapidAllRunning) {
@@ -239,10 +246,20 @@ export default function CampaignDetailPage() {
           setProcessingCompanyId(null);
           fetchCampaignDetails();
 
+          // Increment Rapid All progress even on error
+          if (isRapidAllRunning) {
+            setRapidAllProgress((prev) => prev + 1);
+          }
+
           setTimeout(() => {
             setRapidStatus("");
             setRapidCurrentCompany("");
-          }, 3000);
+          }, 2000); // Reduced delay
+
+          // Auto-process next ONLY if "Rapid All" is running
+          if (isRapidAllRunning) {
+            processNextPending();
+          }
         }
       };
 
@@ -298,22 +315,17 @@ export default function CampaignDetailPage() {
     setCompanies((prevCompanies) => {
       const nextPending = prevCompanies.find((c) => c.status === "pending");
 
+      // Check if we've hit the custom limit
+      if (customProcessingLimit && rapidAllProgress >= customProcessingLimit) {
+        console.log(
+          `[Rapid All] Reached custom limit of ${customProcessingLimit} companies`
+        );
+        setIsRapidAllRunning(false);
+        return prevCompanies;
+      }
+
       // Only process if there's a pending company AND rapid all is still running
       if (nextPending && isRapidAllRunning) {
-        // Count how many have been processed in this batch
-        const processedCount = prevCompanies.filter(
-          (c) => c.status === "completed" || c.status === "failed" || c.status === "captcha"
-        ).length;
-
-        // Check if we've hit the custom limit
-        if (customProcessingLimit && processedCount >= customProcessingLimit) {
-          console.log(
-            `[Rapid All] Reached custom limit of ${customProcessingLimit} companies`
-          );
-          setIsRapidAllRunning(false);
-          return prevCompanies;
-        }
-
         console.log(
           "[Rapid All] Processing next pending company:",
           nextPending.company_name
@@ -321,7 +333,7 @@ export default function CampaignDetailPage() {
         // Delay slightly to ensure state is updated
         setTimeout(() => {
           handleRapidProcess(nextPending.id);
-        }, 500);
+        }, 100); // Very short delay for seamless processing
         return prevCompanies;
       } else if (!nextPending) {
         // No more pending companies - stop Rapid All
@@ -330,7 +342,7 @@ export default function CampaignDetailPage() {
       }
       return prevCompanies;
     });
-  }, [isRapidAllRunning, customProcessingLimit]);
+  }, [isRapidAllRunning, customProcessingLimit, rapidAllProgress]);
 
   const startRapidAll = () => {
     const pendingCompanies = companies.filter((c) => c.status === "pending");
@@ -340,7 +352,13 @@ export default function CampaignDetailPage() {
       return;
     }
 
-    // Show modal to let user set custom limit
+    // Guests get automatic limit, no modal
+    if (!user) {
+      handleStartRapidAllWithLimit(5);
+      return;
+    }
+
+    // Show modal to let authenticated users set custom limit
     setRapidAllModalOpen(true);
   };
 
@@ -350,6 +368,8 @@ export default function CampaignDetailPage() {
     console.log(
       `[Rapid All] Starting batch processing for ${limit} companies`
     );
+    setRapidAllTotal(Math.min(limit, pendingCompanies.length));
+    setRapidAllProgress(0);
     setIsRapidAllRunning(true);
     setRapidAllModalOpen(false);
 
@@ -585,6 +605,46 @@ export default function CampaignDetailPage() {
             <div className="mt-2 text-[10px] text-white/40 font-mono">
               {companies.filter((c) => c.status === "completed").length} /{" "}
               {companies.length} companies processed
+            </div>
+          </div>
+        )}
+
+        {/* Rapid All Progress Bar */}
+        {isRapidAllRunning && rapidAllTotal > 0 && (
+          <div className="mb-6 border border-emerald-500/30 rounded-lg p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Activity className="w-5 h-5 text-emerald-400 animate-pulse" />
+                  <div className="absolute inset-0 bg-emerald-400/20 blur-xl rounded-full" />
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-white">
+                    Rapid All Processing
+                  </div>
+                  <div className="text-xs text-white/60 mt-0.5">
+                    {rapidAllProgress}/{rapidAllTotal} companies processed
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-sm font-mono text-white font-bold">
+                  {Math.round((rapidAllProgress / rapidAllTotal) * 100)}%
+                </div>
+                <button
+                  onClick={emergencyStopAll}
+                  className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded transition-colors flex items-center gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  STOP ALL
+                </button>
+              </div>
+            </div>
+            <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-300 ease-out"
+                style={{ width: `${(rapidAllProgress / rapidAllTotal) * 100}%` }}
+              />
             </div>
           </div>
         )}
