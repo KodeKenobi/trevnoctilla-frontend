@@ -9,6 +9,7 @@ import SplitText from "@/components/SplitText";
 import DecryptedText from "@/components/DecryptedText";
 import TextType from "@/components/TextType";
 import { CircuitPulse } from "@/components/ui/CircuitPulse";
+import { FileConversionCard } from "@/components/ui/file-conversion-card";
 
 export default function LandingPage() {
   const { navigateTo } = useNavigation();
@@ -210,26 +211,65 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-6 pt-8">
               {[
                 {
-                  title: "Video Processing",
+                  name: "Video Converter",
                   description:
                     "Convert videos to MP3 audio and generate animated GIFs with precise control over quality, compression, and output formats for optimal results.",
+                  category: "Video Processing",
+                  icon: Play,
+                  inputFormats: ["MP4", "AVI", "MOV", "MKV", "WEBM", "FLV"],
+                  outputFormats: ["MP3", "GIF", "MP4", "AVI", "MOV"],
+                  features: ["All Formats", "Compression", "Quality Control", "GIF Generation"],
+                  processingSpeed: "Fast" as const,
+                  quality: "High" as const,
+                  maxFileSize: "2GB",
+                  popularity: 5,
+                  usageCount: 125000,
+                  activityData: [0.5, 0.6, 0.4, 0.7, 0.8, 0.9, 1.0, 0.95, 0.8, 0.85, 0.9, 0.92],
+                  isFree: true,
+                  isMobileOptimized: true,
                   href: "/tools/video-converter",
                 },
                 {
-                  title: "Document Management",
+                  name: "PDF Tools",
                   description:
                     "Merge, split, sign, and prepare PDFs for real-world use cases including sharing, printing, archiving, and professional document workflows.",
+                  category: "Document Management",
+                  icon: FileText,
+                  inputFormats: ["PDF", "DOC", "DOCX", "TXT", "HTML"],
+                  outputFormats: ["PDF", "DOC", "TXT", "HTML"],
+                  features: ["Merge & Split", "Digital Sign", "Watermark", "Extract Text"],
+                  processingSpeed: "Instant" as const,
+                  quality: "Lossless" as const,
+                  maxFileSize: "100MB",
+                  popularity: 5,
+                  usageCount: 250000,
+                  activityData: [0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 0.98, 0.92, 0.94, 0.96],
+                  isFree: true,
+                  isMobileOptimized: true,
                   href: "/tools/pdf-tools",
                 },
                 {
-                  title: "Image Conversion",
+                  name: "Image Converter",
                   description:
                     "Convert images across all popular formats while preserving sharpness, color accuracy, metadata, and image quality throughout the process.",
+                  category: "Image Conversion",
+                  icon: Image,
+                  inputFormats: ["JPG", "PNG", "WEBP", "GIF", "BMP", "TIFF"],
+                  outputFormats: ["JPG", "PNG", "WEBP", "GIF", "SVG"],
+                  features: ["All Formats", "Resize", "Compress", "Preserve Quality"],
+                  processingSpeed: "Instant" as const,
+                  quality: "High" as const,
+                  maxFileSize: "50MB",
+                  popularity: 5,
+                  usageCount: 180000,
+                  activityData: [0.4, 0.5, 0.6, 0.65, 0.7, 0.8, 0.85, 0.9, 0.87, 0.82, 0.88, 0.85],
+                  isFree: true,
+                  isMobileOptimized: true,
                   href: "/tools/image-converter",
                 },
-              ].map((feature, index) => (
-                <Link key={feature.title} href={feature.href}>
-                  <motion.article
+              ].map((tool, index) => (
+                <Link key={tool.name} href={tool.href}>
+                  <motion.div
                     initial={{ opacity: 0, y: 24 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{
@@ -238,37 +278,12 @@ export default function LandingPage() {
                       ease: "easeOut",
                     }}
                     viewport={{ once: true }}
-                    whileHover={{ y: -4 }}
-                    className="
-          group relative h-full
-          rounded-xl border border-white/10
-          p-6
-          transition-all duration-200
-          hover:border-white/25
-        "
                   >
-                    {/* subtle top rule */}
-                    <div className="mb-4 h-px w-10 bg-white/20 group-hover:bg-white/40 transition-colors mx-auto md:mx-0" />
-
-                    <div className="text-xl font-medium text-white tracking-tight text-center md:text-left">
-                      <TextType
-                        text={feature.title}
-                        typingSpeed={75}
-                        showCursor={false}
-                        startOnVisible={true}
-                        loop={false}
-                      />
-                    </div>
-
-                    <div className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
-                      {feature.description}
-                    </div>
-
-                    {/* affordance */}
-                    <div className="mt-6 text-sm text-white group-hover:text-neutral-300 transition-colors text-center md:text-left">
-                      Open tool →
-                    </div>
-                  </motion.article>
+                    <FileConversionCard
+                      theme="modern-dark"
+                      tool={tool}
+                    />
+                  </motion.div>
                 </Link>
               ))}
             </div>

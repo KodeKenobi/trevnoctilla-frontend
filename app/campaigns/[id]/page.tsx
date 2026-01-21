@@ -103,6 +103,29 @@ export default function CampaignDetailPage() {
     isRapidAllRunningRef.current = isRapidAllRunning;
   }, [isRapidAllRunning]);
 
+  // Sync rapidAllProgress with actual company statuses (fixes real-time update issue)
+  useEffect(() => {
+    if (isRapidAllRunning && rapidAllTotal > 0) {
+      const completedCount = companies.filter(
+        (c) => c.status === 'completed' || c.status === 'failed'
+      ).length;
+      
+      const processingCountActual = companies.filter(
+        (c) => c.status === 'processing'
+      ).length;
+      
+      // Update progress if it doesn't match actual completed count
+      if (completedCount !== rapidAllProgress) {
+        setRapidAllProgress(completedCount);
+      }
+      
+      // Update processing count if it doesn't match
+      if (processingCountActual !== processingCount) {
+        setProcessingCount(processingCountActual);
+      }
+    }
+  }, [companies, isRapidAllRunning, rapidAllTotal, rapidAllProgress, processingCount]);
+
   const campaignId = params?.id as string;
 
   // Get user's campaign company limit

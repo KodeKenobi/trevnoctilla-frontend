@@ -31,6 +31,7 @@ interface FileConversionCardProps {
     maxFileSize: string;
     popularity: number; // 1-5 stars
     usageCount: number;
+    activityData?: number[]; // Activity graph data (0-1 scale)
     isFree: boolean;
     isMobileOptimized: boolean;
   };
@@ -142,7 +143,7 @@ const FileConversionCard: React.FC<FileConversionCardProps> = ({
       className={`
         relative overflow-hidden rounded-2xl p-6 ${styles.card}
         border backdrop-blur-sm ${styles.hover} transition-all duration-300
-        group cursor-pointer ${className}
+        group cursor-pointer h-full min-h-[550px] flex flex-col ${className}
       `}
     >
       {/* Background Pattern */}
@@ -151,64 +152,124 @@ const FileConversionCard: React.FC<FileConversionCardProps> = ({
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-current to-transparent rounded-full transform -translate-x-12 translate-y-12"></div>
       </div>
 
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col flex-1">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className={`p-3 rounded-xl ${styles.badge} border`}>
-              <IconComponent className="w-6 h-6" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className={`font-semibold text-lg truncate ${styles.text}`}>
+                {tool.name}
+              </h3>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className={`font-semibold text-lg truncate ${styles.text}`}>
-                  {tool.name}
-                </h3>
-                {tool.isFree && (
-                  <span className={`px-2 py-0.5 text-xs rounded-full border ${styles.successBadge}`}>
-                    Free
-                  </span>
-                )}
-              </div>
-              <p className={`text-sm ${styles.textSecondary} truncate`}>
-                {tool.category}
-              </p>
-            </div>
+            <p className={`text-sm ${styles.textSecondary} truncate`}>
+              {tool.category}
+            </p>
           </div>
           <ExternalLink className={`w-5 h-5 ${styles.textMuted} group-hover:${styles.accent} transition-colors flex-shrink-0`} />
         </div>
 
         {/* Description */}
-        <p className={`text-sm leading-relaxed mb-4 line-clamp-2 ${styles.textSecondary}`}>
+        <p className={`text-sm leading-relaxed mb-4 line-clamp-4 min-h-[5.5rem] ${styles.textSecondary}`}>
           {tool.description}
         </p>
 
-        {/* Stats */}
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex items-center gap-1">
-            <Upload className={`w-4 h-4 ${styles.textMuted}`} />
-            <span className={`text-sm font-medium ${styles.text}`}>
-              {tool.inputFormats.length}+ in
-            </span>
+        {/* Activity Graph - Smooth Line Chart */}
+        {tool.activityData && tool.activityData.length > 0 && (
+          <div className="mb-4">
+            <div className="relative h-20 w-full bg-gradient-to-b from-cyan-500/5 to-transparent rounded-lg overflow-hidden">
+              <svg 
+                className="w-full h-full" 
+                viewBox="0 0 300 80" 
+                preserveAspectRatio="none"
+                style={{ shapeRendering: 'geometricPrecision' }}
+              >
+                <defs>
+                  <linearGradient id={`area-gradient-${tool.name.replace(/\s/g, '-')}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: theme === "modern-dark" ? "#22d3ee" : "#3b82f6", stopOpacity: 0.3 }} />
+                    <stop offset="100%" style={{ stopColor: theme === "modern-dark" ? "#22d3ee" : "#3b82f6", stopOpacity: 0 }} />
+                  </linearGradient>
+                </defs>
+                
+                {/* Create smooth curve path */}
+                {(() => {
+                  const data = tool.activityData!;
+                  const width = 300;
+                  const height = 80;
+                  const padding = 10;
+                  
+                  // Calculate points with proper scaling
+                  const points = data.map((value, index) => ({
+                    x: (index / (data.length - 1)) * width,
+                    y: height - padding - (value * (height - padding * 2))
+                  }));
+                  
+                  // Create smooth path using Catmull-Rom spline
+                  const createSmoothPath = (points: Array<{x: number, y: number}>) => {
+                    if (points.length < 2) return '';
+                    
+                    let path = `M ${points[0].x},${points[0].y}`;
+                    
+                    for (let i = 0; i < points.length - 1; i++) {
+                      const p0 = points[Math.max(i - 1, 0)];
+                      const p1 = points[i];
+                      const p2 = points[i + 1];
+                      const p3 = points[Math.min(i + 2, points.length - 1)];
+                      
+                      // Calculate control points for smooth curve
+                      const cp1x = p1.x + (p2.x - p0.x) / 6;
+                      const cp1y = p1.y + (p2.y - p0.y) / 6;
+                      const cp2x = p2.x - (p3.x - p1.x) / 6;
+                      const cp2y = p2.y - (p3.y - p1.y) / 6;
+                      
+                      path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+                    }
+                    
+                    return path;
+                  };
+                  
+                  const linePath = createSmoothPath(points);
+                  const areaPath = `${linePath} L ${width},${height} L 0,${height} Z`;
+                  
+                  return (
+                    <>
+                      {/* Filled area under curve */}
+                      <path
+                        d={areaPath}
+                        fill={`url(#area-gradient-${tool.name.replace(/\s/g, '-')})`}
+                        className="transition-opacity duration-300"
+                      />
+                      {/* Line stroke */}
+                      <path
+                        d={linePath}
+                        fill="none"
+                        stroke={theme === "modern-dark" ? "#22d3ee" : "#3b82f6"}
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="transition-all duration-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"
+                        style={{ vectorEffect: 'non-scaling-stroke' }}
+                      />
+                      {/* Dots at data points */}
+                      {points.map((point, idx) => (
+                        <circle
+                          key={idx}
+                          cx={point.x}
+                          cy={point.y}
+                          r="2.5"
+                          fill={theme === "modern-dark" ? "#22d3ee" : "#3b82f6"}
+                          className="transition-all duration-300 opacity-0 group-hover:opacity-100"
+                        />
+                      ))}
+                    </>
+                  );
+                })()}
+              </svg>
+            </div>
+            <p className={`text-xs mt-2 ${styles.textMuted}`}>
+              Usage activity (last 12 months)
+            </p>
           </div>
-          <div className="flex items-center gap-1">
-            <Download className={`w-4 h-4 ${styles.textMuted}`} />
-            <span className={`text-sm font-medium ${styles.text}`}>
-              {tool.outputFormats.length}+ out
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock className={`w-4 h-4 ${getSpeedColor(tool.processingSpeed)}`} />
-            <span className={`text-sm font-medium ${styles.text}`}>
-              {tool.processingSpeed}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <CheckCircle className={`w-4 h-4 ${getQualityColor(tool.quality)}`} />
-            <span className={`text-sm font-medium ${styles.text}`}>
-              {tool.quality}
-            </span>
-          </div>
-        </div>
+        )}
 
         {/* File Size & Usage */}
         <div className="flex items-center justify-between mb-4">
