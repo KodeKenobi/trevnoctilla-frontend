@@ -175,7 +175,7 @@ export default function LandingPage() {
 
         {/* Circuit Pulse Animation */}
         <section className="relative z-10 py-16 sm:py-24 flex items-center justify-center">
-          <CircuitPulse color="#06b6d4" />
+          <CircuitPulse />
         </section>
 
         {/* Features Section */}
