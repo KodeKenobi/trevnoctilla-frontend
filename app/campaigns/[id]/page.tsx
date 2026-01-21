@@ -373,7 +373,7 @@ export default function CampaignDetailPage() {
             
             // Update progress count in real-time
             const batchProcessed = statusData.companies.filter(
-              c => companyIds.includes(c.id) && (c.status === 'completed' || c.status === 'failed')
+              (c: Company) => companyIds.includes(c.id) && (c.status === 'completed' || c.status === 'failed')
             ).length;
             
             if (batchProcessed > 0) {
