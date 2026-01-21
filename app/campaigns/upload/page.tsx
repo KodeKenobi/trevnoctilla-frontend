@@ -12,6 +12,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
+import { PDFProcessingModal } from "@/components/ui/PDFProcessingModal";
 
 interface UploadedData {
   filename: string;
@@ -27,6 +28,7 @@ export default function CampaignUploadPage() {
   const router = useRouter();
   const { user } = useUser();
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -67,15 +69,30 @@ export default function CampaignUploadPage() {
 
     try {
       setUploading(true);
+      setUploadProgress(0);
       setError(null);
 
       const formData = new FormData();
       formData.append("file", file);
 
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + Math.random() * 30;
+        });
+      }, 300);
+
       const response = await fetch("/api/campaigns/upload", {
         method: "POST",
         body: formData,
       });
+
+      clearInterval(progressInterval);
+      setUploadProgress(95);
 
       if (!response.ok) {
         let errorMsg = "Upload failed";
@@ -109,6 +126,7 @@ export default function CampaignUploadPage() {
         uploadedAt: new Date().toISOString(),
       };
 
+      setUploadProgress(100);
       setUploadedData(uploadData);
       
       // Check if limit is exceeded
@@ -462,6 +480,13 @@ https://another.com,Another Co,hi@another.com,+0987654321`}
             </div>
           </div>
         )}
+
+        {/* Processing Modal */}
+        <PDFProcessingModal
+          isOpen={uploading}
+          progress={uploadProgress}
+          fileName={uploadedData?.filename || "CSV/Excel file"}
+        />
       </div>
     </div>
   );
