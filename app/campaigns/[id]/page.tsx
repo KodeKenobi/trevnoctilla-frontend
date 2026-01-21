@@ -383,7 +383,7 @@ export default function CampaignDetailPage() {
                 ...c,
                 status: data.status,
                 screenshot_url: data.screenshotUrl || c.screenshot_url,
-                error_message: data.errorMessage || c.error_message,
+                error_message: data.errorMessage ? getUserFriendlyError(data.errorMessage) : c.error_message,
               }
             : c
         )
@@ -404,7 +404,7 @@ export default function CampaignDetailPage() {
       setCompanies((prevCompanies) =>
         prevCompanies.map((c) =>
           c.id === companyId
-            ? { ...c, status: 'failed', error_message: 'Processing error' }
+            ? { ...c, status: 'failed', error_message: getUserFriendlyError('Processing error') }
             : c
         )
       );
@@ -415,6 +415,41 @@ export default function CampaignDetailPage() {
     } finally {
       setProcessingCount((prev) => prev - 1);
     }
+  };
+
+  // Convert technical errors to user-friendly messages
+  const getUserFriendlyError = (errorMessage: string): string => {
+    const msg = errorMessage?.toLowerCase() || '';
+
+    if (msg.includes('cannot run the event loop')) {
+      return 'Processing temporarily unavailable. Please try again in a moment.';
+    }
+    if (msg.includes('protocol error') || msg.includes('cannot navigate')) {
+      return 'Could not access the website. Please check the URL and try again.';
+    }
+    if (msg.includes('playwright sync api')) {
+      return 'Processing system busy. Please try again in a few seconds.';
+    }
+    if (msg.includes('timeout')) {
+      return 'Website took too long to respond. Please try again later.';
+    }
+    if (msg.includes('connection') || msg.includes('net::')) {
+      return 'Could not connect to the website. Please check your internet connection.';
+    }
+    if (msg.includes('contact form not found')) {
+      return 'No contact form found on this website.';
+    }
+    if (msg.includes('unable to submit')) {
+      return 'Could not submit the contact form. The website may be protected.';
+    }
+
+    // Return original message if it's already user-friendly
+    if (errorMessage && errorMessage.length < 100 && !msg.includes('error') && !msg.includes('exception')) {
+      return errorMessage;
+    }
+
+    // Default fallback
+    return 'Processing failed. Please try again or contact support if the problem persists.';
   };
 
   const processNextPending = useCallback(() => {
