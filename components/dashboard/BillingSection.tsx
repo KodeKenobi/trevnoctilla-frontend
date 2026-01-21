@@ -41,6 +41,7 @@ const plans: Plan[] = [
     price: 0,
     description: "Perfect for development and testing",
     features: [
+      "50 companies per campaign",
       "5 API calls/month",
       "PDF text extraction",
       "Basic image conversion",
