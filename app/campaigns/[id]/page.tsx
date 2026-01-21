@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import {
@@ -81,6 +81,24 @@ export default function CampaignDetailPage() {
   const [customProcessingLimit, setCustomProcessingLimit] = useState<number | null>(null);
   const [rapidAllProgress, setRapidAllProgress] = useState(0); // Track: X companies processed
   const [rapidAllTotal, setRapidAllTotal] = useState(0); // Track: out of Y total
+  
+  // Use refs to avoid stale closures in processNextPending
+  const rapidAllProgressRef = useRef(0);
+  const customProcessingLimitRef = useRef<number | null>(null);
+  const isRapidAllRunningRef = useRef(false);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    rapidAllProgressRef.current = rapidAllProgress;
+  }, [rapidAllProgress]);
+
+  useEffect(() => {
+    customProcessingLimitRef.current = customProcessingLimit;
+  }, [customProcessingLimit]);
+
+  useEffect(() => {
+    isRapidAllRunningRef.current = isRapidAllRunning;
+  }, [isRapidAllRunning]);
 
   const campaignId = params?.id as string;
 
@@ -219,11 +237,20 @@ export default function CampaignDetailPage() {
           setRapidStatus("Completed!");
           ws.close();
           setActiveWebSocket(null);
+          const completedCompanyId = processingCompanyId;
           setProcessingCompanyId(null);
-          fetchCampaignDetails(); // Refresh to show updated status
+
+          // Manually update company status instead of full refresh (CRITICAL FIX)
+          setCompanies((prevCompanies) =>
+            prevCompanies.map((c) =>
+              c.id === completedCompanyId
+                ? { ...c, status: "completed" }
+                : c
+            )
+          );
 
           // Increment Rapid All progress
-          if (isRapidAllRunning) {
+          if (isRapidAllRunningRef.current) {
             setRapidAllProgress((prev) => prev + 1);
           }
 
@@ -232,33 +259,42 @@ export default function CampaignDetailPage() {
             setRapidProgress(0);
             setRapidStatus("");
             setRapidCurrentCompany("");
-          }, 1000); // Reduced delay for faster processing
+          }, 500); // Reduced delay for faster processing
 
           // Auto-process next ONLY if "Rapid All" is running
-          if (isRapidAllRunning) {
-            processNextPending();
+          if (isRapidAllRunningRef.current) {
+            setTimeout(() => processNextPending(), 200); // Small delay to ensure state update
           }
         } else if (message.type === "error") {
           setRapidProgress(0);
           setRapidStatus("Failed");
           ws.close();
           setActiveWebSocket(null);
+          const failedCompanyId = processingCompanyId;
           setProcessingCompanyId(null);
-          fetchCampaignDetails();
+
+          // Manually update company status instead of full refresh (CRITICAL FIX)
+          setCompanies((prevCompanies) =>
+            prevCompanies.map((c) =>
+              c.id === failedCompanyId
+                ? { ...c, status: "failed" }
+                : c
+            )
+          );
 
           // Increment Rapid All progress even on error
-          if (isRapidAllRunning) {
+          if (isRapidAllRunningRef.current) {
             setRapidAllProgress((prev) => prev + 1);
           }
 
           setTimeout(() => {
             setRapidStatus("");
             setRapidCurrentCompany("");
-          }, 2000); // Reduced delay
+          }, 1000); // Reduced delay
 
           // Auto-process next ONLY if "Rapid All" is running
-          if (isRapidAllRunning) {
-            processNextPending();
+          if (isRapidAllRunningRef.current) {
+            setTimeout(() => processNextPending(), 200); // Small delay to ensure state update
           }
         }
       };
@@ -311,38 +347,46 @@ export default function CampaignDetailPage() {
   };
 
   const processNextPending = useCallback(() => {
-    // This needs to work with the current state
+    // Use refs to avoid stale closures (CRITICAL FIX)
+    const currentProgress = rapidAllProgressRef.current;
+    const currentLimit = customProcessingLimitRef.current;
+    const isRunning = isRapidAllRunningRef.current;
+
+    if (!isRunning) {
+      console.log("[Rapid All] Not running, skipping");
+      return;
+    }
+
+    // Check if we've hit the custom limit
+    if (currentLimit && currentProgress >= currentLimit) {
+      console.log(
+        `[Rapid All] Reached custom limit of ${currentLimit} companies (processed: ${currentProgress})`
+      );
+      setIsRapidAllRunning(false);
+      return;
+    }
+
+    // Get latest companies state
     setCompanies((prevCompanies) => {
       const nextPending = prevCompanies.find((c) => c.status === "pending");
 
-      // Check if we've hit the custom limit
-      if (customProcessingLimit && rapidAllProgress >= customProcessingLimit) {
+      if (nextPending) {
         console.log(
-          `[Rapid All] Reached custom limit of ${customProcessingLimit} companies`
-        );
-        setIsRapidAllRunning(false);
-        return prevCompanies;
-      }
-
-      // Only process if there's a pending company AND rapid all is still running
-      if (nextPending && isRapidAllRunning) {
-        console.log(
-          "[Rapid All] Processing next pending company:",
+          `[Rapid All] Processing next pending company (${currentProgress + 1}/${currentLimit || 'unlimited'}):`,
           nextPending.company_name
         );
-        // Delay slightly to ensure state is updated
+        // Process immediately - no delay needed with manual state updates
         setTimeout(() => {
           handleRapidProcess(nextPending.id);
-        }, 100); // Very short delay for seamless processing
-        return prevCompanies;
-      } else if (!nextPending) {
+        }, 50);
+      } else {
         // No more pending companies - stop Rapid All
         console.log("[Rapid All] All companies processed. Campaign complete.");
         setIsRapidAllRunning(false);
       }
       return prevCompanies;
     });
-  }, [isRapidAllRunning, customProcessingLimit, rapidAllProgress]);
+  }, []); // Empty dependencies - use refs for values
 
   const startRapidAll = () => {
     const pendingCompanies = companies.filter((c) => c.status === "pending");
@@ -368,6 +412,7 @@ export default function CampaignDetailPage() {
     console.log(
       `[Rapid All] Starting batch processing for ${limit} companies`
     );
+    setCustomProcessingLimit(limit); // Set limit for tracking
     setRapidAllTotal(Math.min(limit, pendingCompanies.length));
     setRapidAllProgress(0);
     setIsRapidAllRunning(true);
