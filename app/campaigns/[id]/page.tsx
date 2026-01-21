@@ -623,6 +623,7 @@ export default function CampaignDetailPage() {
     setAvgProcessingTime(0);
     processingTimesRef.current = [];
     setIsRapidAllRunning(true);
+    isRapidAllRunningRef.current = true; // CRITICAL: Update ref immediately before loop
     setRapidAllModalOpen(false);
 
     // Process all URL groups (batches for duplicates, single for unique)
