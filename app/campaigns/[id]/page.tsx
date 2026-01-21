@@ -574,7 +574,10 @@ export default function CampaignDetailPage() {
   }, []); // Empty dependencies - use refs for values
 
   const startRapidAll = () => {
+    console.log("[Rapid All Button] Clicked!");
     const pendingCompanies = companies.filter((c) => c.status === "pending");
+    console.log("[Rapid All Button] Pending companies:", pendingCompanies.length);
+    console.log("[Rapid All Button] User:", user ? "authenticated" : "guest");
 
     if (pendingCompanies.length === 0) {
       alert("No pending companies to process!");
@@ -583,11 +586,13 @@ export default function CampaignDetailPage() {
 
     // Guests get automatic limit, no modal
     if (!user) {
+      console.log("[Rapid All Button] Guest mode - auto-starting with limit 5");
       handleStartRapidAllWithLimit(5);
       return;
     }
 
     // Show modal to let authenticated users set custom limit
+    console.log("[Rapid All Button] Opening modal for authenticated user");
     setRapidAllModalOpen(true);
   };
 
