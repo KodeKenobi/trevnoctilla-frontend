@@ -8,6 +8,7 @@ import { useNavigation } from "@/contexts/NavigationContext";
 import SplitText from "@/components/SplitText";
 import DecryptedText from "@/components/DecryptedText";
 import TextType from "@/components/TextType";
+import { CircuitPulse } from "@/components/ui/CircuitPulse";
 
 export default function LandingPage() {
   const { navigateTo } = useNavigation();
@@ -172,10 +173,15 @@ export default function LandingPage() {
           </div>
         </main>
 
+        {/* Circuit Pulse Animation */}
+        <section className="relative z-10 py-16 sm:py-24 flex items-center justify-center">
+          <CircuitPulse color="#06b6d4" />
+        </section>
+
         {/* Features Section */}
         <section
           id="features"
-          className="relative z-10 px-6 lg:px-12 py-20 mt-[-100px] bg-gray-900"
+          className="relative z-10 px-6 lg:px-12 py-20 bg-gray-900"
         >
           <div className="max-w-6xl mx-auto">
             <motion.div
