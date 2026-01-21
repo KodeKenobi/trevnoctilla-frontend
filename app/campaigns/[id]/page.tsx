@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useUser } from "@/contexts/UserContext";
 import {
   ArrowLeft,
   Loader,
@@ -48,6 +49,7 @@ interface Company {
 export default function CampaignDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { user } = useUser();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,6 +78,17 @@ export default function CampaignDetailPage() {
   const [itemsPerPage] = useState(10);
 
   const campaignId = params?.id as string;
+
+  // Get user's campaign company limit
+  const getCampaignLimit = (): number => {
+    if (!user) return 5; // Guest
+    if (user.subscription_tier === 'free' || user.subscription_tier === 'testing') return 50;
+    if (user.subscription_tier === 'premium') return 100; // Production
+    if (user.subscription_tier === 'enterprise' || user.subscription_tier === 'client') return Infinity;
+    return 5; // Default to guest limit
+  };
+
+  const campaignLimit = getCampaignLimit();
 
   useEffect(() => {
     if (campaignId) {
@@ -310,13 +323,16 @@ export default function CampaignDetailPage() {
       return;
     }
 
+    // Limit the number of companies to process based on user's subscription
+    const companiesToProcess = pendingCompanies.slice(0, campaignLimit === Infinity ? pendingCompanies.length : campaignLimit);
+
     console.log(
-      `[Rapid All] Starting batch processing for ${pendingCompanies.length} companies`
+      `[Rapid All] Starting batch processing for ${companiesToProcess.length} companies (limit: ${campaignLimit === Infinity ? 'unlimited' : campaignLimit})`
     );
     setIsRapidAllRunning(true);
 
     // Start with the first pending company
-    handleRapidProcess(pendingCompanies[0].id);
+    handleRapidProcess(companiesToProcess[0].id);
   };
 
   const handleExport = async (options: any) => {
@@ -475,9 +491,10 @@ export default function CampaignDetailPage() {
                   <Activity className="w-3.5 h-3.5" />
                   {isRapidAllRunning
                     ? "Processing All..."
-                    : `Rapid All (${
-                        companies.filter((c) => c.status === "pending").length
-                      })`}
+                    : `Rapid All (${Math.min(
+                        companies.filter((c) => c.status === "pending").length,
+                        campaignLimit === Infinity ? companies.filter((c) => c.status === "pending").length : campaignLimit
+                      )}${campaignLimit !== Infinity ? `/${campaignLimit}` : ''})`}
                 </button>
               )}
               <button
