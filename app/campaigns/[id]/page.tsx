@@ -360,6 +360,28 @@ export default function CampaignDetailPage() {
     try {
       setProcessingCount((prev) => prev + batchCompanies.length);
       
+      // Mark all as processing immediately for UI feedback
+      setCompanies((prevCompanies) =>
+        prevCompanies.map((c) =>
+          companyIds.includes(c.id)
+            ? { ...c, status: 'processing' }
+            : c
+        )
+      );
+      
+      // Start polling for real-time updates
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusResponse = await fetch(`/api/campaigns/${campaignId}/companies`);
+          const statusData = await statusResponse.json();
+          if (statusData.companies) {
+            setCompanies(statusData.companies);
+          }
+        } catch (error) {
+          console.error('[Batch] Polling error:', error);
+        }
+      }, 2000); // Poll every 2 seconds
+      
       const response = await fetch(`/api/campaigns/${campaignId}/rapid-process-batch`, {
         method: 'POST',
         headers: {
@@ -368,6 +390,9 @@ export default function CampaignDetailPage() {
         body: JSON.stringify({ company_ids: companyIds }),
       });
 
+      // Stop polling once batch completes
+      clearInterval(pollInterval);
+      
       const data = await response.json();
       const processingTime = (Date.now() - startTime) / 1000;
 
@@ -432,6 +457,26 @@ export default function CampaignDetailPage() {
     try {
       setProcessingCount((prev) => prev + 1);
       
+      // Mark as processing immediately for UI feedback
+      setCompanies((prevCompanies) =>
+        prevCompanies.map((c) =>
+          c.id === companyId ? { ...c, status: 'processing' } : c
+        )
+      );
+      
+      // Start polling for real-time updates
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusResponse = await fetch(`/api/campaigns/${campaignId}/companies`);
+          const statusData = await statusResponse.json();
+          if (statusData.companies) {
+            setCompanies(statusData.companies);
+          }
+        } catch (error) {
+          console.error('[Rapid] Polling error:', error);
+        }
+      }, 2000); // Poll every 2 seconds
+      
       const response = await fetch(`/api/campaigns/${campaignId}/companies/${companyId}/rapid-process`, {
         method: 'POST',
         headers: {
@@ -440,6 +485,9 @@ export default function CampaignDetailPage() {
         body: JSON.stringify({ companyId }),
       });
 
+      // Stop polling once processing completes
+      clearInterval(pollInterval);
+      
       const data = await response.json();
       const processingTime = (Date.now() - startTime) / 1000;
 
