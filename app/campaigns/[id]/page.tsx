@@ -628,10 +628,12 @@ export default function CampaignDetailPage() {
     setAvgProcessingTime(0);
     processingTimesRef.current = [];
     setIsRapidAllRunning(true);
+    isRapidAllRunningRef.current = true; // CRITICAL FIX: Update ref directly before loop
     setRapidAllModalOpen(false);
 
     // Process all URL groups (batches for duplicates, single for unique)
     console.log(`[Rapid All] Processing ${urlGroups.length} URL groups`);
+    console.log(`[Rapid All] isRapidAllRunningRef.current = ${isRapidAllRunningRef.current}`);
     
     for (const [url, groupCompanies] of urlGroups) {
       if (!isRapidAllRunningRef.current) {
