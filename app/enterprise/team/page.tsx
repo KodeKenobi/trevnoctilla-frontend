@@ -33,9 +33,12 @@ export default function EnterpriseTeamPage() {
   const [inviting, setInviting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [enterpriseCheckDone, setEnterpriseCheckDone] = useState(false);
 
   // Redirect if not enterprise tier
   useEffect(() => {
+    if (enterpriseCheckDone) return; // Skip if already checked
+
     if (!userLoading && user) {
       const checkEnterpriseStatus = async () => {
         try {
@@ -70,14 +73,16 @@ export default function EnterpriseTeamPage() {
               return;
             }
           }
+          setEnterpriseCheckDone(true);
         } catch (error) {
           console.error("Error checking enterprise status:", error);
+          setEnterpriseCheckDone(true);
         }
       };
 
       checkEnterpriseStatus();
     }
-  }, [user, userLoading, router]);
+  }, [user, userLoading, enterpriseCheckDone, router]);
 
   useEffect(() => {
     if (user) {

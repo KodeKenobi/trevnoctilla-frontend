@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -72,6 +72,8 @@ export default function CampaignDetailPage() {
   const [isRapidAllRunning, setIsRapidAllRunning] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const campaignId = params?.id as string;
 
@@ -275,25 +277,30 @@ export default function CampaignDetailPage() {
     fetchCampaignDetails();
   };
 
-  const processNextPending = () => {
-    // Find next pending company and auto-process it
-    const nextPending = companies.find((c) => c.status === "pending");
+  const processNextPending = useCallback(() => {
+    // This needs to work with the current state
+    setCompanies((prevCompanies) => {
+      const nextPending = prevCompanies.find((c) => c.status === "pending");
 
-    // Only process if there's a pending company AND no other company is currently processing
-    if (nextPending && processingCompanyId === null && isRapidAllRunning) {
-      console.log(
-        "[Rapid All] Processing next pending company:",
-        nextPending.company_name
-      );
-      setTimeout(() => {
-        handleRapidProcess(nextPending.id);
-      }, 1000); // Small delay between companies
-    } else if (!nextPending) {
-      // No more pending companies - stop Rapid All
-      console.log("[Rapid All] All companies processed. Campaign complete.");
-      setIsRapidAllRunning(false);
-    }
-  };
+      // Only process if there's a pending company AND rapid all is still running
+      if (nextPending && isRapidAllRunning) {
+        console.log(
+          "[Rapid All] Processing next pending company:",
+          nextPending.company_name
+        );
+        // Delay slightly to ensure state is updated
+        setTimeout(() => {
+          handleRapidProcess(nextPending.id);
+        }, 500);
+        return prevCompanies;
+      } else if (!nextPending) {
+        // No more pending companies - stop Rapid All
+        console.log("[Rapid All] All companies processed. Campaign complete.");
+        setIsRapidAllRunning(false);
+      }
+      return prevCompanies;
+    });
+  }, [isRapidAllRunning]);
 
   const startRapidAll = () => {
     const pendingCompanies = companies.filter((c) => c.status === "pending");
@@ -349,6 +356,17 @@ export default function CampaignDetailPage() {
   const filteredCompanies = companies.filter((company) =>
     filterStatus === "all" ? true : company.status === filterStatus
   );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCompanies = filteredCompanies.slice(startIndex, endIndex);
+
+  // Reset to first page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -629,9 +647,9 @@ export default function CampaignDetailPage() {
               </div>
             </div>
 
-            {/* Table Rows */}
+            {/* Table Rows - Paginated */}
             <div>
-              {filteredCompanies.map((company, idx) => (
+              {paginatedCompanies.map((company, idx) => (
                 <div
                   key={company.id}
                   onMouseEnter={() => setHoveredRow(company.id)}
@@ -780,6 +798,46 @@ export default function CampaignDetailPage() {
               ))}
             </div>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 px-4">
+              <div className="text-xs text-gray-400">
+                Page {currentPage} of {totalPages} • Showing {startIndex + 1}-{Math.min(endIndex, filteredCompanies.length)} of {filteredCompanies.length}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Previous
+                </button>
+                <div className="flex gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded text-xs transition-colors ${
+                        currentPage === page
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-white/10 hover:bg-white/20 text-white'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
