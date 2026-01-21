@@ -349,14 +349,90 @@ export default function CampaignDetailPage() {
     fetchCampaignDetails();
   };
 
-  // Headless rapid processing (no WebSocket, faster)
+  // BATCH processing: Visit website ONCE, submit multiple forms
+  const rapidProcessBatch = async (batchCompanies: Company[]) => {
+    const startTime = Date.now();
+    const companyIds = batchCompanies.map(c => c.id);
+    const websiteUrl = batchCompanies[0].website_url;
+    
+    console.log(`[Batch] Processing ${batchCompanies.length} companies with same URL: ${websiteUrl}`);
+    
+    try {
+      setProcessingCount((prev) => prev + batchCompanies.length);
+      
+      const response = await fetch(`/api/campaigns/${campaignId}/rapid-process-batch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ company_ids: companyIds }),
+      });
+
+      const data = await response.json();
+      const processingTime = (Date.now() - startTime) / 1000;
+
+      // Track processing time for ETA
+      processingTimesRef.current.push(processingTime);
+      if (processingTimesRef.current.length > 10) {
+        processingTimesRef.current.shift();
+      }
+      const avgTime = processingTimesRef.current.reduce((a, b) => a + b, 0) / processingTimesRef.current.length;
+      setAvgProcessingTime(avgTime);
+
+      // Update each company status from batch results
+      if (data.results && Array.isArray(data.results)) {
+        setCompanies((prevCompanies) =>
+          prevCompanies.map((c) => {
+            const result = data.results.find((r: any) => r.companyId === c.id);
+            if (result) {
+              return {
+                ...c,
+                status: result.status,
+                screenshot_url: result.screenshotUrl || c.screenshot_url,
+                error_message: result.errorMessage ? getUserFriendlyError(result.errorMessage) : c.error_message,
+              };
+            }
+            return c;
+          })
+        );
+      }
+
+      // Increment progress by number of companies in batch
+      setRapidAllProgress((prev) => prev + batchCompanies.length);
+
+      console.log(
+        `[Batch] Completed ${batchCompanies.length} companies in ${processingTime.toFixed(2)}s`
+      );
+
+      return data;
+    } catch (error) {
+      console.error(`[Batch] Error processing batch:`, error);
+      
+      // Mark all in batch as failed
+      setCompanies((prevCompanies) =>
+        prevCompanies.map((c) =>
+          companyIds.includes(c.id)
+            ? { ...c, status: 'failed', error_message: getUserFriendlyError('Processing error') }
+            : c
+        )
+      );
+      
+      setRapidAllProgress((prev) => prev + batchCompanies.length);
+      
+      return { success: false, status: 'failed' };
+    } finally {
+      setProcessingCount((prev) => prev - batchCompanies.length);
+    }
+  };
+
+  // Headless rapid processing (no WebSocket, faster) - for single companies
   const rapidProcessCompany = async (companyId: number) => {
     const startTime = Date.now();
     
     try {
       setProcessingCount((prev) => prev + 1);
       
-      const response = await fetch(`/api/campaigns/${campaignId}/rapid-process`, {
+      const response = await fetch(`/api/campaigns/${campaignId}/companies/${companyId}/rapid-process`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -516,6 +592,65 @@ export default function CampaignDetailPage() {
   };
 
   const handleStartRapidAllWithLimit = async (limit: number) => {
+    const pendingCompanies = companies.filter((c) => c.status === "pending").slice(0, limit);
+
+    // GROUP COMPANIES BY URL FOR BATCH PROCESSING
+    const companyGroups: { [url: string]: Company[] } = {};
+    pendingCompanies.forEach((company) => {
+      const url = company.website_url;
+      if (!companyGroups[url]) {
+        companyGroups[url] = [];
+      }
+      companyGroups[url].push(company);
+    });
+
+    const urlGroups = Object.entries(companyGroups);
+    const batchCount = urlGroups.filter(([_, companies]) => companies.length > 1).length;
+
+    console.log(`[Rapid All] Starting SMART BATCH processing for ${pendingCompanies.length} companies`);
+    console.log(`[Rapid All] Unique URLs: ${urlGroups.length}, Batches: ${batchCount}`);
+    
+    urlGroups.forEach(([url, companyList]) => {
+      if (companyList.length > 1) {
+        console.log(`[Batch] ${url} → ${companyList.length} companies (1 visit, ${companyList.length} submissions)`);
+      }
+    });
+
+    setCustomProcessingLimit(limit);
+    setRapidAllTotal(pendingCompanies.length);
+    setRapidAllProgress(0);
+    setProcessingCount(0);
+    setAvgProcessingTime(0);
+    processingTimesRef.current = [];
+    setIsRapidAllRunning(true);
+    setRapidAllModalOpen(false);
+
+    // Process all URL groups (batches for duplicates, single for unique)
+    console.log(`[Rapid All] Processing ${urlGroups.length} URL groups`);
+    
+    for (const [url, groupCompanies] of urlGroups) {
+      if (!isRapidAllRunningRef.current) {
+        console.log("[Rapid All] Stopped by user");
+        break;
+      }
+
+      if (groupCompanies.length > 1) {
+        // BATCH: Multiple companies with same URL - visit once, submit multiple times
+        console.log(`[Batch] Processing batch of ${groupCompanies.length} for ${url}`);
+        await rapidProcessBatch(groupCompanies);
+      } else {
+        // SINGLE: Only one company for this URL
+        console.log(`[Single] Processing ${groupCompanies[0].company_name}`);
+        await rapidProcessCompany(groupCompanies[0].id);
+      }
+    }
+
+    console.log("[Rapid All] All batches complete");
+    setIsRapidAllRunning(false);
+  };
+
+  // OLD PARALLEL APPROACH - KEPT FOR REFERENCE BUT NOT USED
+  const handleStartRapidAllWithLimit_OLD = async (limit: number) => {
     const pendingCompanies = companies.filter((c) => c.status === "pending");
 
     console.log(
