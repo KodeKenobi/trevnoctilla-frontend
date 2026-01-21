@@ -22,61 +22,68 @@ const FormData = require('form-data');
 const fetch = require('node-fetch');
 
 // Detect environment
-const isProduction = process.env.NODE_ENV === 'production';
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 
-                 (isProduction ? 'https://www.trevnoctilla.com' : 'http://localhost:3000');
-const BACKEND_URL = process.env.BACKEND_URL || 
-                    (isProduction ? 'https://web-production-737b.up.railway.app' : 'http://localhost:5000');
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.trevnoctilla.com';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
+
+// Create log file
+const LOG_FILE = path.join(process.cwd(), 'rapid-all-test-logs.txt');
+const logStream = fs.createWriteStream(LOG_FILE, { flags: 'w' });
+
+// Helper to write to both console and file
+function writeLog(message) {
+  console.log(message);
+  logStream.write(message + '\n');
+}
 
 // EXTENSIVE LOGGING
 const log = {
   step: (num, title) => {
-    console.log('\n' + '═'.repeat(80));
-    console.log(`STEP ${num}: ${title}`);
-    console.log('═'.repeat(80));
+    writeLog('\n' + '═'.repeat(80));
+    writeLog(`STEP ${num}: ${title}`);
+    writeLog('═'.repeat(80));
   },
   info: (msg, data) => {
-    console.log(`\n📋 [INFO] ${msg}`);
-    if (data) console.log(`   Data:`, JSON.stringify(data, null, 2));
+    writeLog(`\n📋 [INFO] ${msg}`);
+    if (data) writeLog(`   Data: ${JSON.stringify(data, null, 2)}`);
   },
   success: (msg, data) => {
-    console.log(`\n✅ [SUCCESS] ${msg}`);
-    if (data) console.log(`   Data:`, JSON.stringify(data, null, 2));
+    writeLog(`\n✅ [SUCCESS] ${msg}`);
+    if (data) writeLog(`   Data: ${JSON.stringify(data, null, 2)}`);
   },
   error: (msg, data) => {
-    console.log(`\n❌ [ERROR] ${msg}`);
-    if (data) console.log(`   Data:`, JSON.stringify(data, null, 2));
+    writeLog(`\n❌ [ERROR] ${msg}`);
+    if (data) writeLog(`   Data: ${JSON.stringify(data, null, 2)}`);
   },
   warn: (msg, data) => {
-    console.log(`\n⚠️  [WARN] ${msg}`);
-    if (data) console.log(`   Data:`, JSON.stringify(data, null, 2));
+    writeLog(`\n⚠️  [WARN] ${msg}`);
+    if (data) writeLog(`   Data: ${JSON.stringify(data, null, 2)}`);
   },
   api: (method, url, body, headers) => {
-    console.log(`\n🌐 [API CALL] ${method} ${url}`);
+    writeLog(`\n🌐 [API CALL] ${method} ${url}`);
     if (headers) {
       const headersObj = typeof headers === 'object' && !Array.isArray(headers) ? headers : {};
-      console.log(`   Headers:`, JSON.stringify(headersObj, null, 2));
+      writeLog(`   Headers: ${JSON.stringify(headersObj, null, 2)}`);
     }
     if (body) {
       const bodyStr = typeof body === 'string' ? body : JSON.stringify(body, null, 2);
-      console.log(`   Body:`, bodyStr.substring(0, 500) + (bodyStr.length > 500 ? '...' : ''));
+      writeLog(`   Body: ${bodyStr.substring(0, 500)}${bodyStr.length > 500 ? '...' : ''}`);
     }
   },
   apiResponse: (status, data, duration) => {
-    console.log(`\n📥 [API RESPONSE] Status: ${status} (${duration}ms)`);
-    console.log(`   Response:`, JSON.stringify(data, null, 2));
+    writeLog(`\n📥 [API RESPONSE] Status: ${status} (${duration}ms)`);
+    writeLog(`   Response: ${JSON.stringify(data, null, 2)}`);
   },
   rapidAll: (msg, data) => {
-    console.log(`\n🚀 [RAPID ALL] ${msg}`);
-    if (data) console.log(`   Data:`, JSON.stringify(data, null, 2));
+    writeLog(`\n🚀 [RAPID ALL] ${msg}`);
+    if (data) writeLog(`   Data: ${JSON.stringify(data, null, 2)}`);
   },
   progress: (current, total, processing, eta, avgTime) => {
     const percent = total > 0 ? Math.round((current / total) * 100) : 0;
-    console.log(`\n📊 [PROGRESS] ${current}/${total} completed (${percent}%) | ${processing} processing | Avg: ${avgTime.toFixed(2)}s | ETA: ${eta}s`);
+    writeLog(`\n📊 [PROGRESS] ${current}/${total} completed (${percent}%) | ${processing} processing | Avg: ${avgTime.toFixed(2)}s | ETA: ${eta}s`);
   },
   company: (id, action, data) => {
-    console.log(`\n🏢 [COMPANY ${id}] ${action}`);
-    if (data) console.log(`   Data:`, JSON.stringify(data, null, 2));
+    writeLog(`\n🏢 [COMPANY ${id}] ${action}`);
+    if (data) writeLog(`   Data: ${JSON.stringify(data, null, 2)}`);
   },
 };
 
@@ -603,7 +610,7 @@ async function main() {
   console.log('╚══════════════════════════════════════════════════════════════════════════════╝\n');
 
   log.info('Configuration:');
-  log.info(`Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+  log.info(`Log file: ${LOG_FILE}`);
   log.info(`Frontend API (Next.js): ${BASE_URL}`);
   log.info(`Backend API (Flask): ${BACKEND_URL} (for reference only)`);
   log.info(`Test file: test-leads.xlsx`);
@@ -617,6 +624,8 @@ async function main() {
   const uploadResult = await step1_UploadSpreadsheet();
   if (!uploadResult) {
     log.error('❌ TEST FAILED: Upload failed');
+    log.info(`\n📄 Full logs saved to: ${LOG_FILE}`);
+    logStream.end();
     process.exit(1);
   }
 
@@ -626,6 +635,8 @@ async function main() {
   const campaign = await step2_CreateCampaign(uploadResult);
   if (!campaign) {
     log.error('❌ TEST FAILED: Could not create campaign');
+    log.info(`\n📄 Full logs saved to: ${LOG_FILE}`);
+    logStream.end();
     process.exit(1);
   }
 
@@ -635,11 +646,15 @@ async function main() {
   const campaignDetails = await step3_FetchCampaignDetails();
   if (!campaignDetails) {
     log.error('❌ TEST FAILED: Could not fetch campaign details');
+    log.info(`\n📄 Full logs saved to: ${LOG_FILE}`);
+    logStream.end();
     process.exit(1);
   }
 
   if (companyIds.length === 0) {
     log.error('❌ TEST FAILED: No pending companies found');
+    log.info(`\n📄 Full logs saved to: ${LOG_FILE}`);
+    logStream.end();
     process.exit(1);
   }
 
@@ -673,11 +688,16 @@ async function main() {
     log.error('\n❌ ALL TESTS FAILED');
   }
 
+  log.info(`\n📄 Full logs saved to: ${LOG_FILE}`);
   console.log('\n');
+  
+  // Close log stream
+  logStream.end();
 }
 
 main().catch(error => {
   log.error(`Fatal error: ${error.message}`);
   console.error(error);
+  logStream.end();
   process.exit(1);
 });
