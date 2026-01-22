@@ -315,7 +315,7 @@ https://another.com,Another Co,hi@another.com,+0987654321`}
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6">
                 <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
                   <AlertCircle className="w-6 h-6 text-amber-400" />
-                  Your CSV has {uploadedData.validRows} companies
+                  Your file has {uploadedData.validRows} companies
                 </h3>
                 
                 {!user ? (

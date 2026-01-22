@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import {
@@ -128,6 +128,25 @@ export default function CampaignDetailPage() {
 
   const campaignId = params?.id as string;
 
+  // Refresh companies data more frequently when rapid processing is running
+  useEffect(() => {
+    if (isRapidAllRunning && campaignId) {
+      const rapidRefreshInterval = setInterval(() => {
+        // Silently refresh companies data for real-time stats updates
+        fetch(`/api/campaigns/${campaignId}/companies`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.companies) {
+              setCompanies(data.companies);
+            }
+          })
+          .catch((err) => console.error("Failed to refresh companies:", err));
+      }, 1000); // Refresh every 1 second during rapid processing
+      
+      return () => clearInterval(rapidRefreshInterval);
+    }
+  }, [isRapidAllRunning, campaignId]);
+
   // Get user's campaign company limit
   const getCampaignLimit = (): number => {
     if (!user) return 5; // Guest
@@ -142,14 +161,18 @@ export default function CampaignDetailPage() {
   useEffect(() => {
     if (campaignId) {
       fetchCampaignDetails();
+      // Poll more frequently for real-time updates (every 2 seconds instead of 5)
       const interval = setInterval(() => {
+        // Always poll if campaign exists and is not completed/failed
         if (
-          campaign?.status === "processing" ||
-          campaign?.status === "queued"
+          campaign &&
+          campaign.status !== "completed" &&
+          campaign.status !== "failed" &&
+          campaign.status !== "cancelled"
         ) {
           fetchCampaignDetails(true);
         }
-      }, 5000);
+      }, 2000); // Reduced from 5000ms to 2000ms for more real-time updates
       return () => clearInterval(interval);
     }
   }, [campaignId, campaign?.status]);
@@ -1063,40 +1086,51 @@ export default function CampaignDetailPage() {
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-5 gap-4 mb-8">
-          {[
-            {
-              label: "Total",
-              value: campaign.total_companies,
-              color: "text-white",
-              bg: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=200&fit=crop",
-            },
-            {
-              label: "Processed",
-              value: campaign.processed_count,
-              color: "text-white",
-              bg: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=200&fit=crop",
-            },
-            {
-              label: "Success",
-              value: campaign.success_count,
-              color: "text-emerald-400",
-              bg: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=200&fit=crop",
-            },
-            {
-              label: "Failed",
-              value: campaign.failed_count,
-              color: "text-rose-400",
-              bg: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=200&fit=crop",
-            },
-            {
-              label: "Progress",
-              value: `${campaign.progress_percentage}%`,
-              color: "text-white",
-              bg: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=200&fit=crop",
-            },
-          ].map((stat, idx) => (
+        {/* Stats - Calculate from companies array for real-time updates */}
+        {useMemo(() => {
+          // Calculate real-time stats from companies array
+          const totalCompanies = campaign?.total_companies || companies.length;
+          const processedCount = companies.filter(c => c.status !== 'pending').length;
+          const successCount = companies.filter((c) => c.status === "completed").length;
+          const failedCount = companies.filter((c) => c.status === "failed").length;
+          const progressPercentage = totalCompanies > 0 
+            ? Math.round((processedCount / totalCompanies) * 100) 
+            : 0;
+
+          return (
+            <div className="grid grid-cols-5 gap-4 mb-8">
+              {[
+                {
+                  label: "Total",
+                  value: totalCompanies,
+                  color: "text-white",
+                  bg: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=200&fit=crop",
+                },
+                {
+                  label: "Processed",
+                  value: processedCount,
+                  color: "text-white",
+                  bg: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=200&fit=crop",
+                },
+                {
+                  label: "Success",
+                  value: successCount,
+                  color: "text-emerald-400",
+                  bg: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=200&fit=crop",
+                },
+                {
+                  label: "Failed",
+                  value: failedCount,
+                  color: "text-rose-400",
+                  bg: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=200&fit=crop",
+                },
+                {
+                  label: "Progress",
+                  value: `${progressPercentage}%`,
+                  color: "text-white",
+                  bg: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=200&fit=crop",
+                },
+              ].map((stat, idx) => (
             <div
               key={idx}
               className="relative border border-white/30 p-4 hover:border-white/50 transition-colors overflow-hidden group"
@@ -1116,7 +1150,9 @@ export default function CampaignDetailPage() {
               </div>
             </div>
           ))}
-        </div>
+            </div>
+          );
+        }, [companies, campaign])}
 
         {/* Companies */}
         <div>
