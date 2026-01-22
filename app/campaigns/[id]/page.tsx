@@ -848,6 +848,23 @@ export default function CampaignDetailPage() {
   const endIndex = startIndex + itemsPerPage;
   const paginatedCompanies = filteredCompanies.slice(startIndex, endIndex);
 
+  // Calculate real-time statistics from companies array
+  const stats = useMemo(() => {
+    const total = campaign?.total_companies || companies.length;
+    const processed = companies.filter(c => c.status !== 'pending').length;
+    const success = companies.filter((c) => c.status === "completed").length;
+    const failed = companies.filter((c) => c.status === "failed").length;
+    const progress = total > 0 ? Math.round((processed / total) * 100) : 0;
+    
+    return {
+      total,
+      processed,
+      success,
+      failed,
+      progress
+    };
+  }, [companies, campaign]);
+
   // Reset to first page when filter changes
   useEffect(() => {
     setCurrentPage(1);
@@ -1087,50 +1104,39 @@ export default function CampaignDetailPage() {
         )}
 
         {/* Stats - Calculate from companies array for real-time updates */}
-        {useMemo(() => {
-          // Calculate real-time stats from companies array
-          const totalCompanies = campaign?.total_companies || companies.length;
-          const processedCount = companies.filter(c => c.status !== 'pending').length;
-          const successCount = companies.filter((c) => c.status === "completed").length;
-          const failedCount = companies.filter((c) => c.status === "failed").length;
-          const progressPercentage = totalCompanies > 0 
-            ? Math.round((processedCount / totalCompanies) * 100) 
-            : 0;
-
-          return (
-            <div className="grid grid-cols-5 gap-4 mb-8">
-              {[
-                {
-                  label: "Total",
-                  value: totalCompanies,
-                  color: "text-white",
-                  bg: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=200&fit=crop",
-                },
-                {
-                  label: "Processed",
-                  value: processedCount,
-                  color: "text-white",
-                  bg: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=200&fit=crop",
-                },
-                {
-                  label: "Success",
-                  value: successCount,
-                  color: "text-emerald-400",
-                  bg: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=200&fit=crop",
-                },
-                {
-                  label: "Failed",
-                  value: failedCount,
-                  color: "text-rose-400",
-                  bg: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=200&fit=crop",
-                },
-                {
-                  label: "Progress",
-                  value: `${progressPercentage}%`,
-                  color: "text-white",
-                  bg: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=200&fit=crop",
-                },
-              ].map((stat, idx) => (
+        <div className="grid grid-cols-5 gap-4 mb-8">
+          {[
+            {
+              label: "Total",
+              value: stats.total,
+              color: "text-white",
+              bg: "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=200&fit=crop",
+            },
+            {
+              label: "Processed",
+              value: stats.processed,
+              color: "text-white",
+              bg: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=200&fit=crop",
+            },
+            {
+              label: "Success",
+              value: stats.success,
+              color: "text-emerald-400",
+              bg: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=200&fit=crop",
+            },
+            {
+              label: "Failed",
+              value: stats.failed,
+              color: "text-rose-400",
+              bg: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=200&fit=crop",
+            },
+            {
+              label: "Progress",
+              value: `${stats.progress}%`,
+              color: "text-white",
+              bg: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=200&fit=crop",
+            },
+          ].map((stat, idx) => (
             <div
               key={idx}
               className="relative border border-white/30 p-4 hover:border-white/50 transition-colors overflow-hidden group"
@@ -1150,9 +1156,7 @@ export default function CampaignDetailPage() {
               </div>
             </div>
           ))}
-            </div>
-          );
-        }, [companies, campaign])}
+        </div>
 
         {/* Companies */}
         <div>
