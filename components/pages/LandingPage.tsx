@@ -47,14 +47,14 @@ export default function LandingPage() {
     <>
       <div className="min-h-screen relative overflow-hidden page-content bg-[#111827]">
         {/* Background Image Layer - Hidden on mobile */}
-        <div
+        {/* <div
           className="absolute inset-0 opacity-30 hidden md:block"
           style={{
             background: 'url("/platform-hero-bg.png") no-repeat center top',
             backgroundSize: "contain",
             backgroundPosition: "center -50px",
           }}
-        ></div>
+        ></div> */}
         {/* Background elements removed - no gradients */}
 
         {/* Hero Section */}
