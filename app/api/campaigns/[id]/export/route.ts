@@ -76,25 +76,61 @@ export async function GET(
     const companiesData = await companiesResponse.json();
     const companies = companiesData.companies || [];
 
-    // Create Excel workbook
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Campaign Results');
+    // Collect all unique column names from companies (including additional_data)
+    const allColumnKeys = new Set<string>();
+    companies.forEach((company: any) => {
+      // Add standard fields
+      if (company.company_name) allColumnKeys.add('company_name');
+      if (company.website_url) allColumnKeys.add('website_url');
+      if (company.contact_email) allColumnKeys.add('contact_email');
+      if (company.contact_person) allColumnKeys.add('contact_person');
+      if (company.phone) allColumnKeys.add('phone');
+      
+      // Add fields from additional_data
+      if (company.additional_data && typeof company.additional_data === 'object') {
+        Object.keys(company.additional_data).forEach(key => allColumnKeys.add(key));
+      }
+    });
 
-    // Define columns based on original data structure plus status and comments
-    const baseColumns = [
-      { header: 'Company Name', key: 'company_name', width: 25 },
-      { header: 'Website URL', key: 'website_url', width: 30 },
-      { header: 'Contact Email', key: 'contact_email', width: 25 },
-      { header: 'Contact Person', key: 'contact_person', width: 20 },
-      { header: 'Phone', key: 'phone', width: 15 },
-      { header: 'Status', key: 'status', width: 15 },
-    ];
+    // Define column order: standard fields first, then additional_data fields, then status/comments
+    const standardFields = ['company_name', 'website_url', 'contact_email', 'contact_person', 'phone'];
+    const additionalFields = Array.from(allColumnKeys).filter(key => !standardFields.includes(key)).sort();
+    
+    // Build columns array preserving original order
+    const baseColumns: any[] = [];
+    
+    // Add standard fields in order (only if they exist in data)
+    standardFields.forEach(field => {
+      if (allColumnKeys.has(field)) {
+        const width = field === 'website_url' ? 30 : field === 'company_name' ? 25 : field === 'contact_email' ? 25 : 20;
+        baseColumns.push({ 
+          header: field.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '), 
+          key: field, 
+          width 
+        });
+      }
+    });
+    
+    // Add additional_data fields
+    additionalFields.forEach(field => {
+      baseColumns.push({ 
+        header: field.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '), 
+        key: field, 
+        width: 20 
+      });
+    });
+    
+    // Add status column
+    baseColumns.push({ header: 'Status', key: 'status', width: 15 });
 
     // Add comments column if requested
     const columns = includeComments
       ? [...baseColumns, { header: 'Comments', key: 'comments', width: 40 }]
       : baseColumns;
 
+    // Create Excel workbook
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Campaign Results');
     worksheet.columns = columns;
 
     // Style the header row
@@ -109,15 +145,32 @@ export async function GET(
 
     // Add data rows with color coding
     companies.forEach((company: any, index: number) => {
-      const row = worksheet.addRow({
-        company_name: company.company_name,
-        website_url: company.website_url,
-        contact_email: company.contact_email || '',
-        contact_person: company.contact_person || '',
-        phone: company.phone || '',
+      const rowData: any = {
         status: company.status,
-        ...(includeComments && { comments: generateComment(company, commentStyle) }),
-      });
+      };
+      
+      // Add standard fields
+      if (allColumnKeys.has('company_name')) rowData.company_name = company.company_name || '';
+      if (allColumnKeys.has('website_url')) rowData.website_url = company.website_url || '';
+      if (allColumnKeys.has('contact_email')) rowData.contact_email = company.contact_email || '';
+      if (allColumnKeys.has('contact_person')) rowData.contact_person = company.contact_person || '';
+      if (allColumnKeys.has('phone')) rowData.phone = company.phone || '';
+      
+      // Add additional_data fields
+      if (company.additional_data && typeof company.additional_data === 'object') {
+        Object.keys(company.additional_data).forEach(key => {
+          if (allColumnKeys.has(key)) {
+            rowData[key] = company.additional_data[key] || '';
+          }
+        });
+      }
+      
+      // Add comments if requested
+      if (includeComments) {
+        rowData.comments = generateComment(company, commentStyle);
+      }
+      
+      const row = worksheet.addRow(rowData);
 
       // Apply color coding based on status
       const fillColor = getStatusColor(company.status, completedColor, failedColor);

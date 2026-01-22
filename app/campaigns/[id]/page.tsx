@@ -21,6 +21,7 @@ import {
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import ExportOptionsModal from "@/components/ui/ExportOptionsModal";
 import RapidAllLimitModal from "@/components/ui/RapidAllLimitModal";
+import RetryFailedModal from "@/components/ui/RetryFailedModal";
 
 interface Campaign {
   id: number;
@@ -78,6 +79,7 @@ export default function CampaignDetailPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [rapidAllModalOpen, setRapidAllModalOpen] = useState(false);
+  const [retryFailedModalOpen, setRetryFailedModalOpen] = useState(false);
   const [customProcessingLimit, setCustomProcessingLimit] = useState<number | null>(null);
   const [rapidAllProgress, setRapidAllProgress] = useState(0); // Track: X companies processed
   const [rapidAllTotal, setRapidAllTotal] = useState(0); // Track: out of Y total
@@ -141,7 +143,7 @@ export default function CampaignDetailPage() {
             }
           })
           .catch((err) => console.error("Failed to refresh companies:", err));
-      }, 1000); // Refresh every 1 second during rapid processing
+      }, 3000); // Refresh every 3 seconds during rapid processing
       
       return () => clearInterval(rapidRefreshInterval);
     }
@@ -585,37 +587,175 @@ export default function CampaignDetailPage() {
 
   // Convert technical errors to user-friendly messages
   const getUserFriendlyError = (errorMessage: string): string => {
-    const msg = errorMessage?.toLowerCase() || '';
-
-    if (msg.includes('cannot run the event loop')) {
-      return 'Processing temporarily unavailable. Please try again in a moment.';
-    }
-    if (msg.includes('protocol error') || msg.includes('cannot navigate')) {
-      return 'Could not access the website. Please check the URL and try again.';
-    }
-    if (msg.includes('playwright sync api')) {
-      return 'Processing system busy. Please try again in a few seconds.';
-    }
-    if (msg.includes('timeout')) {
-      return 'Website took too long to respond. Please try again later.';
-    }
-    if (msg.includes('connection') || msg.includes('net::')) {
-      return 'Could not connect to the website. Please check your internet connection.';
-    }
-    if (msg.includes('contact form not found')) {
-      return 'No contact form found on this website.';
-    }
-    if (msg.includes('unable to submit')) {
-      return 'Could not submit the contact form. The website may be protected.';
+    if (!errorMessage || typeof errorMessage !== 'string') {
+      return 'Processing failed. Please try again.';
     }
 
-    // Return original message if it's already user-friendly
-    if (errorMessage && errorMessage.length < 100 && !msg.includes('error') && !msg.includes('exception')) {
+    const msg = errorMessage.toLowerCase().trim();
+
+    // Empty or very short messages
+    if (msg.length < 3) {
+      return 'Processing failed. Please try again.';
+    }
+
+    // Already user-friendly messages (short, no technical terms)
+    if (msg.length < 80 && 
+        !msg.includes('error') && 
+        !msg.includes('exception') && 
+        !msg.includes('traceback') &&
+        !msg.includes('stack') &&
+        !msg.includes('typeerror') &&
+        !msg.includes('attributeerror') &&
+        !msg.includes('valueerror') &&
+        !msg.includes('keyerror') &&
+        !msg.includes('timeouterror') &&
+        !msg.includes('connectionerror') &&
+        !msg.includes('http') &&
+        !msg.includes('status code') &&
+        !msg.includes('statuscode') &&
+        !msg.includes('500') &&
+        !msg.includes('404') &&
+        !msg.includes('403') &&
+        !msg.includes('timeout') &&
+        !msg.includes('net::') &&
+        !msg.includes('protocol') &&
+        !msg.includes('playwright') &&
+        !msg.includes('browser') &&
+        !msg.includes('chromium') &&
+        !msg.includes('page.goto') &&
+        !msg.includes('navigation') &&
+        !msg.includes('event loop') &&
+        !msg.includes('async') &&
+        !msg.includes('await') &&
+        !msg.includes('promise') &&
+        !msg.includes('undefined') &&
+        !msg.includes('null') &&
+        !msg.includes('none') &&
+        !msg.includes('json') &&
+        !msg.includes('parse') &&
+        !msg.includes('serialize') &&
+        !msg.includes('database') &&
+        !msg.includes('sql') &&
+        !msg.includes('query') &&
+        !msg.includes('db.') &&
+        !msg.includes('session') &&
+        !msg.includes('commit') &&
+        !msg.includes('rollback') &&
+        !msg.includes('traceback') &&
+        !msg.includes('file') &&
+        !msg.includes('line') &&
+        !msg.includes('at ') &&
+        !msg.includes('  ') && // No double spaces (often in stack traces)
+        !msg.match(/^\d+$/) && // Not just a number
+        msg.split(' ').length < 15) { // Not too long
       return errorMessage;
     }
 
-    // Default fallback
-    return 'Processing failed. Please try again or contact support if the problem persists.';
+    // Technical error patterns - convert to friendly messages
+    if (msg.includes('cannot run the event loop') || msg.includes('event loop is running')) {
+      return 'Processing temporarily unavailable. Please try again in a moment.';
+    }
+    
+    if (msg.includes('protocol error') || msg.includes('cannot navigate') || msg.includes('navigation failed')) {
+      return 'Could not access the website. The site may be down or blocking access.';
+    }
+    
+    if (msg.includes('playwright') || msg.includes('browser') || msg.includes('chromium')) {
+      return 'Processing system busy. Please try again in a few seconds.';
+    }
+    
+    if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('exceeded')) {
+      return 'Website took too long to respond. Please try again later.';
+    }
+    
+    if (msg.includes('connection') || msg.includes('net::') || msg.includes('econnrefused') || msg.includes('enotfound')) {
+      return 'Could not connect to the website. Please check the URL is correct.';
+    }
+    
+    if (msg.includes('contact form not found') || msg.includes('no contact form') || msg.includes('form not found')) {
+      return 'No contact form found on this website.';
+    }
+    
+    if (msg.includes('unable to submit') || msg.includes('could not submit') || msg.includes('submission failed')) {
+      return 'Could not submit the contact form. The website may have protection measures.';
+    }
+    
+    if (msg.includes('captcha') || msg.includes('recaptcha') || msg.includes('hcaptcha') || msg.includes('verification')) {
+      return 'CAPTCHA detected. This website requires manual verification.';
+    }
+    
+    if (msg.includes('403') || msg.includes('forbidden') || msg.includes('access denied')) {
+      return 'Access denied. This website is blocking automated requests.';
+    }
+    
+    if (msg.includes('404') || msg.includes('not found')) {
+      return 'Website page not found. Please check the URL is correct.';
+    }
+    
+    if (msg.includes('500') || msg.includes('internal server error')) {
+      return 'Website server error. Please try again later.';
+    }
+    
+    if (msg.includes('ssl') || msg.includes('certificate') || msg.includes('tls')) {
+      return 'Security certificate error. The website may have security issues.';
+    }
+    
+    if (msg.includes('dns') || msg.includes('domain') || msg.includes('hostname')) {
+      return 'Could not find the website. Please check the URL is correct.';
+    }
+    
+    if (msg.includes('rate limit') || msg.includes('too many requests')) {
+      return 'Too many requests. Please wait a moment and try again.';
+    }
+    
+    if (msg.includes('blocked') || msg.includes('block')) {
+      return 'Access blocked. This website is preventing automated access.';
+    }
+    
+    if (msg.includes('cookie') || msg.includes('session')) {
+      return 'Session error. Please try again.';
+    }
+    
+    if (msg.includes('javascript') || msg.includes('js error') || msg.includes('script error')) {
+      return 'Website script error. The site may not be fully loaded.';
+    }
+    
+    if (msg.includes('database') || msg.includes('db') || msg.includes('sql')) {
+      return 'Data storage error. Please try again or contact support.';
+    }
+    
+    if (msg.includes('typeerror') || msg.includes('attributeerror') || msg.includes('valueerror') || msg.includes('keyerror')) {
+      return 'Processing error. Please try again.';
+    }
+    
+    if (msg.includes('undefined') || msg.includes('null') || msg.includes('none')) {
+      return 'Missing data error. Please try again.';
+    }
+    
+    if (msg.includes('json') || msg.includes('parse') || msg.includes('serialize')) {
+      return 'Data format error. Please try again.';
+    }
+    
+    if (msg.includes('file') && (msg.includes('not found') || msg.includes('cannot') || msg.includes('error'))) {
+      return 'File error. Please try again.';
+    }
+    
+    // Extract meaningful part from long error messages
+    if (msg.length > 200) {
+      // Try to find a meaningful sentence
+      const sentences = errorMessage.split(/[.!?]/).filter(s => s.trim().length > 20 && s.trim().length < 150);
+      if (sentences.length > 0) {
+        const meaningful = sentences[0].trim();
+        if (!meaningful.toLowerCase().includes('traceback') && 
+            !meaningful.toLowerCase().includes('file') &&
+            !meaningful.toLowerCase().includes('line')) {
+          return meaningful;
+        }
+      }
+    }
+
+    // Default fallback - make it more friendly
+    return 'Processing failed. Please try again or contact support if the problem continues.';
   };
 
   const processNextPending = useCallback(() => {
@@ -658,6 +798,14 @@ export default function CampaignDetailPage() {
         // No more pending companies - stop Rapid All
         console.log("[Rapid All] All companies processed. Campaign complete.");
         setIsRapidAllRunning(false);
+        
+        // Check for failures and show retry modal
+        const failedCompanies = prevCompanies.filter(c => c.status === 'failed');
+        if (failedCompanies.length > 0) {
+          setTimeout(() => {
+            setRetryFailedModalOpen(true);
+          }, 500); // Small delay to ensure state is updated
+        }
       }
       return prevCompanies;
     });
@@ -738,6 +886,17 @@ export default function CampaignDetailPage() {
 
     console.log("[Rapid All] All batches complete");
     setIsRapidAllRunning(false);
+    
+    // Check for failures and show retry modal after state updates
+    setTimeout(() => {
+      setCompanies((currentCompanies) => {
+        const failedCompanies = currentCompanies.filter(c => c.status === 'failed');
+        if (failedCompanies.length > 0) {
+          setRetryFailedModalOpen(true);
+        }
+        return currentCompanies;
+      });
+    }, 500);
   };
 
   // OLD PARALLEL APPROACH - KEPT FOR REFERENCE BUT NOT USED
@@ -804,6 +963,75 @@ export default function CampaignDetailPage() {
     }
   };
 
+  const handleRetryFailed = async () => {
+    setCompanies((prevCompanies) => {
+      const failedCompanies = prevCompanies.filter(c => c.status === 'failed');
+      
+      if (failedCompanies.length === 0) {
+        alert("No failed companies to retry");
+        return prevCompanies;
+      }
+
+      // Reset failed companies to pending status
+      const updatedCompanies = prevCompanies.map((c) =>
+        c.status === 'failed' ? { ...c, status: 'pending', error_message: null } : c
+      );
+
+      // Start rapid all processing for the failed companies
+      const limit = failedCompanies.length;
+      setCustomProcessingLimit(limit);
+      setRapidAllTotal(limit);
+      setRapidAllProgress(0);
+      setProcessingCount(0);
+      setAvgProcessingTime(0);
+      processingTimesRef.current = [];
+      setIsRapidAllRunning(true);
+      isRapidAllRunningRef.current = true;
+
+      // Group by URL for batch processing
+      const companyGroups: { [url: string]: Company[] } = {};
+      failedCompanies.forEach((company) => {
+        const url = company.website_url;
+        if (!companyGroups[url]) {
+          companyGroups[url] = [];
+        }
+        companyGroups[url].push(company);
+      });
+
+      const urlGroups = Object.entries(companyGroups);
+
+      // Process all URL groups
+      (async () => {
+        for (const [url, groupCompanies] of urlGroups) {
+          if (!isRapidAllRunningRef.current) break;
+
+          if (groupCompanies.length > 1) {
+            // BATCH: Multiple companies with same URL
+            await rapidProcessBatch(groupCompanies);
+          } else {
+            // SINGLE: Only one company for this URL
+            await rapidProcessCompany(groupCompanies[0].id);
+          }
+        }
+
+        setIsRapidAllRunning(false);
+        
+        // Check for failures again after retry
+        setTimeout(() => {
+          setCompanies((currentCompanies) => {
+            const stillFailed = currentCompanies.filter(c => c.status === 'failed');
+            if (stillFailed.length > 0) {
+              setRetryFailedModalOpen(true);
+            }
+            return currentCompanies;
+          });
+        }, 500);
+      })();
+
+      return updatedCompanies;
+    });
+  };
+
   const handleExport = async (options: any) => {
     try {
       setIsExporting(true);
@@ -854,7 +1082,9 @@ export default function CampaignDetailPage() {
     const processed = companies.filter(c => c.status !== 'pending').length;
     const success = companies.filter((c) => c.status === "completed").length;
     const failed = companies.filter((c) => c.status === "failed").length;
-    const progress = total > 0 ? Math.round((processed / total) * 100) : 0;
+    // Progress should be based on completed + failed, not all non-pending (which includes processing)
+    const completedOrFailed = success + failed;
+    const progress = total > 0 ? Math.round((completedOrFailed / total) * 100) : 0;
     
     return {
       total,
@@ -1249,8 +1479,8 @@ export default function CampaignDetailPage() {
                         )}
                       </div>
                     ) : company.error_message ? (
-                      <span className="text-rose-400">
-                        {company.error_message}
+                      <span className="text-rose-400 text-xs leading-relaxed">
+                        {getUserFriendlyError(company.error_message)}
                       </span>
                     ) : company.status === "processing" ? (
                       <span className="text-blue-400">In progress...</span>
@@ -1439,6 +1669,13 @@ export default function CampaignDetailPage() {
       />
 
       {/* Rapid All Limit Modal */}
+      <RetryFailedModal
+        isOpen={retryFailedModalOpen}
+        onClose={() => setRetryFailedModalOpen(false)}
+        onRetry={handleRetryFailed}
+        failedCount={stats.failed}
+      />
+
       <RapidAllLimitModal
         isOpen={rapidAllModalOpen}
         onClose={() => setRapidAllModalOpen(false)}
