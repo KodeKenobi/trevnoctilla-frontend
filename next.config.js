@@ -461,6 +461,11 @@ const nextConfig = {
         source: "/api/analytics/:path*",
         destination: `${backendUrl}/api/analytics/:path*`,
       },
+      // Campaign API endpoints
+      {
+        source: "/api/campaigns/:path*",
+        destination: `${backendUrl}/api/campaigns/:path*`,
+      },
       // Health check
       {
         source: "/health",
