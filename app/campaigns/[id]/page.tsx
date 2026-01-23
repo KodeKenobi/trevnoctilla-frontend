@@ -46,6 +46,15 @@ interface Company {
   contact_page_found: boolean;
   error_message: string | null;
   screenshot_url?: string;
+  // Advanced detection fields
+  contact_method?: string;
+  detection_method?: string;
+  fields_filled?: number;
+  contact_info?: {
+    emails?: string[];
+    phones?: string[];
+    social_links?: string[];
+  };
 }
 
 export default function CampaignDetailPage() {
@@ -85,6 +94,7 @@ export default function CampaignDetailPage() {
   const [rapidAllTotal, setRapidAllTotal] = useState(0); // Track: out of Y total
   const [processingCount, setProcessingCount] = useState(0); // How many are currently processing
   const [avgProcessingTime, setAvgProcessingTime] = useState(0); // Average time per company
+  const [filterMethod, setFilterMethod] = useState<string>("all");
   
   // Use refs to avoid stale closures in processNextPending
   const rapidAllProgressRef = useRef(0);
@@ -543,7 +553,7 @@ export default function CampaignDetailPage() {
       const avgTime = processingTimesRef.current.reduce((a, b) => a + b, 0) / processingTimesRef.current.length;
       setAvgProcessingTime(avgTime);
 
-      // Update company status locally
+      // Update company status locally with advanced detection info
       setCompanies((prevCompanies) =>
         prevCompanies.map((c) =>
           c.id === companyId
@@ -552,6 +562,11 @@ export default function CampaignDetailPage() {
                 status: data.status,
                 screenshot_url: data.screenshotUrl || c.screenshot_url,
                 error_message: data.errorMessage ? getUserFriendlyError(data.errorMessage) : c.error_message,
+                // Add new fields for advanced detection
+                contact_method: data.contactMethod,
+                detection_method: data.method,
+                fields_filled: data.fieldsFilled,
+                contact_info: data.contactInfo,
               }
             : c
         )
@@ -1066,9 +1081,11 @@ export default function CampaignDetailPage() {
   // DISABLED: No auto-start. User must manually click "Rapid" for each company.
   // This prevents infinite loops and unwanted processing.
 
-  const filteredCompanies = companies.filter((company) =>
-    filterStatus === "all" ? true : company.status === filterStatus
-  );
+  const filteredCompanies = companies.filter((company) => {
+    const statusMatch = filterStatus === "all" ? true : company.status === filterStatus;
+    const methodMatch = filterMethod === "all" ? true : company.detection_method === filterMethod;
+    return statusMatch && methodMatch;
+  });
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
@@ -1080,17 +1097,21 @@ export default function CampaignDetailPage() {
   const stats = useMemo(() => {
     const total = campaign?.total_companies || companies.length;
     const processed = companies.filter(c => c.status !== 'pending').length;
-    const success = companies.filter((c) => c.status === "completed").length;
+    const success = companies.filter((c) => c.status === "completed" || c.status === "success" || c.status === "contact_info_found").length;
+    const contactInfoFound = companies.filter((c) => c.status === "contact_info_found").length;
     const failed = companies.filter((c) => c.status === "failed").length;
-    // Progress should be based on completed + failed, not all non-pending (which includes processing)
-    const completedOrFailed = success + failed;
+    const captcha = companies.filter((c) => c.status === "captcha").length;
+    // Progress should be based on completed + failed + contact_info_found + captcha, not all non-pending (which includes processing)
+    const completedOrFailed = success + failed + captcha;
     const progress = total > 0 ? Math.round((completedOrFailed / total) * 100) : 0;
-    
+
     return {
       total,
       processed,
       success,
+      contactInfoFound,
       failed,
+      captcha,
       progress
     };
   }, [companies, campaign]);
@@ -1098,18 +1119,22 @@ export default function CampaignDetailPage() {
   // Reset to first page when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus]);
+  }, [filterStatus, filterMethod]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
         return "text-emerald-400";
+      case "contact_info_found":
+        return "text-cyan-400";
       case "processing":
         return "text-blue-400";
       case "failed":
         return "text-rose-400";
       case "captcha":
         return "text-amber-400";
+      case "success":
+        return "text-emerald-400";
       default:
         return "text-white";
     }
@@ -1118,11 +1143,18 @@ export default function CampaignDetailPage() {
   const getStatusDotColor = (status: string) => {
     switch (status) {
       case "completed":
+      case "success":
         return "bg-emerald-400";
+      case "contact_info_found":
+        return "bg-cyan-400";
+      case "processing":
+        return "bg-blue-400";
       case "failed":
         return "bg-rose-400";
+      case "captcha":
+        return "bg-amber-400";
       default:
-        return "bg-amber-400"; // pending, processing, queued, etc.
+        return "bg-gray-400"; // pending, queued, etc.
     }
   };
 
@@ -1130,7 +1162,10 @@ export default function CampaignDetailPage() {
     const iconClass = "w-3.5 h-3.5";
     switch (status) {
       case "completed":
+      case "success":
         return <CheckCircle className={iconClass} />;
+      case "contact_info_found":
+        return <Eye className={iconClass} />;
       case "processing":
         return <Loader className={`${iconClass} animate-spin`} />;
       case "failed":
@@ -1334,7 +1369,7 @@ export default function CampaignDetailPage() {
         )}
 
         {/* Stats - Calculate from companies array for real-time updates */}
-        <div className="grid grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-6 gap-4 mb-8">
           {[
             {
               label: "Total",
@@ -1355,10 +1390,22 @@ export default function CampaignDetailPage() {
               bg: "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&h=200&fit=crop",
             },
             {
+              label: "Contact Info",
+              value: stats.contactInfoFound,
+              color: "text-blue-400",
+              bg: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=200&fit=crop",
+            },
+            {
               label: "Failed",
               value: stats.failed,
               color: "text-rose-400",
               bg: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=200&fit=crop",
+            },
+            {
+              label: "CAPTCHA",
+              value: stats.captcha,
+              color: "text-amber-400",
+              bg: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=400&h=200&fit=crop",
             },
             {
               label: "Progress",
@@ -1397,15 +1444,29 @@ export default function CampaignDetailPage() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-1.5 bg-black border border-gray-900 text-xs text-white 
+              className="px-3 py-1.5 bg-black border border-gray-900 text-xs text-white
                        hover:border-gray-800 focus:border-white focus:outline-none transition-colors"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
               <option value="processing">Processing</option>
               <option value="completed">Completed</option>
+              <option value="success">Success</option>
+              <option value="contact_info_found">Contact Info Found</option>
               <option value="failed">Failed</option>
               <option value="captcha">CAPTCHA</option>
+            </select>
+            <select
+              value={filterMethod || "all"}
+              onChange={(e) => setFilterMethod(e.target.value)}
+              className="px-3 py-1.5 bg-black border border-gray-900 text-xs text-white
+                       hover:border-gray-800 focus:border-white focus:outline-none transition-colors ml-2"
+            >
+              <option value="all">All Methods</option>
+              <option value="form_submitted">Form Submitted</option>
+              <option value="contact_page_only">Contact Page Only</option>
+              <option value="form_with_captcha">CAPTCHA Detected</option>
+              <option value="no_contact_found">No Contact Found</option>
             </select>
           </div>
 
@@ -1469,19 +1530,55 @@ export default function CampaignDetailPage() {
 
                   {/* Details */}
                   <div className="text-xs text-white/80">
-                    {company.status === "completed" ? (
+                    {company.status === "completed" || company.status === "success" ? (
                       <div className="space-y-0.5">
-                        <div className="text-emerald-400">✓ Form submitted</div>
-                        {company.contact_email && (
-                          <div className="text-white/40 font-mono text-[10px]">
-                            {company.contact_email}
+                        <div className="text-emerald-400">✓ Form submitted successfully</div>
+                        {company.fields_filled && (
+                          <div className="text-emerald-300 text-[10px]">
+                            {company.fields_filled} fields filled
+                          </div>
+                        )}
+                        {company.detection_method && (
+                          <div className="text-white/50 text-[9px]">
+                            Method: {company.detection_method.replace('_', ' ')}
+                          </div>
+                        )}
+                      </div>
+                    ) : company.status === "contact_info_found" ? (
+                      <div className="space-y-0.5">
+                        <div className="text-cyan-400">✓ Contact info extracted</div>
+                        <div className="text-white/60 text-[10px]">
+                          Found alternative contact methods
+                        </div>
+                        {company.contact_info && (
+                          <div className="text-cyan-300 text-[9px]">
+                            {company.contact_info.emails?.length || 0} emails, {company.contact_info.phones?.length || 0} phones
+                          </div>
+                        )}
+                      </div>
+                    ) : company.status === "captcha" ? (
+                      <div className="space-y-0.5">
+                        <div className="text-amber-400">🤖 CAPTCHA detected</div>
+                        <div className="text-white/60 text-[10px]">
+                          Manual intervention required
+                        </div>
+                        {company.detection_method && (
+                          <div className="text-amber-300 text-[9px]">
+                            Method: {company.detection_method.replace('_', ' ')}
                           </div>
                         )}
                       </div>
                     ) : company.error_message ? (
-                      <span className="text-rose-400 text-xs leading-relaxed">
-                        {getUserFriendlyError(company.error_message)}
-                      </span>
+                      <div className="space-y-0.5">
+                        <span className="text-rose-400 text-xs leading-relaxed">
+                          {getUserFriendlyError(company.error_message)}
+                        </span>
+                        {company.detection_method && company.detection_method !== 'unknown' && (
+                          <div className="text-rose-300 text-[9px]">
+                            Method: {company.detection_method.replace('_', ' ')}
+                          </div>
+                        )}
+                      </div>
                     ) : company.status === "processing" ? (
                       <span className="text-blue-400">In progress...</span>
                     ) : company.contact_page_found ? (
