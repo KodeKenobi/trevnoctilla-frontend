@@ -10,6 +10,9 @@ import DecryptedText from "@/components/DecryptedText";
 import TextType from "@/components/TextType";
 import { CircuitPulse } from "@/components/ui/CircuitPulse";
 import { FileConversionCard } from "@/components/ui/file-conversion-card";
+import { StarGrid } from "@/components/ui/StarGrid";
+import { cn } from "@/lib/utils";
+import { Globe } from "@/components/Globe";
 
 export default function LandingPage() {
   const { navigateTo } = useNavigation();
@@ -361,67 +364,96 @@ export default function LandingPage() {
                   ],
                   href: "/tools/qr-generator",
                 },
-              ].map((tool, index) => (
-                <Link key={tool.title} href={tool.href}>
-                  <motion.article
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                    whileHover={{ y: -3 }}
-                    className="
-          group h-full
-          rounded-xl
-          border border-neutral-800
-          p-6
-          transition-colors duration-200
-          hover:border-neutral-600
-        "
-                  >
-                    {/* top rule */}
-                    <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors mx-auto md:mx-0" />
+              ].map((tool, index) => {
+                const items = Array(40).fill(0);
+                return (
+                  <Link key={tool.title} href={tool.href}>
+                    <motion.article
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      whileHover={{ y: -3 }}
+                      className="
+                        group h-full
+                        relative
+                        rounded-2xl
+                        border border-gray-700/50
+                        bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900
+                        overflow-hidden
+                        transition-all duration-300
+                        hover:border-gray-600/70
+                        hover:shadow-lg hover:shadow-cyan-500/10
+                      "
+                    >
+                      {/* Radial gradient background */}
+                      <div className="absolute inset-0 bg-[radial-gradient(40%_128px_at_50%_0%,rgba(255,255,255,0.03),transparent)]"></div>
 
-                    <div className="text-xl font-medium text-white tracking-tight text-center md:text-left">
-                      <TextType
-                        text={tool.title}
-                        typingSpeed={75}
-                        showCursor={false}
-                        startOnVisible={true}
-                        loop={false}
-                      />
-                    </div>
+                      {/* StarGrid */}
+                      <div className="px-6 pt-6 relative z-10">
+                        <StarGrid active={20} duration={100} featureDuration={1500} className="grid w-full grid-cols-10 gap-4">
+                          {items.map((item, itemIndex) => (
+                            <StarGrid.Item key={itemIndex} className="relative flex aspect-square w-full items-center justify-center">
+                              {({ isActive, isFeatured }) => (
+                                <>
+                                  <svg
+                                    className={cn(
+                                      isFeatured ? "scale-1" : "scale-0 opacity-0",
+                                      "absolute h-6 w-6 stroke-cyan-400/50 stroke-[1] transition-all duration-1000",
+                                    )}
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="12" cy="12" r="10.5" />
+                                  </svg>
 
-                    <div className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
-                      <TextType
-                        text={tool.description}
-                        typingSpeed={0}
-                        showCursor={false}
-                        startOnVisible={true}
-                        loop={false}
-                        initialDelay={10}
-                      />
-                    </div>
+                                  <div
+                                    style={{ "--duration": `${(itemIndex % 3) * 1.5}s` } as React.CSSProperties}
+                                    className={cn(
+                                      {
+                                        "scale-50 bg-white/10": !isActive && !isFeatured,
+                                        "h-1 w-1": isActive || isFeatured,
+                                        "bg-white/30": isActive && !isFeatured,
+                                        "bg-cyan-400": isFeatured,
+                                      },
+                                      "relative h-1 w-1 rounded-full transition-all duration-500 [animation-duration:var(--duration)]",
+                                    )}></div>
+                                </>
+                              )}
+                            </StarGrid.Item>
+                          ))}
+                        </StarGrid>
+                      </div>
 
-                    <ul className="mt-6 space-y-2 text-sm text-white">
-                      {tool.features.map((feature) => (
-                        <li
-                          key={feature}
-                          className="flex items-center justify-center md:justify-start gap-2"
-                        >
-                          <span className="mt-[6px] block h-1.5 w-1.5 rounded-full bg-neutral-600 flex-shrink-0" />
-                          <span className="text-center md:text-left">
-                            {feature}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                      {/* Content */}
+                      <div className="mt-6 px-8 pb-8 relative z-10">
+                        <div className="text-lg text-white font-medium">{tool.title}</div>
 
-                    <div className="mt-6 text-xs text-white group-hover:text-neutral-300 transition-colors text-center md:text-left">
-                      Open tool →
-                    </div>
-                  </motion.article>
-                </Link>
-              ))}
+                        <p className="mt-2 text-sm font-light leading-relaxed text-white/75">
+                          {tool.description}
+                        </p>
+
+                        <ul className="mt-6 space-y-2.5">
+                          {tool.features.map((feature) => (
+                            <li
+                              key={feature}
+                              className="flex items-center gap-2.5 text-sm text-white/75"
+                            >
+                              <span className="mt-[2px] block h-1.5 w-1.5 rounded-full bg-cyan-400 flex-shrink-0" />
+                              <span>{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        <div className="mt-6 text-sm text-cyan-400 group-hover:text-cyan-300 transition-colors flex items-center gap-2">
+                          <span>Open tool</span>
+                          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                        </div>
+                      </div>
+                    </motion.article>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -467,7 +499,7 @@ export default function LandingPage() {
                   ],
                   action: {
                     label: "View API documentation",
-                    onClick: () => window.open("/api-docs", "_blank"),
+                    href: "/api-docs",
                   },
                   motion: { x: -20 },
                 },
@@ -485,7 +517,7 @@ export default function LandingPage() {
                   ],
                   action: {
                     label: "Request API access",
-                    onClick: () => window.open("/auth/register", "_self"),
+                    href: "/auth/register",
                   },
                   motion: { x: 20 },
                 },
@@ -497,66 +529,65 @@ export default function LandingPage() {
                   transition={{ duration: 0.4, delay: index * 0.1 }}
                   viewport={{ once: true }}
                   className="
-        group h-full
-        rounded-xl
-        border border-neutral-800
-        p-6
-        transition-colors
-        hover:border-neutral-600
-      "
+                    group relative
+                    flex h-96 w-full
+                    flex-col overflow-hidden
+                    rounded-2xl border border-white/5
+                    bg-zinc-800
+                  "
                 >
-                  {/* top rule */}
-                  <div className="mb-4 h-px w-12 bg-neutral-700 group-hover:bg-neutral-500 transition-colors mx-auto md:mx-0" />
+                  {/* Radial gradient background */}
+                  <div className="absolute inset-0 bg-[radial-gradient(40%_128px_at_50%_0%,rgba(255,255,255,0.05),transparent)]"></div>
 
-                  <div className="text-xl font-medium text-white tracking-tight text-center md:text-left">
-                    <TextType
-                      text={api.title}
-                      typingSpeed={75}
-                      showCursor={false}
-                      startOnVisible={true}
-                      loop={false}
+                  {/* Globe */}
+                  <div>
+                    <Globe
+                      dark
+                      baseColor="#777A80"
+                      glowColor="#50505A"
+                      markerColor="#22d3ee"
+                      opacity={0.85}
+                      brightness={1}
+                      offsetX={320}
+                      offsetY={64}
+                      scale={1.125}
                     />
                   </div>
 
-                  <div className="mt-3 text-md leading-relaxed text-white text-center md:text-left">
-                    <TextType
-                      text={api.description}
-                      typingSpeed={0}
-                      showCursor={false}
-                      startOnVisible={true}
-                      loop={false}
-                      initialDelay={200}
-                    />
+                  {/* Content */}
+                  <div className="pointer-events-none mt-auto px-6 pb-6 relative z-10">
+                    <div className="relative transition duration-300 group-hover:-translate-y-9">
+                      <div className="text-lg text-white transition-all duration-300 group-hover:text-base">
+                        {api.title}
+                      </div>
+
+                      <p className="mt-2 text-sm font-light leading-relaxed text-white/75">
+                        {api.description}
+                      </p>
+
+                      <ul className="mt-4 space-y-1.5 text-sm text-white/75">
+                        {api.features.map((feature) => (
+                          <li
+                            key={feature}
+                            className="flex items-center gap-2"
+                          >
+                            <span className="mt-[2px] block h-1 w-1 rounded-full bg-white/40 flex-shrink-0" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div className="absolute -left-2 bottom-0 translate-y-11 opacity-0 transition duration-300 group-hover:opacity-100">
+                        <Link
+                          href={api.action.href}
+                          className="pointer-events-auto inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-white transition hover:bg-white/5"
+                        >
+                          <span>{api.action.label}</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-
-                  <ul className="mt-6 space-y-2 text-sm text-white">
-                    {api.features.map((feature) => (
-                      <li
-                        key={feature}
-                        className="flex items-center justify-center md:justify-start gap-2"
-                      >
-                        <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-neutral-600 flex-shrink-0" />
-                        <span className="text-center md:text-left">
-                          {feature}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* footer action */}
-                  <button
-                    onClick={api.action.onClick}
-                    className="
-          mt-6 flex w-full items-center justify-center md:justify-between
-          border-t border-neutral-800 pt-4
-          text-sm text-white
-          transition-colors
-          hover:text-neutral-200
-        "
-                  >
-                    <span>{api.action.label}</span>
-                    <span className="text-white">→</span>
-                  </button>
                 </motion.article>
               ))}
             </div>
