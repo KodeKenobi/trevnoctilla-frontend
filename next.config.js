@@ -461,9 +461,10 @@ const nextConfig = {
         source: "/api/analytics/:path*",
         destination: `${backendUrl}/api/analytics/:path*`,
       },
-      // Campaign API endpoints
+      // Campaign API endpoints - only rewrite sub-routes, not the base /api/campaigns route
+      // The base route is handled by app/api/campaigns/route.ts
       {
-        source: "/api/campaigns/:path*",
+        source: "/api/campaigns/:path+",
         destination: `${backendUrl}/api/campaigns/:path*`,
       },
       // Health check
