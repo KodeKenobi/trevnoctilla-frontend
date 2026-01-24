@@ -55,14 +55,6 @@ function LandingPageContent({ router }: { router: any }) {
         ease: "power3.out",
       });
 
-      gsap.from(".hero-cta", {
-        scale: 0.9,
-        y: 20,
-        duration: 1,
-        delay: 0.6,
-        ease: "back.out(1.7)",
-      });
-
       // Advanced scroll-triggered sections with parallax
       const sections = [
         {
