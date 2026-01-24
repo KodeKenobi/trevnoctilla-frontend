@@ -533,7 +533,6 @@ export default function LandingPage() {
                     flex h-96 w-full
                     flex-col overflow-hidden
                     rounded-2xl border border-white/5
-                    bg-zinc-800
                   "
                 >
                   {/* Radial gradient background */}
