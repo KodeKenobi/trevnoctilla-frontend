@@ -173,26 +173,30 @@ export default function CampaignDetailPage() {
   useEffect(() => {
     if (campaignId) {
       fetchCampaignDetails();
-      // Poll more frequently for real-time updates (every 2 seconds instead of 5)
+      // Only poll when there's active processing or Rapid All is running
       const interval = setInterval(() => {
-        // Always poll if campaign exists and is not completed/failed
+        // Poll if there's active processing happening
+        const hasProcessing = companies.some((c) => c.status === "processing");
         if (
           campaign &&
+          (isRapidAllRunning || processingCompanyId !== null || hasProcessing) &&
           campaign.status !== "completed" &&
           campaign.status !== "failed" &&
           campaign.status !== "cancelled"
         ) {
           fetchCampaignDetails(true);
         }
-      }, 2000); // Reduced from 5000ms to 2000ms for more real-time updates
+      }, 3000); // Poll every 3 seconds only during active processing
       return () => clearInterval(interval);
     }
-  }, [campaignId, campaign?.status]);
+  }, [campaignId, campaign?.status, isRapidAllRunning, processingCompanyId, companies]);
 
   const fetchCampaignDetails = async (silent = false) => {
     try {
-      if (!silent) setLoading(true);
-      setRefreshing(true);
+      if (!silent) {
+        setLoading(true);
+        setRefreshing(true);
+      }
 
       const [campaignRes, companiesRes] = await Promise.all([
         fetch(`/api/campaigns/${campaignId}`),
@@ -211,8 +215,10 @@ export default function CampaignDetailPage() {
     } catch (error) {
       console.error("Failed to fetch campaign details:", error);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (!silent) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 
