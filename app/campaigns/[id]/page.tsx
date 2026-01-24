@@ -172,11 +172,19 @@ export default function CampaignDetailPage() {
 
   useEffect(() => {
     if (campaignId) {
+      console.log('[Campaign Detail] Initial load, campaignId:', campaignId);
       fetchCampaignDetails();
       // Only poll when there's active processing or Rapid All is running
       const interval = setInterval(() => {
         // Poll if there's active processing happening
         const hasProcessing = companies.some((c) => c.status === "processing");
+        console.log('[Campaign Detail] Polling check:', {
+          isRapidAllRunning,
+          processingCompanyId,
+          hasProcessing,
+          companiesCount: companies.length
+        });
+        
         if (
           campaign &&
           (isRapidAllRunning || processingCompanyId !== null || hasProcessing) &&
@@ -184,14 +192,19 @@ export default function CampaignDetailPage() {
           campaign.status !== "failed" &&
           campaign.status !== "cancelled"
         ) {
+          console.log('[Campaign Detail] Fetching updates (silent)');
           fetchCampaignDetails(true);
         }
       }, 3000); // Poll every 3 seconds only during active processing
-      return () => clearInterval(interval);
+      return () => {
+        console.log('[Campaign Detail] Cleanup interval');
+        clearInterval(interval);
+      };
     }
-  }, [campaignId, campaign?.status, isRapidAllRunning, processingCompanyId, companies]);
+  }, [campaignId, campaign?.status, isRapidAllRunning, processingCompanyId]);
 
   const fetchCampaignDetails = async (silent = false) => {
+    console.log('[Campaign Detail] Fetching campaign details, silent:', silent);
     try {
       if (!silent) {
         setLoading(true);
@@ -205,15 +218,21 @@ export default function CampaignDetailPage() {
 
       if (campaignRes.ok) {
         const campaignData = await campaignRes.json();
+        console.log('[Campaign Detail] Campaign data loaded:', campaignData.campaign?.name);
         setCampaign(campaignData.campaign);
+      } else {
+        console.error('[Campaign Detail] Failed to fetch campaign:', campaignRes.status);
       }
 
       if (companiesRes.ok) {
         const companiesData = await companiesRes.json();
+        console.log('[Campaign Detail] Companies loaded:', companiesData.companies?.length || 0);
         setCompanies(companiesData.companies || []);
+      } else {
+        console.error('[Campaign Detail] Failed to fetch companies:', companiesRes.status);
       }
     } catch (error) {
-      console.error("Failed to fetch campaign details:", error);
+      console.error("[Campaign Detail] Failed to fetch campaign details:", error);
     } finally {
       if (!silent) {
         setLoading(false);
