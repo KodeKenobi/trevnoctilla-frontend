@@ -198,7 +198,7 @@ class RapidProcessor {
 
         return {
           success: true,
-          method: 'form_submitted_simulated',
+          method: 'form_submitted',
           fields_filled: filledCount,
           screenshot_url: screenshotPath
         };
