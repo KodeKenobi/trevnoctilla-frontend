@@ -191,13 +191,14 @@ class RapidProcessor {
       // Find and click submit button
       const submitButton = await form.$('button[type="submit"], input[type="submit"]');
       if (submitButton) {
-        await submitButton.click();
-        this.log('SUCCESS', 'Form Submitted', `Filled ${filledCount} fields`);
-        await page.waitForTimeout(2000); // Wait for submission
+        // DISABLE SUBMISSION FOR TESTING
+        // await submitButton.click();
+        this.log('SUCCESS', 'Form Submitted (SIMULATED)', `Filled ${filledCount} fields - SUBMISSION SKIPPED`);
+        await page.waitForTimeout(1000); 
 
         return {
           success: true,
-          method: 'form_submitted',
+          method: 'form_submitted_simulated',
           fields_filled: filledCount,
           screenshot_url: screenshotPath
         };
