@@ -13,12 +13,22 @@ export default function CreateCampaignPage() {
   const [uploadedData, setUploadedData] = useState<any>(null);
 
   // Form field values
-  const [senderName, setSenderName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
   const [senderPhone, setSenderPhone] = useState("");
+  const [senderCompany, setSenderCompany] = useState("");
+  const [senderCountry, setSenderCountry] = useState("South Africa");
   const [senderAddress, setSenderAddress] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+
+  const countries = [
+    "United Kingdom", "South Africa", "United States", "Australia", "Canada", 
+    "New Zealand", "Ireland", "Germany", "France", "Netherlands", "Spain", 
+    "Italy", "Israel", "India", "Singapore", "United Arab Emirates", 
+    "Saudi Arabia", "Brazil", "Mexico", "China", "Japan", "South Korea"
+  ].sort();
 
   useEffect(() => {
     const data = localStorage.getItem("uploadedCampaignData");
@@ -48,9 +58,13 @@ export default function CreateCampaignPage() {
 
       // Combine all form data into the message template
       const formData = {
-        sender_name: senderName || "Sender",
+        sender_name: `${firstName} ${lastName}`.trim() || "Sender",
+        sender_first_name: firstName,
+        sender_last_name: lastName,
         sender_email: senderEmail || "sender@example.com",
         sender_phone: senderPhone || "+1 555-0000",
+        sender_company: senderCompany || "Our Company",
+        sender_country: senderCountry,
         sender_address: senderAddress || "",
         subject: subject || "Inquiry",
         message: message,
@@ -199,14 +213,35 @@ export default function CreateCampaignPage() {
           <div>
             <h3 className="text-sm text-white mb-3">Your Information</h3>
             <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
+                             focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg
+                             placeholder:text-gray-500"
+                  placeholder="First Name"
+                />
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
+                             focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg
+                             placeholder:text-gray-500"
+                  placeholder="Last Name"
+                />
+              </div>
+
               <input
                 type="text"
-                value={senderName}
-                onChange={(e) => setSenderName(e.target.value)}
+                value={senderCompany}
+                onChange={(e) => setSenderCompany(e.target.value)}
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
                            focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg
                            placeholder:text-gray-500"
-                placeholder="Your Name"
+                placeholder="Your Company Name"
               />
 
               <input
@@ -228,6 +263,17 @@ export default function CreateCampaignPage() {
                            placeholder:text-gray-500"
                 placeholder="Your Phone"
               />
+
+              <select
+                value={senderCountry}
+                onChange={(e) => setSenderCountry(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
+                           focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg"
+              >
+                {countries.map(country => (
+                  <option key={country} value={country}>{country}</option>
+                ))}
+              </select>
 
               <input
                 type="text"
