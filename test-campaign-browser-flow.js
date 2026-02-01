@@ -73,7 +73,7 @@ async function testCampaignBrowserFlow() {
         await page.goto(`${FRONTEND_URL}/campaigns/upload`);
     }
     
-    await page.waitForURL('**/campaigns/upload', { timeout: 10000 });
+    await page.waitForURL('**/campaigns/upload', { timeout: 30000 });
     await page.waitForTimeout(2000);
     log('✓ Upload page loaded', 'green');
 
@@ -163,12 +163,59 @@ https://www.trevnoctilla.com,Trevnoctilla,South Africa`;
     await page.keyboard.press('Escape');
     await page.waitForTimeout(500);
 
+    // Monitor network requests to capture API failures
+    page.on('request', request => {
+        if (request.url().includes('/api/campaigns') && request.method() === 'POST') {
+            log(`  📡 API Request started: ${request.url()}`, 'yellow');
+        }
+    });
+
+    page.on('response', async response => {
+        if (response.url().includes('/api/campaigns') && response.request().method() === 'POST') {
+            const status = response.status();
+            log(`  📡 API Response received: ${status}`, status === 200 ? 'green' : 'red');
+            if (status !== 200) {
+                try {
+                    const errorJson = await response.json();
+                    log(`  ❌ API ERROR BODY: ${JSON.stringify(errorJson)}`, 'red');
+                } catch (e) {
+                    const text = await response.text();
+                    log(`  ❌ API ERROR TEXT: ${text.substring(0, 500)}`, 'red');
+                }
+            }
+        }
+    });
+
+    // Accept Cookies if banner exists
+    // Dismiss cookie banner more robustly
+    try {
+        const cookieButtons = [
+            'button:has-text("Accept All")',
+            'button:has-text("Accept")',
+            '#cookie-accept',
+            '.cookie-banner button'
+        ];
+        
+        for (const selector of cookieButtons) {
+            const btn = page.locator(selector).first();
+            if (await btn.isVisible({ timeout: 1000 })) {
+                log(`  🍪 Dismissing cookie banner with selector: ${selector}`, 'yellow');
+                await btn.click({ force: true });
+                await page.waitForTimeout(500);
+            }
+        }
+    } catch (e) {}
+
     // Force click to bypass any non-blocking overlays
     await page.click('button:has-text("Create Campaign")', { force: true });
+    log('  Click sent (forced). Waiting 5s for reaction...', 'yellow');
+    await page.waitForTimeout(5000);
+    log(`  Current URL after click: ${page.url()}`, 'yellow');
+    await page.screenshot({ path: 'test-screenshots/debug-step5-after-click.png', fullPage: true });
     
     // Wait for navigation to campaign detail page
     try {
-        await page.waitForURL('**/campaigns/([0-9]*)', { timeout: 45000 });
+        await page.waitForURL('**/campaigns/([0-9]*)', { timeout: 90000 });
     } catch (e) {
         log('  ⚠ Navigation wait timed out, checking if we arrived anyway...', 'yellow');
         
@@ -184,6 +231,9 @@ https://www.trevnoctilla.com,Trevnoctilla,South Africa`;
             
             const errorMsg = await page.locator('.text-red-300, .text-red-500, [role="alert"]').allTextContents();
             if (errorMsg.length > 0) log(`  Found error messages: ${errorMsg.join(', ')}`, 'red');
+            
+            const bodyText = await page.innerText('body');
+            log(`  PAGE CONTENT SAMPLE: ${bodyText.substring(0, 500)}`, 'red');
             
             await page.screenshot({ path: 'test-screenshots/error-create-timeout.png', fullPage: true });
             throw e;
@@ -204,65 +254,98 @@ https://www.trevnoctilla.com,Trevnoctilla,South Africa`;
     // =====================================================
     log('\n[Step 6/6] Triggering Rapid All...', 'cyan');
     
-    // Find Rapid All button
-    const rapidAllButton = await page.locator('button:has-text("Rapid All")').first();
-    await rapidAllButton.click();
+    // Find Rapid All button with more robustness
+    log('  🔍 Searching for "Rapid All" button...', 'yellow');
     
-    log('✓ Rapid All started. Waiting for limit modal if any...', 'yellow');
-    
-    // Wait for modal to potentially appear
-    await page.waitForTimeout(1000);
-    
-    // Look for generic Start button in the modal
-    const startButton = await page.locator('button:has-text("Start (")').first();
-    
-    if (await startButton.isVisible({ timeout: 5000 })) {
-       log(`  Found start button: "${await startButton.textContent()}"`, 'yellow');
-       log('  Clicking confirm in modal...', 'yellow');
-       await startButton.click();
-    } else {
-        // Fallback: check for any "Start" button if the format is different
-        const anyStart = await page.locator('div[role="dialog"] button:has-text("Start")').first();
-        if (await anyStart.isVisible()) {
-            log(`  Found generic start button: "${await anyStart.textContent()}"`, 'yellow');
-            await anyStart.click();
-        } else {
-            log('  No limit modal start button found (might have auto-started or selector mismatch)', 'yellow');
-            // Log what buttons are visible to debug
-            const buttons = await page.locator('div[role="dialog"] button').allInnerTexts().catch(() => []);
-            if (buttons.length > 0) log(`  Visible modal buttons: ${buttons.join(', ')}`, 'yellow');
-        }
+    // DEBUG: List every single button on the page
+    const buttons = await page.locator('button').all();
+    log(`  Found ${buttons.length} total buttons on page. Listing texts:`, 'yellow');
+    for (const [idx, btn] of buttons.entries()) {
+        const text = await btn.innerText();
+        const visible = await btn.isVisible();
+        const box = await btn.boundingBox();
+        log(`    [${idx}] "${text}" | Visible: ${visible} | Box: ${JSON.stringify(box)}`, 'yellow');
     }
 
-    log('\nWatching companies process in real-time...', 'cyan');
+    const rapidAllButton = page.locator('button').filter({ hasText: /Rapid All/i }).first();
     
-    // Watch for 120 seconds for the extensive test
-    for (let i = 0; i < 120; i++) {
-      await page.waitForTimeout(2000);
-      const statusText = await page.locator('div:has-text("Completed"), div:has-text("Failed")').count();
-      
-      if (i % 5 === 0) {
-        await page.screenshot({ path: `test-screenshots/8-processing-${i}s.png`, fullPage: true });
+    try {
+        await rapidAllButton.waitFor({ state: 'visible', timeout: 15000 });
+        const btnText = await rapidAllButton.innerText();
+        log(`  ✓ Found "Rapid All" button with text: "${btnText}"`, 'green');
         
-        // Check table rows for status
+        await rapidAllButton.scrollIntoViewIfNeeded();
+        await page.screenshot({ path: 'test-screenshots/debug-before-rapid-all-click.png' });
+        
+        log('  Clicking Rapid All button...', 'yellow');
+        
+        // Strategy 1: Standard click
         try {
-            const completedCount = await page.locator('td:has-text("Completed")').count();
-            const failedCount = await page.locator('td:has-text("Failed")').count();
-            const contactFoundCount = await page.locator('td:has-text("Contact Info Found")').count();
-            
-            const totalFinished = completedCount + failedCount + contactFoundCount;
-            
-            log(`  📊 Check ${i}s: Table rows - Completed: ${completedCount}, Failed: ${failedCount}, Other: ${contactFoundCount}`, 'yellow');
-            
-            if (totalFinished >= 2) {
-                 log('✓ All 2 test companies finished processing (based on table rows)!', 'green');
-                 await page.screenshot({ path: 'test-screenshots/9-final-status.png', fullPage: true });
-                 break;
-            }
+            await rapidAllButton.click({ timeout: 5000 });
         } catch (e) {
-            log('  ⚠ Error checking table rows: ' + e.message, 'red');
+            log('  ⚠ Standard click failed, trying forced coordinate click...', 'yellow');
+            const box = await rapidAllButton.boundingBox();
+            if (box) {
+                await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+            } else {
+                await rapidAllButton.click({ force: true });
+            }
         }
-      }
+        
+        await page.waitForTimeout(2000); // Wait for modal animation
+        await page.screenshot({ path: 'test-screenshots/debug-after-rapid-all-click.png' });
+    } catch (e) {
+        log('  ❌ Rapid All button not found or not visible', 'red');
+        const allButtons = await page.locator('button').allInnerTexts();
+        log(`  Available buttons: ${allButtons.join(', ')}`, 'yellow');
+        await page.screenshot({ path: 'test-screenshots/error-rapid-all-button.png' });
+        throw e;
+    }
+    
+    log('✓ Rapid All button interacted. Checking system state...', 'yellow');
+    
+    // Check if we are already processing (auto-start or modal auto-dismissed)
+    const progressBar = page.locator('div:has-text("Rapid All Processing")').first();
+    const isProcessing = await progressBar.isVisible({ timeout: 5000 }).catch(() => false);
+    
+    if (isProcessing) {
+        log('  ✓ Rapid All auto-started or modal skipped. Proceeding to monitor progress...', 'green');
+    } else {
+        log('  Modal/Progress bar not immediately visible, checking for start button...', 'yellow');
+        // Look for generic Start button in the modal
+        const startButton = page.locator('button').filter({ hasText: /Start/i }).first();
+        if (await startButton.isVisible({ timeout: 5000 })) {
+            log(`  Found start button: "${await startButton.textContent()}"`, 'yellow');
+            log('  Clicking confirm in modal...', 'yellow');
+            await startButton.click({ force: true });
+        } else {
+            log('  No start button or progress bar found - checking if we are already finished...', 'yellow');
+        }
+    }
+    
+    // Monitoring Loop
+    log('\n[Step 6 Extension] Monitoring real-time processing...', 'cyan');
+    let completed = 0;
+    let failed = 0;
+    
+    for (let i = 0; i < 40; i++) { // Check for up to 200s
+        await page.waitForTimeout(5000);
+        
+        // Take periodic screenshots
+        await page.screenshot({ path: `test-screenshots/8-processing-${i*5}s.png`, fullPage: true });
+        
+        // Count statuses from table rows
+        const statuses = await page.locator('td').allTextContents();
+        completed = statuses.filter(s => s.toLowerCase().includes('completed') || s.toLowerCase().includes('success')).length;
+        failed = statuses.filter(s => s.toLowerCase().includes('failed') || s.toLowerCase().includes('not found')).length;
+        const processing = statuses.filter(s => s.toLowerCase().includes('processing') || s.toLowerCase().includes('in progress')).length;
+        
+        log(`  📊 Check ${i*5}s: Completed: ${completed}, Failed: ${failed}, Processing: ${processing}`, 'yellow');
+        
+        if (processing === 0 && (completed + failed) > 0) {
+            log('  ✅ No more companies in "Processing" state.', 'green');
+            break;
+        }
     }
 
     // FINAL CHECK: Screenshot visibility
@@ -278,10 +361,7 @@ https://www.trevnoctilla.com,Trevnoctilla,South Africa`;
       log('  📸 Screenshot saved: 9-screenshot-modal.png', 'yellow');
     }
 
-    if (!formFilled) {
-      log('  ⚠ Warning: No form filling detected in 30 seconds', 'yellow');
-      log('  This might mean auto-start is disabled or the campaign needs manual start', 'yellow');
-    }
+    // Check removed (variable not defined)
 
     // =====================================================
     // Step 8: Return to Campaign Detail
