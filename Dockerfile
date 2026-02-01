@@ -12,8 +12,10 @@ RUN apt-get update && apt-get install -y \
     libcairo2-dev \
     curl \
     wget \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
+    xz-utils \
+    && wget https://nodejs.org/dist/v20.10.0/node-v20.10.0-linux-x64.tar.xz \
+    && tar -xJf node-v20.10.0-linux-x64.tar.xz -C /usr/local --strip-components=1 \
+    && rm node-v20.10.0-linux-x64.tar.xz \
     && npm install -g pnpm \
     && rm -rf /var/lib/apt/lists/*
 
@@ -81,14 +83,10 @@ RUN chmod +x start.sh
 # Install Node.js dependencies and build Next.js frontend
 WORKDIR /tmp/repo
 RUN if [ -f "package.json" ]; then \
-        echo "Cleaning .next directory for fresh build..." && \
+        echo "Building Next.js frontend..." && \
         rm -rf .next && \
-        if [ -f "pnpm-lock.yaml" ]; then \
-            pnpm install --frozen-lockfile; \
-        else \
-            echo "WARNING: pnpm-lock.yaml not found, installing without frozen-lockfile"; \
-            pnpm install; \
-        fi && \
+        # Install dependencies without frozen lockfile to avoid cross-platform issues
+        pnpm install && \
         NEXT_TELEMETRY_DISABLED=1 pnpm exec next build; \
     else \
         echo "WARNING: package.json not found, skipping frontend build"; \
