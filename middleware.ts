@@ -71,6 +71,8 @@ export default withAuth(
           "/cookies",
           "/tools",
           "/api-docs",
+          "/api/campaigns",
+          "/campaigns",
         ];
         const isPublicRoute = publicRoutes.some((route) =>
           req.nextUrl.pathname.startsWith(route)
