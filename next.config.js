@@ -477,6 +477,15 @@ const nextConfig = {
         source: "/test/:path*",
         destination: `${backendUrl}/test/:path*`,
       },
+      // Screenshot redirects
+      {
+        source: "/screenshots/:path*",
+        destination: `${backendUrl}/static/screenshots/:path*`,
+      },
+      {
+        source: "/static/screenshots/:path*",
+        destination: `${backendUrl}/static/screenshots/:path*`,
+      },
     ];
   },
   async redirects() {
