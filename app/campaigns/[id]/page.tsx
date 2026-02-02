@@ -266,143 +266,115 @@ export default function CampaignDetailPage() {
     }
   };
 
-  const handleRapidProcess = async (companyId: number) => {
-    try {
-      setProcessingCompanyId(companyId);
+const handleRapidProcess = async (companyId: number) => {
+  const currentCompanyId = companyId;
 
-      // Find company name for display
-      const company = companies.find((c) => c.id === companyId);
-      setRapidCurrentCompany(company?.company_name || `Company ${companyId}`);
-      setRapidProgress(0);
-      setRapidStatus("Starting...");
+  try {
+    setProcessingCompanyId(currentCompanyId);
 
-      // Update company status to processing
-      const response = await fetch(`/api/campaigns/companies/${companyId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "processing" }),
-      });
+    const company = companies.find((c) => c.id === currentCompanyId);
+    setRapidCurrentCompany(company?.company_name || `Company ${currentCompanyId}`);
+    setRapidProgress(0);
+    setRapidStatus("Starting...");
 
-      if (!response.ok) {
-        throw new Error("Failed to start rapid processing");
-      }
+    const response = await fetch(`/api/campaigns/companies/${currentCompanyId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "processing" }),
+    });
 
-      // Start processing in background via WebSocket (but don't navigate to monitor page)
-      // The backend will handle it and update the status
-      const wsProtocol =
-        window.location.protocol === "https:" ? "wss:" : "wss:";
-      const backendUrl = "web-production-737b.up.railway.app";
-      const wsUrl = `${wsProtocol}//${backendUrl}/ws/campaign/${campaignId}/monitor/${companyId}`;
+    if (!response.ok) {
+      throw new Error("Failed to start rapid processing");
+    }
 
-      console.log("[Rapid] Connecting to WebSocket:", wsUrl);
-      const ws = new WebSocket(wsUrl);
-      setActiveWebSocket(ws); // Store WebSocket reference for emergency stop
-
-      ws.onopen = () => {
-        console.log(`[Rapid] Started processing company ${companyId}`);
-        setRapidStatus("Connected");
-        setRapidProgress(10);
-      };
-
-      ws.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-
-        // Update progress based on message type
-        if (message.type === "log") {
-          const log = message.data;
-          setRapidStatus(log.message || log.action);
-
-          // Map actions to progress percentages
-          if (log.action?.includes("Navigation")) setRapidProgress(20);
-          else if (log.action?.includes("Contact")) setRapidProgress(40);
-          else if (log.action?.includes("Form")) setRapidProgress(60);
-          else if (log.action?.includes("Submit")) setRapidProgress(80);
-          else if (log.action?.includes("Screenshot")) setRapidProgress(90);
-        } else if (message.type === "completed") {
-          setRapidProgress(100);
-          setRapidStatus("Completed!");
-          ws.close();
-          setActiveWebSocket(null);
-          const completedCompanyId = processingCompanyId;
-          setProcessingCompanyId(null);
-
-          // Manually update company status instead of full refresh (CRITICAL FIX)
-          setCompanies((prevCompanies) =>
-            prevCompanies.map((c) =>
-              c.id === completedCompanyId
-                ? { ...c, status: "completed" }
-                : c
-            )
-          );
-
-          // Increment Rapid All progress
-          if (isRapidAllRunningRef.current) {
-            setRapidAllProgress((prev) => prev + 1);
-          }
-
-          // Reset progress display after a delay
-          setTimeout(() => {
-            setRapidProgress(0);
-            setRapidStatus("");
-            setRapidCurrentCompany("");
-          }, 500); // Reduced delay for faster processing
-
-          // Auto-process next ONLY if "Rapid All" is running
-          if (isRapidAllRunningRef.current) {
-            setTimeout(() => processNextPending(), 200); // Small delay to ensure state update
-          }
-        } else if (message.type === "error") {
-          setRapidProgress(0);
-          setRapidStatus("Failed");
-          ws.close();
-          setActiveWebSocket(null);
-          const failedCompanyId = processingCompanyId;
-          setProcessingCompanyId(null);
-
-          // Manually update company status instead of full refresh (CRITICAL FIX)
-          setCompanies((prevCompanies) =>
-            prevCompanies.map((c) =>
-              c.id === failedCompanyId
-                ? { ...c, status: "failed" }
-                : c
-            )
-          );
-
-          // Increment Rapid All progress even on error
-          if (isRapidAllRunningRef.current) {
-            setRapidAllProgress((prev) => prev + 1);
-          }
-
-          setTimeout(() => {
-            setRapidStatus("");
-            setRapidCurrentCompany("");
-          }, 1000); // Reduced delay
-
-          // Auto-process next ONLY if "Rapid All" is running
-          if (isRapidAllRunningRef.current) {
-            setTimeout(() => processNextPending(), 200); // Small delay to ensure state update
-          }
-        }
-      };
-
-      ws.onerror = () => {
-        setActiveWebSocket(null);
-        setProcessingCompanyId(null);
-        setRapidProgress(0);
-        setRapidStatus("Connection error");
-        setRapidCurrentCompany("");
-        alert("Failed to process company");
-      };
-    } catch (error: any) {
-      console.error("Failed to start rapid processing:", error);
-      alert(`Failed to start processing: ${error.message}`);
+    const cleanup = () => {
       setActiveWebSocket(null);
       setProcessingCompanyId(null);
       setRapidProgress(0);
       setRapidStatus("");
       setRapidCurrentCompany("");
-    }
-  };
+    };
+
+    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "wss:";
+    const backendUrl = "web-production-737b.up.railway.app";
+    const wsUrl = `${wsProtocol}//${backendUrl}/ws/campaign/${campaignId}/monitor/${currentCompanyId}`;
+
+    console.log("[Rapid] Connecting to WebSocket:", wsUrl);
+    const ws = new WebSocket(wsUrl);
+    setActiveWebSocket(ws);
+
+    ws.onopen = () => {
+      setRapidStatus("Connected");
+      setRapidProgress(10);
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+
+      if (message.type === "log") {
+        const log = message.data;
+        setRapidStatus(log.message || log.action);
+
+        if (log.action?.includes("Navigation")) setRapidProgress(20);
+        else if (log.action?.includes("Contact")) setRapidProgress(40);
+        else if (log.action?.includes("Form")) setRapidProgress(60);
+        else if (log.action?.includes("Submit")) setRapidProgress(80);
+        else if (log.action?.includes("Screenshot")) setRapidProgress(90);
+      }
+
+      if (message.type === "completed") {
+        setRapidProgress(100);
+        setRapidStatus("Completed!");
+
+        ws.close();
+        cleanup();
+
+        setCompanies((prev) =>
+          prev.map((c) =>
+            c.id === currentCompanyId ? { ...c, status: "completed" } : c
+          )
+        );
+
+        if (isRapidAllRunningRef.current) {
+          setRapidAllProgress((prev) => prev + 1);
+          setTimeout(() => processNextPending(), 200);
+        }
+      }
+
+      if (message.type === "error") {
+        ws.close();
+        cleanup();
+
+        setCompanies((prev) =>
+          prev.map((c) =>
+            c.id === currentCompanyId ? { ...c, status: "failed" } : c
+          )
+        );
+
+        if (isRapidAllRunningRef.current) {
+          setRapidAllProgress((prev) => prev + 1);
+          setTimeout(() => processNextPending(), 200);
+        }
+      }
+    };
+
+    ws.onerror = () => {
+      ws.close();
+      cleanup();
+      alert("Failed to process company");
+    };
+  } catch (error: any) {
+    console.error("Failed to start rapid processing:", error);
+    alert(`Failed to start processing: ${error.message}`);
+
+    setActiveWebSocket(null);
+    setProcessingCompanyId(null);
+    setRapidProgress(0);
+    setRapidStatus("");
+    setRapidCurrentCompany("");
+  }
+};
+
 
   const emergencyStopAll = () => {
     console.log("[EMERGENCY STOP] Forcefully stopping all processing");
@@ -433,197 +405,254 @@ export default function CampaignDetailPage() {
   };
 
   // BATCH processing: Visit website ONCE, submit multiple forms
-  const rapidProcessBatch = async (batchCompanies: Company[]) => {
-    const startTime = Date.now();
-    const companyIds = batchCompanies.map(c => c.id);
-    const websiteUrl = batchCompanies[0].website_url;
-    
-    console.log(`[Batch] Processing ${batchCompanies.length} companies with same URL: ${websiteUrl}`);
-    
-    try {
-      setProcessingCount((prev) => prev + batchCompanies.length);
-      
-      // DON'T mark all as processing - let backend do it sequentially!
-      // This ensures proper queue visualization
-      
-      // Start polling for real-time updates (faster polling for better UX)
-      const pollInterval = setInterval(async () => {
-        try {
-          const statusResponse = await fetch(`/api/campaigns/${campaignId}/companies`);
-          const statusData = await statusResponse.json();
-          if (statusData.companies) {
-            setCompanies(statusData.companies);
-            
-            // Update progress count in real-time
-            const batchProcessed = statusData.companies.filter(
-              (c: Company) => companyIds.includes(c.id) && (c.status === 'completed' || c.status === 'failed')
-            ).length;
-            
-            if (batchProcessed > 0) {
-              console.log(`[Batch] Real-time progress: ${batchProcessed}/${batchCompanies.length} completed`);
-            }
+const rapidProcessBatch = async (batchCompanies: Company[]) => {
+  const startTime = Date.now();
+  const companyIds = batchCompanies.map(c => c.id);
+  const websiteUrl = batchCompanies[0].website_url;
+
+  let pollInterval: NodeJS.Timeout | null = null;
+
+  console.log(`[Batch] Processing ${batchCompanies.length} companies with same URL: ${websiteUrl}`);
+
+  try {
+    setProcessingCount((prev) => prev + batchCompanies.length);
+
+    // Start polling for real-time updates
+    pollInterval = setInterval(async () => {
+      try {
+        const statusResponse = await fetch(`/api/campaigns/${campaignId}/companies`);
+        const statusData = await statusResponse.json();
+
+        if (statusData.companies) {
+          setCompanies(statusData.companies);
+
+          const batchProcessed = statusData.companies.filter(
+            (c: Company) =>
+              companyIds.includes(c.id) &&
+              (c.status === 'completed' || c.status === 'failed')
+          ).length;
+
+          if (batchProcessed > 0) {
+            console.log(
+              `[Batch] Real-time progress: ${batchProcessed}/${batchCompanies.length} completed`
+            );
           }
-        } catch (error) {
-          console.error('[Batch] Polling error:', error);
         }
-      }, 1000); // Poll every 1 second for faster updates
-      
-      const response = await fetch(`/api/campaigns/${campaignId}/rapid-process-batch`, {
+      } catch (error) {
+        console.error('[Batch] Polling error:', error);
+      }
+    }, 1000);
+
+    const response = await fetch(
+      `/api/campaigns/${campaignId}/rapid-process-batch`,
+      {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ company_ids: companyIds }),
-      });
-
-      // Stop polling once batch completes
-      clearInterval(pollInterval);
-      
-      const data = await response.json();
-      const processingTime = (Date.now() - startTime) / 1000;
-
-      // Track processing time for ETA
-      processingTimesRef.current.push(processingTime);
-      if (processingTimesRef.current.length > 10) {
-        processingTimesRef.current.shift();
       }
-      const avgTime = processingTimesRef.current.reduce((a, b) => a + b, 0) / processingTimesRef.current.length;
-      setAvgProcessingTime(avgTime);
+    );
 
-      // Update each company status from batch results
-      if (data.results && Array.isArray(data.results)) {
-        setCompanies((prevCompanies) =>
-          prevCompanies.map((c) => {
-            const result = data.results.find((r: any) => r.companyId === c.id);
-            if (result) {
-              return {
-                ...c,
-                status: result.status,
-                screenshot_url: result.screenshotUrl || c.screenshot_url,
-                error_message: result.errorMessage ? getUserFriendlyError(result.errorMessage) : c.error_message,
-              };
-            }
-            return c;
-          })
-        );
-      }
+    let data: any = {};
+    const contentType = response.headers.get('content-type');
 
-      // Increment progress by number of companies in batch
-      setRapidAllProgress((prev) => prev + batchCompanies.length);
-
-      console.log(
-        `[Batch] Completed ${batchCompanies.length} companies in ${processingTime.toFixed(2)}s`
-      );
-
-      return data;
-    } catch (error) {
-      console.error(`[Batch] Error processing batch:`, error);
-      
-      // Mark all in batch as failed
-      setCompanies((prevCompanies) =>
-        prevCompanies.map((c) =>
-          companyIds.includes(c.id)
-            ? { ...c, status: 'failed', error_message: getUserFriendlyError('Processing error') }
-            : c
-        )
-      );
-      
-      setRapidAllProgress((prev) => prev + batchCompanies.length);
-      
-      return { success: false, status: 'failed' };
-    } finally {
-      setProcessingCount((prev) => prev - batchCompanies.length);
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
     }
-  };
+
+    if (!response.ok) {
+      throw new Error(`Batch request failed (${response.status})`);
+    }
+
+    const processingTime = (Date.now() - startTime) / 1000;
+
+    processingTimesRef.current.push(processingTime);
+    if (processingTimesRef.current.length > 10) {
+      processingTimesRef.current.shift();
+    }
+
+    const avgTime =
+      processingTimesRef.current.reduce((a, b) => a + b, 0) /
+      processingTimesRef.current.length;
+
+    setAvgProcessingTime(avgTime);
+
+    if (data.results && Array.isArray(data.results)) {
+      setCompanies((prevCompanies) =>
+        prevCompanies.map((c) => {
+          const result = data.results.find((r: any) => r.companyId === c.id);
+          if (result) {
+            return {
+              ...c,
+              status: result.status,
+              screenshot_url: result.screenshotUrl || c.screenshot_url,
+              error_message: result.errorMessage
+                ? getUserFriendlyError(result.errorMessage)
+                : c.error_message,
+            };
+          }
+          return c;
+        })
+      );
+    }
+
+    setRapidAllProgress((prev) => prev + batchCompanies.length);
+
+    console.log(
+      `[Batch] Completed ${batchCompanies.length} companies in ${processingTime.toFixed(2)}s`
+    );
+
+    return data;
+  } catch (error) {
+    console.error(`[Batch] Error processing batch:`, error);
+
+    setCompanies((prevCompanies) =>
+      prevCompanies.map((c) =>
+        companyIds.includes(c.id)
+          ? { ...c, status: 'failed', error_message: getUserFriendlyError('Processing error') }
+          : c
+      )
+    );
+
+    setRapidAllProgress((prev) => prev + batchCompanies.length);
+
+    return { success: false, status: 'failed' };
+  } finally {
+    if (pollInterval) {
+      clearInterval(pollInterval);
+    }
+    setProcessingCount((prev) => prev - batchCompanies.length);
+  }
+};
+
 
   // Headless rapid processing (no WebSocket, faster) - for single companies
-  const rapidProcessCompany = async (companyId: number) => {
-    const startTime = Date.now();
-    
-    try {
-      setProcessingCount((prev) => prev + 1);
-      
-      // Start polling for real-time updates (backend marks as processing)
-      const pollInterval = setInterval(async () => {
-        try {
-          const statusResponse = await fetch(`/api/campaigns/${campaignId}/companies`);
-          const statusData = await statusResponse.json();
-          if (statusData.companies) {
-            setCompanies(statusData.companies);
-          }
-        } catch (error) {
-          console.error('[Rapid] Polling error:', error);
+const rapidProcessCompany = async (companyId: number) => {
+  const startTime = Date.now();
+  let pollInterval: any;
+
+  try {
+    setProcessingCount((prev) => prev + 1);
+
+    // Start polling for real-time updates (backend marks as processing)
+    pollInterval = setInterval(async () => {
+      try {
+        const statusResponse = await fetch(
+          `/api/campaigns/${campaignId}/companies`
+        );
+
+        if (!statusResponse.ok) return;
+
+        const contentType = statusResponse.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) return;
+
+        const statusData = await statusResponse.json();
+        if (statusData.companies) {
+          setCompanies(statusData.companies);
         }
-      }, 1000); // Poll every 1 second for faster updates
-      
-      const response = await fetch(`/api/campaigns/${campaignId}/companies/${companyId}/rapid-process`, {
-        method: 'POST',
+      } catch (error) {
+        console.error("[Rapid] Polling error:", error);
+      }
+    }, 1000);
+
+    // Start backend processing
+    const response = await fetch(
+      `/api/campaigns/${campaignId}/companies/${companyId}/rapid-process`,
+      {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ companyId }),
-      });
-
-      // Stop polling once processing completes
-      clearInterval(pollInterval);
-      
-      const data = await response.json();
-      const processingTime = (Date.now() - startTime) / 1000;
-
-      // Track processing time for ETA
-      processingTimesRef.current.push(processingTime);
-      if (processingTimesRef.current.length > 10) {
-        processingTimesRef.current.shift(); // Keep only last 10
       }
-      const avgTime = processingTimesRef.current.reduce((a, b) => a + b, 0) / processingTimesRef.current.length;
-      setAvgProcessingTime(avgTime);
+    );
 
-      // Update company status locally with advanced detection info
-      setCompanies((prevCompanies) =>
-        prevCompanies.map((c) =>
-          c.id === companyId
-            ? {
-                ...c,
-                status: data.status,
-                screenshot_url: data.screenshotUrl || c.screenshot_url,
-                error_message: data.errorMessage ? getUserFriendlyError(data.errorMessage) : c.error_message,
-                // Add new fields for advanced detection
-                contact_method: data.contactMethod,
-                detection_method: data.method,
-                fields_filled: data.fieldsFilled,
-                contact_info: data.contactInfo,
-              }
-            : c
-        )
-      );
+    // Safely read response ONCE
+    let data: any = {};
+    const contentType = response.headers.get("content-type");
 
-      // Increment progress
-      setRapidAllProgress((prev) => prev + 1);
-
-      console.log(
-        `[Rapid All] Company ${companyId} completed: ${data.status} (${processingTime.toFixed(2)}s)`
-      );
-
-      return data;
-    } catch (error) {
-      console.error(`[Rapid All] Error processing company ${companyId}:`, error);
-      
-      // Mark as failed
-      setCompanies((prevCompanies) =>
-        prevCompanies.map((c) =>
-          c.id === companyId
-            ? { ...c, status: 'failed', error_message: getUserFriendlyError('Processing error') }
-            : c
-        )
-      );
-      
-      setRapidAllProgress((prev) => prev + 1);
-      
-      return { success: false, status: 'failed' };
-    } finally {
-      setProcessingCount((prev) => prev - 1);
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
     }
-  };
+
+    if (!response.ok) {
+      throw new Error(`Request failed (${response.status})`);
+    }
+
+    const processingTime = (Date.now() - startTime) / 1000;
+
+    // Track processing time for ETA
+    processingTimesRef.current.push(processingTime);
+    if (processingTimesRef.current.length > 10) {
+      processingTimesRef.current.shift();
+    }
+
+    const avgTime =
+      processingTimesRef.current.reduce((a, b) => a + b, 0) /
+      processingTimesRef.current.length;
+    setAvgProcessingTime(avgTime);
+
+    // Update company status locally (SAFE MERGE)
+    setCompanies((prevCompanies) =>
+      prevCompanies.map((c) =>
+        c.id === companyId
+          ? {
+              ...c,
+              status: data.status ?? c.status,
+              screenshot_url: data.screenshotUrl ?? c.screenshot_url,
+              error_message: data.errorMessage
+                ? getUserFriendlyError(data.errorMessage)
+                : c.error_message,
+              contact_method: data.contactMethod ?? c.contact_method,
+              detection_method: data.method ?? c.detection_method,
+              fields_filled: data.fieldsFilled ?? c.fields_filled,
+              contact_info: data.contactInfo ?? c.contact_info,
+            }
+          : c
+      )
+    );
+
+    // Increment progress
+    setRapidAllProgress((prev) => prev + 1);
+
+    console.log(
+      `[Rapid All] Company ${companyId} completed: ${data.status} (${processingTime.toFixed(
+        2
+      )}s)`
+    );
+
+    return data;
+  } catch (error) {
+    console.error(
+      `[Rapid All] Error processing company ${companyId}:`,
+      error
+    );
+
+    const friendlyError = getUserFriendlyError(
+      error instanceof Error ? error.message : String(error)
+    );
+
+    // Mark as failed
+    setCompanies((prevCompanies) =>
+      prevCompanies.map((c) =>
+        c.id === companyId
+          ? { ...c, status: "failed", error_message: friendlyError }
+          : c
+      )
+    );
+
+    setRapidAllProgress((prev) => prev + 1);
+
+    return { success: false, status: "failed" };
+  } finally {
+    // ✅ Polling stops ONLY when function is truly finished
+    if (pollInterval) {
+      clearInterval(pollInterval);
+    }
+
+    setProcessingCount((prev) => Math.max(0, prev - 1));
+  }
+};
+
 
   // Convert technical errors to user-friendly messages
   const getUserFriendlyError = (errorMessage: string): string => {
