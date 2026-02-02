@@ -487,7 +487,7 @@ const rapidProcessBatch = async (batchCompanies: Company[]) => {
               screenshot_url: result.screenshotUrl || c.screenshot_url,
               error_message: result.errorMessage
                 ? getUserFriendlyError(result.errorMessage)
-                : c.error_message,
+                : (result.status === 'completed' || result.status === 'contact_info_found' || result.status === 'success' ? null : c.error_message),
             };
           }
           return c;
@@ -599,9 +599,9 @@ const rapidProcessCompany = async (companyId: number) => {
               ...c,
               status: data.status ?? c.status,
               screenshot_url: data.screenshotUrl ?? c.screenshot_url,
-              error_message: data.errorMessage
-                ? getUserFriendlyError(data.errorMessage)
-                : c.error_message,
+              error_message: (data.errorMessage || data.error)
+                ? getUserFriendlyError(data.errorMessage || data.error)
+                : (data.status === 'completed' || data.status === 'success' || data.status === 'contact_info_found' ? null : c.error_message),
               contact_method: data.contactMethod ?? c.contact_method,
               detection_method: data.method ?? c.detection_method,
               fields_filled: data.fieldsFilled ?? c.fields_filled,
@@ -667,8 +667,8 @@ const rapidProcessCompany = async (companyId: number) => {
       return 'Processing failed. Please try again.';
     }
 
-    // Already user-friendly messages (short, no technical terms)
-    if (msg.length < 80 && 
+    // Already user-friendly messages (allow longer messages and URLs)
+    if (msg.length < 150 && 
         !msg.includes('error') && 
         !msg.includes('exception') && 
         !msg.includes('traceback') &&
@@ -679,44 +679,19 @@ const rapidProcessCompany = async (companyId: number) => {
         !msg.includes('keyerror') &&
         !msg.includes('timeouterror') &&
         !msg.includes('connectionerror') &&
-        !msg.includes('http') &&
         !msg.includes('status code') &&
         !msg.includes('statuscode') &&
-        !msg.includes('500') &&
-        !msg.includes('404') &&
-        !msg.includes('403') &&
-        !msg.includes('timeout') &&
         !msg.includes('net::') &&
-        !msg.includes('protocol') &&
         !msg.includes('playwright') &&
-        !msg.includes('browser') &&
         !msg.includes('chromium') &&
         !msg.includes('page.goto') &&
-        !msg.includes('navigation') &&
-        !msg.includes('event loop') &&
-        !msg.includes('async') &&
-        !msg.includes('await') &&
-        !msg.includes('promise') &&
         !msg.includes('undefined') &&
-        !msg.includes('null') &&
-        !msg.includes('none') &&
         !msg.includes('json') &&
-        !msg.includes('parse') &&
-        !msg.includes('serialize') &&
         !msg.includes('database') &&
         !msg.includes('sql') &&
-        !msg.includes('query') &&
-        !msg.includes('db.') &&
-        !msg.includes('session') &&
-        !msg.includes('commit') &&
-        !msg.includes('rollback') &&
-        !msg.includes('traceback') &&
-        !msg.includes('file') &&
-        !msg.includes('line') &&
         !msg.includes('at ') &&
-        !msg.includes('  ') && // No double spaces (often in stack traces)
-        !msg.match(/^\d+$/) && // Not just a number
-        msg.split(' ').length < 15) { // Not too long
+        !msg.match(/^\d+$/) &&
+        msg.split(' ').length < 25) { 
       return errorMessage;
     }
 
