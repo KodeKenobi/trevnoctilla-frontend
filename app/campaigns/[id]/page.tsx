@@ -660,6 +660,11 @@ const rapidProcessCompany = async (companyId: number) => {
       return 'Processing failed. Please try again.';
     }
 
+    // Log raw error for debugging
+    if (errorMessage && !errorMessage.includes('success')) {
+      console.log(`[Campaign Error] Raw message: "${errorMessage}"`);
+    }
+
     const msg = errorMessage.toLowerCase().trim();
 
     // Empty or very short messages
@@ -667,116 +672,18 @@ const rapidProcessCompany = async (companyId: number) => {
       return 'Processing failed. Please try again.';
     }
 
-    // Already user-friendly messages (short, no technical terms)
-    if (msg.length < 80 && 
-        !msg.includes('error') && 
-        !msg.includes('exception') && 
-        !msg.includes('traceback') &&
-        !msg.includes('stack') &&
-        !msg.includes('typeerror') &&
-        !msg.includes('attributeerror') &&
-        !msg.includes('valueerror') &&
-        !msg.includes('keyerror') &&
-        !msg.includes('timeouterror') &&
-        !msg.includes('connectionerror') &&
-        !msg.includes('http') &&
-        !msg.includes('status code') &&
-        !msg.includes('statuscode') &&
-        !msg.includes('500') &&
-        !msg.includes('404') &&
-        !msg.includes('403') &&
-        !msg.includes('timeout') &&
-        !msg.includes('net::') &&
-        !msg.includes('protocol') &&
-        !msg.includes('playwright') &&
-        !msg.includes('browser') &&
-        !msg.includes('chromium') &&
-        !msg.includes('page.goto') &&
-        !msg.includes('navigation') &&
-        !msg.includes('event loop') &&
-        !msg.includes('async') &&
-        !msg.includes('await') &&
-        !msg.includes('promise') &&
-        !msg.includes('undefined') &&
-        !msg.includes('null') &&
-        !msg.includes('none') &&
-        !msg.includes('json') &&
-        !msg.includes('parse') &&
-        !msg.includes('serialize') &&
-        !msg.includes('database') &&
-        !msg.includes('sql') &&
-        !msg.includes('query') &&
-        !msg.includes('db.') &&
-        !msg.includes('session') &&
-        !msg.includes('commit') &&
-        !msg.includes('rollback') &&
-        !msg.includes('traceback') &&
-        !msg.includes('file') &&
-        !msg.includes('line') &&
-        !msg.includes('at ') &&
-        !msg.includes('  ') && // No double spaces (often in stack traces)
-        !msg.match(/^\d+$/) && // Not just a number
-        msg.split(' ').length < 15) { // Not too long
-      return errorMessage;
+    if (msg.includes('attributeerror') || msg.includes('has no attribute')) {
+      return 'System error: Data missing or invalid format.';
     }
 
-    // Technical error patterns - convert to friendly messages
-    if (msg.includes('cannot run the event loop') || msg.includes('event loop is running')) {
-      return 'Processing temporarily unavailable. Please try again in a moment.';
+    if (msg.includes('connectionerror') || msg.includes('max retries exceeded')) {
+      return 'Network error: Could not reach the destination site.';
     }
-    
-    if (msg.includes('protocol error') || msg.includes('cannot navigate') || msg.includes('navigation failed')) {
-      return 'Could not access the website. The site may be down or blocking access.';
-    }
-    
+
     if (msg.includes('playwright') || msg.includes('browser') || msg.includes('chromium')) {
-      return 'Processing system busy. Please try again in a few seconds.';
+      return 'Processing system busy. Please try again in 5 seconds.';
     }
-    
-    if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('exceeded')) {
-      return 'Website took too long to respond. Please try again later.';
-    }
-    
-    if (msg.includes('connection') || msg.includes('net::') || msg.includes('econnrefused') || msg.includes('enotfound')) {
-      return 'Could not connect to the website. Please check the URL is correct.';
-    }
-    
-    if (msg.includes('contact form not found') || msg.includes('no contact form') || msg.includes('form not found')) {
-      return 'No contact form found on this website.';
-    }
-    
-    if (msg.includes('unable to submit') || msg.includes('could not submit') || msg.includes('submission failed')) {
-      return 'Could not submit the contact form. The website may have protection measures.';
-    }
-    
-    if (msg.includes('captcha') || msg.includes('recaptcha') || msg.includes('hcaptcha') || msg.includes('verification')) {
-      return 'CAPTCHA detected. This website requires manual verification.';
-    }
-    
-    if (msg.includes('403') || msg.includes('forbidden') || msg.includes('access denied')) {
-      return 'Access denied. This website is blocking automated requests.';
-    }
-    
-    if (msg.includes('404') || msg.includes('not found')) {
-      return 'Website page not found. Please check the URL is correct.';
-    }
-    
-    if (msg.includes('500') || msg.includes('internal server error')) {
-      return 'Website server error. Please try again later.';
-    }
-    
-    if (msg.includes('ssl') || msg.includes('certificate') || msg.includes('tls')) {
-      return 'Security certificate error. The website may have security issues.';
-    }
-    
-    if (msg.includes('dns') || msg.includes('domain') || msg.includes('hostname')) {
-      return 'Could not find the website. Please check the URL is correct.';
-    }
-    
-    if (msg.includes('rate limit') || msg.includes('too many requests')) {
-      return 'Too many requests. Please wait a moment and try again.';
-    }
-    
+
     if (msg.includes('blocked') || msg.includes('block')) {
       return 'Access blocked. This website is preventing automated access.';
     }
@@ -793,8 +700,8 @@ const rapidProcessCompany = async (companyId: number) => {
       return 'Data storage error. Please try again or contact support.';
     }
     
-    if (msg.includes('typeerror') || msg.includes('attributeerror') || msg.includes('valueerror') || msg.includes('keyerror')) {
-      return 'Processing error. Please try again.';
+    if (msg.includes('typeerror') || msg.includes('valueerror') || msg.includes('keyerror')) {
+      return 'Processing data error. Please try again.';
     }
     
     if (msg.includes('undefined') || msg.includes('null') || msg.includes('none')) {
@@ -809,20 +716,6 @@ const rapidProcessCompany = async (companyId: number) => {
       return 'File error. Please try again.';
     }
     
-    // Extract meaningful part from long error messages
-    if (msg.length > 200) {
-      // Try to find a meaningful sentence
-      const sentences = errorMessage.split(/[.!?]/).filter(s => s.trim().length > 20 && s.trim().length < 150);
-      if (sentences.length > 0) {
-        const meaningful = sentences[0].trim();
-        if (!meaningful.toLowerCase().includes('traceback') && 
-            !meaningful.toLowerCase().includes('file') &&
-            !meaningful.toLowerCase().includes('line')) {
-          return meaningful;
-        }
-      }
-    }
-
     // Default fallback - make it more friendly
     return 'Processing failed. Please try again or contact support if the problem continues.';
   };
