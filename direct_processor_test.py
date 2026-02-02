@@ -6,6 +6,9 @@ import time
 # Add backend to path
 sys.path.append(os.path.join(os.getcwd(), 'trevnoctilla-backend'))
 
+# Enable simulation mode for safe testing
+os.environ['SIMULATION_MODE'] = 'true'
+
 from services.fast_campaign_processor import FastCampaignProcessor
 from playwright.sync_api import sync_playwright
 
