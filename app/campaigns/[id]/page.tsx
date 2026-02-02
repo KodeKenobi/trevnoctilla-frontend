@@ -1654,7 +1654,7 @@ const rapidProcessCompany = async (companyId: number) => {
                         className="relative group/img"
                       >
                         <img
-                          src={company.screenshot_url}
+                          src={company.screenshot_url.startsWith('http') || company.screenshot_url.startsWith('/') ? company.screenshot_url : `/${company.screenshot_url}`}
                           alt="Proof"
                           className="w-12 h-12 object-cover border border-gray-800 group-hover/img:border-white transition-colors"
                         />
@@ -1792,7 +1792,7 @@ const rapidProcessCompany = async (companyId: number) => {
               <X className="w-4 h-4" />
             </button>
             <img
-              src={selectedScreenshot}
+              src={selectedScreenshot.startsWith('http') || selectedScreenshot.startsWith('/') ? selectedScreenshot : `/${selectedScreenshot}`}
               alt="Form submission proof"
               className="w-full h-auto"
             />
