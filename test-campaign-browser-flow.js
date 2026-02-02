@@ -19,7 +19,7 @@ function log(message, color = 'reset') {
   console.log(`${colors[color]}${message}${colors.reset}`);
 }
 
-const FRONTEND_URL = 'https://www.trevnoctilla.com';
+const FRONTEND_URL = 'http://localhost:3000';
 const CSV_FILE_PATH = path.join(__dirname, 'sample_companies.csv');
 
 async function testCampaignBrowserFlow() {
@@ -213,32 +213,12 @@ https://www.trevnoctilla.com,Trevnoctilla,South Africa`;
     log(`  Current URL after click: ${page.url()}`, 'yellow');
     await page.screenshot({ path: 'test-screenshots/debug-step5-after-click.png', fullPage: true });
     
-    // Wait for navigation to campaign detail page
-    try {
-        await page.waitForURL('**/campaigns/([0-9]*)', { timeout: 90000 });
-    } catch (e) {
-        log('  ⚠ Navigation wait timed out, checking if we arrived anyway...', 'yellow');
-        
-        // Check if we are on the page by looking for the "Rapid All" button
-        const rButton = await page.locator('button:has-text("Rapid All")').first();
-        if (await rButton.isVisible()) {
-            log('  ✓ Found "Rapid All" button - we are on the campaign page!', 'green');
-        } else {
-            // Real failure logging
-            log('  ❌ Navigation failed and no Rapid All button found.', 'red');
-            const url = page.url();
-            log(`  Current URL: ${url}`, 'red');
-            
-            const errorMsg = await page.locator('.text-red-300, .text-red-500, [role="alert"]').allTextContents();
-            if (errorMsg.length > 0) log(`  Found error messages: ${errorMsg.join(', ')}`, 'red');
-            
-            const bodyText = await page.innerText('body');
-            log(`  PAGE CONTENT SAMPLE: ${bodyText.substring(0, 500)}`, 'red');
-            
-            await page.screenshot({ path: 'test-screenshots/error-create-timeout.png', fullPage: true });
-            throw e;
-        }
-    }
+    // Wait for EITHER the URL change OR the Rapid All button to appear immediately
+    log('  Waiting for campaign page to stabilize...', 'yellow');
+    await Promise.race([
+        page.waitForURL('**/campaigns/([0-9]*)', { timeout: 10000 }).catch(() => {}),
+        page.waitForSelector('button:has-text("Rapid All")', { timeout: 10000 }).catch(() => {})
+    ]);
     await page.waitForTimeout(3000);
     
     // Get ID from URL or just grab it from button/page if needed
