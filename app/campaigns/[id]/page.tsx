@@ -492,58 +492,6 @@ const handleRapidProcess = async (companyId: number) => {
     return 'Processing failed. Please try again or contact support if the problem continues.';
   };
 
-  const processNextPending = useCallback(() => {
-    // Use refs to avoid stale closures (CRITICAL FIX)
-    const currentProgress = rapidAllProgressRef.current;
-    const currentLimit = customProcessingLimitRef.current;
-    const isRunning = isRapidAllRunningRef.current;
-
-    if (!isRunning) {
-      console.log("[Rapid All] Not running, skipping");
-      return;
-    }
-
-    // Check if we've hit the custom limit
-    if (currentLimit && currentProgress >= currentLimit) {
-      console.log(
-        `[Rapid All] Reached custom limit of ${currentLimit} companies (processed: ${currentProgress})`
-      );
-      setIsRapidAllRunning(false);
-      return;
-    }
-
-    // Get latest companies state
-    setCompanies((prevCompanies) => {
-      const nextPending = prevCompanies.find((c) => c.status === "pending");
-
-      if (nextPending) {
-        console.log(
-          `[Rapid All] Processing next pending company (${currentProgress + 1}/${currentLimit || 'unlimited'}):`,
-          nextPending.company_name
-        );
-        // Process using headless API (faster, no WebSocket)
-        rapidProcessCompany(nextPending.id).then(() => {
-          // After completion, check if we should continue
-          if (isRapidAllRunningRef.current) {
-            setTimeout(() => processNextPending(), 100);
-          }
-        });
-      } else {
-        // No more pending companies - stop Rapid All
-        console.log("[Rapid All] All companies processed. Campaign complete.");
-        setIsRapidAllRunning(false);
-        
-        // Check for failures and show retry modal
-        const failedCompanies = prevCompanies.filter(c => c.status === 'failed');
-        if (failedCompanies.length > 0) {
-          setTimeout(() => {
-            setRetryFailedModalOpen(true);
-          }, 500); // Small delay to ensure state is updated
-        }
-      }
-      return prevCompanies;
-    });
-  }, []); // Empty dependencies - use refs for values
 
   const startRapidAll = () => {
     const pendingCompanies = companies.filter((c) => c.status === "pending");
@@ -616,137 +564,40 @@ const handleRapidProcess = async (companyId: number) => {
     }
   };
 
-  // OLD PARALLEL APPROACH - KEPT FOR REFERENCE BUT NOT USED
-  const handleStartRapidAllWithLimit_OLD = async (limit: number) => {
-    const pendingCompanies = companies.filter((c) => c.status === "pending");
-
-    console.log(
-      `[Rapid All] Starting parallel batch processing for ${limit} companies (5 at a time)`
-    );
-    setCustomProcessingLimit(limit); // Set limit for tracking
-    setRapidAllTotal(Math.min(limit, pendingCompanies.length));
-    setRapidAllProgress(0);
-    setProcessingCount(0);
-    setAvgProcessingTime(0);
-    processingTimesRef.current = [];
-    setIsRapidAllRunning(true);
-    setRapidAllModalOpen(false);
-
-    // Start 5 companies in parallel (or fewer if less than 5 pending)
-    const PARALLEL_COUNT = 5;
-    const initialBatch = pendingCompanies.slice(0, Math.min(PARALLEL_COUNT, limit));
-    
-    console.log(`[Rapid All] Starting initial batch of ${initialBatch.length} companies`);
-    
-    for (const company of initialBatch) {
-      rapidProcessCompany(company.id).then(() => {
-        // After completion, start next pending if we should continue
-        if (isRapidAllRunningRef.current) {
-          setTimeout(() => {
-            const currentProgress = rapidAllProgressRef.current;
-            const currentLimit = customProcessingLimitRef.current;
-            
-            if (currentLimit && currentProgress >= currentLimit) {
-              // Reached limit, check if all processing is done
-              setProcessingCount((count) => {
-                if (count === 0) {
-                  setIsRapidAllRunning(false);
-                  console.log('[Rapid All] Limit reached. Stopping.');
-                }
-                return count;
-              });
-            } else {
-              // Start next pending
-              setCompanies((prevCompanies) => {
-                const nextPending = prevCompanies.find((c) => c.status === "pending");
-                if (nextPending) {
-                  rapidProcessCompany(nextPending.id);
-                } else {
-                  // No more pending, check if all done
-                  setProcessingCount((count) => {
-                    if (count === 0) {
-                      setIsRapidAllRunning(false);
-                      console.log('[Rapid All] All companies processed!');
-                    }
-                    return count;
-                  });
-                }
-                return prevCompanies;
-              });
-            }
-          }, 100);
-        }
-      });
-    }
-  };
 
   const handleRetryFailed = async () => {
-    setCompanies((prevCompanies) => {
-      const failedCompanies = prevCompanies.filter(c => c.status === 'failed');
+    const failedCompanies = companies.filter(c => c.status === 'failed');
+    
+    if (failedCompanies.length === 0) {
+      alert("No failed companies to retry");
+      return;
+    }
+
+    try {
+      setRetryFailedModalOpen(false);
+      setActivityLogs([]);
+      activityLogsRef.current = [];
       
-      if (failedCompanies.length === 0) {
-        alert("No failed companies to retry");
-        return prevCompanies;
-      }
+      // Connect to stream
+      connectToCampaignStream(campaignId);
 
-      // Reset failed companies to pending status
-      const updatedCompanies = prevCompanies.map((c) =>
-        c.status === 'failed' ? { ...c, status: 'pending', error_message: null } : c
-      );
+      // Trigger sequential processing for failed IDs
+      const failedIds = failedCompanies.map(c => c.id);
 
-      // Start rapid all processing for the failed companies
-      const limit = failedCompanies.length;
-      setCustomProcessingLimit(limit);
-      setRapidAllTotal(limit);
-      setRapidAllProgress(0);
-      setProcessingCount(0);
-      setAvgProcessingTime(0);
-      processingTimesRef.current = [];
-      setIsRapidAllRunning(true);
-      isRapidAllRunningRef.current = true;
-
-      // Group by URL for batch processing
-      const companyGroups: { [url: string]: Company[] } = {};
-      failedCompanies.forEach((company) => {
-        const url = company.website_url;
-        if (!companyGroups[url]) {
-          companyGroups[url] = [];
-        }
-        companyGroups[url].push(company);
+      const response = await fetch(`/api/campaigns/${campaignId}/rapid-process-batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_ids: failedIds }),
       });
 
-      const urlGroups = Object.entries(companyGroups);
+      if (!response.ok) throw new Error("Failed to start retry");
+      
+      console.log("[Retry] Started batch processing for failed companies");
 
-      // Process all URL groups
-      (async () => {
-        for (const [url, groupCompanies] of urlGroups) {
-          if (!isRapidAllRunningRef.current) break;
-
-          if (groupCompanies.length > 1) {
-            // BATCH: Multiple companies with same URL
-            await rapidProcessBatch(groupCompanies);
-          } else {
-            // SINGLE: Only one company for this URL
-            await rapidProcessCompany(groupCompanies[0].id);
-          }
-        }
-
-        setIsRapidAllRunning(false);
-        
-        // Check for failures again after retry
-        setTimeout(() => {
-          setCompanies((currentCompanies) => {
-            const stillFailed = currentCompanies.filter(c => c.status === 'failed');
-            if (stillFailed.length > 0) {
-              setRetryFailedModalOpen(true);
-            }
-            return currentCompanies;
-          });
-        }, 500);
-      })();
-
-      return updatedCompanies;
-    });
+    } catch (error: any) {
+      console.error("Failed to retry failed companies:", error);
+      alert(`Error: ${error.message}`);
+    }
   };
 
   const handleExport = async (options: any) => {
