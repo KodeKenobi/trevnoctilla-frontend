@@ -41,6 +41,7 @@ interface ActivityLog {
   company_name?: string;
   action: string;
   message: string;
+  user_message?: string;
   level: "info" | "success" | "warning" | "error";
   timestamp: string;
 }
@@ -364,7 +365,7 @@ export default function CampaignDetailPage() {
             activityLogsRef.current = newLogs;
             return newLogs;
           });
-          setRapidStatus(log.message);
+          setRapidStatus(log.user_message ?? log.message);
           if (log.company_name) setRapidCurrentCompany(log.company_name);
 
           // Auto-scroll logs
@@ -1037,58 +1038,60 @@ export default function CampaignDetailPage() {
                 <div className="flex items-center gap-2">
                   <Activity className="w-3.5 h-3.5 text-blue-400" />
                   <span className="text-[10px] font-bold text-white uppercase tracking-widest">
-                    Real-time Stream
+                    What&apos;s happening
                   </span>
                 </div>
-                <div className="text-[9px] font-mono text-white/40 animate-pulse text-right">
-                  Receiving Data...
-                </div>
+                {activityLogs.length > 0 && (
+                  <span className="text-[9px] text-white/40">
+                    {activityLogs.length} update
+                    {activityLogs.length !== 1 ? "s" : ""}
+                  </span>
+                )}
               </div>
               <div
                 ref={logContainerRef}
-                className="flex-1 overflow-y-auto p-4 font-mono space-y-2 scrollbar-hide"
+                className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-hide"
               >
                 {activityLogs.length === 0 ? (
                   <div className="h-full flex items-center justify-center">
-                    <p className="text-[10px] text-white/20 italic">
-                      Awaiting events from server...
+                    <p className="text-sm text-white/50 text-center px-4">
+                      When you run &quot;Rapid All&quot; or process a company,
+                      friendly status updates will appear here.
                     </p>
                   </div>
                 ) : (
                   activityLogs.map((log, i) => (
                     <div
                       key={i}
-                      className="flex gap-2 text-[10px] animate-in fade-in slide-in-from-left-2 duration-300"
+                      className="flex gap-2 text-sm animate-in fade-in slide-in-from-left-2 duration-300"
                     >
-                      <span className="text-white/20 shrink-0">
-                        [
+                      <span className="text-white/30 shrink-0 tabular-nums">
                         {new Date(log.timestamp).toLocaleTimeString([], {
                           hour12: false,
                           hour: "2-digit",
                           minute: "2-digit",
                           second: "2-digit",
                         })}
-                        ]
                       </span>
                       {log.company_name && (
-                        <span className="text-blue-500 shrink-0">
-                          [{log.company_name}]
+                        <span className="text-blue-400 shrink-0 font-medium">
+                          {log.company_name}
                         </span>
                       )}
                       <span
                         className={`
                         ${
                           log.level === "error"
-                            ? "text-rose-400 font-bold"
+                            ? "text-rose-400 font-medium"
                             : log.level === "success"
                             ? "text-emerald-400"
                             : log.level === "warning"
                             ? "text-amber-400"
-                            : "text-white/80"
+                            : "text-white/90"
                         }
                       `}
                       >
-                        {log.message}
+                        {log.user_message ?? log.message}
                       </span>
                     </div>
                   ))
