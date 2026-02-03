@@ -24,6 +24,7 @@ import {
   LayoutDashboard,
   Crown,
   Zap,
+  Brain,
 } from "lucide-react";
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
@@ -37,6 +38,7 @@ const adminNavItems = [
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/automations", label: "Automations", icon: Zap },
+  { href: "/admin/brain", label: "Brain", icon: Brain },
   { href: "/admin/backups", label: "Backups", icon: Database },
   { href: "/admin/testing", label: "Testing", icon: TestTube },
   { href: "/admin/settings", label: "Settings", icon: Settings },
@@ -66,7 +68,9 @@ export default function AdminLayout({
       // Redirect based on role
       if (user.role === "admin") {
         // Regular admin (enterprise users) should go to enterprise dashboard
-        console.log("Redirecting admin (enterprise) from admin layout to /enterprise");
+        console.log(
+          "Redirecting admin (enterprise) from admin layout to /enterprise"
+        );
         router.push("/enterprise");
       } else if (user.role === "user") {
         // Regular users should go to regular dashboard

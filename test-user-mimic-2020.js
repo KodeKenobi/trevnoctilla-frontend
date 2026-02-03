@@ -32,8 +32,8 @@ async function runMimicryTest() {
     log("Starting browser...", "cyan");
 
     browser = await chromium.launch({
-      headless: false, // Visual verification in the user's environment
-      slowMo: 1000, // Slow down for better visibility
+      headless: true, // Run unattended for script check
+      slowMo: 200,
     });
 
     const context = await browser.newContext({
@@ -306,6 +306,60 @@ async function runMimicryTest() {
       "  📸 FINAL SCREENSHOT SAVED: mimic-screenshots/9-final-table-result.png",
       "bright"
     );
+
+    // Check what the API actually returns (definitive: backend sending screenshot_url or not)
+    const campaignIdMatch = page.url().match(/\/campaigns\/(\d+)/);
+    const campaignId = campaignIdMatch ? campaignIdMatch[1] : null;
+    if (campaignId) {
+      try {
+        const apiUrl = `${BASE_URL}/api/campaigns/${campaignId}/companies`;
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        const companies = data.companies || [];
+        log("  [API] Companies from backend:", "cyan");
+        for (const c of companies) {
+          const hasUrl = !!(c.screenshot_url || c.screenshotUrl);
+          log(
+            `    id=${c.id} status=${c.status} screenshot_url=${
+              hasUrl ? "SET" : "NULL"
+            } ${c.screenshot_url || c.screenshotUrl || ""}`,
+            hasUrl ? "green" : "red"
+          );
+        }
+        if (
+          companies.length > 0 &&
+          !companies.some((c) => c.screenshot_url || c.screenshotUrl)
+        ) {
+          log(
+            "  ❌ BACKEND RETURNED NO screenshot_url FOR ANY COMPANY (fix backend/upload)",
+            "red"
+          );
+        }
+      } catch (e) {
+        log(`  [API] Failed to fetch companies: ${e.message}`, "yellow");
+      }
+    }
+
+    // Check if company screenshot img is visible in UI
+    const screenshotImgs = await page
+      .locator(
+        'img[src*="screenshot"], img[src*="supabase"], img[src*="campaign_"]'
+      )
+      .all();
+    let visibleCount = 0;
+    for (const img of screenshotImgs) {
+      const src = await img.getAttribute("src").catch(() => "");
+      const visible = await img.isVisible().catch(() => false);
+      if (src && visible) visibleCount++;
+    }
+    if (visibleCount > 0) {
+      log(`  ✅ SCREENSHOT IN UI: yes (${visibleCount} img visible)`, "green");
+    } else {
+      log(
+        "  ❌ SCREENSHOT IN UI: no (no img with screenshot/supabase src visible)",
+        "red"
+      );
+    }
 
     log("\n=== TEST COMPLETED SUCCESSFULLY ===", "green");
   } catch (error) {

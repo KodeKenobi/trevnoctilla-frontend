@@ -96,7 +96,7 @@ export default function CampaignDetailPage() {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(100);
   const [rapidAllModalOpen, setRapidAllModalOpen] = useState(false);
   const [retryFailedModalOpen, setRetryFailedModalOpen] = useState(false);
   const [customProcessingLimit, setCustomProcessingLimit] = useState<
@@ -367,12 +367,6 @@ export default function CampaignDetailPage() {
           });
           setRapidStatus(log.user_message ?? log.message);
           if (log.company_name) setRapidCurrentCompany(log.company_name);
-
-          // Auto-scroll logs
-          if (logContainerRef.current) {
-            logContainerRef.current.scrollTop =
-              logContainerRef.current.scrollHeight;
-          }
         }
 
         if (message.type === "company_completed") {
@@ -939,9 +933,9 @@ export default function CampaignDetailPage() {
 
         {/* Mission Control Dashboard */}
         {(isRapidAllRunning || processingCompanyId !== null) && (
-          <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="mb-8 grid grid-cols-1 gap-6">
             {/* Main Progress & Status */}
-            <div className="lg:col-span-2 border border-blue-500/30 rounded-lg p-6 bg-gradient-to-br from-blue-500/10 via-black to-purple-500/10 backdrop-blur-sm relative overflow-hidden">
+            <div className="border border-blue-500/30 rounded-lg p-6 bg-gradient-to-br from-blue-500/10 via-black to-purple-500/10 backdrop-blur-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
@@ -1029,73 +1023,6 @@ export default function CampaignDetailPage() {
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Real-time Activity Log */}
-            <div className="border border-white/10 rounded-lg flex flex-col bg-black/40 backdrop-blur-sm overflow-hidden h-[320px]">
-              <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between bg-white/5">
-                <div className="flex items-center gap-2">
-                  <Activity className="w-3.5 h-3.5 text-blue-400" />
-                  <span className="text-[10px] font-bold text-white uppercase tracking-widest">
-                    What&apos;s happening
-                  </span>
-                </div>
-                {activityLogs.length > 0 && (
-                  <span className="text-[9px] text-white/40">
-                    {activityLogs.length} update
-                    {activityLogs.length !== 1 ? "s" : ""}
-                  </span>
-                )}
-              </div>
-              <div
-                ref={logContainerRef}
-                className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-hide"
-              >
-                {activityLogs.length === 0 ? (
-                  <div className="h-full flex items-center justify-center">
-                    <p className="text-sm text-white/50 text-center px-4">
-                      When you run &quot;Rapid All&quot; or process a company,
-                      friendly status updates will appear here.
-                    </p>
-                  </div>
-                ) : (
-                  activityLogs.map((log, i) => (
-                    <div
-                      key={i}
-                      className="flex gap-2 text-sm animate-in fade-in slide-in-from-left-2 duration-300"
-                    >
-                      <span className="text-white/30 shrink-0 tabular-nums">
-                        {new Date(log.timestamp).toLocaleTimeString([], {
-                          hour12: false,
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })}
-                      </span>
-                      {log.company_name && (
-                        <span className="text-blue-400 shrink-0 font-medium">
-                          {log.company_name}
-                        </span>
-                      )}
-                      <span
-                        className={`
-                        ${
-                          log.level === "error"
-                            ? "text-rose-400 font-medium"
-                            : log.level === "success"
-                            ? "text-emerald-400"
-                            : log.level === "warning"
-                            ? "text-amber-400"
-                            : "text-white/90"
-                        }
-                      `}
-                      >
-                        {log.user_message ?? log.message}
-                      </span>
-                    </div>
-                  ))
-                )}
               </div>
             </div>
           </div>
@@ -1367,15 +1294,49 @@ export default function CampaignDetailPage() {
 
                   {/* Actions */}
                   <div className="flex items-center justify-end gap-3">
-                    {company.status === "completed" ? (
-                      // Completed: Show non-clickable Complete button
+                    {company.status === "completed" ||
+                    company.status === "contact_info_found" ? (
                       <>
                         <button
                           disabled
                           className="flex items-center gap-1.5 px-4 py-1.5 text-xs text-emerald-400 bg-emerald-400/10 border border-emerald-400/30 cursor-default"
                         >
                           <CheckCircle className="w-3.5 h-3.5" />
-                          Complete
+                          {company.status === "contact_info_found"
+                            ? "Email sent"
+                            : "Complete"}
+                        </button>
+                        <div
+                          className={`w-2 h-2 rounded-full ${getStatusDotColor(
+                            company.status
+                          )}`}
+                        />
+                      </>
+                    ) : company.status === "failed" ? (
+                      <>
+                        <button
+                          onClick={emergencyStopAll}
+                          disabled={
+                            isStopping ||
+                            (!isRapidAllRunning && processingCompanyId === null)
+                          }
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Stop
+                        </button>
+                        <button
+                          onClick={() => handleRapidProcess(company.id)}
+                          disabled={
+                            processingCompanyId !== null || isRapidAllRunning
+                          }
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-black bg-white hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-600"
+                        >
+                          {processingCompanyId === company.id ? (
+                            <Loader className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          )}
+                          Retry
                         </button>
                         <div
                           className={`w-2 h-2 rounded-full ${getStatusDotColor(
@@ -1384,38 +1345,7 @@ export default function CampaignDetailPage() {
                         />
                       </>
                     ) : (
-                      // Not completed: Show View and Rapid buttons
                       <>
-                        <button
-                          onClick={() =>
-                            router.push(
-                              `/campaigns/${campaignId}/monitor?company=${company.id}`
-                            )
-                          }
-                          disabled={
-                            processingCompanyId !== null &&
-                            processingCompanyId !== company.id
-                          }
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white hover:text-white hover:bg-white/10 transition-colors border border-white/20 hover:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleRapidProcess(company.id)}
-                          disabled={
-                            processingCompanyId !== null ||
-                            company.status === "processing"
-                          }
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-black bg-white hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-600"
-                        >
-                          {processingCompanyId === company.id ? (
-                            <Loader className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Activity className="w-3.5 h-3.5" />
-                          )}
-                          Rapid
-                        </button>
                         <div
                           className={`w-2 h-2 rounded-full ${getStatusDotColor(
                             company.status
