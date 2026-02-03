@@ -1349,6 +1349,7 @@ export default function CampaignDetailPage() {
                               ? "anonymous"
                               : undefined
                           }
+                          referrerPolicy="no-referrer"
                         />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
                           <ImageIcon className="w-4 h-4 text-white" />
