@@ -134,6 +134,18 @@ async function runMimicryTest() {
     const rapidAllBtn = page.locator('button:has-text("Rapid All")').first();
     await rapidAllBtn.click();
     
+    // NEW: Handle the Start Processing Limit modal
+    try {
+        log('  🛡️  Waiting for Limit Modal...', 'yellow');
+        const startBtn = page.locator('button:has-text("Start ("), button:has-text("Start")').first();
+        if (await startBtn.isVisible({ timeout: 5000 })) {
+            log('  🚀 Clicking Start in modal...', 'green');
+            await startBtn.click();
+        }
+    } catch (e) {
+        log('  (Modal did not appear or was already handled)', 'yellow');
+    }
+
     log('Waiting for processing to complete...', 'yellow');
     
     // Mimic user watching the table
