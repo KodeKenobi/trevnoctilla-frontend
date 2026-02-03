@@ -531,7 +531,10 @@ const handleRapidProcess = async (companyId: number) => {
         body: JSON.stringify({ company_ids: pendingIds }),
       });
 
-      if (!response.ok) throw new Error("Failed to start campaign");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to start campaign");
+      }
       
       const data = await response.json();
       console.log("[Rapid All] Started:", data);
@@ -553,7 +556,10 @@ const handleRapidProcess = async (companyId: number) => {
         method: 'POST',
       });
 
-      if (!response.ok) throw new Error("Failed to stop campaign");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to process company");
+      }
       
       console.log("[Stop] Stopping requested");
       
@@ -590,7 +596,10 @@ const handleRapidProcess = async (companyId: number) => {
         body: JSON.stringify({ company_ids: failedIds }),
       });
 
-      if (!response.ok) throw new Error("Failed to start retry");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to start retry");
+      }
       
       console.log("[Retry] Started batch processing for failed companies");
 
