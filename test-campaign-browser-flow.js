@@ -33,7 +33,7 @@ async function testCampaignBrowserFlow() {
 
     // Launch browser in headed mode so you can see it
     browser = await chromium.launch({
-      headless: false, // Set to false to see the browser
+      headless: true, // Run headlessly in this environment
       slowMo: 1000, // Slow down by 1 second between actions
     });
 
@@ -87,10 +87,9 @@ async function testCampaignBrowserFlow() {
     log('\n[Step 3/6] Uploading CSV file...', 'cyan');
     
     // Ensure CSV exists with requested companies
-    log('Creating sample CSV with 2020innovation and Trevnoctilla...', 'yellow');
-    const sampleCSV = `website_url,company_name,country
-https://2020innovation.com,2020 Innovation,United Kingdom
-https://www.trevnoctilla.com,Trevnoctilla,South Africa`;
+    log('Creating sample CSV with 2020innovation...', 'yellow');
+    const sampleCSV = `website_url,company_name
+https://www.2020innovation.com,2020 Innovation`;
     fs.writeFileSync(CSV_FILE_PATH, sampleCSV);
 
     // Upload file

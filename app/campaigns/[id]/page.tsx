@@ -36,6 +36,15 @@ interface Campaign {
   created_at: string;
 }
 
+interface ActivityLog {
+  company_id?: number;
+  company_name?: string;
+  action: string;
+  message: string;
+  level: 'info' | 'success' | 'warning' | 'error';
+  timestamp: string;
+}
+
 interface Company {
   id: number;
   company_name: string;
@@ -95,6 +104,10 @@ export default function CampaignDetailPage() {
   const [processingCount, setProcessingCount] = useState(0); // How many are currently processing
   const [avgProcessingTime, setAvgProcessingTime] = useState(0); // Average time per company
   const [filterMethod, setFilterMethod] = useState<string>("all");
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  const [isStopping, setIsStopping] = useState(false);
+  const activityLogsRef = useRef<ActivityLog[]>([]);
+  const logContainerRef = useRef<HTMLDivElement>(null);
   
   // Use refs to avoid stale closures in processNextPending
   const rapidAllProgressRef = useRef(0);
@@ -266,112 +279,119 @@ export default function CampaignDetailPage() {
     }
   };
 
-const handleRapidProcess = async (companyId: number) => {
-  const currentCompanyId = companyId;
+const connectToCampaignStream = (id: string) => {
+  if (activeWebSocket) {
+    activeWebSocket.close();
+  }
 
-  try {
-    setProcessingCompanyId(currentCompanyId);
+  const wsProtocol = window.location.protocol === "https:" ? "wss:" : "wss:";
+  const backendUrl = "web-production-737b.up.railway.app";
+  const wsUrl = `${wsProtocol}//${backendUrl}/ws/campaign/${id}`;
 
-    const company = companies.find((c) => c.id === currentCompanyId);
-    setRapidCurrentCompany(company?.company_name || `Company ${currentCompanyId}`);
-    setRapidProgress(0);
-    setRapidStatus("Starting...");
+  console.log("[Stream] Connecting to Campaign WebSocket:", wsUrl);
+  const ws = new WebSocket(wsUrl);
+  setActiveWebSocket(ws);
 
-    const response = await fetch(`/api/campaigns/companies/${currentCompanyId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "processing" }),
-    });
+  ws.onopen = () => {
+    console.log("[Stream] Connected to campaign stream");
+    setRapidStatus("System Connected");
+  };
 
-    if (!response.ok) {
-      throw new Error("Failed to start rapid processing");
-    }
-
-    const cleanup = () => {
-      setActiveWebSocket(null);
-      setProcessingCompanyId(null);
-      setRapidProgress(0);
-      setRapidStatus("");
-      setRapidCurrentCompany("");
-    };
-
-    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "wss:";
-    const backendUrl = "web-production-737b.up.railway.app";
-    const wsUrl = `${wsProtocol}//${backendUrl}/ws/campaign/${campaignId}/monitor/${currentCompanyId}`;
-
-    console.log("[Rapid] Connecting to WebSocket:", wsUrl);
-    const ws = new WebSocket(wsUrl);
-    setActiveWebSocket(ws);
-
-    ws.onopen = () => {
-      setRapidStatus("Connected");
-      setRapidProgress(10);
-    };
-
-    ws.onmessage = (event) => {
+  ws.onmessage = (event) => {
+    try {
       const message = JSON.parse(event.data);
+      console.log("[Stream] Message received:", message.type);
 
-      if (message.type === "log") {
-        const log = message.data;
-        setRapidStatus(log.message || log.action);
-
-        if (log.action?.includes("Navigation")) setRapidProgress(20);
-        else if (log.action?.includes("Contact")) setRapidProgress(40);
-        else if (log.action?.includes("Form")) setRapidProgress(60);
-        else if (log.action?.includes("Submit")) setRapidProgress(80);
-        else if (log.action?.includes("Screenshot")) setRapidProgress(90);
+      if (message.type === "campaign_start") {
+        setIsRapidAllRunning(true);
+        setRapidAllTotal(message.data.total_companies || 0);
+        setRapidAllProgress(0);
+        setActivityLogs([]);
+        activityLogsRef.current = [];
       }
 
-      if (message.type === "completed") {
-        setRapidProgress(100);
-        setRapidStatus("Completed!");
-
-        ws.close();
-        cleanup();
-
-        setCompanies((prev) =>
-          prev.map((c) =>
-            c.id === currentCompanyId ? { ...c, status: "completed" } : c
-          )
-        );
-
-        if (isRapidAllRunningRef.current) {
-          setRapidAllProgress((prev) => prev + 1);
-          setTimeout(() => processNextPending(), 200);
+      if (message.type === "activity") {
+        const log: ActivityLog = message.data;
+        setActivityLogs(prev => {
+          const newLogs = [...prev, log].slice(-50); // Keep last 50
+          activityLogsRef.current = newLogs;
+          return newLogs;
+        });
+        setRapidStatus(log.message);
+        if (log.company_name) setRapidCurrentCompany(log.company_name);
+        
+        // Auto-scroll logs
+        if (logContainerRef.current) {
+          logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
         }
+      }
+
+      if (message.type === "company_completed") {
+        const { company_id, status, screenshot_url, progress } = message.data;
+        setCompanies(prev => prev.map(c => 
+          c.id === company_id ? { ...c, status, screenshot_url } : c
+        ));
+        setRapidAllProgress(prev => prev + 1);
+        setRapidProgress(progress);
+      }
+
+      if (message.type === "campaign_complete") {
+        setIsRapidAllRunning(false);
+        setRapidStatus("Campaign Complete!");
+        fetchCampaignDetails(true);
+        // ws.close(); // Keep open to see final logs?
+      }
+
+      if (message.type === "campaign_stopped") {
+        setIsRapidAllRunning(false);
+        setIsStopping(false);
+        setRapidStatus("Stopped");
+        fetchCampaignDetails(true);
       }
 
       if (message.type === "error") {
-        ws.close();
-        cleanup();
-
-        setCompanies((prev) =>
-          prev.map((c) =>
-            c.id === currentCompanyId ? { ...c, status: "failed" } : c
-          )
-        );
-
-        if (isRapidAllRunningRef.current) {
-          setRapidAllProgress((prev) => prev + 1);
-          setTimeout(() => processNextPending(), 200);
-        }
+        console.error("[Stream] Error:", message.data);
+        setRapidStatus(`Error: ${message.data.message}`);
       }
-    };
+    } catch (e) {
+      console.error("[Stream] Failed to parse message:", e);
+    }
+  };
 
-    ws.onerror = () => {
-      ws.close();
-      cleanup();
-      alert("Failed to process company");
-    };
+  ws.onclose = () => {
+    console.log("[Stream] WebSocket disconnected");
+    setActiveWebSocket(null);
+  };
+
+  ws.onerror = (err) => {
+    console.error("[Stream] WebSocket error:", err);
+  };
+
+  return ws;
+};
+
+const handleRapidProcess = async (companyId: number) => {
+  // Update single process to use new sequential logic but only for this company
+  try {
+    setProcessingCompanyId(companyId);
+    setRapidCurrentCompany(companies.find(c => c.id === companyId)?.company_name || 'Company');
+    
+    // Connect to stream first
+    connectToCampaignStream(campaignId);
+
+    // Call batch endpoint with just this ID
+    const response = await fetch(`/api/campaigns/${campaignId}/rapid-process-batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ company_ids: [companyId] }),
+    });
+
+    if (!response.ok) throw new Error("Failed to start processing");
+    
   } catch (error: any) {
     console.error("Failed to start rapid processing:", error);
-    alert(`Failed to start processing: ${error.message}`);
-
-    setActiveWebSocket(null);
+    alert(`Error: ${error.message}`);
     setProcessingCompanyId(null);
-    setRapidProgress(0);
-    setRapidStatus("");
-    setRapidCurrentCompany("");
   }
 };
 
@@ -404,254 +424,6 @@ const handleRapidProcess = async (companyId: number) => {
     fetchCampaignDetails();
   };
 
-  // BATCH processing: Visit website ONCE, submit multiple forms
-const rapidProcessBatch = async (batchCompanies: Company[]) => {
-  const startTime = Date.now();
-  const companyIds = batchCompanies.map(c => c.id);
-  const websiteUrl = batchCompanies[0].website_url;
-
-  let pollInterval: NodeJS.Timeout | null = null;
-
-  console.log(`[Batch] Processing ${batchCompanies.length} companies with same URL: ${websiteUrl}`);
-
-  try {
-    setProcessingCount((prev) => prev + batchCompanies.length);
-
-    // Start polling for real-time updates
-    pollInterval = setInterval(async () => {
-      try {
-        const statusResponse = await fetch(`/api/campaigns/${campaignId}/companies`);
-        const statusData = await statusResponse.json();
-
-        if (statusData.companies) {
-          setCompanies(statusData.companies);
-
-          const batchProcessed = statusData.companies.filter(
-            (c: Company) =>
-              companyIds.includes(c.id) &&
-              (c.status === 'completed' || c.status === 'failed')
-          ).length;
-
-          if (batchProcessed > 0) {
-            console.log(
-              `[Batch] Real-time progress: ${batchProcessed}/${batchCompanies.length} completed`
-            );
-          }
-        }
-      } catch (error) {
-        console.error('[Batch] Polling error:', error);
-      }
-    }, 1000);
-
-    const response = await fetch(
-      `/api/campaigns/${campaignId}/rapid-process-batch`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ company_ids: companyIds }),
-      }
-    );
-
-    let data: any = {};
-    const contentType = response.headers.get('content-type');
-
-    if (contentType && contentType.includes('application/json')) {
-      data = await response.json();
-    }
-
-    if (!response.ok) {
-      throw new Error(`Batch request failed (${response.status})`);
-    }
-
-    const processingTime = (Date.now() - startTime) / 1000;
-
-    processingTimesRef.current.push(processingTime);
-    if (processingTimesRef.current.length > 10) {
-      processingTimesRef.current.shift();
-    }
-
-    const avgTime =
-      processingTimesRef.current.reduce((a, b) => a + b, 0) /
-      processingTimesRef.current.length;
-
-    setAvgProcessingTime(avgTime);
-
-    if (data.results && Array.isArray(data.results)) {
-      setCompanies((prevCompanies) =>
-        prevCompanies.map((c) => {
-          const result = data.results.find((r: any) => r.companyId === c.id);
-          if (result) {
-            return {
-              ...c,
-              status: result.status,
-              screenshot_url: result.screenshotUrl || c.screenshot_url,
-              error_message: result.errorMessage
-                ? getUserFriendlyError(result.errorMessage)
-                : c.error_message,
-            };
-          }
-          return c;
-        })
-      );
-    }
-
-    setRapidAllProgress((prev) => prev + batchCompanies.length);
-
-    console.log(
-      `[Batch] Completed ${batchCompanies.length} companies in ${processingTime.toFixed(2)}s`
-    );
-
-    return data;
-  } catch (error) {
-    console.error(`[Batch] Error processing batch:`, error);
-
-    setCompanies((prevCompanies) =>
-      prevCompanies.map((c) =>
-        companyIds.includes(c.id)
-          ? { ...c, status: 'failed', error_message: getUserFriendlyError('Processing error') }
-          : c
-      )
-    );
-
-    setRapidAllProgress((prev) => prev + batchCompanies.length);
-
-    return { success: false, status: 'failed' };
-  } finally {
-    if (pollInterval) {
-      clearInterval(pollInterval);
-    }
-    setProcessingCount((prev) => prev - batchCompanies.length);
-  }
-};
-
-
-  // Headless rapid processing (no WebSocket, faster) - for single companies
-const rapidProcessCompany = async (companyId: number) => {
-  const startTime = Date.now();
-  let pollInterval: any;
-
-  try {
-    setProcessingCount((prev) => prev + 1);
-
-    // Start polling for real-time updates (backend marks as processing)
-    pollInterval = setInterval(async () => {
-      try {
-        const statusResponse = await fetch(
-          `/api/campaigns/${campaignId}/companies`
-        );
-
-        if (!statusResponse.ok) return;
-
-        const contentType = statusResponse.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) return;
-
-        const statusData = await statusResponse.json();
-        if (statusData.companies) {
-          setCompanies(statusData.companies);
-        }
-      } catch (error) {
-        console.error("[Rapid] Polling error:", error);
-      }
-    }, 1000);
-
-    // Start backend processing
-    const response = await fetch(
-      `/api/campaigns/${campaignId}/companies/${companyId}/rapid-process`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ companyId }),
-      }
-    );
-
-    // Safely read response ONCE
-    let data: any = {};
-    const contentType = response.headers.get("content-type");
-
-    if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
-    }
-
-    if (!response.ok) {
-      throw new Error(`Request failed (${response.status})`);
-    }
-
-    const processingTime = (Date.now() - startTime) / 1000;
-
-    // Track processing time for ETA
-    processingTimesRef.current.push(processingTime);
-    if (processingTimesRef.current.length > 10) {
-      processingTimesRef.current.shift();
-    }
-
-    const avgTime =
-      processingTimesRef.current.reduce((a, b) => a + b, 0) /
-      processingTimesRef.current.length;
-    setAvgProcessingTime(avgTime);
-
-    // Update company status locally (SAFE MERGE)
-    setCompanies((prevCompanies) =>
-      prevCompanies.map((c) =>
-        c.id === companyId
-          ? {
-              ...c,
-              status: data.status ?? c.status,
-              screenshot_url: data.screenshotUrl ?? c.screenshot_url,
-              error_message: data.errorMessage
-                ? getUserFriendlyError(data.errorMessage)
-                : c.error_message,
-              contact_method: data.contactMethod ?? c.contact_method,
-              detection_method: data.method ?? c.detection_method,
-              fields_filled: data.fieldsFilled ?? c.fields_filled,
-              contact_info: data.contactInfo ?? c.contact_info,
-            }
-          : c
-      )
-    );
-
-    // Increment progress
-    setRapidAllProgress((prev) => prev + 1);
-
-    console.log(
-      `[Rapid All] Company ${companyId} completed: ${data.status} (${processingTime.toFixed(
-        2
-      )}s)`
-    );
-
-    return data;
-  } catch (error) {
-    console.error(
-      `[Rapid All] Error processing company ${companyId}:`,
-      error
-    );
-
-    const friendlyError = getUserFriendlyError(
-      error instanceof Error ? error.message : String(error)
-    );
-
-    // Mark as failed
-    setCompanies((prevCompanies) =>
-      prevCompanies.map((c) =>
-        c.id === companyId
-          ? { ...c, status: "failed", error_message: friendlyError }
-          : c
-      )
-    );
-
-    setRapidAllProgress((prev) => prev + 1);
-
-    return { success: false, status: "failed" };
-  } finally {
-    // ✅ Polling stops ONLY when function is truly finished
-    if (pollInterval) {
-      clearInterval(pollInterval);
-    }
-
-    setProcessingCount((prev) => Math.max(0, prev - 1));
-  }
-};
 
 
   // Convert technical errors to user-friendly messages
@@ -792,73 +564,56 @@ const rapidProcessCompany = async (companyId: number) => {
   };
 
   const handleStartRapidAllWithLimit = async (limit: number) => {
-    const pendingCompanies = companies.filter((c) => c.status === "pending").slice(0, limit);
+    try {
+      setRapidAllModalOpen(false);
+      setActivityLogs([]);
+      activityLogsRef.current = [];
+      
+      // Connect to stream
+      connectToCampaignStream(campaignId);
 
-    // GROUP COMPANIES BY URL FOR BATCH PROCESSING
-    const companyGroups: { [url: string]: Company[] } = {};
-    pendingCompanies.forEach((company) => {
-      const url = company.website_url;
-      if (!companyGroups[url]) {
-        companyGroups[url] = [];
-      }
-      companyGroups[url].push(company);
-    });
+      // Trigger sequential processing
+      // We don't need to specify IDs if we want to process all pending, 
+      // but we use limit to slice for now if needed.
+      const pendingIds = companies.filter(c => c.status === 'pending').slice(0, limit).map(c => c.id);
 
-    const urlGroups = Object.entries(companyGroups);
-    const batchCount = urlGroups.filter(([_, companies]) => companies.length > 1).length;
-
-    console.log(`[Rapid All] Starting SMART BATCH processing for ${pendingCompanies.length} companies`);
-    console.log(`[Rapid All] Unique URLs: ${urlGroups.length}, Batches: ${batchCount}`);
-    
-    urlGroups.forEach(([url, companyList]) => {
-      if (companyList.length > 1) {
-        console.log(`[Batch] ${url} → ${companyList.length} companies (1 visit, ${companyList.length} submissions)`);
-      }
-    });
-
-    setCustomProcessingLimit(limit);
-    setRapidAllTotal(pendingCompanies.length);
-    setRapidAllProgress(0);
-    setProcessingCount(0);
-    setAvgProcessingTime(0);
-    processingTimesRef.current = [];
-    setIsRapidAllRunning(true);
-    isRapidAllRunningRef.current = true; // CRITICAL: Update ref immediately before loop
-    setRapidAllModalOpen(false);
-
-    // Process all URL groups (batches for duplicates, single for unique)
-    console.log(`[Rapid All] Processing ${urlGroups.length} URL groups`);
-    
-    for (const [url, groupCompanies] of urlGroups) {
-      if (!isRapidAllRunningRef.current) {
-        console.log("[Rapid All] Stopped by user");
-        break;
-      }
-
-      if (groupCompanies.length > 1) {
-        // BATCH: Multiple companies with same URL - visit once, submit multiple times
-        console.log(`[Batch] Processing batch of ${groupCompanies.length} for ${url}`);
-        await rapidProcessBatch(groupCompanies);
-      } else {
-        // SINGLE: Only one company for this URL
-        console.log(`[Single] Processing ${groupCompanies[0].company_name}`);
-        await rapidProcessCompany(groupCompanies[0].id);
-      }
-    }
-
-    console.log("[Rapid All] All batches complete");
-    setIsRapidAllRunning(false);
-    
-    // Check for failures and show retry modal after state updates
-    setTimeout(() => {
-      setCompanies((currentCompanies) => {
-        const failedCompanies = currentCompanies.filter(c => c.status === 'failed');
-        if (failedCompanies.length > 0) {
-          setRetryFailedModalOpen(true);
-        }
-        return currentCompanies;
+      const response = await fetch(`/api/campaigns/${campaignId}/rapid-process-batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_ids: pendingIds }),
       });
-    }, 500);
+
+      if (!response.ok) throw new Error("Failed to start campaign");
+      
+      const data = await response.json();
+      console.log("[Rapid All] Started:", data);
+
+    } catch (error: any) {
+      console.error("Failed to start rapid all:", error);
+      alert(`Error: ${error.message}`);
+    }
+  };
+
+  const handleStopCampaign = async () => {
+    if (isStopping) return;
+    
+    try {
+      setIsStopping(true);
+      setRapidStatus("Stopping...");
+      
+      const response = await fetch(`/api/campaigns/${campaignId}/stop`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) throw new Error("Failed to stop campaign");
+      
+      console.log("[Stop] Stopping requested");
+      
+    } catch (error: any) {
+      console.error("Failed to stop campaign:", error);
+      alert(`Error: ${error.message}`);
+      setIsStopping(false);
+    }
   };
 
   // OLD PARALLEL APPROACH - KEPT FOR REFERENCE BUT NOT USED
@@ -1187,8 +942,8 @@ const rapidProcessCompany = async (companyId: number) => {
                   className="group flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Activity className="w-3.5 h-3.5" />
-                  {isRapidAllRunning
-                    ? "Processing All..."
+                  {isRapidAllRunning || processingCompanyId !== null
+                    ? "Mission Control Active"
                     : `Rapid All (${Math.min(
                         companies.filter((c) => c.status === "pending").length,
                         campaignLimit === Infinity ? companies.filter((c) => c.status === "pending").length : campaignLimit
@@ -1203,13 +958,6 @@ const rapidProcessCompany = async (companyId: number) => {
                 Export Results
               </button>
               <button
-                onClick={() => router.push(`/campaigns/${campaignId}/monitor`)}
-                className="group flex items-center gap-2 px-4 py-2 bg-white text-black text-xs font-medium hover:bg-gray-100 transition-colors rounded-lg"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                Live Monitor
-              </button>
-              <button
                 onClick={() => setDeleteDialogOpen(true)}
                 disabled={deleting}
                 className="group flex items-center gap-2 px-4 py-2 bg-rose-500/10 text-rose-400 text-xs font-medium hover:bg-rose-500/20 transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed border border-rose-500/30"
@@ -1221,97 +969,111 @@ const rapidProcessCompany = async (companyId: number) => {
           </div>
         </div>
 
-        {/* Rapid Progress Bar */}
-        {processingCompanyId && (
-          <div className="mb-6 border border-white/20 rounded-lg p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Activity className="w-5 h-5 text-blue-400 animate-pulse" />
-                  <div className="absolute inset-0 bg-blue-400/20 blur-xl rounded-full" />
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-white">
-                    Processing: {rapidCurrentCompany}
-                  </div>
-                  <div className="text-xs text-white/60 mt-0.5">
-                    {rapidStatus}
-                  </div>
+        {/* Mission Control Dashboard */}
+        {(isRapidAllRunning || processingCompanyId !== null) && (
+          <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Progress & Status */}
+            <div className="lg:col-span-2 border border-blue-500/30 rounded-lg p-6 bg-gradient-to-br from-blue-500/10 via-black to-purple-500/10 backdrop-blur-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                  <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest">Live Link Established</span>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="text-sm font-mono text-white">
-                  {rapidProgress}%
-                </div>
-                <button
-                  onClick={emergencyStopAll}
-                  className="px-4 py-1.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded transition-colors flex items-center gap-2"
-                >
-                  <X className="w-4 h-4" />
-                  STOP
-                </button>
-              </div>
-            </div>
-            <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out"
-                style={{ width: `${rapidProgress}%` }}
-              />
-            </div>
-            <div className="mt-2 text-[10px] text-white/40 font-mono">
-              {companies.filter((c) => c.status === "completed").length} /{" "}
-              {companies.length} companies processed
-            </div>
-          </div>
-        )}
 
-        {/* Rapid All Progress Bar */}
-        {isRapidAllRunning && rapidAllTotal > 0 && (
-          <div className="mb-6 border border-emerald-500/30 rounded-lg p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Activity className="w-5 h-5 text-emerald-400 animate-pulse" />
-                  <div className="absolute inset-0 bg-emerald-400/20 blur-xl rounded-full" />
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+                    <Activity className="w-6 h-6 text-blue-400 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white tracking-tight">Mission Control</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-white/60 font-medium">Currently:</span>
+                      <span className="text-xs text-blue-400 font-mono font-bold animate-pulse">{rapidStatus || 'Synchronizing...'}</span>
+                    </div>
+                  </div>
                 </div>
+                
+                <div className="text-right">
+                  <div className="text-2xl font-mono font-black text-white">{rapidProgress || 0}%</div>
+                  <div className="text-[10px] text-white/40 uppercase font-bold tracking-tighter">Current Step Progress</div>
+                </div>
+              </div>
+
+              {/* Progress Gauges */}
+              <div className="space-y-6">
                 <div>
-                  <div className="text-sm font-semibold text-white">
-                    Rapid All Processing (Parallel Mode)
+                  <div className="flex justify-between text-[10px] uppercase tracking-wider font-bold text-white/60 mb-2">
+                    <span>Campaign Sequence</span>
+                    <span>{rapidAllProgress} / {rapidAllTotal} Sites Complete</span>
                   </div>
-                  <div className="text-xs text-white/60 mt-0.5">
-                    {rapidAllProgress}/{rapidAllTotal} completed • {processingCount} processing
-                    {avgProcessingTime > 0 && (
-                      <span className="ml-2">
-                        • ETA: {Math.ceil((rapidAllTotal - rapidAllProgress) * avgProcessingTime / 5)}s
+                  <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/10 p-0.5">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                      style={{ width: `${(rapidAllProgress / (rapidAllTotal || 1)) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                    <div className="text-[9px] text-white/40 uppercase mb-1">Active Target</div>
+                    <div className="text-xs text-white font-mono truncate">{rapidCurrentCompany || 'Waiting...'}</div>
+                  </div>
+                  <div className="bg-white/5 rounded-lg p-3 border border-white/10 flex items-center justify-between">
+                    <div>
+                      <div className="text-[9px] text-white/40 uppercase mb-1">System Health</div>
+                      <div className="text-xs text-emerald-400 font-bold">OPTIMAL</div>
+                    </div>
+                    <button
+                      onClick={handleStopCampaign}
+                      disabled={isStopping}
+                      className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white text-[10px] font-black rounded border border-rose-500/30 transition-all uppercase tracking-widest disabled:opacity-50"
+                    >
+                      {isStopping ? 'Stopping...' : 'Abort Mission'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Real-time Activity Log */}
+            <div className="border border-white/10 rounded-lg flex flex-col bg-black/40 backdrop-blur-sm overflow-hidden h-[320px]">
+              <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between bg-white/5">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-3.5 h-3.5 text-blue-400" />
+                  <span className="text-[10px] font-bold text-white uppercase tracking-widest">Real-time Stream</span>
+                </div>
+                <div className="text-[9px] font-mono text-white/40 animate-pulse text-right">
+                  Receiving Data...
+                </div>
+              </div>
+              <div 
+                ref={logContainerRef}
+                className="flex-1 overflow-y-auto p-4 font-mono space-y-2 scrollbar-hide"
+              >
+                {activityLogs.length === 0 ? (
+                  <div className="h-full flex items-center justify-center">
+                    <p className="text-[10px] text-white/20 italic">Awaiting events from server...</p>
+                  </div>
+                ) : (
+                  activityLogs.map((log, i) => (
+                    <div key={i} className="flex gap-2 text-[10px] animate-in fade-in slide-in-from-left-2 duration-300">
+                      <span className="text-white/20 shrink-0">[{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
+                      {log.company_name && <span className="text-blue-500 shrink-0">[{log.company_name}]</span>}
+                      <span className={`
+                        ${log.level === 'error' ? 'text-rose-400 font-bold' : 
+                          log.level === 'success' ? 'text-emerald-400' : 
+                          log.level === 'warning' ? 'text-amber-400' : 'text-white/80'}
+                      `}>
+                        {log.message}
                       </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="text-sm font-mono text-white font-bold">
-                  {Math.round((rapidAllProgress / rapidAllTotal) * 100)}%
-                </div>
-                <button
-                  onClick={emergencyStopAll}
-                  className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded transition-colors flex items-center gap-2"
-                >
-                  <X className="w-4 h-4" />
-                  STOP ALL
-                </button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
-            <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-300 ease-out"
-                style={{ width: `${(rapidAllProgress / rapidAllTotal) * 100}%` }}
-              />
-            </div>
-            {avgProcessingTime > 0 && (
-              <div className="mt-2 text-[10px] text-white/50 font-mono">
-                Avg: {avgProcessingTime.toFixed(1)}s per company • Speed: ~{Math.round(60 / avgProcessingTime * 5)} companies/min (5x parallel)
-              </div>
-            )}
           </div>
         )}
 

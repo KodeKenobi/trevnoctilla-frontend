@@ -35,23 +35,52 @@ export async function POST(request: NextRequest) {
         'I am interested in your services. Please contact me.',
     };
 
-    // Read Excel
+    // Read Excel/CSV with raw headers to prevent data loss if first row is data
     const buffer = Buffer.from(await file.arrayBuffer());
     const workbook = xlsx.read(buffer, { type: 'buffer' });
     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data: any[] = xlsx.utils.sheet_to_json(firstSheet);
+    
+    // Get raw data as array of arrays
+    const rows = xlsx.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
+    
+    if (!rows || rows.length === 0) {
+      return NextResponse.json({ error: 'The file appears to be empty' }, { status: 400 });
+    }
 
-    // Extract URLs
-    const urls: string[] = data
-      .map(row => {
-        const entry = Object.entries(row).find(([key]) =>
-          key.toLowerCase().includes('url') || key.toLowerCase().includes('website')
-        );
-        return entry ? String(entry[1]) : null;
-      })
-      .filter((url): url is string => !!url && url.startsWith('http'));
+    // Extract URLs from all rows
+    const urls: string[] = [];
+    
+    for (const row of rows) {
+      if (!Array.isArray(row)) continue;
+      
+      // Look for any string in the row that looks like a URL
+      let foundUrlInRow = false;
+      for (const cell of row) {
+        if (!cell) continue;
+        const str = String(cell).trim();
+        
+        // Skip common headers themselves unless they look like specific URLs
+        if (['url', 'website', 'site', 'link', 'domain'].includes(str.toLowerCase())) continue;
+
+        // Check if it looks like a URL or domain
+        const isUrl = str.toLowerCase().startsWith('http') || 
+                      str.toLowerCase().startsWith('www.') || 
+                      (/^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/i.test(str));
+        
+        if (isUrl) {
+          let finalUrl = str;
+          if (!finalUrl.toLowerCase().startsWith('http')) {
+            finalUrl = `https://${finalUrl}`;
+          }
+          urls.push(finalUrl);
+          foundUrlInRow = true;
+          break; // Take only one URL per row
+        }
+      }
+    }
 
     if (urls.length === 0) {
+      console.log('Sample rows from file:', rows.slice(0, 3));
       return NextResponse.json({ error: 'No valid URLs found in file' }, { status: 400 });
     }
 
