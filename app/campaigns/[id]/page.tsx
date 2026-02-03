@@ -1340,9 +1340,15 @@ export default function CampaignDetailPage() {
                         className="relative group/img"
                       >
                         <img
+                          key={company.screenshot_url}
                           src={company.screenshot_url}
                           alt="Proof"
                           className="w-12 h-12 object-cover border border-gray-800 group-hover/img:border-white transition-colors"
+                          crossOrigin={
+                            company.screenshot_url.startsWith("http")
+                              ? "anonymous"
+                              : undefined
+                          }
                         />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
                           <ImageIcon className="w-4 h-4 text-white" />
