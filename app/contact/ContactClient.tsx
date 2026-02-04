@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import { HelpCircle, CreditCard, MessageSquare, Bug, Users, Sparkles } from "lucide-react";
 
 interface ContactFormData {
   name: string;
@@ -14,13 +12,17 @@ interface ContactFormData {
 }
 
 const categories = [
-  { value: "support", label: "Technical Support", icon: HelpCircle },
-  { value: "billing", label: "Billing & Subscriptions", icon: CreditCard },
-  { value: "feedback", label: "Feedback & Suggestions", icon: MessageSquare },
-  { value: "bug", label: "Bug Report", icon: Bug },
-  { value: "partnership", label: "Partnership Inquiry", icon: Users },
-  { value: "other", label: "Other", icon: Sparkles },
+  { value: "support", label: "Technical Support" },
+  { value: "billing", label: "Billing & Subscriptions" },
+  { value: "feedback", label: "Feedback & Suggestions" },
+  { value: "bug", label: "Bug Report" },
+  { value: "partnership", label: "Partnership Inquiry" },
+  { value: "other", label: "Other" },
 ];
+
+const SITE_NAME = "Trevnoctilla";
+const SITE_URL = "https://www.trevnoctilla.com";
+const CONTACT_SOURCE = `${SITE_NAME} contact form (${SITE_URL}/contact)`;
 
 export default function ContactClient() {
   const [formData, setFormData] = useState<ContactFormData>({
@@ -31,15 +33,11 @@ export default function ContactClient() {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(
-    null
-  );
+  const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -52,47 +50,28 @@ export default function ContactClient() {
     setErrorMessage("");
 
     try {
-      // Get the category label for the email
       const categoryLabel =
-        categories.find((c) => c.value === formData.category)?.label ||
-        formData.category;
+        categories.find((c) => c.value === formData.category)?.label || formData.category;
 
-      // Send email via the API
       const response = await fetch("/api/email/send", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: "info@trevnoctilla.com",
           subject: `[${categoryLabel}] ${formData.subject}`,
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #0891b2;">New Contact Form Submission</h2>
-              <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />
-              
-              <p><strong>From:</strong> ${formData.name}</p>
-              <p><strong>Email:</strong> <a href="mailto:${formData.email}">${
-            formData.email
-          }</a></p>
-              <p><strong>Category:</strong> ${categoryLabel}</p>
-              <p><strong>Subject:</strong> ${formData.subject}</p>
-              
-              <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />
-              
-              <h3 style="color: #374151;">Message:</h3>
-              <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; white-space: pre-wrap;">
-                ${formData.message.replace(/\n/g, "<br>")}
-              </div>
-              
-              <hr style="border: 1px solid #e5e7eb; margin: 20px 0;" />
-              <p style="color: #6b7280; font-size: 12px;">
-                This email was sent from the Trevnoctilla contact form.
-              </p>
+            <div style="font-family: system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #111;">
+              <h2 style="font-size: 1.25rem; font-weight: 600; margin: 0 0 1rem;">New contact form submission</h2>
+              <p style="margin: 0 0 0.5rem;"><strong>From:</strong> ${formData.name}</p>
+              <p style="margin: 0 0 0.5rem;"><strong>Email:</strong> <a href="mailto:${formData.email}">${formData.email}</a></p>
+              <p style="margin: 0 0 0.5rem;"><strong>Category:</strong> ${categoryLabel}</p>
+              <p style="margin: 0 0 1rem;"><strong>Subject:</strong> ${formData.subject}</p>
+              <p style="margin: 0 0 0.25rem;"><strong>Message:</strong></p>
+              <div style="background: #f5f5f5; padding: 12px; border-radius: 4px; white-space: pre-wrap; margin-bottom: 1rem;">${formData.message.replace(/\n/g, "<br>")}</div>
+              <p style="margin: 0; font-size: 0.8125rem; color: #666;">Sent from: ${CONTACT_SOURCE}</p>
             </div>
           `,
-          text: `
-New Contact Form Submission
+          text: `New contact form submission
 
 From: ${formData.name}
 Email: ${formData.email}
@@ -103,7 +82,7 @@ Message:
 ${formData.message}
 
 ---
-This email was sent from the Trevnoctilla contact form.
+Sent from: ${CONTACT_SOURCE}
           `,
         }),
       });
@@ -122,10 +101,10 @@ This email was sent from the Trevnoctilla contact form.
       } else {
         throw new Error(result.error || "Failed to send message");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setSubmitStatus("error");
       setErrorMessage(
-        error.message || "Something went wrong. Please try again."
+        error instanceof Error ? error.message : "Something went wrong. Please try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -133,264 +112,142 @@ This email was sent from the Trevnoctilla contact form.
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 page-content">
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 relative overflow-hidden">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <h1 className="text-3xl lg:text-4xl font-bold text-white mb-6">
-              Get in Touch
-            </h1>
+    <div className="min-h-screen bg-white pt-24 pb-20">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+        <header className="mb-10">
+          <h1 className="text-2xl font-semibold text-black tracking-tight">
+            Contact
+          </h1>
+          <p className="mt-2 text-[15px] text-neutral-600">
+            Send a message and we’ll respond as soon as we can.
+          </p>
+        </header>
 
-            <p className="text-xl text-gray-300 mb-4 max-w-2xl mx-auto">
-              Have a question, feedback, or need support? We&apos;re here to
-              help. Fill out the form below and we&apos;ll get back to you as
-              soon as possible.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+        <div className="border border-neutral-200 rounded-lg bg-white p-6 sm:p-8">
+          {submitStatus === "success" && (
+            <div className="mb-6 py-3 px-4 bg-neutral-100 border border-neutral-200 rounded text-sm text-neutral-700">
+              Message sent. We’ll get back to you within 24–48 hours.
+            </div>
+          )}
 
-      {/* Contact Form & Info */}
-      <section className="pb-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Contact Info Cards */}
-            <div className="lg:col-span-1 space-y-6">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
-              >
-                <h3 className="text-lg font-bold text-white mb-2">Email Us</h3>
-                <p className="text-gray-400 mb-3">
-                  For general inquiries and support
-                </p>
-                <a
-                  href="mailto:info@trevnoctilla.com"
-                  className="text-white hover:text-cyan-300 font-medium transition-colors"
-                >
-                  info@trevnoctilla.com
-                </a>
-              </motion.div>
+          {submitStatus === "error" && (
+            <div className="mb-6 py-3 px-4 bg-neutral-100 border border-neutral-300 rounded text-sm text-neutral-800">
+              {errorMessage}
+            </div>
+          )}
 
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
-              >
-                <h3 className="text-lg font-bold text-white mb-2">
-                  Response Time
-                </h3>
-                <p className="text-gray-400 mb-3">
-                  We typically respond within
-                </p>
-                <p className="text-emerald-400 font-medium">24-48 hours</p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-gray-800/50 border border-gray-700 rounded-xl p-6"
-              >
-                <h3 className="text-lg font-bold text-white mb-2">FAQs</h3>
-                <p className="text-gray-400 mb-3">
-                  Find quick answers to common questions
-                </p>
-                <Link
-                  href="/support"
-                  className="text-purple-400 hover:text-purple-300 font-medium transition-colors"
-                >
-                  Visit Support Center →
-                </Link>
-              </motion.div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-neutral-800 mb-1.5">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Your name"
+                  className="w-full px-3 py-2.5 border border-neutral-300 rounded text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400"
+                />
+              </div>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-neutral-800 mb-1.5">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="you@example.com"
+                  className="w-full px-3 py-2.5 border border-neutral-300 rounded text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400"
+                />
+              </div>
             </div>
 
-            {/* Contact Form */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="lg:col-span-2"
-            >
-              <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 md:p-8">
-                <h2 className="text-2xl font-bold text-white mb-6">
-                  Send us a Message
-                </h2>
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-neutral-800 mb-1.5">
+                Category
+              </label>
+              <select
+                id="category"
+                name="category"
+                required
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full px-3 py-2.5 border border-neutral-300 rounded text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400"
+              >
+                {categories.map((cat) => (
+                  <option key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                {/* Success Message */}
-                {submitStatus === "success" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl"
-                  >
-                    <div>
-                      <p className="text-emerald-400 font-medium">
-                        Message sent successfully!
-                      </p>
-                      <p className="text-emerald-400/80 text-sm mt-1">
-                        We&apos;ve received your message and will get back to
-                        you within 24-48 hours.
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
+            <div>
+              <label htmlFor="subject" className="block text-sm font-medium text-neutral-800 mb-1.5">
+                Subject
+              </label>
+              <input
+                type="text"
+                id="subject"
+                name="subject"
+                required
+                value={formData.subject}
+                onChange={handleChange}
+                placeholder="Brief subject"
+                className="w-full px-3 py-2.5 border border-neutral-300 rounded text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400"
+              />
+            </div>
 
-                {/* Error Message */}
-                {submitStatus === "error" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl"
-                  >
-                    <div>
-                      <p className="text-red-400 font-medium">
-                        Failed to send message
-                      </p>
-                      <p className="text-red-400/80 text-sm mt-1">
-                        {errorMessage}
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium text-neutral-800 mb-1.5">
+                Message
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                required
+                rows={5}
+                value={formData.message}
+                onChange={handleChange}
+                placeholder="Your message..."
+                className="w-full px-3 py-2.5 border border-neutral-300 rounded text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400 focus:border-neutral-400 resize-none"
+              />
+            </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Name & Email Row */}
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    <div>
-                      <label
-                        htmlFor="name"
-                        className="block text-sm font-medium text-gray-300 mb-2"
-                      >
-                        Your Name <span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        required
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="John Doe"
-                        className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="email"
-                        className="block text-sm font-medium text-gray-300 mb-2"
-                      >
-                        Email Address <span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        required
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="john@example.com"
-                        className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Category */}
-                  <div>
-                    <label
-                      htmlFor="category"
-                      className="block text-sm font-medium text-gray-300 mb-2"
-                    >
-                      Category <span className="text-red-400">*</span>
-                    </label>
-                    <select
-                      id="category"
-                      name="category"
-                      required
-                      value={formData.category}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all appearance-none cursor-pointer"
-                    >
-                      {categories.map((cat) => (
-                        <option key={cat.value} value={cat.value}>
-                          {cat.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Subject */}
-                  <div>
-                    <label
-                      htmlFor="subject"
-                      className="block text-sm font-medium text-gray-300 mb-2"
-                    >
-                      Subject <span className="text-red-400">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="subject"
-                      name="subject"
-                      required
-                      value={formData.subject}
-                      onChange={handleChange}
-                      placeholder="How can we help you?"
-                      className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
-                    />
-                  </div>
-
-                  {/* Message */}
-                  <div>
-                    <label
-                      htmlFor="message"
-                      className="block text-sm font-medium text-gray-300 mb-2"
-                    >
-                      Message <span className="text-red-400">*</span>
-                    </label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      required
-                      rows={6}
-                      value={formData.message}
-                      onChange={handleChange}
-                      placeholder="Please describe your question or issue in detail..."
-                      className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all resize-none"
-                    />
-                  </div>
-
-                  {/* Submit Button */}
-                  <motion.button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full sm:w-auto px-8 py-4 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
-                    whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
-                    whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        Send Message
-                      </>
-                    )}
-                  </motion.button>
-                </form>
-              </div>
-            </motion.div>
-          </div>
+            <div className="pt-1 flex flex-col sm:flex-row sm:items-center gap-4">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-5 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded hover:bg-neutral-800 disabled:opacity-50 disabled:pointer-events-none"
+              >
+                {isSubmitting ? "Sending…" : "Send message"}
+              </button>
+              <p className="text-sm text-neutral-500">
+                Or email{" "}
+                <a href="mailto:info@trevnoctilla.com" className="text-neutral-700 underline hover:no-underline">
+                  info@trevnoctilla.com
+                </a>
+                {" "}directly.
+              </p>
+            </div>
+          </form>
         </div>
-      </section>
+
+        <div className="mt-8 text-sm text-neutral-500">
+          <p>We usually respond within 24–48 hours.</p>
+          <Link href="/support" className="text-neutral-700 underline hover:no-underline mt-1 inline-block">
+            Support & FAQs
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
