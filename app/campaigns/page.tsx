@@ -509,13 +509,20 @@ export default function CampaignsPage() {
         typeof window !== "undefined"
           ? localStorage.getItem("guest_session_id")
           : null;
-      const url = user
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("auth_token")
+          : null;
+      const url = token
         ? "/api/campaigns"
         : sessionId
         ? `/api/campaigns?session_id=${encodeURIComponent(sessionId)}`
         : "/api/campaigns";
 
-      const response = await fetch(url, { credentials: "include" });
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (token) Object.assign(headers, getAuthHeaders(token));
+
+      const response = await fetch(url, { credentials: "include", headers });
       if (!response.ok) {
         throw new Error("Failed to fetch campaigns");
       }
