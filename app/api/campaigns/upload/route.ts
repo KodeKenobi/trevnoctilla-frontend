@@ -173,72 +173,81 @@ export async function POST(request: NextRequest) {
         }
       } else {
         // No headers - detect columns by analyzing data patterns
-        // Look at first few rows to detect column types
         const sampleSize = Math.min(5, lines.length);
         const columnPatterns: { [key: number]: { isUrl: number; isEmail: number; isPhone: number; isText: number } } = {};
-        
-        // Initialize pattern counters for each column
+        const textSamples: { [key: number]: string[] } = {};
+        const countryLike = new Set(['england', 'united kingdom', 'uk', 'scotland', 'wales', 'usa', 'united states', 'us', 'south africa', 'australia', 'canada', 'ireland', 'germany', 'france', 'netherlands', 'spain', 'italy', 'new zealand', 'india', 'china', 'japan', 'brazil', 'mexico']);
+
         for (let col = 0; col < firstLine.length; col++) {
           columnPatterns[col] = { isUrl: 0, isEmail: 0, isPhone: 0, isText: 0 };
+          textSamples[col] = [];
         }
-        
-        // Analyze first few rows
+
         for (let row = 0; row < sampleSize; row++) {
           const values = lines[row].split(',').map(v => v.trim().replace(/['"]/g, ''));
           values.forEach((value, col) => {
             const lower = value.toLowerCase();
-            
-            // Check if it's a URL
-            if (lower.includes('http') || lower.includes('.com') || lower.includes('.net') || 
-                lower.includes('.org') || lower.includes('.io') || lower.includes('.co') || 
+            if (lower.includes('http') || lower.includes('.com') || lower.includes('.net') ||
+                lower.includes('.org') || lower.includes('.io') || lower.includes('.co') ||
                 lower.includes('www.') || /\.[a-z]{2,}/.test(lower)) {
               columnPatterns[col].isUrl++;
-            }
-            // Check if it's an email
-            else if (value.includes('@') && value.includes('.')) {
+            } else if (value.includes('@') && value.includes('.')) {
               columnPatterns[col].isEmail++;
-            }
-            // Check if it's a phone number
-            else if (/[\d\-\+\(\)\s]{7,}/.test(value) && /\d{3,}/.test(value)) {
+            } else if (/[\d\-\+\(\)\s]{7,}/.test(value) && /\d{3,}/.test(value)) {
               columnPatterns[col].isPhone++;
-            }
-            // Otherwise it's text
-            else if (value.length > 0) {
+            } else if (value.length > 0) {
               columnPatterns[col].isText++;
+              textSamples[col].push(lower);
             }
           });
         }
-        
-        // Assign column types based on patterns (already normalized)
+
+        const isLikelyCountryColumn = (col: number): boolean => {
+          const samples = textSamples[col] || [];
+          if (samples.length === 0) return false;
+          return samples.every(v => countryLike.has(v) || v.length < 4);
+        };
+        const looksLikeCompanyName = (col: number): boolean => {
+          const samples = textSamples[col] || [];
+          return samples.some(v => v.includes('ltd') || v.includes('inc') || v.includes('limited') || v.includes('co.') || v.split(/\s+/).length >= 2);
+        };
+
         headers = [];
         let urlColumnFound = false;
-        
+        let companyNameAssigned = false;
+
         for (let col = 0; col < firstLine.length; col++) {
           const patterns = columnPatterns[col];
-          
           if (patterns.isUrl > 0 && !urlColumnFound) {
-            headers.push('website_url'); // Already normalized
+            headers.push('website_url');
             urlColumnFound = true;
           } else if (patterns.isEmail > 0) {
-            headers.push('contact_email'); // Already normalized
+            headers.push('contact_email');
           } else if (patterns.isPhone > 0) {
-            headers.push('phone'); // Already normalized
+            headers.push('phone');
           } else if (patterns.isText > 0) {
-            headers.push('company_name'); // Already normalized
+            const useAsCompanyName = !companyNameAssigned && (!isLikelyCountryColumn(col) || looksLikeCompanyName(col));
+            if (useAsCompanyName) {
+              headers.push('company_name');
+              companyNameAssigned = true;
+            } else {
+              headers.push(`column_${col}`);
+            }
           } else {
             headers.push(`column_${col}`);
           }
         }
-        
+
         if (!urlColumnFound) {
           return NextResponse.json(
-            { 
-              error: `Could not detect website URL column. Please ensure at least one column contains website URLs.`
-            },
+            { error: `Could not detect website URL column. Please ensure at least one column contains website URLs.` },
             { status: 400 }
           );
         }
-        
+        if (!companyNameAssigned) {
+          const firstTextCol = Object.entries(columnPatterns).find(([, p]) => p.isText > 0);
+          if (firstTextCol) headers[Number(firstTextCol[0])] = 'company_name';
+        }
         startRow = 0;
       }
 
@@ -380,59 +389,65 @@ export async function POST(request: NextRequest) {
             );
           }
         } else {
-          // No headers - detect columns by analyzing data patterns
-          // Look at first few rows to detect column types
           const sampleSize = Math.min(5, lines.length);
           const columnPatterns: { [key: number]: { isUrl: number; isEmail: number; isPhone: number; isText: number } } = {};
+          const textSamples: { [key: number]: string[] } = {};
+          const countryLike = new Set(['england', 'united kingdom', 'uk', 'scotland', 'wales', 'usa', 'united states', 'us', 'south africa', 'australia', 'canada', 'ireland', 'germany', 'france', 'netherlands', 'spain', 'italy', 'new zealand', 'india', 'china', 'japan', 'brazil', 'mexico']);
 
-          // Initialize pattern counters for each column
           for (let col = 0; col < firstLine.length; col++) {
             columnPatterns[col] = { isUrl: 0, isEmail: 0, isPhone: 0, isText: 0 };
+            textSamples[col] = [];
           }
 
-          // Analyze first few rows
           for (let row = 0; row < sampleSize; row++) {
             const values = lines[row].split(',').map(v => v.trim().replace(/['"]/g, ''));
             values.forEach((value, col) => {
               const lower = value.toLowerCase();
-
-              // Check if it's a URL
               if (lower.includes('http') || lower.includes('.com') || lower.includes('.net') ||
                   lower.includes('.org') || lower.includes('.io') || lower.includes('.co') ||
                   lower.includes('www.') || /\.[a-z]{2,}/.test(lower)) {
                 columnPatterns[col].isUrl++;
-              }
-              // Check if it's an email
-              else if (value.includes('@') && value.includes('.')) {
+              } else if (value.includes('@') && value.includes('.')) {
                 columnPatterns[col].isEmail++;
-              }
-              // Check if it's a phone number
-              else if (/[\d\-\+\(\)\s]{7,}/.test(value) && /\d{3,}/.test(value)) {
+              } else if (/[\d\-\+\(\)\s]{7,}/.test(value) && /\d{3,}/.test(value)) {
                 columnPatterns[col].isPhone++;
-              }
-              // Otherwise it's text
-              else if (value.length > 0) {
+              } else if (value.length > 0) {
                 columnPatterns[col].isText++;
+                textSamples[col].push(lower);
               }
             });
           }
 
-          // Assign column types based on patterns (already normalized)
+          const isLikelyCountryColumn = (col: number): boolean => {
+            const samples = textSamples[col] || [];
+            return samples.length > 0 && samples.every(v => countryLike.has(v) || v.length < 4);
+          };
+          const looksLikeCompanyName = (col: number): boolean => {
+            const samples = textSamples[col] || [];
+            return samples.some(v => v.includes('ltd') || v.includes('inc') || v.includes('limited') || v.includes('co.') || v.split(/\s+/).length >= 2);
+          };
+
           headers = [];
           let urlColumnFound = false;
+          let companyNameAssigned = false;
 
           for (let col = 0; col < firstLine.length; col++) {
             const patterns = columnPatterns[col];
-
             if (patterns.isUrl > 0 && !urlColumnFound) {
-              headers.push('website_url'); // Already normalized
+              headers.push('website_url');
               urlColumnFound = true;
             } else if (patterns.isEmail > 0) {
-              headers.push('contact_email'); // Already normalized
+              headers.push('contact_email');
             } else if (patterns.isPhone > 0) {
-              headers.push('phone'); // Already normalized
+              headers.push('phone');
             } else if (patterns.isText > 0) {
-              headers.push('company_name'); // Already normalized
+              const useAsCompanyName = !companyNameAssigned && (!isLikelyCountryColumn(col) || looksLikeCompanyName(col));
+              if (useAsCompanyName) {
+                headers.push('company_name');
+                companyNameAssigned = true;
+              } else {
+                headers.push(`column_${col}`);
+              }
             } else {
               headers.push(`column_${col}`);
             }
@@ -440,13 +455,14 @@ export async function POST(request: NextRequest) {
 
           if (!urlColumnFound) {
             return NextResponse.json(
-              {
-                error: `Could not detect website URL column. Please ensure at least one column contains website URLs.`
-              },
+              { error: `Could not detect website URL column. Please ensure at least one column contains website URLs.` },
               { status: 400 }
             );
           }
-
+          if (!companyNameAssigned) {
+            const firstTextCol = Object.entries(columnPatterns).find(([, p]) => p.isText > 0);
+            if (firstTextCol) headers[Number(firstTextCol[0])] = 'company_name';
+          }
           startRow = 0;
         }
 

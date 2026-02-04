@@ -125,11 +125,16 @@ export default function CampaignDetailPage() {
   const customProcessingLimitRef = useRef<number | null>(null);
   const isRapidAllRunningRef = useRef(false);
   const processingTimesRef = useRef<number[]>([]); // Track processing times for ETA
+  const processingCompanyIdRef = useRef<number | null>(null);
 
   // Keep refs in sync with state
   useEffect(() => {
     rapidAllProgressRef.current = rapidAllProgress;
   }, [rapidAllProgress]);
+
+  useEffect(() => {
+    processingCompanyIdRef.current = processingCompanyId;
+  }, [processingCompanyId]);
 
   useEffect(() => {
     customProcessingLimitRef.current = customProcessingLimit;
@@ -170,24 +175,7 @@ export default function CampaignDetailPage() {
 
   const campaignId = params?.id as string;
 
-  // Refresh companies data more frequently when rapid processing is running
-  useEffect(() => {
-    if (isRapidAllRunning && campaignId) {
-      const rapidRefreshInterval = setInterval(() => {
-        // Silently refresh companies data for real-time stats updates
-        fetch(`/api/campaigns/${campaignId}/companies`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.companies) {
-              setCompanies(data.companies);
-            }
-          })
-          .catch((err) => console.error("Failed to refresh companies:", err));
-      }, 3000); // Refresh every 3 seconds during rapid processing
-
-      return () => clearInterval(rapidRefreshInterval);
-    }
-  }, [isRapidAllRunning, campaignId]);
+  // Single source of company updates: main poll only (no separate rapid refresh that overwrites optimistic "processing")
 
   // Get user's campaign company limit
   const getCampaignLimit = (): number => {
@@ -247,15 +235,7 @@ export default function CampaignDetailPage() {
       fetchUsage();
       // Only poll when there's active processing or Rapid All is running
       const interval = setInterval(() => {
-        // Poll if there's active processing happening
         const hasProcessing = companies.some((c) => c.status === "processing");
-        console.log("[Campaign Detail] Polling check:", {
-          isRapidAllRunning,
-          processingCompanyId,
-          hasProcessing,
-          companiesCount: companies.length,
-        });
-
         if (
           campaign &&
           (isRapidAllRunning ||
@@ -265,14 +245,10 @@ export default function CampaignDetailPage() {
           campaign.status !== "failed" &&
           campaign.status !== "cancelled"
         ) {
-          console.log("[Campaign Detail] Fetching updates (silent)");
           fetchCampaignDetails(true);
         }
-      }, 3000); // Poll every 3 seconds only during active processing
-      return () => {
-        console.log("[Campaign Detail] Cleanup interval");
-        clearInterval(interval);
-      };
+      }, 6000); // Poll every 6 seconds to avoid excessive refreshes
+      return () => clearInterval(interval);
     }
   }, [campaignId, campaign?.status, isRapidAllRunning, processingCompanyId]);
 
@@ -291,7 +267,6 @@ export default function CampaignDetailPage() {
   }, [campaign?.status, isRapidAllRunning]);
 
   const fetchCampaignDetails = async (silent = false) => {
-    console.log("[Campaign Detail] Fetching campaign details, silent:", silent);
     try {
       if (!silent) {
         setLoading(true);
@@ -305,10 +280,6 @@ export default function CampaignDetailPage() {
 
       if (campaignRes.ok) {
         const campaignData = await campaignRes.json();
-        console.log(
-          "[Campaign Detail] Campaign data loaded:",
-          campaignData.campaign?.name
-        );
         setCampaign(campaignData.campaign);
       } else {
         console.error(
@@ -319,18 +290,17 @@ export default function CampaignDetailPage() {
 
       if (companiesRes.ok) {
         const companiesData = await companiesRes.json();
-        console.log(
-          "[Campaign Detail] Companies loaded:",
-          companiesData.companies?.length || 0
-        );
         // Preserve optimistic "processing" so UI shows it until API/WebSocket catches up
         setCompanies((prev) => {
           const fromApi = (companiesData.companies || []) as Company[];
           const wasProcessing = new Set(
             prev.filter((c) => c.status === "processing").map((c) => c.id)
           );
+          const currentProcessingId = processingCompanyIdRef.current;
           return fromApi.map((c: Company) =>
-            wasProcessing.has(c.id) ? { ...c, status: "processing" } : c
+            wasProcessing.has(c.id) || c.id === currentProcessingId
+              ? { ...c, status: "processing" as const }
+              : c
           );
         });
       } else {
@@ -722,16 +692,12 @@ export default function CampaignDetailPage() {
       const data = await response.json();
       console.log("[Rapid All] Started:", data);
 
-      // Start polling immediately so status (Pending → Processing → Completed) and screenshot update
       const count = pendingIds.length;
       setIsRapidAllRunning(true);
       setRapidAllTotal(count);
       setRapidAllProgress(0);
       setRapidStatus("Processing...");
-      // Fetch right away and again soon so "Processing" shows within ~1s (backend sets first company before Playwright)
-      fetchCampaignDetails(true);
-      setTimeout(() => fetchCampaignDetails(true), 400);
-      setTimeout(() => fetchCampaignDetails(true), 1000);
+      // Rely on optimistic "processing" for first company; main poll (every 6s) will sync real status
     } catch (error: any) {
       console.error("Failed to start rapid all:", error);
       alert(`Error: ${error.message}`);
@@ -837,6 +803,40 @@ export default function CampaignDetailPage() {
 
   // DISABLED: No auto-start. User must manually click "Rapid" for each company.
   // This prevents infinite loops and unwanted processing.
+
+  // Display name: use company_name unless it looks like a country (wrong CSV column)
+  const getCompanyDisplayName = (c: Company): string => {
+    const name = (c.company_name || "").trim();
+    const countryLike = [
+      "england",
+      "united kingdom",
+      "uk",
+      "scotland",
+      "wales",
+      "usa",
+      "united states",
+      "us",
+      "south africa",
+      "australia",
+      "canada",
+      "ireland",
+      "germany",
+      "france",
+      "netherlands",
+      "spain",
+      "italy",
+    ];
+    if (name && !countryLike.includes(name.toLowerCase())) return name;
+    const url = (c.website_url || "").trim();
+    if (!url) return "Company";
+    try {
+      const u = new URL(url.startsWith("http") ? url : `https://${url}`);
+      const host = (u.hostname || "").replace(/^www\./, "");
+      return host || "Company";
+    } catch {
+      return url || "Company";
+    }
+  };
 
   const filteredCompanies = companies.filter((company) => {
     const statusMatch =
@@ -1125,7 +1125,9 @@ export default function CampaignDetailPage() {
                 <div
                   className="h-full bg-blue-500 rounded-full transition-all duration-500"
                   style={{
-                    width: `${(rapidAllProgress / (rapidAllTotal || 1)) * 100}%`,
+                    width: `${
+                      (rapidAllProgress / (rapidAllTotal || 1)) * 100
+                    }%`,
                   }}
                 />
               </div>
@@ -1275,10 +1277,25 @@ export default function CampaignDetailPage() {
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="min-w-0">
                       <div className="text-sm text-white truncate group-hover:text-white transition-colors">
-                        {company.company_name}
+                        {getCompanyDisplayName(company)}
                       </div>
-                      <div className="text-[11px] text-white font-mono truncate mt-0.5">
-                        {company.website_url}
+                      <div className="text-[11px] font-mono truncate mt-0.5">
+                        {company.website_url ? (
+                          <a
+                            href={
+                              company.website_url.startsWith("http")
+                                ? company.website_url
+                                : `https://${company.website_url}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 underline truncate block"
+                          >
+                            {company.website_url}
+                          </a>
+                        ) : (
+                          <span className="text-white/60">—</span>
+                        )}
                       </div>
                     </div>
                   </div>

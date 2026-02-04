@@ -29,6 +29,8 @@ export default function CreateCampaignPage() {
   const [senderAddress, setSenderAddress] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [emailFoundWhenNoForm, setEmailFoundWhenNoForm] = useState(false);
+  const [ccEmail, setCcEmail] = useState("");
 
   const countries = [
     "United Kingdom",
@@ -95,12 +97,44 @@ export default function CreateCampaignPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     if (!campaignName.trim()) {
       setError("Campaign name is required");
       return;
     }
-
+    if (!firstName.trim()) {
+      setError("First name is required");
+      return;
+    }
+    if (!lastName.trim()) {
+      setError("Last name is required");
+      return;
+    }
+    if (!senderCompany.trim()) {
+      setError("Your company name is required");
+      return;
+    }
+    if (!senderEmail.trim()) {
+      setError("Your email is required");
+      return;
+    }
+    if (!senderPhone.trim()) {
+      setError("Your phone is required");
+      return;
+    }
+    if (!senderCountry.trim()) {
+      setError("Country is required");
+      return;
+    }
+    if (!senderAddress.trim()) {
+      setError("Your address is required");
+      return;
+    }
+    if (!subject.trim()) {
+      setError("Email subject is required");
+      return;
+    }
     if (!message.trim()) {
       setError("Message is required");
       return;
@@ -108,20 +142,20 @@ export default function CreateCampaignPage() {
 
     try {
       setLoading(true);
-      setError(null);
 
-      // Combine all form data into the message template
       const formData = {
-        sender_name: `${firstName} ${lastName}`.trim() || "Sender",
-        sender_first_name: firstName,
-        sender_last_name: lastName,
-        sender_email: senderEmail || "sender@example.com",
-        sender_phone: senderPhone || "+1 555-0000",
-        sender_company: senderCompany || "Our Company",
-        sender_country: senderCountry,
-        sender_address: senderAddress || "",
-        subject: subject || "Inquiry",
-        message: message,
+        sender_name: `${firstName} ${lastName}`.trim(),
+        sender_first_name: firstName.trim(),
+        sender_last_name: lastName.trim(),
+        sender_email: senderEmail.trim(),
+        sender_phone: senderPhone.trim(),
+        sender_company: senderCompany.trim(),
+        sender_country: senderCountry.trim(),
+        sender_address: senderAddress.trim(),
+        subject: subject.trim(),
+        message: message.trim(),
+        email_found_when_no_form: emailFoundWhenNoForm,
+        cc_email: ccEmail.trim() || undefined,
       };
 
       const token =
@@ -285,7 +319,8 @@ export default function CreateCampaignPage() {
                   className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
                              focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg
                              placeholder:text-gray-500"
-                  placeholder="First Name"
+                  placeholder="First Name *"
+                  required
                 />
                 <input
                   type="text"
@@ -294,7 +329,8 @@ export default function CreateCampaignPage() {
                   className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
                              focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg
                              placeholder:text-gray-500"
-                  placeholder="Last Name"
+                  placeholder="Last Name *"
+                  required
                 />
               </div>
 
@@ -305,7 +341,8 @@ export default function CreateCampaignPage() {
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
                            focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg
                            placeholder:text-gray-500"
-                placeholder="Your Company Name"
+                placeholder="Your Company Name *"
+                required
               />
 
               <input
@@ -315,7 +352,8 @@ export default function CreateCampaignPage() {
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
                            focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg
                            placeholder:text-gray-500"
-                placeholder="Your Email"
+                placeholder="Your Email *"
+                required
               />
 
               <input
@@ -325,7 +363,8 @@ export default function CreateCampaignPage() {
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
                            focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg
                            placeholder:text-gray-500"
-                placeholder="Your Phone"
+                placeholder="Your Phone *"
+                required
               />
 
               <select
@@ -333,6 +372,7 @@ export default function CreateCampaignPage() {
                 onChange={(e) => setSenderCountry(e.target.value)}
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
                            focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg"
+                required
               >
                 {countries.map((country) => (
                   <option key={country} value={country}>
@@ -348,7 +388,8 @@ export default function CreateCampaignPage() {
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
                            focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg
                            placeholder:text-gray-500"
-                placeholder="Your Address (optional)"
+                placeholder="Your Address *"
+                required
               />
 
               <input
@@ -358,8 +399,46 @@ export default function CreateCampaignPage() {
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
                            focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg
                            placeholder:text-gray-500"
-                placeholder="Subject"
+                placeholder="Email Subject *"
+                required
               />
+            </div>
+          </div>
+
+          {/* Email when no form + CC */}
+          <div className="border border-gray-800 rounded-xl p-5 space-y-4">
+            <h3 className="text-sm text-white mb-3">Email options</h3>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={emailFoundWhenNoForm}
+                onChange={(e) => setEmailFoundWhenNoForm(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-600 bg-gray-900 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+              />
+              <span className="text-sm text-white">
+                Email found contact when no contact form is found
+              </span>
+            </label>
+            <p className="text-xs text-white/60">
+              When enabled, if we find an email address but no submitable form, we will send your message to that email. When off, we only record the contact and do not send.
+            </p>
+            <div>
+              <label htmlFor="ccEmail" className="block text-sm text-white mb-2">
+                CC email (optional)
+              </label>
+              <input
+                id="ccEmail"
+                type="email"
+                value={ccEmail}
+                onChange={(e) => setCcEmail(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
+                           focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg
+                           placeholder:text-gray-500"
+                placeholder="e.g. you@company.com"
+              />
+              <p className="text-xs text-white/60 mt-1">
+                When we send to a found contact (form or email), this address will receive a copy.
+              </p>
             </div>
           </div>
 
