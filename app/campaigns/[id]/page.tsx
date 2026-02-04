@@ -412,7 +412,8 @@ export default function CampaignDetailPage() {
 
         if (message.type === "company_completed") {
           const { company_id, status, screenshot_url, progress } = message.data;
-          setProcessingCompanyId(null); // clear so next company_processing sets it
+          processingCompanyIdRef.current = null; // clear ref first so in-flight poll merge won't keep this company as "processing"
+          setProcessingCompanyId(null);
           setCompanies((prev) =>
             prev.map((c) =>
               c.id === company_id ? { ...c, status, screenshot_url } : c
@@ -430,6 +431,7 @@ export default function CampaignDetailPage() {
         }
 
         if (message.type === "campaign_stopped") {
+          processingCompanyIdRef.current = null;
           setIsRapidAllRunning(false);
           setIsStopping(false);
           setRapidStatus("Stopped");

@@ -53,12 +53,15 @@ export async function POST(request: NextRequest) {
       text,
     };
     
-    // Add CC if provided (Resend expects array for CC)
+    // Add CC if provided (Resend expects array for CC; verified domain may be required for CC to deliver)
     if (cc) {
       if (Array.isArray(cc) && cc.length > 0) {
         emailPayload.cc = cc;
-      } else if (typeof cc === 'string') {
-        emailPayload.cc = [cc];
+      } else if (typeof cc === 'string' && cc.trim()) {
+        emailPayload.cc = [cc.trim()];
+      }
+      if (emailPayload.cc?.length) {
+        console.log('[EMAIL] CC recipients:', emailPayload.cc);
       }
     }
 
