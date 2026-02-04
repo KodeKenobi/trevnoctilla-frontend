@@ -724,19 +724,24 @@ export default function CampaignDetailPage() {
       setIsStopping(true);
       setRapidStatus("Stopping...");
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
       const response = await fetch(`/api/campaigns/${campaignId}/stop`, {
         method: "POST",
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to process company");
+        throw new Error(errorData.error || "Failed to stop campaign");
       }
 
-      console.log("[Stop] Stopping requested");
+      console.log("[Stop] Stopping requested — current company may finish, then campaign stops.");
+      fetchCampaignDetails(true);
     } catch (error: any) {
       console.error("Failed to stop campaign:", error);
-      alert(`Error: ${error.message}`);
+      alert(error?.name === "AbortError" ? "Request timed out. Stop was sent; campaign will stop after the current company finishes." : `Error: ${error.message}`);
       setIsStopping(false);
     }
   };
@@ -1482,13 +1487,6 @@ export default function CampaignDetailPage() {
                       </>
                     ) : company.status === "processing" ? (
                       <>
-                        <button
-                          onClick={handleStopCampaign}
-                          disabled={isStopping}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isStopping ? "Stopping..." : "Stop campaign"}
-                        </button>
                         <div
                           className={`w-2 h-2 rounded-full ${getStatusDotColor(
                             company.status
@@ -1497,16 +1495,6 @@ export default function CampaignDetailPage() {
                       </>
                     ) : company.status === "failed" ? (
                       <>
-                        <button
-                          onClick={handleStopCampaign}
-                          disabled={
-                            isStopping ||
-                            (!isRapidAllRunning && processingCompanyId === null)
-                          }
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Stop
-                        </button>
                         <button
                           onClick={() => handleRapidProcess(company.id)}
                           disabled={

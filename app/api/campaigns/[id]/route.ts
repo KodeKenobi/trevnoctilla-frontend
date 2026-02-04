@@ -120,6 +120,8 @@ export async function PATCH(
   }
 }
 
+const DELETE_TIMEOUT_MS = 60000;
+
 /**
  * DELETE /api/campaigns/:id
  * Delete a campaign (public endpoint)
@@ -131,17 +133,20 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    // Delete campaign in backend
     const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), DELETE_TIMEOUT_MS);
     const response = await fetch(
       `${backendUrl}/api/campaigns/${id}`,
       {
         method: 'DELETE',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
         },
       }
     );
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -169,8 +174,9 @@ export async function DELETE(
 
   } catch (error: any) {
     console.error('[Campaign DELETE] Error:', error);
+    const isAbort = (error as { name?: string })?.name === 'AbortError';
     return NextResponse.json(
-      { error: error.message || 'Failed to delete campaign' },
+      { error: isAbort ? 'Delete timed out. Try again or delete from a stable connection.' : error.message || 'Failed to delete campaign' },
       { status: 500 }
     );
   }
