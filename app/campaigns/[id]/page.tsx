@@ -399,8 +399,10 @@ export default function CampaignDetailPage() {
           activityLogsRef.current = [];
         }
         if (message.type === "company_processing") {
-          const { company_id } = message.data;
+          const { company_id, company_name } = message.data;
           if (company_id) {
+            setProcessingCompanyId(company_id);
+            if (company_name) setRapidCurrentCompany(company_name);
             setCompanies((prev) =>
               prev.map((c) =>
                 c.id === company_id ? { ...c, status: "processing" } : c
@@ -421,6 +423,7 @@ export default function CampaignDetailPage() {
 
         if (message.type === "company_completed") {
           const { company_id, status, screenshot_url, progress } = message.data;
+          setProcessingCompanyId(null); // clear so next company_processing sets it
           setCompanies((prev) =>
             prev.map((c) =>
               c.id === company_id ? { ...c, status, screenshot_url } : c
@@ -670,16 +673,26 @@ export default function CampaignDetailPage() {
       setActivityLogs([]);
       activityLogsRef.current = [];
 
-      // Connect to stream
-      connectToCampaignStream(campaignId);
-
-      // Trigger sequential processing
-      // We don't need to specify IDs if we want to process all pending,
-      // but we use limit to slice for now if needed.
       const pendingIds = companies
         .filter((c) => c.status === "pending")
         .slice(0, limit)
         .map((c) => c.id);
+
+      // Show first company as "Processing" immediately when user clicks Start
+      if (pendingIds.length > 0) {
+        const firstId = pendingIds[0];
+        setCompanies((prev) =>
+          prev.map((c) =>
+            c.id === firstId ? { ...c, status: "processing" } : c
+          )
+        );
+        setProcessingCompanyId(firstId);
+        setRapidCurrentCompany(
+          companies.find((c) => c.id === firstId)?.company_name || "Company"
+        );
+      }
+
+      connectToCampaignStream(campaignId);
 
       const response = await fetch(
         `/api/campaigns/${campaignId}/rapid-process-batch`,
