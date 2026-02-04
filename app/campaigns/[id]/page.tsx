@@ -361,8 +361,7 @@ export default function CampaignDetailPage() {
     setActiveWebSocket(ws);
 
     ws.onopen = () => {
-      console.log("[Stream] Connected to campaign stream");
-      setRapidStatus("System Connected");
+      setRapidStatus("Processing…");
     };
 
     ws.onmessage = (event) => {
@@ -396,8 +395,11 @@ export default function CampaignDetailPage() {
             activityLogsRef.current = newLogs;
             return newLogs;
           });
-          setRapidStatus(log.user_message ?? log.message);
           if (log.company_name) setRapidCurrentCompany(log.company_name);
+          // Mission Control: only show "Processing [company name]" — no technical messages (scroll, fetch, lazy, etc.)
+          setRapidStatus(
+            log.company_name ? `Processing ${log.company_name}` : "Processing…"
+          );
         }
 
         if (message.type === "company_completed") {
@@ -658,17 +660,18 @@ export default function CampaignDetailPage() {
         .map((c) => c.id);
 
       // Show first company as "Processing" immediately when user clicks Start
-      if (pendingIds.length > 0) {
-        const firstId = pendingIds[0];
+      const firstId = pendingIds.length > 0 ? pendingIds[0] : null;
+      if (firstId != null) {
+        processingCompanyIdRef.current = firstId; // sync ref before any async so in-flight fetch merge preserves "processing"
         setCompanies((prev) =>
           prev.map((c) =>
-            c.id === firstId ? { ...c, status: "processing" } : c
+            c.id === firstId ? { ...c, status: "processing" as const } : c
           )
         );
         setProcessingCompanyId(firstId);
-        setRapidCurrentCompany(
-          companies.find((c) => c.id === firstId)?.company_name || "Company"
-        );
+        const firstName =
+          companies.find((c) => c.id === firstId)?.company_name || "Company";
+        setRapidCurrentCompany(firstName);
       }
 
       connectToCampaignStream(campaignId);
@@ -1100,13 +1103,10 @@ export default function CampaignDetailPage() {
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
                   <span className="text-sm text-white">
-                    {rapidStatus || "Processing..."}
+                    {rapidCurrentCompany
+                      ? `Processing ${rapidCurrentCompany}`
+                      : rapidStatus || "Processing…"}
                   </span>
-                  {rapidCurrentCompany && (
-                    <span className="text-xs text-white/50 truncate max-w-[200px]">
-                      {rapidCurrentCompany}
-                    </span>
-                  )}
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-white/70">
