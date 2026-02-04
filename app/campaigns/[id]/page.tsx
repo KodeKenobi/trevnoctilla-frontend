@@ -398,7 +398,16 @@ export default function CampaignDetailPage() {
           setActivityLogs([]);
           activityLogsRef.current = [];
         }
-
+        if (message.type === "company_processing") {
+          const { company_id } = message.data;
+          if (company_id) {
+            setCompanies((prev) =>
+              prev.map((c) =>
+                c.id === company_id ? { ...c, status: "processing" } : c
+              )
+            );
+          }
+        }
         if (message.type === "activity") {
           const log: ActivityLog = message.data;
           setActivityLogs((prev) => {
@@ -697,8 +706,10 @@ export default function CampaignDetailPage() {
       setRapidAllTotal(count);
       setRapidAllProgress(0);
       setRapidStatus("Processing...");
-      // Kick first poll soon so status/screenshot update without waiting for 3s interval
-      setTimeout(() => fetchCampaignDetails(true), 1500);
+      // Fetch right away and again soon so "Processing" shows within ~1s (backend sets first company before Playwright)
+      fetchCampaignDetails(true);
+      setTimeout(() => fetchCampaignDetails(true), 400);
+      setTimeout(() => fetchCampaignDetails(true), 1000);
     } catch (error: any) {
       console.error("Failed to start rapid all:", error);
       alert(`Error: ${error.message}`);
