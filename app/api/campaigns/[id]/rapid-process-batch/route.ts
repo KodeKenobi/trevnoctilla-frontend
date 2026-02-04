@@ -44,7 +44,13 @@ export async function POST(
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { error: errorData.error || 'Failed to process batch' },
+        {
+          error: errorData.error || 'Failed to process batch',
+          message: errorData.message,
+          daily_used: errorData.daily_used,
+          daily_limit: errorData.daily_limit,
+          daily_remaining: errorData.daily_remaining,
+        },
         { status: response.status }
       );
     }

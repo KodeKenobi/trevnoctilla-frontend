@@ -1,46 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getSessionIdByStableId, upsertGuestSession } from '@/lib/supabase-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const GUEST_STABLE_ID_COOKIE = 'guest_stable_id';
+const COOKIE_OPTIONS = { path: '/', maxAge: 31536000, sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production', httpOnly: true };
+
 /**
  * GET /api/campaigns
- * Get all campaigns (public endpoint)
+ * Get all campaigns (public endpoint).
+ * For guests: if session_id missing (e.g. localStorage cleared), recover from cookie + Supabase guest_sessions.
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get backend URL
     const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
-    
-    // Get parameters from query
     const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get('session_id');
+    let sessionId = searchParams.get('session_id');
     const email = searchParams.get('email');
-
-    // Check for auth token (authenticated users)
     const authHeader = request.headers.get('Authorization');
-    
-    // Build query params
+
+    // Guest: recover session_id from cookie + Supabase if not in query
+    let recoveredSessionId: string | null = null;
+    if (!authHeader && !sessionId) {
+      const cookieStore = await cookies();
+      const stableId = cookieStore.get(GUEST_STABLE_ID_COOKIE)?.value;
+      if (stableId) {
+        const recovered = await getSessionIdByStableId(stableId);
+        if (recovered) {
+          sessionId = recovered;
+          recoveredSessionId = recovered;
+        }
+      }
+    }
+    // Guest with session_id: keep Supabase mapping up to date (optional, for next time)
+    if (!authHeader && sessionId) {
+      const cookieStore = await cookies();
+      const stableId = cookieStore.get(GUEST_STABLE_ID_COOKIE)?.value;
+      if (stableId) await upsertGuestSession(stableId, sessionId);
+    }
+
     let queryParams = '';
     if (authHeader) {
-      // Authenticated user - backend will use token to get user_id
       queryParams = '';
     } else if (sessionId) {
-      // Guest with session ID
       queryParams = `?session_id=${encodeURIComponent(sessionId)}`;
     } else if (email) {
-      // Legacy email parameter
       queryParams = `?email=${encodeURIComponent(email)}`;
     }
 
-    // Fetch campaigns from backend
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-    
-    if (authHeader) {
-      headers['Authorization'] = authHeader;
-    }
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    if (authHeader) headers['Authorization'] = authHeader;
 
     const response = await fetch(`${backendUrl}/api/campaigns${queryParams}`, {
       method: 'GET',
@@ -63,7 +74,10 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      const data = JSON.parse(text);
+      const data = JSON.parse(text) as Record<string, unknown>;
+      if (recoveredSessionId && typeof data === 'object' && data !== null) {
+        data.recovered_session_id = recoveredSessionId;
+      }
       return NextResponse.json(data);
     } catch (parseError) {
       console.error('[Campaigns GET] JSON parse error:', parseError);
@@ -85,14 +99,14 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/campaigns
- * Create a new campaign
+ * Create a new campaign.
+ * For guests: set/update guest_stable_id cookie and Supabase guest_sessions mapping.
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { name, message_template, companies, email, session_id } = body;
 
-    // Validate input
     if (!name || !message_template || !companies || companies.length === 0) {
       return NextResponse.json(
         { error: 'Missing required fields: name, message_template, companies' },
@@ -100,21 +114,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get authorization header if present (for authenticated users)
     const authHeader = request.headers.get('Authorization');
-
-    // Create campaign in backend
     const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
-    
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-    
-    // Add auth header if present (for user-associated campaigns)
-    if (authHeader) {
-      headers['Authorization'] = authHeader;
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    if (authHeader) headers['Authorization'] = authHeader;
+
+    // Guest: ensure cookie + Supabase mapping so list can be recovered later
+    let stableId: string | undefined;
+    if (!authHeader && session_id) {
+      const cookieStore = await cookies();
+      stableId = cookieStore.get(GUEST_STABLE_ID_COOKIE)?.value;
+      if (!stableId) {
+        stableId = crypto.randomUUID();
+        await upsertGuestSession(stableId, session_id);
+      } else {
+        await upsertGuestSession(stableId, session_id);
+      }
     }
-    
+
     const response = await fetch(`${backendUrl}/api/campaigns`, {
       method: 'POST',
       headers,
@@ -123,40 +140,44 @@ export async function POST(request: NextRequest) {
         name,
         message_template,
         companies,
-        session_id: session_id  // Pass session_id for guest tracking
+        session_id,
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: errorData.error || 'Failed to create campaign' },
         { status: response.status }
       );
+      if (stableId) res.cookies.set(GUEST_STABLE_ID_COOKIE, stableId, COOKIE_OPTIONS);
+      return res;
     }
 
-    // Check if response has content before parsing
     const text = await response.text();
     if (!text || text.trim() === '') {
-      console.error('[Campaigns POST] Empty response from backend');
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: 'Empty response from backend' },
         { status: 500 }
       );
+      if (stableId) res.cookies.set(GUEST_STABLE_ID_COOKIE, stableId, COOKIE_OPTIONS);
+      return res;
     }
 
+    let data: unknown;
     try {
-      const data = JSON.parse(text);
-      return NextResponse.json(data);
+      data = JSON.parse(text);
     } catch (parseError) {
       console.error('[Campaigns POST] JSON parse error:', parseError);
-      console.error('[Campaigns POST] Response text:', text);
       return NextResponse.json(
         { error: 'Invalid response from backend' },
         { status: 500 }
       );
     }
 
+    const res = NextResponse.json(data);
+    if (stableId) res.cookies.set(GUEST_STABLE_ID_COOKIE, stableId, COOKIE_OPTIONS);
+    return res;
   } catch (error: any) {
     console.error('[Campaigns POST] Error:', error);
     return NextResponse.json(

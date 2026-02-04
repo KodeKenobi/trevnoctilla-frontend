@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
+import { getAuthHeaders } from "@/lib/config";
 
 export default function CreateCampaignPage() {
   const router = useRouter();
@@ -11,6 +12,12 @@ export default function CreateCampaignPage() {
   const [error, setError] = useState<string | null>(null);
   const [campaignName, setCampaignName] = useState("");
   const [uploadedData, setUploadedData] = useState<any>(null);
+  const [dailyUsage, setDailyUsage] = useState<{
+    daily_limit: number;
+    daily_used: number;
+    daily_remaining: number | null;
+    unlimited: boolean;
+  } | null>(null);
 
   // Form field values
   const [firstName, setFirstName] = useState("");
@@ -38,6 +45,30 @@ export default function CreateCampaignPage() {
     }
     setUploadedData(JSON.parse(data));
   }, [router]);
+
+  useEffect(() => {
+    if (!uploadedData) return;
+    let url = "/api/campaigns/usage";
+    const headers: HeadersInit = { "Content-Type": "application/json" };
+    if (user) {
+      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+      if (token) Object.assign(headers, getAuthHeaders(token));
+    } else {
+      const sessionId = typeof window !== "undefined" ? localStorage.getItem("guest_session_id") : null;
+      if (sessionId) url += `?session_id=${encodeURIComponent(sessionId)}`;
+    }
+    fetch(url, { credentials: "include", headers })
+      .then((res) => res.ok && res.json())
+      .then((data) => {
+        if (data) setDailyUsage({
+          daily_limit: data.daily_limit ?? 5,
+          daily_used: data.daily_used ?? 0,
+          daily_remaining: data.daily_remaining ?? null,
+          unlimited: data.unlimited ?? false,
+        });
+      })
+      .catch(() => {});
+  }, [uploadedData, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,9 +125,8 @@ export default function CreateCampaignPage() {
         let errorMsg = "Failed to create campaign";
         try {
           const data = await response.json();
-          errorMsg = data.error || errorMsg;
+          errorMsg = data.message || data.error || errorMsg;
         } catch (e) {
-          // If JSON parsing fails, use status text
           errorMsg = `Failed to create campaign (${response.status})`;
         }
         throw new Error(errorMsg);
@@ -316,22 +346,35 @@ export default function CreateCampaignPage() {
           </div>
 
           {/* Submit */}
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => router.push("/campaigns/upload")}
-              className="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors"
-            >
-              Back
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white text-sm font-medium
-                         hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-full"
-            >
-              {loading ? "Creating..." : "Create Campaign"}
-            </button>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+            <div className="text-xs text-gray-400">
+              {dailyUsage && (
+                <>
+                  Today: <span className="text-white font-medium">{dailyUsage.daily_used}</span>
+                  {dailyUsage.unlimited ? "" : ` / ${dailyUsage.daily_limit}`} companies
+                  {!dailyUsage.unlimited && (dailyUsage.daily_remaining ?? 0) <= 0 && (
+                    <span className="text-amber-400 ml-1">— Daily limit reached. Resets at midnight UTC.</span>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => router.push("/campaigns/upload")}
+                className="px-4 py-2 text-sm text-white/60 hover:text-white transition-colors"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={loading || (dailyUsage !== null && !dailyUsage.unlimited && (dailyUsage.daily_remaining ?? 0) <= 0)}
+                className="px-6 py-2 bg-blue-600 text-white text-sm font-medium
+                           hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-full"
+              >
+                {loading ? "Creating..." : "Create Campaign"}
+              </button>
+            </div>
           </div>
         </form>
       </div>

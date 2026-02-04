@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader, AlertCircle } from "lucide-react";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { useUser } from "@/contexts/UserContext";
+import { getAuthHeaders } from "@/lib/config";
 import { motion, useInView } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -453,40 +454,69 @@ export default function CampaignsPage() {
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<number | null>(null);
+  const [dailyUsage, setDailyUsage] = useState<{
+    daily_limit: number;
+    daily_used: number;
+    daily_remaining: number | null;
+    unlimited: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (!userLoading) {
       fetchCampaigns();
+      fetchUsage();
     }
   }, [userLoading]);
+
+  const fetchUsage = async () => {
+    try {
+      let url = "/api/campaigns/usage";
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (user) {
+        const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+        if (token) Object.assign(headers, getAuthHeaders(token));
+      } else {
+        const sessionId = typeof window !== "undefined" ? localStorage.getItem("guest_session_id") : null;
+        if (sessionId) url += `?session_id=${encodeURIComponent(sessionId)}`;
+      }
+      const res = await fetch(url, { credentials: "include", headers });
+      if (res.ok) {
+        const data = await res.json();
+        setDailyUsage({
+          daily_limit: data.daily_limit ?? 5,
+          daily_used: data.daily_used ?? 0,
+          daily_remaining: data.daily_remaining ?? null,
+          unlimited: data.unlimited ?? false,
+        });
+      }
+    } catch {
+      // Non-blocking
+    }
+  };
 
   const fetchCampaigns = async () => {
     try {
       setLoading(true);
 
-      // For guests, use a unique session ID stored in localStorage
-      // For authenticated users, backend will use their user_id
-      let sessionId = localStorage.getItem("guest_session_id");
-      if (!sessionId && !user) {
-        // Generate unique session ID for guests
-        sessionId = `guest_${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}`;
-        localStorage.setItem("guest_session_id", sessionId);
-      }
-
-      // Build URL with session parameter for guests
+      // For guests: use session_id from localStorage if present; otherwise let server recover from cookie + Supabase
+      const sessionId = typeof window !== "undefined" ? localStorage.getItem("guest_session_id") : null;
       const url = user
         ? "/api/campaigns"
-        : `/api/campaigns?session_id=${sessionId}`;
+        : sessionId
+          ? `/api/campaigns?session_id=${encodeURIComponent(sessionId)}`
+          : "/api/campaigns";
 
-      const response = await fetch(url);
+      const response = await fetch(url, { credentials: "include" });
       if (!response.ok) {
         throw new Error("Failed to fetch campaigns");
       }
       const data = await response.json();
       setCampaigns(data.campaigns || []);
       setError(null);
+      // Sync localStorage when server recovered session from cookie (so future requests use it)
+      if (data.recovered_session_id && typeof window !== "undefined") {
+        localStorage.setItem("guest_session_id", data.recovered_session_id);
+      }
     } catch (err: any) {
       console.error("Failed to fetch campaigns:", err);
       setError(err.message || "Failed to load campaigns");
@@ -572,20 +602,46 @@ export default function CampaignsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-white mb-2">Campaigns</h1>
               <p className="text-sm text-gray-400">
                 Automated outreach campaigns
               </p>
             </div>
-            <button
-              onClick={() => router.push("/campaigns/upload")}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors rounded border border-blue-500/20"
-            >
-              Create Campaign
-            </button>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              {dailyUsage && (
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                    Today: <span className="text-white font-medium">{dailyUsage.daily_used}</span>
+                    {dailyUsage.unlimited ? "" : ` / ${dailyUsage.daily_limit}`} companies
+                  </span>
+                  {!dailyUsage.unlimited && (
+                    <div className="flex-1 min-w-[80px] max-w-[120px] h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 rounded-full transition-all"
+                        style={{
+                          width: `${Math.min(100, (dailyUsage.daily_used / dailyUsage.daily_limit) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+              <button
+                onClick={() => router.push("/campaigns/upload")}
+                disabled={dailyUsage !== null && !dailyUsage.unlimited && (dailyUsage.daily_remaining ?? 0) <= 0}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors rounded border border-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                Create Campaign
+              </button>
+            </div>
           </div>
+          {dailyUsage && !dailyUsage.unlimited && (dailyUsage.daily_remaining ?? 0) <= 0 && (
+            <p className="mt-2 text-xs text-amber-400">
+              Daily limit reached. Resets at midnight UTC.
+            </p>
+          )}
         </div>
 
         {error && (

@@ -23,6 +23,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import ExportOptionsModal from "@/components/ui/ExportOptionsModal";
 import RapidAllLimitModal from "@/components/ui/RapidAllLimitModal";
 import RetryFailedModal from "@/components/ui/RetryFailedModal";
+import { getAuthHeaders } from "@/lib/config";
 
 interface Campaign {
   id: number;
@@ -110,6 +111,12 @@ export default function CampaignDetailPage() {
   const [filterMethod, setFilterMethod] = useState<string>("all");
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [isStopping, setIsStopping] = useState(false);
+  const [dailyUsage, setDailyUsage] = useState<{
+    daily_limit: number;
+    daily_used: number;
+    daily_remaining: number | null;
+    unlimited: boolean;
+  } | null>(null);
   const activityLogsRef = useRef<ActivityLog[]>([]);
   const logContainerRef = useRef<HTMLDivElement>(null);
 
@@ -201,10 +208,37 @@ export default function CampaignDetailPage() {
 
   const campaignLimit = getCampaignLimit();
 
+  const fetchUsage = useCallback(async () => {
+    try {
+      let url = "/api/campaigns/usage";
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (user) {
+        const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+        if (token) Object.assign(headers, getAuthHeaders(token));
+      } else {
+        const sessionId = typeof window !== "undefined" ? localStorage.getItem("guest_session_id") : null;
+        if (sessionId) url += `?session_id=${encodeURIComponent(sessionId)}`;
+      }
+      const res = await fetch(url, { credentials: "include", headers });
+      if (res.ok) {
+        const data = await res.json();
+        setDailyUsage({
+          daily_limit: data.daily_limit ?? 5,
+          daily_used: data.daily_used ?? 0,
+          daily_remaining: data.daily_remaining ?? null,
+          unlimited: data.unlimited ?? false,
+        });
+      }
+    } catch {
+      // Non-blocking
+    }
+  }, [user]);
+
   useEffect(() => {
     if (campaignId) {
       console.log("[Campaign Detail] Initial load, campaignId:", campaignId);
       fetchCampaignDetails();
+      fetchUsage();
       // Only poll when there's active processing or Rapid All is running
       const interval = setInterval(() => {
         // Poll if there's active processing happening
@@ -584,6 +618,8 @@ export default function CampaignDetailPage() {
     return "Processing failed. Please try again or contact support if the problem continues.";
   };
 
+  const dailyLimitReached = dailyUsage !== null && !dailyUsage.unlimited && (dailyUsage.daily_remaining ?? 0) <= 0;
+
   const startRapidAll = () => {
     const pendingCompanies = companies.filter((c) => c.status === "pending");
 
@@ -591,10 +627,15 @@ export default function CampaignDetailPage() {
       alert("No pending companies to process!");
       return;
     }
+    if (dailyLimitReached) {
+      alert("Daily limit reached. Resets at midnight UTC.");
+      return;
+    }
 
     // Guests get automatic limit, no modal
     if (!user) {
-      handleStartRapidAllWithLimit(5);
+      const cap = dailyUsage?.daily_remaining != null ? Math.min(5, dailyUsage.daily_remaining) : 5;
+      handleStartRapidAllWithLimit(cap);
       return;
     }
 
@@ -630,7 +671,8 @@ export default function CampaignDetailPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to start campaign");
+        const msg = errorData.message || errorData.error || "Failed to start campaign";
+        throw new Error(msg);
       }
 
       const data = await response.json();
@@ -704,7 +746,8 @@ export default function CampaignDetailPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to start retry");
+        const msg = errorData.message || errorData.error || "Failed to start retry";
+        throw new Error(msg);
       }
 
       console.log("[Retry] Started batch processing for failed companies");
@@ -906,7 +949,16 @@ export default function CampaignDetailPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {dailyUsage && (
+                <span className="text-[11px] text-gray-400 mr-1">
+                  Today: <span className="text-white font-medium">{dailyUsage.daily_used}</span>
+                  {dailyUsage.unlimited ? "" : ` / ${dailyUsage.daily_limit}`} companies
+                  {dailyLimitReached && (
+                    <span className="text-amber-400 ml-1">(limit reached)</span>
+                  )}
+                </span>
+              )}
               <button
                 onClick={() => fetchCampaignDetails()}
                 disabled={refreshing}
@@ -919,7 +971,7 @@ export default function CampaignDetailPage() {
               {companies.filter((c) => c.status === "pending").length > 0 && (
                 <button
                   onClick={startRapidAll}
-                  disabled={isRapidAllRunning || processingCompanyId !== null}
+                  disabled={isRapidAllRunning || processingCompanyId !== null || dailyLimitReached}
                   className="group flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Activity className="w-3.5 h-3.5" />
