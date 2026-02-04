@@ -325,11 +325,11 @@ export default function CampaignDetailPage() {
         );
         // Preserve optimistic "processing" so UI shows it until API/WebSocket catches up
         setCompanies((prev) => {
-          const fromApi = companiesData.companies || [];
+          const fromApi = (companiesData.companies || []) as Company[];
           const wasProcessing = new Set(
             prev.filter((c) => c.status === "processing").map((c) => c.id)
           );
-          return fromApi.map((c) =>
+          return fromApi.map((c: Company) =>
             wasProcessing.has(c.id) ? { ...c, status: "processing" } : c
           );
         });
