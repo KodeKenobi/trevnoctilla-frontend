@@ -17,6 +17,7 @@ import {
   Activity,
   Trash2,
   Download,
+  Search,
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import ExportOptionsModal from "@/components/ui/ExportOptionsModal";
@@ -490,6 +491,23 @@ export default function CampaignDetailPage() {
       return "Processing failed. Please try again.";
     }
 
+    // Successful processing outcomes (no form / no contact) — show clear result, not "failed"
+    if (
+      msg.includes("no contact form") ||
+      msg.includes("no contact found") ||
+      msg.includes("no contact or email") ||
+      msg.includes("no form found")
+    ) {
+      return "No contact form found on this site.";
+    }
+    if (
+      msg.includes("no contact") &&
+      msg.includes("email") &&
+      msg.includes("found")
+    ) {
+      return "No contact form found; contact emails were found on the page.";
+    }
+
     if (msg.includes("attributeerror") || msg.includes("has no attribute")) {
       return "System error: Data missing or invalid format.";
     }
@@ -786,6 +804,8 @@ export default function CampaignDetailPage() {
         return "text-emerald-400";
       case "contact_info_found":
         return "text-cyan-400";
+      case "no_contact_found":
+        return "text-slate-400";
       case "processing":
         return "text-blue-400";
       case "failed":
@@ -806,6 +826,8 @@ export default function CampaignDetailPage() {
         return "bg-emerald-400";
       case "contact_info_found":
         return "bg-cyan-400";
+      case "no_contact_found":
+        return "bg-slate-500";
       case "processing":
         return "bg-blue-400";
       case "failed":
@@ -825,6 +847,8 @@ export default function CampaignDetailPage() {
         return <CheckCircle className={iconClass} />;
       case "contact_info_found":
         return <Eye className={iconClass} />;
+      case "no_contact_found":
+        return <Search className={iconClass} />;
       case "processing":
         return <Loader className={`${iconClass} animate-spin`} />;
       case "failed":
@@ -1185,7 +1209,11 @@ export default function CampaignDetailPage() {
                     )}`}
                   >
                     {getStatusIcon(company.status)}
-                    <span className="text-xs capitalize">{company.status}</span>
+                    <span className="text-xs capitalize">
+                      {company.status === "no_contact_found"
+                        ? "No contact found"
+                        : company.status.replace(/_/g, " ")}
+                    </span>
                   </div>
 
                   {/* Details */}
@@ -1235,6 +1263,16 @@ export default function CampaignDetailPage() {
                             Method: {company.detection_method.replace("_", " ")}
                           </div>
                         )}
+                      </div>
+                    ) : company.status === "no_contact_found" ? (
+                      <div className="space-y-0.5">
+                        <div className="text-slate-400">
+                          No contact form found
+                        </div>
+                        <div className="text-white/50 text-[10px]">
+                          {company.error_message ||
+                            "This site had no contact form or submitable form."}
+                        </div>
                       </div>
                     ) : company.error_message ? (
                       <div className="space-y-0.5">
