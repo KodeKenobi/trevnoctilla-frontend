@@ -212,11 +212,17 @@ export default function CampaignDetailPage() {
     try {
       let url = "/api/campaigns/usage";
       const headers: HeadersInit = { "Content-Type": "application/json" };
-      if (user) {
-        const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-        if (token) Object.assign(headers, getAuthHeaders(token));
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("auth_token")
+          : null;
+      if (token) {
+        Object.assign(headers, getAuthHeaders(token));
       } else {
-        const sessionId = typeof window !== "undefined" ? localStorage.getItem("guest_session_id") : null;
+        const sessionId =
+          typeof window !== "undefined"
+            ? localStorage.getItem("guest_session_id")
+            : null;
         if (sessionId) url += `?session_id=${encodeURIComponent(sessionId)}`;
       }
       const res = await fetch(url, { credentials: "include", headers });
@@ -618,7 +624,10 @@ export default function CampaignDetailPage() {
     return "Processing failed. Please try again or contact support if the problem continues.";
   };
 
-  const dailyLimitReached = dailyUsage !== null && !dailyUsage.unlimited && (dailyUsage.daily_remaining ?? 0) <= 0;
+  const dailyLimitReached =
+    dailyUsage !== null &&
+    !dailyUsage.unlimited &&
+    (dailyUsage.daily_remaining ?? 0) <= 0;
 
   const startRapidAll = () => {
     const pendingCompanies = companies.filter((c) => c.status === "pending");
@@ -634,7 +643,10 @@ export default function CampaignDetailPage() {
 
     // Guests get automatic limit, no modal
     if (!user) {
-      const cap = dailyUsage?.daily_remaining != null ? Math.min(5, dailyUsage.daily_remaining) : 5;
+      const cap =
+        dailyUsage?.daily_remaining != null
+          ? Math.min(5, dailyUsage.daily_remaining)
+          : 5;
       handleStartRapidAllWithLimit(cap);
       return;
     }
@@ -671,7 +683,8 @@ export default function CampaignDetailPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const msg = errorData.message || errorData.error || "Failed to start campaign";
+        const msg =
+          errorData.message || errorData.error || "Failed to start campaign";
         throw new Error(msg);
       }
 
@@ -746,7 +759,8 @@ export default function CampaignDetailPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const msg = errorData.message || errorData.error || "Failed to start retry";
+        const msg =
+          errorData.message || errorData.error || "Failed to start retry";
         throw new Error(msg);
       }
 
@@ -952,8 +966,12 @@ export default function CampaignDetailPage() {
             <div className="flex flex-wrap items-center gap-2">
               {dailyUsage && (
                 <span className="text-[11px] text-gray-400 mr-1">
-                  Today: <span className="text-white font-medium">{dailyUsage.daily_used}</span>
-                  {dailyUsage.unlimited ? "" : ` / ${dailyUsage.daily_limit}`} companies
+                  Today:{" "}
+                  <span className="text-white font-medium">
+                    {dailyUsage.daily_used}
+                  </span>
+                  {dailyUsage.unlimited ? "" : ` / ${dailyUsage.daily_limit}`}{" "}
+                  companies
                   {dailyLimitReached && (
                     <span className="text-amber-400 ml-1">(limit reached)</span>
                   )}
@@ -971,7 +989,11 @@ export default function CampaignDetailPage() {
               {companies.filter((c) => c.status === "pending").length > 0 && (
                 <button
                   onClick={startRapidAll}
-                  disabled={isRapidAllRunning || processingCompanyId !== null || dailyLimitReached}
+                  disabled={
+                    isRapidAllRunning ||
+                    processingCompanyId !== null ||
+                    dailyLimitReached
+                  }
                   className="group flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Activity className="w-3.5 h-3.5" />

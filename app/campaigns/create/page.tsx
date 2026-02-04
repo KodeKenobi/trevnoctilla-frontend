@@ -31,10 +31,28 @@ export default function CreateCampaignPage() {
   const [message, setMessage] = useState("");
 
   const countries = [
-    "United Kingdom", "South Africa", "United States", "Australia", "Canada", 
-    "New Zealand", "Ireland", "Germany", "France", "Netherlands", "Spain", 
-    "Italy", "Israel", "India", "Singapore", "United Arab Emirates", 
-    "Saudi Arabia", "Brazil", "Mexico", "China", "Japan", "South Korea"
+    "United Kingdom",
+    "South Africa",
+    "United States",
+    "Australia",
+    "Canada",
+    "New Zealand",
+    "Ireland",
+    "Germany",
+    "France",
+    "Netherlands",
+    "Spain",
+    "Italy",
+    "Israel",
+    "India",
+    "Singapore",
+    "United Arab Emirates",
+    "Saudi Arabia",
+    "Brazil",
+    "Mexico",
+    "China",
+    "Japan",
+    "South Korea",
   ].sort();
 
   useEffect(() => {
@@ -50,22 +68,27 @@ export default function CreateCampaignPage() {
     if (!uploadedData) return;
     let url = "/api/campaigns/usage";
     const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (user) {
-      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-      if (token) Object.assign(headers, getAuthHeaders(token));
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    if (token) {
+      Object.assign(headers, getAuthHeaders(token));
     } else {
-      const sessionId = typeof window !== "undefined" ? localStorage.getItem("guest_session_id") : null;
+      const sessionId =
+        typeof window !== "undefined"
+          ? localStorage.getItem("guest_session_id")
+          : null;
       if (sessionId) url += `?session_id=${encodeURIComponent(sessionId)}`;
     }
     fetch(url, { credentials: "include", headers })
       .then((res) => res.ok && res.json())
       .then((data) => {
-        if (data) setDailyUsage({
-          daily_limit: data.daily_limit ?? 5,
-          daily_used: data.daily_used ?? 0,
-          daily_remaining: data.daily_remaining ?? null,
-          unlimited: data.unlimited ?? false,
-        });
+        if (data)
+          setDailyUsage({
+            daily_limit: data.daily_limit ?? 5,
+            daily_used: data.daily_used ?? 0,
+            daily_remaining: data.daily_remaining ?? null,
+            unlimited: data.unlimited ?? false,
+          });
       })
       .catch(() => {});
   }, [uploadedData, user]);
@@ -300,8 +323,10 @@ export default function CreateCampaignPage() {
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 text-sm text-white 
                            focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all rounded-lg"
               >
-                {countries.map(country => (
-                  <option key={country} value={country}>{country}</option>
+                {countries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
                 ))}
               </select>
 
@@ -350,11 +375,18 @@ export default function CreateCampaignPage() {
             <div className="text-xs text-gray-400">
               {dailyUsage && (
                 <>
-                  Today: <span className="text-white font-medium">{dailyUsage.daily_used}</span>
-                  {dailyUsage.unlimited ? "" : ` / ${dailyUsage.daily_limit}`} companies
-                  {!dailyUsage.unlimited && (dailyUsage.daily_remaining ?? 0) <= 0 && (
-                    <span className="text-amber-400 ml-1">— Daily limit reached. Resets at midnight UTC.</span>
-                  )}
+                  Today:{" "}
+                  <span className="text-white font-medium">
+                    {dailyUsage.daily_used}
+                  </span>
+                  {dailyUsage.unlimited ? "" : ` / ${dailyUsage.daily_limit}`}{" "}
+                  companies
+                  {!dailyUsage.unlimited &&
+                    (dailyUsage.daily_remaining ?? 0) <= 0 && (
+                      <span className="text-amber-400 ml-1">
+                        — Daily limit reached. Resets at midnight UTC.
+                      </span>
+                    )}
                 </>
               )}
             </div>
@@ -368,7 +400,12 @@ export default function CreateCampaignPage() {
               </button>
               <button
                 type="submit"
-                disabled={loading || (dailyUsage !== null && !dailyUsage.unlimited && (dailyUsage.daily_remaining ?? 0) <= 0)}
+                disabled={
+                  loading ||
+                  (dailyUsage !== null &&
+                    !dailyUsage.unlimited &&
+                    (dailyUsage.daily_remaining ?? 0) <= 0)
+                }
                 className="px-6 py-2 bg-blue-600 text-white text-sm font-medium
                            hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-full"
               >

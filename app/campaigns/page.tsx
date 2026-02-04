@@ -472,11 +472,17 @@ export default function CampaignsPage() {
     try {
       let url = "/api/campaigns/usage";
       const headers: HeadersInit = { "Content-Type": "application/json" };
-      if (user) {
-        const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-        if (token) Object.assign(headers, getAuthHeaders(token));
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("auth_token")
+          : null;
+      if (token) {
+        Object.assign(headers, getAuthHeaders(token));
       } else {
-        const sessionId = typeof window !== "undefined" ? localStorage.getItem("guest_session_id") : null;
+        const sessionId =
+          typeof window !== "undefined"
+            ? localStorage.getItem("guest_session_id")
+            : null;
         if (sessionId) url += `?session_id=${encodeURIComponent(sessionId)}`;
       }
       const res = await fetch(url, { credentials: "include", headers });
@@ -499,12 +505,15 @@ export default function CampaignsPage() {
       setLoading(true);
 
       // For guests: use session_id from localStorage if present; otherwise let server recover from cookie + Supabase
-      const sessionId = typeof window !== "undefined" ? localStorage.getItem("guest_session_id") : null;
+      const sessionId =
+        typeof window !== "undefined"
+          ? localStorage.getItem("guest_session_id")
+          : null;
       const url = user
         ? "/api/campaigns"
         : sessionId
-          ? `/api/campaigns?session_id=${encodeURIComponent(sessionId)}`
-          : "/api/campaigns";
+        ? `/api/campaigns?session_id=${encodeURIComponent(sessionId)}`
+        : "/api/campaigns";
 
       const response = await fetch(url, { credentials: "include" });
       if (!response.ok) {
@@ -613,15 +622,23 @@ export default function CampaignsPage() {
               {dailyUsage && (
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="text-xs text-gray-400 whitespace-nowrap">
-                    Today: <span className="text-white font-medium">{dailyUsage.daily_used}</span>
-                    {dailyUsage.unlimited ? "" : ` / ${dailyUsage.daily_limit}`} companies
+                    Today:{" "}
+                    <span className="text-white font-medium">
+                      {dailyUsage.daily_used}
+                    </span>
+                    {dailyUsage.unlimited ? "" : ` / ${dailyUsage.daily_limit}`}{" "}
+                    companies
                   </span>
                   {!dailyUsage.unlimited && (
                     <div className="flex-1 min-w-[80px] max-w-[120px] h-1.5 bg-gray-700 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-blue-500 rounded-full transition-all"
                         style={{
-                          width: `${Math.min(100, (dailyUsage.daily_used / dailyUsage.daily_limit) * 100)}%`,
+                          width: `${Math.min(
+                            100,
+                            (dailyUsage.daily_used / dailyUsage.daily_limit) *
+                              100
+                          )}%`,
                         }}
                       />
                     </div>
@@ -630,18 +647,24 @@ export default function CampaignsPage() {
               )}
               <button
                 onClick={() => router.push("/campaigns/upload")}
-                disabled={dailyUsage !== null && !dailyUsage.unlimited && (dailyUsage.daily_remaining ?? 0) <= 0}
+                disabled={
+                  dailyUsage !== null &&
+                  !dailyUsage.unlimited &&
+                  (dailyUsage.daily_remaining ?? 0) <= 0
+                }
                 className="px-4 py-2 bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 transition-colors rounded border border-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 Create Campaign
               </button>
             </div>
           </div>
-          {dailyUsage && !dailyUsage.unlimited && (dailyUsage.daily_remaining ?? 0) <= 0 && (
-            <p className="mt-2 text-xs text-amber-400">
-              Daily limit reached. Resets at midnight UTC.
-            </p>
-          )}
+          {dailyUsage &&
+            !dailyUsage.unlimited &&
+            (dailyUsage.daily_remaining ?? 0) <= 0 && (
+              <p className="mt-2 text-xs text-amber-400">
+                Daily limit reached. Resets at midnight UTC.
+              </p>
+            )}
         </div>
 
         {error && (
@@ -676,147 +699,153 @@ export default function CampaignsPage() {
                   >
                     {/* Content */}
                     <div className="h-full flex flex-col">
-                    {/* Header */}
-                    <div className="p-6 pb-4">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-white mb-1 line-clamp-2 group-hover:text-blue-300 transition-colors">
-                            {campaign.name}
-                          </h3>
-                          <p className="text-sm text-gray-400">
-                            Created{" "}
-                            {new Date(campaign.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
+                      {/* Header */}
+                      <div className="p-6 pb-4">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-white mb-1 line-clamp-2 group-hover:text-blue-300 transition-colors">
+                              {campaign.name}
+                            </h3>
+                            <p className="text-sm text-gray-400">
+                              Created{" "}
+                              {new Date(
+                                campaign.created_at
+                              ).toLocaleDateString()}
+                            </p>
+                          </div>
 
-                        {/* Status Badge */}
-                        <div
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                            isActive
-                              ? "bg-green-500/10 text-green-300 border border-green-500/20"
-                              : isCompleted
-                              ? "bg-blue-500/10 text-blue-300 border border-blue-500/20"
-                              : isPaused
-                              ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
-                              : isFailed
-                              ? "bg-red-500/10 text-red-300 border border-red-500/20"
-                              : "bg-gray-500/10 text-gray-300 border border-gray-500/20"
-                          }`}
-                        >
-                          <span className="capitalize">{campaign.status}</span>
-                        </div>
-                      </div>
-
-                      {/* Progress Section */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-400">Progress</span>
-                          <span className="text-white font-medium">
-                            {campaign.progress_percentage}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          {/* Status Badge */}
                           <div
-                            className={`h-2 rounded-full transition-all duration-500 ${
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                               isActive
-                                ? "bg-green-500"
+                                ? "bg-green-500/10 text-green-300 border border-green-500/20"
                                 : isCompleted
-                                ? "bg-blue-500"
+                                ? "bg-blue-500/10 text-blue-300 border border-blue-500/20"
+                                : isPaused
+                                ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
                                 : isFailed
-                                ? "bg-red-500"
-                                : "bg-gray-500"
+                                ? "bg-red-500/10 text-red-300 border border-red-500/20"
+                                : "bg-gray-500/10 text-gray-300 border border-gray-500/20"
                             }`}
-                            style={{
-                              width: `${campaign.progress_percentage}%`,
-                            }}
-                          />
+                          >
+                            <span className="capitalize">
+                              {campaign.status}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Stats Grid */}
-                    <div className="px-6 pb-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                          <div className="text-xl font-bold text-white mb-1">
-                            {campaign.total_companies}
+                        {/* Progress Section */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">Progress</span>
+                            <span className="text-white font-medium">
+                              {campaign.progress_percentage}%
+                            </span>
                           </div>
-                          <div className="text-xs text-gray-400">
-                            Total Companies
+                          <div className="w-full bg-gray-700 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-500 ${
+                                isActive
+                                  ? "bg-green-500"
+                                  : isCompleted
+                                  ? "bg-blue-500"
+                                  : isFailed
+                                  ? "bg-red-500"
+                                  : "bg-gray-500"
+                              }`}
+                              style={{
+                                width: `${campaign.progress_percentage}%`,
+                              }}
+                            />
                           </div>
-                        </div>
-                        <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                          <div className="text-xl font-bold text-blue-300 mb-1">
-                            {campaign.processed_count}
-                          </div>
-                          <div className="text-xs text-gray-400">Processed</div>
-                        </div>
-                        <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                          <div className="text-xl font-bold text-green-300 mb-1">
-                            {campaign.success_count}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            Successful
-                          </div>
-                        </div>
-                        <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                          <div className="text-xl font-bold text-red-300 mb-1">
-                            {campaign.failed_count}
-                          </div>
-                          <div className="text-xs text-gray-400">Failed</div>
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-800">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/campaigns/${campaign.id}`);
-                          }}
-                          className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-500 transition-colors border border-blue-500/20"
-                        >
-                          View
-                        </button>
+                      {/* Stats Grid */}
+                      <div className="px-6 pb-6">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                            <div className="text-xl font-bold text-white mb-1">
+                              {campaign.total_companies}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              Total Companies
+                            </div>
+                          </div>
+                          <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                            <div className="text-xl font-bold text-blue-300 mb-1">
+                              {campaign.processed_count}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              Processed
+                            </div>
+                          </div>
+                          <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                            <div className="text-xl font-bold text-green-300 mb-1">
+                              {campaign.success_count}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              Successful
+                            </div>
+                          </div>
+                          <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+                            <div className="text-xl font-bold text-red-300 mb-1">
+                              {campaign.failed_count}
+                            </div>
+                            <div className="text-xs text-gray-400">Failed</div>
+                          </div>
+                        </div>
 
-                        {isActive && (
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-800">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Add pause action here
+                              router.push(`/campaigns/${campaign.id}`);
                             }}
-                            className="px-3 py-2 bg-amber-600 text-white text-sm font-medium rounded hover:bg-amber-500 transition-colors border border-amber-500/20"
-                            title="Pause campaign"
+                            className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-500 transition-colors border border-blue-500/20"
                           >
-                            Pause
+                            View
                           </button>
-                        )}
 
-                        {isPaused && (
+                          {isActive && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Add pause action here
+                              }}
+                              className="px-3 py-2 bg-amber-600 text-white text-sm font-medium rounded hover:bg-amber-500 transition-colors border border-amber-500/20"
+                              title="Pause campaign"
+                            >
+                              Pause
+                            </button>
+                          )}
+
+                          {isPaused && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Add resume action here
+                              }}
+                              className="px-3 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-500 transition-colors border border-green-500/20"
+                              title="Resume campaign"
+                            >
+                              Resume
+                            </button>
+                          )}
+
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Add resume action here
+                              handleDeleteClick(campaign.id);
                             }}
-                            className="px-3 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-500 transition-colors border border-green-500/20"
-                            title="Resume campaign"
+                            className="px-3 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-500 transition-colors border border-red-500/20"
+                            title="Delete campaign"
                           >
-                            Resume
+                            Delete
                           </button>
-                        )}
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteClick(campaign.id);
-                          }}
-                          className="px-3 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-500 transition-colors border border-red-500/20"
-                          title="Delete campaign"
-                        >
-                          Delete
-                        </button>
+                        </div>
                       </div>
-                    </div>
                     </div>
                   </div>
                 );
