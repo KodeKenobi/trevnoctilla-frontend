@@ -18,6 +18,8 @@ import {
   Trash2,
   Download,
   Search,
+  ExternalLink,
+  ShieldAlert,
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import ExportOptionsModal from "@/components/ui/ExportOptionsModal";
@@ -126,8 +128,9 @@ export default function CampaignDetailPage() {
   const isRapidAllRunningRef = useRef(false);
   const processingTimesRef = useRef<number[]>([]); // Track processing times for ETA
   const processingCompanyIdRef = useRef<number | null>(null);
+  const campaignStatusRef = useRef<string | undefined>(undefined);
 
-  // Keep refs in sync with state
+  // Keep refs in sync with state (so polling interval can read latest without re-running effect)
   useEffect(() => {
     rapidAllProgressRef.current = rapidAllProgress;
   }, [rapidAllProgress]);
@@ -135,6 +138,10 @@ export default function CampaignDetailPage() {
   useEffect(() => {
     processingCompanyIdRef.current = processingCompanyId;
   }, [processingCompanyId]);
+
+  useEffect(() => {
+    campaignStatusRef.current = campaign?.status;
+  }, [campaign?.status]);
 
   useEffect(() => {
     customProcessingLimitRef.current = customProcessingLimit;
@@ -228,29 +235,30 @@ export default function CampaignDetailPage() {
     }
   }, [user]);
 
+  // Initial load + polling only. Do NOT depend on processingCompanyId/isRapidAllRunning so that
+  // clicking Start does NOT re-run this effect and trigger fetchCampaignDetails() — the first company
+  // stays "processing" from the optimistic update until the next poll (every 6s) or WebSocket.
   useEffect(() => {
-    if (campaignId) {
-      console.log("[Campaign Detail] Initial load, campaignId:", campaignId);
-      fetchCampaignDetails();
-      fetchUsage();
-      // Only poll when there's active processing or Rapid All is running
-      const interval = setInterval(() => {
-        const hasProcessing = companies.some((c) => c.status === "processing");
-        if (
-          campaign &&
-          (isRapidAllRunning ||
-            processingCompanyId !== null ||
-            hasProcessing) &&
-          campaign.status !== "completed" &&
-          campaign.status !== "failed" &&
-          campaign.status !== "cancelled"
-        ) {
-          fetchCampaignDetails(true);
-        }
-      }, 6000); // Poll every 6 seconds to avoid excessive refreshes
-      return () => clearInterval(interval);
-    }
-  }, [campaignId, campaign?.status, isRapidAllRunning, processingCompanyId]);
+    if (!campaignId) return;
+    console.log("[Campaign Detail] Initial load, campaignId:", campaignId);
+    fetchCampaignDetails();
+    fetchUsage();
+    const interval = setInterval(() => {
+      const status = campaignStatusRef.current;
+      const running = isRapidAllRunningRef.current;
+      const currentId = processingCompanyIdRef.current;
+      if (
+        status &&
+        status !== "completed" &&
+        status !== "failed" &&
+        status !== "cancelled" &&
+        (running || currentId != null)
+      ) {
+        fetchCampaignDetails(true);
+      }
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [campaignId]);
 
   // When polling sees campaign finished, stop Rapid All state (covers case when WebSocket never sent campaign_complete)
   useEffect(() => {
@@ -957,7 +965,12 @@ export default function CampaignDetailPage() {
       case "failed":
         return <XCircle className={iconClass} />;
       case "captcha":
-        return <Shield className={iconClass} />;
+        return (
+          <ShieldAlert
+            className={iconClass}
+            title="Form has CAPTCHA — flagged"
+          />
+        );
       default:
         return <Clock className={iconClass} />;
     }
@@ -1287,20 +1300,27 @@ export default function CampaignDetailPage() {
                       <div className="text-sm text-white truncate group-hover:text-white transition-colors">
                         {getCompanyDisplayName(company)}
                       </div>
-                      <div className="text-[11px] font-mono truncate mt-0.5">
+                      <div className="text-[11px] font-mono truncate mt-0.5 flex items-center gap-1">
                         {company.website_url ? (
-                          <a
-                            href={
-                              company.website_url.startsWith("http")
-                                ? company.website_url
-                                : `https://${company.website_url}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-400 hover:text-blue-300 underline truncate block"
-                          >
-                            {company.website_url}
-                          </a>
+                          <>
+                            <a
+                              href={
+                                company.website_url.startsWith("http")
+                                  ? company.website_url
+                                  : `https://${company.website_url}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:text-blue-300 underline truncate inline-flex items-center gap-1"
+                              title="Open in new tab"
+                            >
+                              {company.website_url}
+                              <ExternalLink
+                                className="w-3 h-3 shrink-0 opacity-80"
+                                aria-hidden
+                              />
+                            </a>
+                          </>
                         ) : (
                           <span className="text-white/60">—</span>
                         )}
@@ -1312,12 +1332,14 @@ export default function CampaignDetailPage() {
                   <div
                     className={`flex items-center gap-2 ${getStatusColor(
                       company.status
-                    )}`}
+                    )} ${company.status === "captcha" ? "font-semibold" : ""}`}
                   >
                     {getStatusIcon(company.status)}
                     <span className="text-xs capitalize">
                       {company.status === "no_contact_found"
                         ? "No contact found"
+                        : company.status === "captcha"
+                        ? "CAPTCHA (flagged)"
                         : company.status.replace(/_/g, " ")}
                     </span>
                   </div>
