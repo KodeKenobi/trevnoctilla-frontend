@@ -124,23 +124,34 @@ export default function CreateCampaignPage() {
         message: message,
       };
 
-      // Get or create session ID for guest users
-      let sessionId = localStorage.getItem("guest_session_id");
-      if (!sessionId) {
-        sessionId = `guest_${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}`;
-        localStorage.setItem("guest_session_id", sessionId);
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("auth_token")
+          : null;
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (token) Object.assign(headers, getAuthHeaders(token));
+
+      // For guests: session_id required. For logged-in users: backend uses JWT, do not send session_id.
+      let sessionId = null;
+      if (!token) {
+        sessionId = localStorage.getItem("guest_session_id");
+        if (!sessionId) {
+          sessionId = `guest_${Date.now()}_${Math.random()
+            .toString(36)
+            .substr(2, 9)}`;
+          localStorage.setItem("guest_session_id", sessionId);
+        }
       }
 
       const response = await fetch("/api/campaigns", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           name: campaignName,
-          message_template: JSON.stringify(formData), // Store form data as JSON
+          message_template: JSON.stringify(formData),
           companies: uploadedData.rows,
-          session_id: sessionId, // Include session ID for guest tracking
+          email: senderEmail || undefined,
+          ...(sessionId ? { session_id: sessionId } : {}),
         }),
       });
 
