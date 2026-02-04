@@ -1021,6 +1021,14 @@ export default function CampaignDetailPage() {
                   {dailyLimitReached && (
                     <span className="text-amber-400 ml-1">(limit reached)</span>
                   )}
+                  {!dailyUsage.unlimited && dailyUsage.daily_limit === 5 && (
+                    <span
+                      className="text-gray-500 ml-1"
+                      title="Guest tier: 5 companies per campaign and 5 per day. Sign up free for 50."
+                    >
+                      — Guest limit
+                    </span>
+                  )}
                 </span>
               )}
               <button
