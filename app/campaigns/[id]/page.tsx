@@ -968,7 +968,7 @@ export default function CampaignDetailPage() {
         return (
           <ShieldAlert
             className={iconClass}
-            title="Form has CAPTCHA — flagged"
+            aria-label="Form has CAPTCHA — flagged"
           />
         );
       default:
