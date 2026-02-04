@@ -323,7 +323,16 @@ export default function CampaignDetailPage() {
           "[Campaign Detail] Companies loaded:",
           companiesData.companies?.length || 0
         );
-        setCompanies(companiesData.companies || []);
+        // Preserve optimistic "processing" so UI shows it until API/WebSocket catches up
+        setCompanies((prev) => {
+          const fromApi = companiesData.companies || [];
+          const wasProcessing = new Set(
+            prev.filter((c) => c.status === "processing").map((c) => c.id)
+          );
+          return fromApi.map((c) =>
+            wasProcessing.has(c.id) ? { ...c, status: "processing" } : c
+          );
+        });
       } else {
         console.error(
           "[Campaign Detail] Failed to fetch companies:",
@@ -844,9 +853,20 @@ export default function CampaignDetailPage() {
   const paginatedCompanies = filteredCompanies.slice(startIndex, endIndex);
 
   // Calculate real-time statistics from companies array
+  // PROCESSED = finished only (exclude "processing" so the count adds up: processed = success + failed + no_contact + captcha)
   const stats = useMemo(() => {
     const total = campaign?.total_companies || companies.length;
-    const processed = companies.filter((c) => c.status !== "pending").length;
+    const terminalStatuses = [
+      "completed",
+      "success",
+      "contact_info_found",
+      "failed",
+      "no_contact_found",
+      "captcha",
+    ];
+    const processed = companies.filter((c) =>
+      terminalStatuses.includes(c.status)
+    ).length;
     const success = companies.filter(
       (c) =>
         c.status === "completed" ||
@@ -858,7 +878,6 @@ export default function CampaignDetailPage() {
     ).length;
     const failed = companies.filter((c) => c.status === "failed").length;
     const captcha = companies.filter((c) => c.status === "captcha").length;
-    // Progress should be based on completed + failed + contact_info_found + captcha, not all non-pending (which includes processing)
     const completedOrFailed = success + failed + captcha;
     const progress =
       total > 0 ? Math.round((completedOrFailed / total) * 100) : 0;
@@ -1022,7 +1041,7 @@ export default function CampaignDetailPage() {
                 >
                   <Activity className="w-3.5 h-3.5" />
                   {isRapidAllRunning || processingCompanyId !== null
-                    ? "Mission Control Active"
+                    ? "Processing…"
                     : `Rapid All (${Math.min(
                         companies.filter((c) => c.status === "pending").length,
                         campaignLimit === Infinity
@@ -1032,6 +1051,26 @@ export default function CampaignDetailPage() {
                       )}${
                         campaignLimit !== Infinity ? `/${campaignLimit}` : ""
                       })`}
+                </button>
+              )}
+              {(isRapidAllRunning || processingCompanyId !== null) && (
+                <button
+                  onClick={handleStopCampaign}
+                  disabled={isStopping}
+                  className="group flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-colors rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isStopping ? "Stopping..." : "Stop campaign"}
+                </button>
+              )}
+              {companies.filter((c) => c.status === "failed").length > 0 && (
+                <button
+                  onClick={() => setRetryFailedModalOpen(true)}
+                  disabled={isRapidAllRunning || processingCompanyId !== null}
+                  className="group flex items-center gap-2 px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-medium transition-colors rounded-lg border border-amber-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Retry failed (
+                  {companies.filter((c) => c.status === "failed").length})
                 </button>
               )}
               <button
@@ -1053,98 +1092,42 @@ export default function CampaignDetailPage() {
           </div>
         </div>
 
-        {/* Mission Control Dashboard */}
+        {/* Processing in progress */}
         {(isRapidAllRunning || processingCompanyId !== null) && (
-          <div className="mb-8 grid grid-cols-1 gap-6">
-            {/* Main Progress & Status */}
-            <div className="border border-blue-500/30 rounded-lg p-6 bg-gradient-to-br from-blue-500/10 via-black to-purple-500/10 backdrop-blur-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                  <span className="text-[10px] font-mono text-blue-400 uppercase tracking-widest">
-                    Live Link Established
+          <div className="mb-8">
+            <div className="border border-white/10 rounded-lg p-5">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                  <span className="text-sm text-white">
+                    {rapidStatus || "Processing..."}
                   </span>
-                </div>
-              </div>
-
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
-                    <Activity className="w-6 h-6 text-blue-400 animate-pulse" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white tracking-tight">
-                      Mission Control
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-white/60 font-medium">
-                        Currently:
-                      </span>
-                      <span className="text-xs text-blue-400 font-mono font-bold animate-pulse">
-                        {rapidStatus || "Synchronizing..."}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-2xl font-mono font-black text-white">
-                    {rapidProgress || 0}%
-                  </div>
-                  <div className="text-[10px] text-white/40 uppercase font-bold tracking-tighter">
-                    Current Step Progress
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress Gauges */}
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between text-[10px] uppercase tracking-wider font-bold text-white/60 mb-2">
-                    <span>Campaign Sequence</span>
-                    <span>
-                      {rapidAllProgress} / {rapidAllTotal} Sites Complete
+                  {rapidCurrentCompany && (
+                    <span className="text-xs text-white/50 truncate max-w-[200px]">
+                      {rapidCurrentCompany}
                     </span>
-                  </div>
-                  <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/10 p-0.5">
-                    <div
-                      className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-400 rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(59,130,246,0.5)]"
-                      style={{
-                        width: `${
-                          (rapidAllProgress / (rapidAllTotal || 1)) * 100
-                        }%`,
-                      }}
-                    />
-                  </div>
+                  )}
                 </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                    <div className="text-[9px] text-white/40 uppercase mb-1">
-                      Active Target
-                    </div>
-                    <div className="text-xs text-white font-mono truncate">
-                      {rapidCurrentCompany || "Waiting..."}
-                    </div>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10 flex items-center justify-between">
-                    <div>
-                      <div className="text-[9px] text-white/40 uppercase mb-1">
-                        System Health
-                      </div>
-                      <div className="text-xs text-emerald-400 font-bold">
-                        OPTIMAL
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleStopCampaign}
-                      disabled={isStopping}
-                      className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white text-[10px] font-black rounded border border-rose-500/30 transition-all uppercase tracking-widest disabled:opacity-50"
-                    >
-                      {isStopping ? "Stopping..." : "Abort Mission"}
-                    </button>
-                  </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-white/70">
+                    {rapidAllProgress} / {rapidAllTotal}
+                  </span>
+                  <button
+                    onClick={handleStopCampaign}
+                    disabled={isStopping}
+                    className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white text-xs font-medium rounded border border-rose-500/30 disabled:opacity-50"
+                  >
+                    {isStopping ? "Stopping..." : "Stop"}
+                  </button>
                 </div>
+              </div>
+              <div className="mt-3 w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${(rapidAllProgress / (rapidAllTotal || 1)) * 100}%`,
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -1448,10 +1431,25 @@ export default function CampaignDetailPage() {
                           )}`}
                         />
                       </>
+                    ) : company.status === "processing" ? (
+                      <>
+                        <button
+                          onClick={handleStopCampaign}
+                          disabled={isStopping}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isStopping ? "Stopping..." : "Stop campaign"}
+                        </button>
+                        <div
+                          className={`w-2 h-2 rounded-full ${getStatusDotColor(
+                            company.status
+                          )}`}
+                        />
+                      </>
                     ) : company.status === "failed" ? (
                       <>
                         <button
-                          onClick={emergencyStopAll}
+                          onClick={handleStopCampaign}
                           disabled={
                             isStopping ||
                             (!isRapidAllRunning && processingCompanyId === null)
