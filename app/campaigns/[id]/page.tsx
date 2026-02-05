@@ -299,18 +299,29 @@ export default function CampaignDetailPage() {
 
       if (companiesRes.ok) {
         const companiesData = await companiesRes.json();
-        // Preserve optimistic "processing" so UI shows it until API/WebSocket catches up
+        // Preserve optimistic "processing" only when API still has company as processing/pending.
+        // Never overwrite terminal statuses (no_contact_found, completed, failed, etc.) with "processing".
+        const terminalStatuses = [
+          "completed",
+          "success",
+          "contact_info_found",
+          "failed",
+          "no_contact_found",
+          "captcha",
+        ];
         setCompanies((prev) => {
           const fromApi = (companiesData.companies || []) as Company[];
           const wasProcessing = new Set(
             prev.filter((c) => c.status === "processing").map((c) => c.id)
           );
           const currentProcessingId = processingCompanyIdRef.current;
-          return fromApi.map((c: Company) =>
-            wasProcessing.has(c.id) || c.id === currentProcessingId
-              ? { ...c, status: "processing" as const }
-              : c
-          );
+          return fromApi.map((c: Company) => {
+            const apiTerminal = terminalStatuses.includes(c.status);
+            if (apiTerminal) return c; // Always trust API for finished companies
+            if (wasProcessing.has(c.id) || c.id === currentProcessingId)
+              return { ...c, status: "processing" as const };
+            return c;
+          });
         });
       } else {
         console.error(
