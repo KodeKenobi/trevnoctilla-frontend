@@ -270,9 +270,10 @@ export function DashboardSidebar({
     );
   };
 
-  // Check if user is enterprise (admin role) or super admin
-  // Role structure: user = regular user, admin = enterprise, super_admin = super admin
-  const isEnterprise = user ? user.role === "admin" || user.role === "super_admin" : false;
+  // Quick Switch: show for super_admin (role) or enterprise-tier only (client ≠ enterprise)
+  const tier = (user?.subscription_tier || "").toLowerCase();
+  const isEnterpriseTier = tier === "enterprise";
+  const isEnterprise = user ? user.role === "super_admin" || isEnterpriseTier : false;
 
   const sidebarContent = (
     <div className="h-full flex flex-col bg-[#1a1a1a] border-r border-[#2a2a2a]">

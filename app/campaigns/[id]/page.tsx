@@ -610,6 +610,14 @@ export default function CampaignDetailPage() {
       return "System error: Data missing or invalid format.";
     }
 
+    // Backend internal error (e.g. NoneType subscript) — suggest retry
+    if (
+      msg.includes("subscriptable") ||
+      (msg.includes("nonetype") && msg.includes("object"))
+    ) {
+      return "Internal processing error. You can retry this company.";
+    }
+
     if (
       msg.includes("connectionerror") ||
       msg.includes("max retries exceeded")
@@ -653,10 +661,10 @@ export default function CampaignDetailPage() {
       return "Processing data error. Please try again.";
     }
 
+    // Only show "Missing data" for short/null-like messages, not for Python "NoneType" (handled above)
     if (
-      msg.includes("undefined") ||
-      msg.includes("null") ||
-      msg.includes("none")
+      (msg.includes("undefined") || msg.includes("null")) &&
+      !msg.includes("nonetype")
     ) {
       return "Missing data error. Please try again.";
     }

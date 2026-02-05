@@ -202,27 +202,26 @@ function DashboardContent() {
         bypassRedirect,
       });
 
-      // Role-based redirection:
-      // super_admin → /admin (Super Admin Dashboard)
-      // admin → /enterprise (Enterprise Dashboard)
-      // user → /dashboard (User Dashboard)
+      // Super admin: always by role → /admin. Everyone else: by subscription tier (enterprise only).
+      const tier = (user.subscription_tier || "").toLowerCase();
+      const isEnterpriseTier = tier === "enterprise";
 
       if (user.role === "super_admin") {
-        // Super admins go to admin dashboard
+        // Super admins always go to admin dashboard (role-based)
         if (window.location.pathname !== "/admin" && !bypassRedirect) {
           console.log("Redirecting super_admin to /admin");
           router.push("/admin");
           return;
         }
-      } else if (user.role === "admin") {
-        // Regular admins (enterprise users) go to enterprise dashboard
+      } else if (isEnterpriseTier) {
+        // Enterprise-tier users (by subscription) go to enterprise dashboard
         if (window.location.pathname !== "/enterprise" && !bypassRedirect) {
-          console.log("Redirecting admin (enterprise) to /enterprise");
+          console.log("Redirecting enterprise tier to /enterprise");
           router.push("/enterprise");
           return;
         }
       }
-      // Users with role "user" stay on this dashboard
+      // Free/premium/production etc. stay on this dashboard
     }
   }, [user, userLoading, router, searchParams]);
 

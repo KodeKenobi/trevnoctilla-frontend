@@ -194,7 +194,7 @@ function EnterpriseDashboardContent() {
   const [toolStats, setToolStats] = useState<any[]>([]);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
-  // Redirect if not admin role (enterprise users have admin role)
+  // Redirect: allow super_admin (role) or enterprise-tier (subscription); else /dashboard
   useEffect(() => {
     if (!userLoading) {
       // If no user at all, redirect to login
@@ -215,16 +215,18 @@ function EnterpriseDashboardContent() {
         currentPath: window.location.pathname,
       });
 
-      // Check if user has admin role (enterprise users)
-      // Role structure: user = regular user, admin = enterprise, super_admin = super admin
-      if (user.role !== "admin" && user.role !== "super_admin") {
-        // Not an admin, redirect to regular dashboard
-        console.log("Redirecting non-admin to /dashboard");
+      // Access: super_admin by role; everyone else by subscription tier (enterprise only; client ≠ enterprise)
+      const tier = (user.subscription_tier || "").toLowerCase();
+      const isEnterpriseTier = tier === "enterprise";
+      const canAccessEnterprise =
+        user.role === "super_admin" || isEnterpriseTier;
+
+      if (!canAccessEnterprise) {
+        console.log("Redirecting non-enterprise to /dashboard");
         router.push("/dashboard");
         return;
       }
 
-      // Admin or super_admin can access this page
       console.log("Access granted to enterprise dashboard");
     }
   }, [user, userLoading, router]);
@@ -505,6 +507,15 @@ function EnterpriseDashboardContent() {
               <Shield className="h-3 w-3 mr-2" />
               Enterprise
             </div>
+            {user?.role === "super_admin" && (
+              <Link
+                href="/admin"
+                className="flex items-center px-2 py-1.5 text-xs text-gray-300 hover:bg-gray-600 rounded transition-colors"
+              >
+                <Crown className="h-3 w-3 mr-2" />
+                Admin
+              </Link>
+            )}
           </div>
         </div>
       </div>

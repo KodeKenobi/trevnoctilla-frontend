@@ -65,19 +65,18 @@ export default function AdminLayout({
         currentPath: pathname,
       });
 
-      // Redirect based on role
-      if (user.role === "admin") {
-        // Regular admin (enterprise users) should go to enterprise dashboard
-        console.log(
-          "Redirecting admin (enterprise) from admin layout to /enterprise"
-        );
-        router.push("/enterprise");
-      } else if (user.role === "user") {
-        // Regular users should go to regular dashboard
-        console.log("Redirecting user from admin layout to /dashboard");
-        router.push("/dashboard");
+      // Only super_admin can access admin. Everyone else: redirect by subscription tier (enterprise only).
+      if (user.role !== "super_admin") {
+        const tier = (user.subscription_tier || "").toLowerCase();
+        const isEnterpriseTier = tier === "enterprise";
+        if (isEnterpriseTier) {
+          console.log("Redirecting non–super_admin (enterprise tier) to /enterprise");
+          router.push("/enterprise");
+        } else {
+          console.log("Redirecting non–super_admin to /dashboard");
+          router.push("/dashboard");
+        }
       }
-      // super_admin can access admin pages
     }
   }, [user, router, pathname]);
 
