@@ -86,6 +86,7 @@ export default function CampaignDetailPage() {
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [processingCompanyId, setProcessingCompanyId] = useState<number | null>(
     null
   );
@@ -333,25 +334,27 @@ export default function CampaignDetailPage() {
   const handleDeleteCampaign = async () => {
     if (!campaignId) return;
 
+    setDeleteError(null);
     try {
       setDeleting(true);
       const response = await fetch(`/api/campaigns/${campaignId}`, {
         method: "DELETE",
       });
 
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
         throw new Error(data.error || "Failed to delete campaign");
       }
 
-      // Redirect to campaigns list
+      setDeleteDialogOpen(false);
       router.push("/campaigns");
+      router.refresh();
     } catch (error: any) {
       console.error("Failed to delete campaign:", error);
-      alert(`Failed to delete campaign: ${error.message}`);
+      setDeleteError(error.message || "Failed to delete campaign");
+      setDeleteDialogOpen(false);
     } finally {
       setDeleting(false);
-      setDeleteDialogOpen(false);
     }
   };
 
@@ -1008,6 +1011,21 @@ export default function CampaignDetailPage() {
   return (
     <div className="min-h-screen bg-black pt-24 pb-12 px-8">
       <div className="max-w-[1400px] mx-auto">
+        {deleteError && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-200 rounded-lg flex items-start justify-between gap-3">
+            <p className="text-sm font-medium flex-1">
+              Could not delete campaign. {deleteError}
+            </p>
+            <button
+              type="button"
+              onClick={() => setDeleteError(null)}
+              className="text-red-300 hover:text-white p-1 rounded transition-colors"
+              aria-label="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         {/* Header */}
         <div className="mb-8 pb-6 border-b border-gray-900">
           <button
@@ -1612,7 +1630,10 @@ export default function CampaignDetailPage() {
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setDeleteError(null);
+        }}
         onConfirm={handleDeleteCampaign}
         title="Delete Campaign Permanently"
         message={`Are you sure you want to delete "${campaign?.name}"? This will permanently delete the campaign and all ${campaign?.total_companies} companies. This action cannot be undone.`}
