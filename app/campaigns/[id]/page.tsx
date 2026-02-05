@@ -737,11 +737,17 @@ export default function CampaignDetailPage() {
         throw new Error(errorData.error || "Failed to stop campaign");
       }
 
-      console.log("[Stop] Stopping requested — current company may finish, then campaign stops.");
+      console.log(
+        "[Stop] Stopping requested — current company may finish, then campaign stops."
+      );
       fetchCampaignDetails(true);
     } catch (error: any) {
       console.error("Failed to stop campaign:", error);
-      alert(error?.name === "AbortError" ? "Request timed out. Stop was sent; campaign will stop after the current company finishes." : `Error: ${error.message}`);
+      alert(
+        error?.name === "AbortError"
+          ? "Request timed out. Stop was sent; campaign will stop after the current company finishes."
+          : `Error: ${error.message}`
+      );
       setIsStopping(false);
     }
   };

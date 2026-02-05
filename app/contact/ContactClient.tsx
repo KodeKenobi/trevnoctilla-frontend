@@ -33,11 +33,15 @@ export default function ContactClient() {
     message: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(null);
+  const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(
+    null
+  );
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -51,7 +55,8 @@ export default function ContactClient() {
 
     try {
       const categoryLabel =
-        categories.find((c) => c.value === formData.category)?.label || formData.category;
+        categories.find((c) => c.value === formData.category)?.label ||
+        formData.category;
 
       const response = await fetch("/api/email/send", {
         method: "POST",
@@ -62,12 +67,21 @@ export default function ContactClient() {
           html: `
             <div style="font-family: system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #111;">
               <h2 style="font-size: 1.25rem; font-weight: 600; margin: 0 0 1rem;">New contact form submission</h2>
-              <p style="margin: 0 0 0.5rem;"><strong>From:</strong> ${formData.name}</p>
-              <p style="margin: 0 0 0.5rem;"><strong>Email:</strong> <a href="mailto:${formData.email}">${formData.email}</a></p>
+              <p style="margin: 0 0 0.5rem;"><strong>From:</strong> ${
+                formData.name
+              }</p>
+              <p style="margin: 0 0 0.5rem;"><strong>Email:</strong> <a href="mailto:${
+                formData.email
+              }">${formData.email}</a></p>
               <p style="margin: 0 0 0.5rem;"><strong>Category:</strong> ${categoryLabel}</p>
-              <p style="margin: 0 0 1rem;"><strong>Subject:</strong> ${formData.subject}</p>
+              <p style="margin: 0 0 1rem;"><strong>Subject:</strong> ${
+                formData.subject
+              }</p>
               <p style="margin: 0 0 0.25rem;"><strong>Message:</strong></p>
-              <div style="background: #f5f5f5; padding: 12px; border-radius: 4px; white-space: pre-wrap; margin-bottom: 1rem;">${formData.message.replace(/\n/g, "<br>")}</div>
+              <div style="background: #f5f5f5; padding: 12px; border-radius: 4px; white-space: pre-wrap; margin-bottom: 1rem;">${formData.message.replace(
+                /\n/g,
+                "<br>"
+              )}</div>
               <p style="margin: 0; font-size: 0.8125rem; color: #666;">Sent from: ${CONTACT_SOURCE}</p>
             </div>
           `,
@@ -104,7 +118,9 @@ Sent from: ${CONTACT_SOURCE}
     } catch (error: unknown) {
       setSubmitStatus("error");
       setErrorMessage(
-        error instanceof Error ? error.message : "Something went wrong. Please try again."
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again."
       );
     } finally {
       setIsSubmitting(false);
@@ -139,7 +155,10 @@ Sent from: ${CONTACT_SOURCE}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-neutral-800 mb-1.5">
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-neutral-800 mb-1.5"
+                >
                   Name
                 </label>
                 <input
@@ -154,7 +173,10 @@ Sent from: ${CONTACT_SOURCE}
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-neutral-800 mb-1.5">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-neutral-800 mb-1.5"
+                >
                   Email
                 </label>
                 <input
@@ -171,7 +193,10 @@ Sent from: ${CONTACT_SOURCE}
             </div>
 
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-neutral-800 mb-1.5">
+              <label
+                htmlFor="category"
+                className="block text-sm font-medium text-neutral-800 mb-1.5"
+              >
                 Category
               </label>
               <select
@@ -191,7 +216,10 @@ Sent from: ${CONTACT_SOURCE}
             </div>
 
             <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-neutral-800 mb-1.5">
+              <label
+                htmlFor="subject"
+                className="block text-sm font-medium text-neutral-800 mb-1.5"
+              >
                 Subject
               </label>
               <input
@@ -207,7 +235,10 @@ Sent from: ${CONTACT_SOURCE}
             </div>
 
             <div>
-              <label htmlFor="message" className="block text-sm font-medium text-neutral-800 mb-1.5">
+              <label
+                htmlFor="message"
+                className="block text-sm font-medium text-neutral-800 mb-1.5"
+              >
                 Message
               </label>
               <textarea
@@ -232,10 +263,13 @@ Sent from: ${CONTACT_SOURCE}
               </button>
               <p className="text-sm text-neutral-500">
                 Or email{" "}
-                <a href="mailto:info@trevnoctilla.com" className="text-neutral-700 underline hover:no-underline">
+                <a
+                  href="mailto:info@trevnoctilla.com"
+                  className="text-neutral-700 underline hover:no-underline"
+                >
                   info@trevnoctilla.com
-                </a>
-                {" "}directly.
+                </a>{" "}
+                directly.
               </p>
             </div>
           </form>
@@ -243,7 +277,10 @@ Sent from: ${CONTACT_SOURCE}
 
         <div className="mt-8 text-sm text-neutral-500">
           <p>We usually respond within 24–48 hours.</p>
-          <Link href="/support" className="text-neutral-700 underline hover:no-underline mt-1 inline-block">
+          <Link
+            href="/support"
+            className="text-neutral-700 underline hover:no-underline mt-1 inline-block"
+          >
             Support & FAQs
           </Link>
         </div>

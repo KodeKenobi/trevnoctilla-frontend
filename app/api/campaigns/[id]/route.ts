@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /**
  * GET /api/campaigns/:id
@@ -15,31 +15,31 @@ export async function GET(
     const { id } = await params;
 
     // Fetch campaign from backend
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
-    const response = await fetch(
-      `${backendUrl}/api/campaigns/${id}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.BACKEND_URL ||
+      "https://web-production-737b.up.railway.app";
+    const response = await fetch(`${backendUrl}/api/campaigns/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { error: errorData.error || 'Failed to fetch campaign' },
+        { error: errorData.error || "Failed to fetch campaign" },
         { status: response.status }
       );
     }
 
     // Check if response has content before parsing
     const text = await response.text();
-    if (!text || text.trim() === '') {
-      console.error('[Campaign GET] Empty response from backend');
+    if (!text || text.trim() === "") {
+      console.error("[Campaign GET] Empty response from backend");
       return NextResponse.json(
-        { error: 'Campaign not found' },
+        { error: "Campaign not found" },
         { status: 404 }
       );
     }
@@ -48,18 +48,17 @@ export async function GET(
       const data = JSON.parse(text);
       return NextResponse.json(data);
     } catch (parseError) {
-      console.error('[Campaign GET] JSON parse error:', parseError);
-      console.error('[Campaign GET] Response text:', text);
+      console.error("[Campaign GET] JSON parse error:", parseError);
+      console.error("[Campaign GET] Response text:", text);
       return NextResponse.json(
-        { error: 'Invalid response from backend' },
+        { error: "Invalid response from backend" },
         { status: 500 }
       );
     }
-
   } catch (error: any) {
-    console.error('[Campaign GET] Error:', error);
+    console.error("[Campaign GET] Error:", error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch campaign' },
+      { error: error.message || "Failed to fetch campaign" },
       { status: 500 }
     );
   }
@@ -78,11 +77,14 @@ export async function PATCH(
     const body = await request.json();
 
     // Update campaign in backend
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.BACKEND_URL ||
+      "https://web-production-737b.up.railway.app";
     const response = await fetch(`${backendUrl}/api/campaigns/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
     });
@@ -90,15 +92,15 @@ export async function PATCH(
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { error: errorData.error || 'Failed to update campaign' },
+        { error: errorData.error || "Failed to update campaign" },
         { status: response.status }
       );
     }
 
     // Check if response has content before parsing
     const text = await response.text();
-    if (!text || text.trim() === '') {
-      console.error('[Campaign PATCH] Empty response from backend');
+    if (!text || text.trim() === "") {
+      console.error("[Campaign PATCH] Empty response from backend");
       return NextResponse.json({ success: true });
     }
 
@@ -106,15 +108,14 @@ export async function PATCH(
       const data = JSON.parse(text);
       return NextResponse.json(data);
     } catch (parseError) {
-      console.error('[Campaign PATCH] JSON parse error:', parseError);
-      console.error('[Campaign PATCH] Response text:', text);
+      console.error("[Campaign PATCH] JSON parse error:", parseError);
+      console.error("[Campaign PATCH] Response text:", text);
       return NextResponse.json({ success: true });
     }
-
   } catch (error: any) {
-    console.error('[Campaign PATCH] Error:', error);
+    console.error("[Campaign PATCH] Error:", error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update campaign' },
+      { error: error.message || "Failed to update campaign" },
       { status: 500 }
     );
   }
@@ -133,33 +134,35 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.BACKEND_URL || 'https://web-production-737b.up.railway.app';
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.BACKEND_URL ||
+      "https://web-production-737b.up.railway.app";
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), DELETE_TIMEOUT_MS);
-    const response = await fetch(
-      `${backendUrl}/api/campaigns/${id}`,
-      {
-        method: 'DELETE',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const response = await fetch(`${backendUrl}/api/campaigns/${id}`, {
+      method: "DELETE",
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { error: errorData.error || 'Failed to delete campaign' },
+        { error: errorData.error || "Failed to delete campaign" },
         { status: response.status }
       );
     }
 
     // Check if response has content before parsing
     const text = await response.text();
-    if (!text || text.trim() === '') {
-      console.warn('[Campaign DELETE] Empty response from backend, assuming success');
+    if (!text || text.trim() === "") {
+      console.warn(
+        "[Campaign DELETE] Empty response from backend, assuming success"
+      );
       return NextResponse.json({ success: true });
     }
 
@@ -167,16 +170,19 @@ export async function DELETE(
       const data = JSON.parse(text);
       return NextResponse.json(data);
     } catch (parseError) {
-      console.error('[Campaign DELETE] JSON parse error:', parseError);
-      console.error('[Campaign DELETE] Response text:', text);
+      console.error("[Campaign DELETE] JSON parse error:", parseError);
+      console.error("[Campaign DELETE] Response text:", text);
       return NextResponse.json({ success: true });
     }
-
   } catch (error: any) {
-    console.error('[Campaign DELETE] Error:', error);
-    const isAbort = (error as { name?: string })?.name === 'AbortError';
+    console.error("[Campaign DELETE] Error:", error);
+    const isAbort = (error as { name?: string })?.name === "AbortError";
     return NextResponse.json(
-      { error: isAbort ? 'Delete timed out. Try again or delete from a stable connection.' : error.message || 'Failed to delete campaign' },
+      {
+        error: isAbort
+          ? "Delete timed out. Try again or delete from a stable connection."
+          : error.message || "Failed to delete campaign",
+      },
       { status: 500 }
     );
   }

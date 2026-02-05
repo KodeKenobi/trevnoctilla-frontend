@@ -1,15 +1,13 @@
 /**
- * Test: open https://7core.co.uk, find the contact form, list all fields found,
- * fill them with test data, and report what was found vs filled.
- * Run in headed mode so you can watch: node test-7core-form-fields.js
- *
- * Usage: node test-7core-form-fields.js
+ * Test: open https://7core.co.uk HOMEPAGE only (do not navigate to Contact).
+ * Find all forms on the homepage, list fields, and distinguish e.g. contact vs newsletter.
+ * Run: node test-7core-form-fields.js
  */
 
 const { chromium } = require("playwright");
 
 const TARGET_URL = "https://7core.co.uk";
-const SLOW_MO_MS = 150;
+const SLOW_MO_MS = 80;
 
 async function getLabelForElement(page, el) {
   try {
@@ -32,7 +30,7 @@ async function getLabelForElement(page, el) {
 
 async function run() {
   const browser = await chromium.launch({
-    headless: false,
+    headless: true,
     slowMo: SLOW_MO_MS,
   });
 
@@ -67,18 +65,18 @@ async function run() {
       }
     } catch (e) {}
 
-    // Try to open Contact if there's a link
-    try {
-      const contactLink = page
-        .locator('a:has-text("Contact"), a[href*="contact" i]')
-        .first();
-      if (await contactLink.isVisible({ timeout: 2000 })) {
-        await contactLink.click();
-        await page.waitForTimeout(2000);
-      }
-    } catch (e) {}
+    // Stay on HOMEPAGE — do not click Contact (that page has newsletter form)
+    // Scroll down so any below-fold contact form is in DOM
+    await page.evaluate(() =>
+      window.scrollTo(0, document.body.scrollHeight / 2)
+    );
+    await page.waitForTimeout(800);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(800);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
 
-    // Find forms
+    // Find forms on homepage only
     const forms = await page.locator("form").all();
     console.log("[2] Forms on page:", forms.length, "\n");
 
@@ -87,7 +85,8 @@ async function run() {
       const formId = await form.getAttribute("id").catch(() => "");
       const formName = await form.getAttribute("name").catch(() => "");
       const formInfo = formId || formName || `form ${formIndex + 1}`;
-      console.log("--- Form:", formInfo, "---");
+      const formFieldsForThis = [];
+      console.log("--- Form:", formInfo, "(homepage) ---");
 
       let oneBranchCheckboxChecked = false;
 
@@ -117,6 +116,7 @@ async function run() {
             required,
           };
           fieldsFound.push(info);
+          formFieldsForThis.push(info);
           console.log("  [FOUND] input", JSON.stringify(info));
 
           let filled = false;
@@ -124,7 +124,11 @@ async function run() {
           if (type === "email") {
             await el.fill("test@example.com");
             filled = true;
-          } else if (type === "tel" || type === "phone" || role.includes("phone")) {
+          } else if (
+            type === "tel" ||
+            type === "phone" ||
+            role.includes("phone")
+          ) {
             await el.fill("07700900123");
             filled = true;
           } else if (
@@ -153,7 +157,10 @@ async function run() {
               await el.check();
               filled = true;
               oneBranchCheckboxChecked = true;
-              console.log("  [FILLED] branch checkbox (one selected):", label || name || id);
+              console.log(
+                "  [FILLED] branch checkbox (one selected):",
+                label || name || id
+              );
             }
           }
           if (filled) {
@@ -184,6 +191,7 @@ async function run() {
             placeholder,
           };
           fieldsFound.push(info);
+          formFieldsForThis.push(info);
           console.log("  [FOUND] textarea", JSON.stringify(info));
           await el.fill("This is a test message from the 7core form test.");
           fieldsFilled.push(info);
@@ -193,11 +201,10 @@ async function run() {
         }
       }
 
-      // Selects
+      // Selects (Wix often uses custom dropdowns: native select may be hidden; visible is div. Try both.)
       const selects = await form.locator("select").all();
       for (const el of selects) {
         try {
-          if (!(await el.isVisible())) continue;
           const name = (await el.getAttribute("name")) || "";
           const id = (await el.getAttribute("id")) || "";
           const label = await getLabelForElement(page, el);
@@ -216,27 +223,124 @@ async function run() {
             options: optionTexts,
           };
           fieldsFound.push(info);
+          formFieldsForThis.push(info);
           console.log("  [FOUND] select", JSON.stringify(info));
 
-          // Pick first non-placeholder option
+          // First real option (skip "Choose a branch" etc.)
           let pickIndex = 0;
+          let pickValue = optionTexts[0]?.value;
+          let pickText = optionTexts[0]?.text || "";
           if (options.length > 1) {
             const firstText = (optionTexts[0]?.text || "").toLowerCase();
-            if (/choose|select|please|--/.test(firstText)) pickIndex = 1;
+            if (/choose|select|please|--/.test(firstText)) {
+              pickIndex = 1;
+              pickValue = optionTexts[1]?.value;
+              pickText = optionTexts[1]?.text || "";
+            }
           }
-          await el.selectOption({ index: pickIndex });
-          fieldsFilled.push(info);
-          console.log(
-            "  [FILLED] select",
-            name || id || "(no name)",
-            "-> option index",
-            pickIndex
-          );
+
+          let selectFilled = false;
+          const isVisible = await el.isVisible().catch(() => false);
+
+          // 1) Native select: set value and dispatch events (so Wix JS sees it)
+          try {
+            if (pickValue) {
+              await el.selectOption({ value: pickValue });
+              await el.evaluate((node) => {
+                node.dispatchEvent(new Event("change", { bubbles: true }));
+                node.dispatchEvent(new Event("input", { bubbles: true }));
+              });
+              selectFilled = true;
+              console.log(
+                "  [FILLED] select (native value)",
+                name || id,
+                "->",
+                pickValue
+              );
+            } else {
+              await el.selectOption({ index: pickIndex });
+              await el.evaluate((node) => {
+                node.dispatchEvent(new Event("change", { bubbles: true }));
+                node.dispatchEvent(new Event("input", { bubbles: true }));
+              });
+              selectFilled = true;
+              console.log(
+                "  [FILLED] select (index)",
+                name || id,
+                "-> index",
+                pickIndex
+              );
+            }
+          } catch (e) {
+            console.log("  [selectOption failed]", e.message);
+          }
+
+          // 2) Wix custom dropdown: if native select is hidden, click the visible trigger then click option by text
+          if (!selectFilled || !isVisible) {
+            try {
+              const branchLabel = (label || "").toLowerCase().includes("branch")
+                ? "Branch"
+                : null;
+              const dropdownTrigger = branchLabel
+                ? page
+                    .getByLabel(branchLabel, { exact: false })
+                    .or(
+                      page
+                        .locator(
+                          "[data-id*='branch' i], [id*='branch' i], [aria-haspopup='listbox']"
+                        )
+                        .first()
+                    )
+                : null;
+              const trigger = dropdownTrigger || el;
+              await trigger.scrollIntoViewIfNeeded();
+              await trigger.click();
+              await page.waitForTimeout(300);
+              const optionLocator = page
+                .getByRole("option", { name: pickText })
+                .or(page.getByText(pickText, { exact: true }));
+              if ((await optionLocator.count()) > 0) {
+                await optionLocator.first().click();
+                selectFilled = true;
+                console.log(
+                  "  [FILLED] select (custom dropdown click)",
+                  name || id,
+                  "->",
+                  pickText
+                );
+              }
+            } catch (e2) {
+              console.log("  [custom dropdown fallback failed]", e2.message);
+            }
+          }
+
+          if (selectFilled) fieldsFilled.push(info);
         } catch (e) {
           console.log("  [SKIP select]", e.message);
         }
       }
 
+      // Infer form type from field labels (homepage: search vs newsletter vs contact)
+      const labels = formFieldsForThis
+        .map((f) => (f.label || "").toLowerCase())
+        .join(" ");
+      const hasMessage =
+        /message|enquiry|enquiry message|your message|comments/.test(labels);
+      const hasSearch = formFieldsForThis.some(
+        (f) =>
+          f.name === "q" ||
+          (f.placeholder || "").toLowerCase().includes("search")
+      );
+      const hasFirstLastOnly =
+        /first name|last name/.test(labels) &&
+        !hasMessage &&
+        formFieldsForThis.length <= 4;
+      let formType = "unknown";
+      if (hasSearch) formType = "SEARCH";
+      else if (hasFirstLastOnly && !hasMessage)
+        formType = "NEWSLETTER (First/Last name, no message)";
+      else if (hasMessage) formType = "CONTACT (has message/enquiry field)";
+      console.log("  [FORM TYPE]", formType);
       console.log("");
     }
 
@@ -256,8 +360,6 @@ async function run() {
       )
     );
     console.log("\n==============================\n");
-
-    await page.waitForTimeout(3000);
   } finally {
     await browser.close();
   }
