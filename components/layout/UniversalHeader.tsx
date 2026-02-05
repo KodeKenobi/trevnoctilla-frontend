@@ -156,7 +156,6 @@ export default function UniversalHeader() {
           {[
             { label: "Home", href: "/", anchor: "Free Online PDF Editor" },
             { label: "Tools", href: "/tools", anchor: "Free PDF Editor Tools" },
-            { label: "Leads", href: "/leads", anchor: "Automated Lead Processing" },
             {
               label: "Video Converter",
               href: "/tools/video-converter",
@@ -547,11 +546,6 @@ export default function UniversalHeader() {
                 label: "Tools",
                 href: "/tools",
                 anchor: "Free PDF Editor Tools",
-              },
-              {
-                label: "Leads",
-                href: "/leads",
-                anchor: "Automated Lead Processing",
               },
               {
                 label: "Video Converter",

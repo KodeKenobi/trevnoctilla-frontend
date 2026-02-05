@@ -106,7 +106,7 @@ export default function ToolsPage() {
   ];
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#0a0a0a] page-content overflow-x-hidden">
+    <div ref={containerRef} className="min-h-screen bg-[#111827] page-content overflow-x-hidden">
       {/* Hero Section (Matching Campaigns Style but all white font) */}
       <section className="min-h-[60vh] flex items-center justify-center relative overflow-hidden px-6">
         <div className="text-center max-w-4xl relative z-20">
@@ -126,20 +126,6 @@ export default function ToolsPage() {
             />
           </p>
           
-          <div className="hero-stats flex flex-wrap justify-center items-center gap-8 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full shadow-[0_0_8px_rgba(74,222,128,0.5)]"></div>
-              <span>100% Free</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.5)]"></div>
-              <span>No Registration</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-purple-400 rounded-full shadow-[0_0_8px_rgba(192,132,252,0.5)]"></div>
-              <span>Secure & Private</span>
-            </div>
-          </div>
         </div>
 
         {/* Background Gradients */}
@@ -246,7 +232,7 @@ export default function ToolsPage() {
       </section>
 
       {/* Simplified Footer section to match landing page vibe */}
-      <section className="py-32 border-t border-gray-800/30 bg-[#0a0a0a]">
+      <section className="py-24 border-t border-gray-800/30 bg-[#111827]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
