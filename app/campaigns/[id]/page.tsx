@@ -114,6 +114,7 @@ export default function CampaignDetailPage() {
   const [filterMethod, setFilterMethod] = useState<string>("all");
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [isStopping, setIsStopping] = useState(false);
+  const [resettingStuck, setResettingStuck] = useState(false);
   const [dailyUsage, setDailyUsage] = useState<{
     daily_limit: number;
     daily_used: number;
@@ -130,6 +131,7 @@ export default function CampaignDetailPage() {
   const processingTimesRef = useRef<number[]>([]); // Track processing times for ETA
   const processingCompanyIdRef = useRef<number | null>(null);
   const campaignStatusRef = useRef<string | undefined>(undefined);
+  const autoResetStuckDoneRef = useRef(false);
 
   // Keep refs in sync with state (so polling interval can read latest without re-running effect)
   useEffect(() => {
@@ -274,6 +276,45 @@ export default function CampaignDetailPage() {
       );
     }
   }, [campaign?.status, isRapidAllRunning]);
+
+  // PERMANENT FIX: Auto-reset stuck companies when (a) campaign is done but API still shows "processing", or (b) campaign/companies show "processing" but we're not running (thread died). Run once per mount.
+  useEffect(() => {
+    if (!campaignId || autoResetStuckDoneRef.current) return;
+    const terminal = ["completed", "failed", "cancelled"];
+    const campaignDone =
+      campaign?.status && terminal.includes(campaign.status);
+    const campaignStuckButNotRunning =
+      campaign?.status === "processing" &&
+      !isRapidAllRunning &&
+      processingCompanyId === null;
+    const hasStuck = companies.some((c) => c.status === "processing");
+    const notRunning =
+      !isRapidAllRunning && processingCompanyId === null;
+    const shouldAutoReset =
+      (campaignDone || campaignStuckButNotRunning) &&
+      hasStuck &&
+      notRunning &&
+      companies.length > 0;
+    if (shouldAutoReset) {
+      autoResetStuckDoneRef.current = true;
+      fetch(`/api/campaigns/${campaignId}/reset-stuck`, { method: "POST" })
+        .then((r) => {
+          if (r.ok) {
+            console.log("[Campaign] Auto-reset stuck companies");
+            return fetchCampaignDetails(true);
+          }
+        })
+        .catch((err) =>
+          console.error("[Campaign] Auto reset-stuck failed:", err)
+        );
+    }
+  }, [
+    campaignId,
+    campaign?.status,
+    companies,
+    isRapidAllRunning,
+    processingCompanyId,
+  ]);
 
   const fetchCampaignDetails = async (silent = false) => {
     try {
@@ -766,6 +807,31 @@ export default function CampaignDetailPage() {
     }
   };
 
+  const handleResetStuck = async () => {
+    if (resettingStuck) return;
+    try {
+      setResettingStuck(true);
+      const response = await fetch(`/api/campaigns/${campaignId}/reset-stuck`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to reset stuck companies");
+      }
+      const data = await response.json();
+      const count = data.reset_count ?? data.n;
+      if (count !== undefined && count > 0) {
+        console.log(`[Reset Stuck] Cleared ${count} stuck company/companies to pending`);
+      }
+      fetchCampaignDetails(true);
+    } catch (error: any) {
+      console.error("Reset stuck failed:", error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setResettingStuck(false);
+    }
+  };
+
   const handleRetryFailed = async () => {
     const failedCompanies = companies.filter((c) => c.status === "failed");
 
@@ -1128,6 +1194,20 @@ export default function CampaignDetailPage() {
                   {isStopping ? "Stopping..." : "Stop campaign"}
                 </button>
               )}
+              {companies.filter((c) => c.status === "processing").length > 0 &&
+                !isRapidAllRunning &&
+                processingCompanyId === null && (
+                  <button
+                    onClick={handleResetStuck}
+                    disabled={resettingStuck}
+                    className="group flex items-center gap-2 px-4 py-2 bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 text-xs font-medium transition-colors rounded-lg border border-slate-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    {resettingStuck
+                      ? "Resetting..."
+                      : `Reset stuck (${companies.filter((c) => c.status === "processing").length})`}
+                  </button>
+                )}
               {companies.filter((c) => c.status === "failed").length > 0 && (
                 <button
                   onClick={() => setRetryFailedModalOpen(true)}
