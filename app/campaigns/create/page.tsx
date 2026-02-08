@@ -202,7 +202,7 @@ export default function CreateCampaignPage() {
 
       const data = await response.json();
       localStorage.removeItem("uploadedCampaignData");
-      router.push(`/campaigns/${data.campaign.id}`);
+      router.push(`/campaigns/${data.campaign.public_id}`);
     } catch (err: any) {
       console.error("Failed to create campaign:", err);
       setError(err.message || "Failed to create campaign");

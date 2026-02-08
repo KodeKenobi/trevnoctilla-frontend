@@ -29,6 +29,7 @@ import { getAuthHeaders } from "@/lib/config";
 
 interface Campaign {
   id: number;
+  public_id: string;
   name: string;
   status: string;
   total_companies: number;
@@ -415,7 +416,7 @@ export default function CampaignDetailPage() {
       activeWebSocket.close();
     }
 
-    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "wss:";
+    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const backendUrl = "web-production-737b.up.railway.app";
     const wsUrl = `${wsProtocol}//${backendUrl}/ws/campaign/${id}`;
 

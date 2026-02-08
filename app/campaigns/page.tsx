@@ -16,6 +16,7 @@ if (typeof window !== "undefined") {
 
 interface Campaign {
   id: number;
+  public_id: string;
   name: string;
   status: string;
   total_companies: number;
@@ -702,7 +703,7 @@ export default function CampaignsPage() {
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                     }}
-                    onClick={() => router.push(`/campaigns/${campaign.id}`)}
+                    onClick={() => router.push(`/campaigns/${campaign.public_id}`)}
                   >
                     {/* Content */}
                     <div className="h-full flex flex-col">
