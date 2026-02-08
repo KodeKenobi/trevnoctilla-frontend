@@ -155,34 +155,7 @@ export default function CampaignDetailPage() {
     isRapidAllRunningRef.current = isRapidAllRunning;
   }, [isRapidAllRunning]);
 
-  // Sync rapidAllProgress with actual company statuses (fixes real-time update issue)
-  useEffect(() => {
-    if (isRapidAllRunning && rapidAllTotal > 0) {
-      const completedCount = companies.filter(
-        (c) => c.status === "completed" || c.status === "failed"
-      ).length;
-
-      const processingCountActual = companies.filter(
-        (c) => c.status === "processing"
-      ).length;
-
-      // Update progress if it doesn't match actual completed count
-      if (completedCount !== rapidAllProgress) {
-        setRapidAllProgress(completedCount);
-      }
-
-      // Update processing count if it doesn't match
-      if (processingCountActual !== processingCount) {
-        setProcessingCount(processingCountActual);
-      }
-    }
-  }, [
-    companies,
-    isRapidAllRunning,
-    rapidAllTotal,
-    rapidAllProgress,
-    processingCount,
-  ]);
+  // Removed manual sync effect: using global 'stats' object for UI consistency
 
   const campaignId = params?.id as string;
 
@@ -459,11 +432,8 @@ export default function CampaignDetailPage() {
             activityLogsRef.current = newLogs;
             return newLogs;
           });
-          if (log.company_name) setRapidCurrentCompany(log.company_name);
-          // Mission Control: only show "Processing [company name]" — no technical messages (scroll, fetch, lazy, etc.)
-          setRapidStatus(
-            log.company_name ? `Processing ${log.company_name}` : "Processing…"
-          );
+          // Mission Control: only show "Processing..." — no company names or technical jargon
+          setRapidStatus("Processing...");
         }
 
         if (message.type === "company_completed") {
@@ -991,9 +961,8 @@ export default function CampaignDetailPage() {
     ).length;
     const failed = companies.filter((c) => c.status === "failed").length;
     const captcha = companies.filter((c) => c.status === "captcha").length;
-    const completedOrFailed = success + failed + captcha;
     const progress =
-      total > 0 ? Math.round((completedOrFailed / total) * 100) : 0;
+      total > 0 ? Math.round((processed / total) * 100) : 0;
 
     return {
       total,
@@ -1255,14 +1224,12 @@ export default function CampaignDetailPage() {
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
                   <span className="text-sm text-white">
-                    {rapidCurrentCompany
-                      ? `Processing ${rapidCurrentCompany}`
-                      : rapidStatus || "Processing…"}
+                    Processing...
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-white/70">
-                    {rapidAllProgress} / {rapidAllTotal}
+                    {stats.processed} / {stats.total}
                   </span>
                   <button
                     onClick={handleStopCampaign}
@@ -1277,9 +1244,7 @@ export default function CampaignDetailPage() {
                 <div
                   className="h-full bg-blue-500 rounded-full transition-all duration-500"
                   style={{
-                    width: `${
-                      (rapidAllProgress / (rapidAllTotal || 1)) * 100
-                    }%`,
+                    width: `${stats.progress}%`,
                   }}
                 />
               </div>
